@@ -134,6 +134,7 @@ public:
     {
         _empty_blocks.clear();
         _candidate_blocks.clear();
+        _candidate_blocks.push_back(null_group);
         for (auto r : vertices_range(_bg))
         {
             if (_wr[r] == 0)
@@ -1727,7 +1728,7 @@ public:
         // attempt new block
         size_t s;
         std::bernoulli_distribution new_r(d);
-        if (d > 0 && new_r(rng) && (_candidate_blocks.size() < num_vertices(_g)))
+        if (d > 0 && new_r(rng) && (_candidate_blocks.size() - 1 < num_vertices(_g)))
         {
             if (_empty_blocks.empty())
                 add_block();
@@ -1749,7 +1750,7 @@ public:
             double p_rand = 0;
             if (c > 0)
             {
-                size_t B = _candidate_blocks.size();
+                size_t B = _candidate_blocks.size() - 1;
                 if (is_directed_::apply<g_t>::type::value)
                     p_rand = c * B / double(_mrp[t] + _mrm[t] + c * B);
                 else
@@ -1770,12 +1771,14 @@ public:
             }
             else
             {
-                s = uniform_sample(_candidate_blocks, rng);
+                s = uniform_sample(_candidate_blocks.begin() + 1,
+                                   _candidate_blocks.end(), rng);
             }
         }
         else
         {
-            s = uniform_sample(_candidate_blocks, rng);
+            s = uniform_sample(_candidate_blocks.begin() + 1,
+                               _candidate_blocks.end(), rng);
         }
 
         return s;
@@ -1793,7 +1796,7 @@ public:
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                          bool reverse, MEntries& m_entries)
     {
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_blocks.size() - 1;
 
         if (reverse)
         {
