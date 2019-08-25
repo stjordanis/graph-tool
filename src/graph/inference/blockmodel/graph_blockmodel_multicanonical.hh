@@ -91,13 +91,8 @@ struct Multicanonical
             return _state.node_state(v);
         }
 
-        size_t node_weight(size_t v)
-        {
-            return _state.node_weight(v);
-        }
-
         template <class RNG>
-        move_t move_proposal(size_t v, RNG& rng)
+        auto move_proposal(size_t v, RNG& rng)
         {
             return _state.move_proposal(v, rng);
         }
@@ -139,6 +134,11 @@ struct Multicanonical
         auto& get_vlist()
         {
             return _state.get_vlist();
+        }
+
+        size_t get_N()
+        {
+            return _state.get_N();
         }
 
         double get_beta()

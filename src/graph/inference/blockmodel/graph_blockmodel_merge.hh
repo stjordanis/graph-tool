@@ -113,7 +113,7 @@ struct Merge
                 s = uniform_sample(_available, rng);
             }
 
-            if (s == r || !_state.allow_move(v, r, s))
+            if (s == r || !_state.allow_move(r, s))
                 return _null_move;
 
             return s;

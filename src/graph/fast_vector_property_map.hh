@@ -68,53 +68,53 @@ public:
     typedef checked_vector_property_map<T,IndexMap> self_t;
 
     checked_vector_property_map(const IndexMap& idx = IndexMap())
-        : store(std::make_shared<std::vector<T>>()), index(idx) {}
+        : _store(std::make_shared<std::vector<T>>()), _index(idx) {}
 
     checked_vector_property_map(unsigned initial_size,
                                 const IndexMap& idx = IndexMap())
-        : store(std::make_shared<std::vector<T>>(initial_size)), index(idx) {}
+        : _store(std::make_shared<std::vector<T>>(initial_size)), _index(idx) {}
 
     typename std::vector<T>::iterator storage_begin()
     {
-        return store->begin();
+        return _store->begin();
     }
 
     typename std::vector<T>::iterator storage_end()
     {
-        return store->end();
+        return _store->end();
     }
 
     typename std::vector<T>::const_iterator storage_begin() const
     {
-        return store->begin();
+        return _store->begin();
     }
 
     typename std::vector<T>::const_iterator storage_end() const
     {
-        return store->end();
+        return _store->end();
     }
 
     void reserve(size_t size) const
     {
-        if (size > store->size())
-            store->resize(size);
+        if (size > _store->size())
+            _store->resize(size);
     }
 
     void resize(size_t size) const
     {
-        store->resize(size);
+        _store->resize(size);
     }
 
     void shrink_to_fit() const
     {
-        store->shrink_to_fit();
+        _store->shrink_to_fit();
     }
 
-    std::vector<T>& get_storage() const { return (*store); }
+    std::vector<T>& get_storage() const { return *_store; }
 
     void swap(checked_vector_property_map& other)
     {
-        store->swap(*other.store);
+        _store->swap(*other._store);
     }
 
     unchecked_t get_unchecked(size_t size = 0) const
@@ -126,32 +126,23 @@ public:
     // deep copy
     checked_vector_property_map copy() const
     {
-        checked_vector_property_map pmap(index);
-        *(pmap.store) = *store;
+        checked_vector_property_map pmap(_index);
+        *(pmap._store) = *_store;
         return pmap;
     }
 
 public:
-    // Copy ctor absent, default semantics is OK.
-    // Assignment operator absent, default semantics is OK.
-    // CONSIDER: not sure that assignment to 'index' is correct.
-
     reference operator[](const key_type& v) const {
-        auto i = get(index, v);
-        if (static_cast<size_t>(i) >= store->size()) {
-            store->resize(i + 1, T());
+        auto i = get(_index, v);
+        auto& store = *_store;
+        if (static_cast<size_t>(i) >= store.size()) {
+            store.resize(i + 1);
         }
-        return (*store)[i];
+        return store[i];
     }
 protected:
-    // Conceptually, we have a vector of infinite size. For practical
-    // purposes, we start with an empty vector and grow it as needed.
-    // Note that we cannot store pointer to vector here -- we cannot
-    // store pointer to data, because if copy of property map resizes
-    // the vector, the pointer to data will be invalidated.
-    // I wonder if class 'pmap_ref' is simply needed.
-    std::shared_ptr< std::vector<T> > store;
-    IndexMap index;
+    std::shared_ptr<std::vector<T>> _store;
+    IndexMap _index;
 };
 
 template<typename T, typename IndexMap = identity_property_map>
@@ -174,14 +165,14 @@ public:
                                   size_t size = 0)
         : _checked(checked)
     {
-        if (size > 0 && _checked.store->size() < size)
-            _checked.store->resize(size);
+        if (size > 0 && _checked._store->size() < size)
+            _checked._store->resize(size);
     }
 
     unchecked_vector_property_map(const IndexMap& index_map,
                                   size_t size = 0)
+        : _checked(size, index_map)
     {
-        *this = unchecked_vector_property_map(checked_t(index_map), size);
     }
 
     void reserve(size_t size) const { _checked.reserve(size); }
@@ -192,7 +183,7 @@ public:
     __attribute__((always_inline)) __attribute__((flatten))
     reference operator[](const key_type& v) const
     {
-        return (*_checked.store)[get(_checked.index, v)];
+        return (*_checked._store)[get(_checked._index, v)];
     }
 
     std::vector<T>& get_storage() const { return _checked.get_storage(); }

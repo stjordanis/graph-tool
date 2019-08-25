@@ -42,7 +42,6 @@ using namespace std;
     ((d,, double, 0))                                                          \
     ((entropy_args,, entropy_args_t, 0))                                       \
     ((allow_vacate,, bool, 0))                                                 \
-    ((parallel,, bool, 0))                                                     \
     ((sequential,, bool, 0))                                                   \
     ((deterministic,, bool, 0))                                                \
     ((verbose,, bool, 0))                                                      \
@@ -79,7 +78,7 @@ struct MCMC
 
         typename state_t::g_t& _g;
         typename state_t::m_entries_t _m_entries;
-        size_t _null_move = null_group;
+        constexpr static size_t _null_move = null_group;
 
         size_t node_state(size_t v)
         {
@@ -91,25 +90,12 @@ struct MCMC
             return _state.node_weight(v) == 0;
         }
 
-        size_t node_weight(size_t v)
-        {
-            return _state.node_weight(v);
-        }
-
         template <class RNG>
         size_t move_proposal(size_t v, RNG& rng)
         {
-            auto r = _state._b[v];
-
             if (!_allow_vacate && _state.is_last(v))
-                return null_group;
-
-            size_t s = _state.sample_block(v, _c, _d, rng);
-
-            if (!_state.allow_move(v, r, s))
-                return null_group;
-
-            return s;
+                return _null_move;
+            return  _state.sample_block(v, _c, _d, rng);
         }
 
         std::tuple<double, double>

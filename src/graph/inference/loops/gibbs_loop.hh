@@ -35,20 +35,8 @@ namespace graph_tool
 {
 
 template <class GibbsState, class RNG>
-auto gibbs_sweep(GibbsState state, RNG& rng_)
+auto gibbs_sweep(GibbsState state, RNG& rng)
 {
-    auto& g = state._g;
-
-    vector<RNG> rngs;
-    vector<std::pair<size_t, double>> best_move;
-
-    if (state._parallel)
-    {
-        parallel_rng<RNG>::init(rng_);
-        init_cache(state._E);
-        best_move.resize(num_vertices(g));
-    }
-
     auto& vlist = state._vlist;
     auto beta = state._beta;
 
@@ -62,113 +50,66 @@ auto gibbs_sweep(GibbsState state, RNG& rng_)
 
     for (size_t iter = 0; iter < state._niter; ++iter)
     {
-        if (state._parallel)
-        {
-            parallel_loop(vlist,
-                          [&](size_t, auto v)
-                          {
-                              best_move[v] =
-                                  std::make_pair(state.node_state(v),
-                                                 numeric_limits<double>::max());
-                          });
-        }
-        else
-        {
-            if (!state._deterministic)
-                std::shuffle(vlist.begin(), vlist.end(), rng_);
-        }
+        if (!state._deterministic)
+            std::shuffle(vlist.begin(), vlist.end(), rng);
 
-        #pragma omp parallel firstprivate(state, probs, deltas, idx) \
-            reduction(+: S, nmoves, nattempts) if (state._parallel)
-        parallel_loop_no_spawn
-            (vlist,
-             [&](size_t, auto v)
+        for (auto v : vlist)
+        {
+             if (!state._sequential)
+                 v = uniform_sample(vlist, rng);
+
+             if (state.node_weight(v) == 0)
+                 continue;
+
+             auto& moves = state.get_moves(v);
+
+             nattempts += moves.size();
+
+             probs.resize(moves.size());
+             deltas.resize(moves.size());
+             idx.resize(moves.size());
+
+             double dS_min = numeric_limits<double>::max();
+             for (size_t j = 0; j < moves.size(); ++j)
              {
-                 auto& rng = parallel_rng<RNG>::get(rng_);
+                 size_t s = moves[j];
+                 double dS = state.virtual_move_dS(v, s, rng);
+                 dS_min = std::min(dS, dS_min);
+                 deltas[j] = dS;
+                 idx[j] = j;
+             }
 
-                 if (!state._sequential)
-                     v = uniform_sample(vlist, rng);
-
-                 if (state.node_weight(v) == 0)
-                     return;
-
-                 auto& moves = state.get_moves(v);
-
-                 nattempts += moves.size();
-
-                 probs.resize(moves.size());
-                 deltas.resize(moves.size());
-                 idx.resize(moves.size());
-
-                 double dS_min = numeric_limits<double>::max();
+             if (!std::isinf(beta))
+             {
                  for (size_t j = 0; j < moves.size(); ++j)
                  {
-                     size_t s = moves[j];
-                     double dS = state.virtual_move_dS(v, s);
-                     dS_min = std::min(dS, dS_min);
-                     deltas[j] = dS;
-                     idx[j] = j;
+                     if (std::isinf(deltas[j]))
+                         probs[j] = 0;
+                     else
+                         probs[j] = exp((-deltas[j] + dS_min) * beta);
                  }
+             }
+             else
+             {
+                 for (size_t j = 0; j < moves.size(); ++j)
+                     probs[j] = (deltas[j] == dS_min) ? 1 : 0;
+             }
 
-                 if (!std::isinf(beta))
-                 {
-                     for (size_t j = 0; j < moves.size(); ++j)
-                     {
-                         if (std::isinf(deltas[j]))
-                             probs[j] = 0;
-                         else
-                             probs[j] = exp((-deltas[j] + dS_min) * beta);
-                     }
-                 }
-                 else
-                 {
-                     for (size_t j = 0; j < moves.size(); ++j)
-                         probs[j] = (deltas[j] == dS_min) ? 1 : 0;
-                 }
+             Sampler<size_t> sampler(idx, probs);
 
-                 Sampler<size_t> sampler(idx, probs);
+             size_t j = sampler.sample(rng);
 
-                 size_t j = sampler.sample(rng);
+             assert(probs[j] > 0);
 
-                 assert(probs[j] > 0);
+             size_t s = moves[j];
+             size_t r = state.node_state(v);
 
-                 size_t s = moves[j];
-                 size_t r = state.node_state(v);
+             if (s == r)
+                 continue;
 
-                 if (s == r)
-                     return;
-
-                 if (!state._parallel)
-                 {
-                     state.perform_move(v, s);
-                     nmoves += state.node_weight(v);
-                     S += deltas[j];
-                 }
-                 else
-                 {
-                     best_move[v].first = s;
-                     best_move[v].second = deltas[j];
-                 }
-             });
-
-        if (state._parallel)
-        {
-            for (auto v : vlist)
-            {
-                auto s = best_move[v].first;
-                double dS = best_move[v].second;
-                if (dS != numeric_limits<double>::max())
-                {
-                    dS = state.virtual_move_dS(v, s);
-
-                    if (dS > 0 && std::isinf(beta))
-                        continue;
-
-                    state.perform_move(v, s);
-                    nmoves++;
-                    S += dS;
-                }
-            }
+             state.perform_move(v, s);
+             nmoves += state.node_weight(v);
+             S += deltas[j];
         }
 
         if (state._sequential && state._deterministic)

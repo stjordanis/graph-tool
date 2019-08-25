@@ -40,11 +40,10 @@ public:
     virtual void coupled_resize_vertex(size_t v) = 0;
     virtual double virtual_move(size_t v, size_t r, size_t nr,
                                 entropy_args_t eargs) = 0;
+    virtual void sample_branch(size_t v, size_t u, rng_t& rng) = 0;
     virtual size_t sample_block(size_t v, double c, double d, rng_t& rng) = 0;
     virtual double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
-                                 bool reverse,
-                                 std::vector<std::tuple<size_t, size_t, int>>& p_entries) = 0;
-
+                                 bool reverse) = 0;
     virtual size_t add_block() = 0;
     virtual void add_edge(const GraphInterface::edge_t& e) = 0;
     virtual void remove_edge(const GraphInterface::edge_t& e) = 0;
@@ -71,7 +70,7 @@ public:
                                           entropy_args_t& ea) = 0;
     virtual vprop_map_t<int32_t>::type::unchecked_t& get_b() = 0;
     virtual bool check_edge_counts(bool emat=true) = 0;
-    virtual bool allow_move(size_t v, size_t r, size_t nr) = 0;
+    virtual bool allow_move(size_t r, size_t nr) = 0;
 };
 
 } // graph_tool namespace

@@ -117,16 +117,13 @@ for nested in [False, True]:
             state = minimize_blockmodel_dl(g, deg_corr=True)
             state = state.copy(B=g.num_vertices())
 
-        if nested:
-            cs = list(reversed([-numpy.inf, numpy.inf, 1, 0.1, 0.01, -1]))
-        else:
-            cs = list(reversed([-numpy.inf, numpy.inf, 1, 0.1, 0.01, "gibbs", -1]))
+        cs = list(reversed([numpy.inf, 1, 0.1, 0.01, "gibbs", -numpy.inf, -1]))
 
         for i, c in enumerate(cs):
             if c != "gibbs":
-                mcmc_args=dict(beta=.2, c=abs(c), niter=40)
+                mcmc_args=dict(beta=.3, c=abs(c), niter=40)
             else:
-                mcmc_args=dict(beta=.2, niter=40)
+                mcmc_args=dict(beta=.3, niter=40)
 
             if nested:
                 get_B = lambda s: [sl.get_nonempty_B() for sl in s.levels]
@@ -146,8 +143,8 @@ for nested in [False, True]:
                                         mcmc_args=mcmc_args,
                                         gibbs=c=="gibbs",
                                         multiflip = c != "gibbs" and c < 0,
-                                        wait=1000,
-                                        nbreaks=5,
+                                        wait=6000,
+                                        nbreaks=10,
                                         callback=get_B,
                                         verbose=(1, "c = %s " % str(c)) if verbose else False,
                                         history=True)

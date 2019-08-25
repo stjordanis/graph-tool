@@ -100,12 +100,6 @@ struct MCMC
             return false;
         }
 
-        template <class T>
-        size_t node_weight(T&)
-        {
-            return 1;
-        }
-
         template <class RNG>
         int move_proposal(size_t, RNG& rng)
         {

@@ -770,10 +770,8 @@ class NestedBlockState(object):
     def _h_sweep_states(self, algo, **kwargs):
         entropy_args = kwargs.get("entropy_args", {})
         for l, lstate, args in self._h_sweep_gen(**kwargs):
-            if l > 0 and "beta_dl" in entropy_args:
-                yield l, lstate, algo(self.levels[l], dispatch=False, **args), entropy_args["beta_dl"]
-            else:
-                yield l, lstate, algo(self.levels[l], dispatch=False, **args), 1
+            beta_dl = entropy_args.get("beta_dl", 1) if l > 0 else 1
+            yield l, lstate, algo(self.levels[l], dispatch=False, **args), beta_dl
 
     def _h_sweep_parallel_dispatch(states, sweeps, algo):
         ret = None
@@ -806,7 +804,7 @@ class NestedBlockState(object):
 
         c = kwargs.pop("c", 1)
         if not isinstance(c, collections.Iterable):
-            c = [c] + [c * 2 ** l for l in range(1, len(self.levels))]
+            c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
             if _bm_test():
@@ -847,7 +845,7 @@ class NestedBlockState(object):
 
         c = kwargs.pop("c", 1)
         if not isinstance(c, collections.Iterable):
-            c = [c] + [c * 2 ** l for l in range(1, len(self.levels))]
+            c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
             if _bm_test():
@@ -869,6 +867,32 @@ class NestedBlockState(object):
 
     def _multiflip_mcmc_sweep_parallel_dispatch(states, sweeps):
         algo = lambda s, lstates, lsweep_states: s._multiflip_mcmc_sweep_parallel_dispatch(lstates, lsweep_states)
+        return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
+
+    def gibbs_sweep(self, **kwargs):
+        r"""Perform ``niter`` sweeps of a rejection-free Gibbs sampling MCMC
+        to sample network partitions.
+
+        The arguments accepted are the same as in
+        :meth:`graph_tool.inference.blockmodel.BlockState.gibbs_sweep`.
+        """
+        if _bm_test():
+            kwargs = dict(kwargs, test=False)
+            entropy_args = kwargs.get("entropy_args", {})
+            Si = self.entropy(**entropy_args)
+
+        dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.gibbs_sweep(**a),
+                                              **kwargs)
+
+        if _bm_test():
+            Sf = self.entropy(**entropy_args)
+            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
+                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
+                                                            str(entropy_args))
+        return dS, nattempts, nmoves
+
+    def _gibbs_sweep_parallel_dispatch(states, sweeps):
+        algo = lambda s, lstates, lsweep_states: s._gibbs_sweep_parallel_dispatch(lstates, lsweep_states)
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
     def multicanonical_sweep(self, **kwargs):

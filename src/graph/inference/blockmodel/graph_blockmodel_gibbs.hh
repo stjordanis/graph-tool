@@ -41,7 +41,6 @@ using namespace std;
     ((entropy_args,, entropy_args_t, 0))                                       \
     ((allow_vacate,, bool, 0))                                                 \
     ((allow_new_group,, bool, 0))                                              \
-    ((parallel,, bool, 0))                                                     \
     ((sequential,, bool, 0))                                                   \
     ((deterministic,, bool, 0))                                                \
     ((verbose,, bool, 0))                                                      \
@@ -67,7 +66,6 @@ struct Gibbs
                                             sizeof...(Ts)>* = nullptr>
         GibbsBlockState(ATs&&... as)
            : GibbsBlockStateBase<Ts...>(as...),
-            _g(_state._g),
             _m_entries(num_vertices(_state._bg))
         {
             _state.init_mcmc(numeric_limits<double>::infinity(),
@@ -76,10 +74,14 @@ struct Gibbs
                               _entropy_args.edges_dl));
         }
 
-        typename state_t::g_t& _g;
         typename state_t::m_entries_t _m_entries;
 
-        auto& get_moves(size_t) { return _state._candidate_blocks; }
+        std::vector<size_t> _candidate_blocks;
+
+        auto& get_moves(size_t)
+        {
+            return _state._candidate_blocks;
+        }
 
         size_t node_state(size_t v)
         {
@@ -91,32 +93,29 @@ struct Gibbs
             return _state.node_weight(v);
         }
 
-        double virtual_move_dS(size_t v, size_t nr)
+        size_t _nr;
+        double virtual_move_dS(size_t v, size_t nr, rng_t& rng)
         {
+            size_t r = _state._b[v];
             if (nr == null_group)
             {
-                if (!_allow_new_group)
+                if (!_allow_new_group ||
+                    _state._candidate_blocks.size() - 1 == num_vertices(_state._g))
                     return numeric_limits<double>::infinity();
-                if (_state._empty_blocks.empty())
-                    _state.add_block();
-                nr = _state._empty_blocks.back();
+                _state.get_empty_block(v);
+                _nr = nr = uniform_sample(_state._empty_blocks, rng);
+                if (_state._coupled_state != nullptr)
+                    _state._coupled_state->sample_branch(nr, r, rng);
+                _state._bclabel[nr] = _state._bclabel[r];
+
             }
-            size_t r = _state._b[v];
-            if (!_state.allow_move(v, r, nr))
-                return numeric_limits<double>::infinity();
             return _state.virtual_move(v, r, nr, _entropy_args, _m_entries);
         }
 
         void perform_move(size_t v, size_t nr)
         {
-            size_t r = _state._b[v];
-
             if (nr == null_group)
-                nr = _state._empty_blocks.back();
-
-            if (r == nr)
-                return;
-
+                nr = _nr;
             _state.move_vertex(v, nr);
         }
     };

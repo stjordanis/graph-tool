@@ -490,9 +490,9 @@ struct Layers
             set_partition(b.get_unchecked());
         }
 
-        bool allow_move(size_t v, size_t r, size_t nr)
+        bool allow_move(size_t r, size_t nr)
         {
-            return BaseState::allow_move(v, r, nr);
+            return BaseState::allow_move(r, nr);
         }
 
         template <class MEntries>
@@ -504,6 +504,9 @@ struct Layers
                 m_entries.set_move(r, s, num_vertices(BaseState::_bg));
                 return 0;
             }
+
+            if (!allow_move(r, s))
+                return std::numeric_limits<double>::infinity();
 
             // assert(check_layers());
 
@@ -610,6 +613,11 @@ struct Layers
         size_t sample_block(size_t v, double c, double d, rng_t& rng)
         {
             return BaseState::sample_block(v, c, d, rng);
+        }
+
+        void sample_branch(size_t v, size_t u, rng_t& rng)
+        {
+            BaseState::sample_branch(v, u, rng);
         }
 
         void merge_vertices(size_t u, size_t v)

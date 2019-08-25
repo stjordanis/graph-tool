@@ -1374,7 +1374,7 @@ class BlockState(object):
 
     def mcmc_sweep(self, beta=1., c=1., d=.01, niter=1, entropy_args={},
                    allow_vacate=True, sequential=True, deterministic=False,
-                   parallel=False, vertices=None, verbose=False, **kwargs):
+                   vertices=None, verbose=False, **kwargs):
         r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection
         sampling MCMC to sample network partitions.
 
@@ -1407,13 +1407,6 @@ class BlockState(object):
         deterministic : ``bool`` (optional, default: ``False``)
             If ``sequential == True`` and ``deterministic == True`` the
             vertices will be visited in deterministic order.
-        parallel : ``bool`` (optional, default: ``False``)
-            If ``parallel == True``, vertex movements are attempted in parallel.
-
-            .. warning::
-
-               If ``parallel == True``, the asymptotic exactness of the MCMC
-               sampling is not guaranteed.
         vertices : ``list`` of ints (optional, default: ``None``)
             If provided, this should be a list of vertices which will be
             moved. Otherwise, all vertices will.
@@ -1553,6 +1546,7 @@ class BlockState(object):
 
         """
 
+        gibbs_sweeps = max(gibbs_sweeps, 1)
         mcmc_state = DictState(locals())
         entropy_args = dict(self._entropy_args, **entropy_args)
         if (_bm_test() and entropy_args["multigraph"] and
@@ -1574,13 +1568,6 @@ class BlockState(object):
                 dS, nattempts, nmoves = self._multiflip_mcmc_sweep_dispatch(mcmc_state)
             finally:
                 self.B = self.bg.num_vertices()
-
-            if "mproposals" in kwargs:
-                kwargs["mproposals"][:M] = mcmc_state.mproposals.a
-                del kwargs["mproposals"]
-            if "maccept" in kwargs:
-                kwargs["maccept"][:M] = mcmc_state.maccept.a
-                del kwargs["maccept"]
 
             if _bm_test() and test:
                 assert self._check_clabel(), "invalid clabel after sweep"
@@ -1609,7 +1596,7 @@ class BlockState(object):
 
     def gibbs_sweep(self, beta=1., niter=1, entropy_args={}, allow_vacate=True,
                     allow_new_group=True, sequential=True, deterministic=False,
-                    parallel=False, vertices=None, verbose=False, **kwargs):
+                    vertices=None, verbose=False, **kwargs):
         r"""Perform ``niter`` sweeps of a rejection-free Gibbs sampling MCMC
         to sample network partitions.
 
@@ -1636,13 +1623,6 @@ class BlockState(object):
         deterministic : ``bool`` (optional, default: ``False``)
             If ``sequential == True`` and ``deterministic == True`` the
             vertices will be visited in deterministic order.
-        parallel : ``bool`` (optional, default: ``False``)
-            If ``parallel == True``, vertex movements are attempted in parallel.
-
-            .. warning::
-
-               If ``parallel == True``, the asymptotic exactness of the MCMC
-               sampling is not guaranteed.
         vertices : ``list`` of ints (optional, default: ``None``)
             If provided, this should be a list of vertices which will be
             moved. Otherwise, all vertices will.

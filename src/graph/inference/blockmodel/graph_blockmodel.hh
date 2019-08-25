@@ -192,6 +192,10 @@ public:
         }
         _dBdx.resize(_rec_types.size());
         _LdBdx.resize(_rec_types.size());
+
+        _N = 0;
+        for (auto v : vertices_range(_g))
+            _N += _vweight[v];
     }
 
     BlockState(const BlockState& other)
@@ -209,6 +213,7 @@ public:
           _B_E(other._B_E),
           _B_E_D(other._B_E_D),
           _rt(other._rt),
+          _N(other._N),
           _vweight(uncheck(__avweight, typename std::add_pointer<vweight_t>::type())),
           _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
           _degs(uncheck(__adegs, typename std::add_pointer<degs_t>::type())),
@@ -275,15 +280,16 @@ public:
             BlockState::remove_partition_node(v, r);
     }
 
-    bool allow_move(size_t v, size_t r, size_t nr)
+    bool allow_move(size_t r, size_t nr)
     {
-        if (_coupled_state != nullptr && is_last(v))
+        if (_coupled_state != nullptr)
         {
-            auto& bh = _coupled_state->get_b();
-            if (bh[r] != bh[nr])
+            auto& hb = _coupled_state->get_b();
+            auto rr = hb[r];
+            auto ss = hb[nr];
+            if (rr != ss && !_coupled_state->allow_move(rr, ss))
                 return false;
         }
-
         return _bclabel[r] == _bclabel[nr];
     }
 
@@ -293,7 +299,7 @@ public:
         if (r == nr)
             return;
 
-        if (!allow_move(v, r, nr))
+        if (!allow_move(r, nr))
             throw ValueException("cannot move vertex across clabel barriers");
 
         get_move_entries(v, r, nr, _m_entries, std::forward<EFilt>(efilt));
@@ -861,7 +867,9 @@ public:
     template <class VMap>
     void set_vertex_weight(size_t v, int w, VMap&& vweight)
     {
+        _N -= vweight[v];
         vweight[v] = w;
+        _N += w;
     }
 
     void init_vertex_weight(size_t v)
@@ -1384,7 +1392,7 @@ public:
     {
         assert(size_t(_b[v]) == r || r == null_group);
 
-        if (r != null_group && nr != null_group && !allow_move(v, r, nr))
+        if (r != null_group && nr != null_group && !allow_move(r, nr))
             return std::numeric_limits<double>::infinity();
 
         get_move_entries(v, r, nr, m_entries, [](auto) { return false; });
@@ -1722,17 +1730,12 @@ public:
     // Move proposals
     // =========================================================================
 
-    // Sample node placement
-    size_t sample_block(size_t v, double c, double d, rng_t& rng)
+    size_t get_empty_block(size_t v)
     {
-        // attempt new block
-        size_t s;
-        std::bernoulli_distribution new_r(d);
-        if (d > 0 && new_r(rng) && (_candidate_blocks.size() - 1 < num_vertices(_g)))
+        if (_empty_blocks.empty())
         {
-            if (_empty_blocks.empty())
-                add_block();
-            s = uniform_sample(_empty_blocks, rng);
+            add_block();
+            auto s = _empty_blocks.back();
             auto r = _b[v];
             _bclabel[s] = _bclabel[r];
             if (_coupled_state != nullptr)
@@ -1740,9 +1743,51 @@ public:
                 auto& hb = _coupled_state->get_b();
                 hb[s] = hb[r];
             }
+        }
+        return _empty_blocks.back();
+    }
+
+    void sample_branch(size_t v, size_t u, rng_t& rng)
+    {
+        size_t s;
+
+        std::bernoulli_distribution new_r(1./_candidate_blocks.size());
+        if (_candidate_blocks.size() <= num_vertices(_g) && new_r(rng))
+        {
+            get_empty_block(v);
+            s = uniform_sample(_empty_blocks, rng);
+            auto r = _b[u];
+            if (_coupled_state != nullptr)
+                _coupled_state->sample_branch(s, r, rng);
+            _bclabel[s] = _bclabel[r];
+        }
+        else
+        {
+            s = uniform_sample(_candidate_blocks.begin() + 1,
+                               _candidate_blocks.end(), rng);
+        }
+        _b[v] = s;
+    }
+
+    // Sample node placement
+    size_t sample_block(size_t v, double c, double d, rng_t& rng)
+    {
+        size_t B = _candidate_blocks.size() - 1;
+
+        // attempt new block
+        std::bernoulli_distribution new_r(d);
+        if (d > 0 && B < _N && new_r(rng))
+        {
+            get_empty_block(v);
+            auto s = uniform_sample(_empty_blocks, rng);
+            auto r = _b[v];
+            if (_coupled_state != nullptr)
+                _coupled_state->sample_branch(s, r, rng);
+            _bclabel[s] = _bclabel[r];
             return s;
         }
 
+        size_t s;
         if (!std::isinf(c) && !_neighbor_sampler.empty(v))
         {
             auto u = _neighbor_sampler.sample(v, rng);
@@ -1750,7 +1795,6 @@ public:
             double p_rand = 0;
             if (c > 0)
             {
-                size_t B = _candidate_blocks.size() - 1;
                 if (is_directed_::apply<g_t>::type::value)
                     p_rand = c * B / double(_mrp[t] + _mrm[t] + c * B);
                 else
@@ -1791,6 +1835,7 @@ public:
         return _neighbor_sampler.sample(v, rng);
     }
 
+
     // Computes the move proposal probability
     template <class MEntries>
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
@@ -1804,8 +1849,6 @@ public:
                 return d;
             if (_wr[r] == 0)
                 B++;
-            // if (_wr[s] == _vweight[v])
-            //     B--;
         }
         else
         {
@@ -1813,7 +1856,7 @@ public:
                 return d;
         }
 
-        if (B == num_vertices(_g))
+        if (B == _N)
             d = 0;
 
         if (std::isinf(c))
@@ -1824,11 +1867,11 @@ public:
 
         size_t kout = 0, kin = 0;
         degs_op(v, _vweight, _eweight, _degs, _g,
-                [&] ([[maybe_unused]] size_t din, size_t dout, auto c)
+                [&] ([[maybe_unused]] size_t din, size_t dout, auto count)
                 {
-                    kout += dout * c;
+                    kout += dout * count;
                     if constexpr (is_directed_::apply<g_t>::type::value)
-                        kin += din * c;
+                        kin += din * count;
                 });
         if constexpr (!is_directed_::apply<g_t>::type::value)
             kin = kout;
@@ -1939,7 +1982,7 @@ public:
 
     bool is_last(size_t v)
     {
-        return _wr[_b[v]] == _vweight[v];
+        return (_vweight[v] > 0) && (_wr[_b[v]] == _vweight[v]);
     }
 
     size_t node_weight(size_t v)
@@ -2570,6 +2613,7 @@ public:
     size_t _B_E = 0;
     size_t _B_E_D = 0;
     int _rt = weight_type::NONE;
+    size_t _N;
 
     typedef typename std::conditional<is_weighted_t::value,
                                       vmap_t::unchecked_t, vcmap_t>::type vweight_t;

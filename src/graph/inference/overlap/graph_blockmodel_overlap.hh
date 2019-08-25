@@ -231,15 +231,16 @@ public:
         modify_vertex<true>(v, r);
     }
 
-    bool allow_move(size_t v, size_t r, size_t nr)
+    bool allow_move(size_t r, size_t nr)
     {
-        if (_coupled_state != nullptr && is_last(v))
+        if (_coupled_state != nullptr)
         {
-            auto& bh = _coupled_state->get_b();
-            if (bh[r] != bh[nr])
+            auto& hb = _coupled_state->get_b();
+            auto rr = hb[r];
+            auto ss = hb[nr];
+            if (rr != ss && !_coupled_state->allow_move(rr, ss))
                 return false;
         }
-
         return _bclabel[r] == _bclabel[nr];
     }
 
@@ -251,7 +252,7 @@ public:
         if (r == nr)
             return;
 
-        if (!allow_move(v, r, nr))
+        if (!allow_move(r, nr))
             throw ValueException("cannot move vertex across clabel barriers");
 
         bool r_vacate = (_overlap_stats.virtual_remove_size(v, r) == 0);
@@ -420,7 +421,7 @@ public:
             return 0;
         }
 
-        if (!allow_move(v, r, nr))
+        if (!allow_move(r, nr))
             return std::numeric_limits<double>::infinity();
 
         get_move_entries(v, r, nr, m_entries);
@@ -544,20 +545,12 @@ public:
         return dS;
     }
 
-    // Sample node placement
-    template <class RNG>
-    size_t sample_block(size_t v, double c, double d, RNG& rng)
+    size_t get_empty_block(size_t v)
     {
-        // attempt random block
-        size_t s = uniform_sample(_candidate_blocks, rng);
-
-        // attempt new block
-        std::bernoulli_distribution new_r(d);
-        if (d > 0 && new_r(rng) && (_candidate_blocks.size() - 1 < num_vertices(_g)))
+        if (_empty_blocks.empty())
         {
-            if (_empty_blocks.empty())
-                add_block();
-            s = uniform_sample(_empty_blocks, rng);
+            add_block();
+            auto s = _empty_blocks.back();
             auto r = _b[v];
             _bclabel[s] = _bclabel[r];
             if (_coupled_state != nullptr)
@@ -565,8 +558,30 @@ public:
                 auto& hb = _coupled_state->get_b();
                 hb[s] = hb[r];
             }
+        }
+        return _empty_blocks.back();
+    }
+
+    // Sample node placement
+    template <class RNG>
+    size_t sample_block(size_t v, double c, double d, RNG& rng)
+    {
+        // attempt new block
+        std::bernoulli_distribution new_r(d);
+        if (d > 0 && new_r(rng) && (_candidate_blocks.size() - 1 < num_vertices(_g)))
+        {
+            get_empty_block(v);
+            auto s = uniform_sample(_empty_blocks, rng);
+            auto r = _b[v];
+            if (_coupled_state != nullptr)
+                _coupled_state->sample_branch(s, r, rng);
+            _bclabel[s] = _bclabel[r];
             return s;
         }
+
+        // attempt random block
+        size_t s = uniform_sample(_candidate_blocks.begin() + 1,
+                                  _candidate_blocks.end(), rng);
 
         if (!std::isinf(c))
         {
@@ -605,6 +620,10 @@ public:
     size_t sample_block(size_t v, double c, double d, rng_t& rng)
     {
         return sample_block<rng_t>(v, c, d, rng);
+    }
+
+    void sample_branch(size_t, size_t, rng_t&)
+    {
     }
 
     template <class RNG>

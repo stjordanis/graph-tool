@@ -63,6 +63,11 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
     auto& vlist = state.get_vlist();
     auto beta = state.get_beta();
 
+    typedef std::remove_const_t<decltype(state._null_move)> move_t;
+    constexpr bool single_step =
+        std::is_same_v<decltype(state.move_proposal(vlist.front(), rng)),
+                       move_t>;
+
     double S = 0;
     size_t nattempts = 0;
     size_t nmoves = 0;
@@ -72,7 +77,17 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
         if (state.is_sequential() && !state.is_deterministic())
             std::shuffle(vlist.begin(), vlist.end(), rng);
 
-        for (size_t vi = 0; vi < vlist.size(); ++vi)
+        size_t nsteps = 1;
+        auto get_N =
+            [&]
+            {
+                if constexpr (single_step)
+                    return vlist.size();
+                else
+                    return state.get_N();
+            };
+
+        for (size_t vi = 0; vi < get_N(); vi += nsteps)
         {
             auto v = (state.is_sequential()) ?
                 vlist[vi] : uniform_sample(vlist, rng);
@@ -82,7 +97,14 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
 
             auto r = (state._verbose) ? state.node_state(v)
                 : decltype(state.node_state(v))();
-            auto&& s = state.move_proposal(v, rng);
+
+            move_t s;
+
+            auto ret = state.move_proposal(v, rng);
+            if constexpr (single_step)
+                s = ret;
+            else
+                std::tie(s, nsteps) = ret;
 
             if (s == state._null_move)
                 continue;
@@ -90,13 +112,13 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
             double dS, mP;
             std::tie(dS, mP) = state.virtual_move_dS(v, s);
 
-            nattempts += state.node_weight(v);
+            nattempts += nsteps;
 
             bool accept = false;
             if (metropolis_accept(dS, mP, beta, rng))
             {
                 state.perform_move(v, s);
-                nmoves += state.node_weight(v);
+                nmoves += nsteps;
                 S += dS;
                 accept = true;
             }
@@ -112,92 +134,6 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
     }
     return make_tuple(S, nattempts, nmoves);
 }
-
-
-template <class MCMCState, class RNG>
-auto mcmc_sweep_parallel(MCMCState state, RNG& rng_)
-{
-    auto& g = state._g;
-
-    std::vector<std::pair<size_t, double>> best_move;
-
-    parallel_rng<RNG>::init(rng_);
-    init_cache(state._E);
-    best_move.resize(num_vertices(g));
-
-    auto& vlist = state._vlist;
-    auto& beta = state._beta;
-
-    double S = 0;
-    size_t nmoves = 0;
-    size_t nattempts = 0;
-
-    for (size_t iter = 0; iter < state._niter; ++iter)
-    {
-        parallel_loop(vlist,
-                      [&](size_t, auto v)
-                      {
-                          best_move[v] =
-                              std::make_pair(state.node_state(v),
-                                             numeric_limits<double>::max());
-                      });
-
-        #pragma omp parallel firstprivate(state)
-        parallel_loop_no_spawn
-            (vlist,
-             [&](size_t, auto v)
-             {
-                 auto& rng = parallel_rng<RNG>::get(rng_);
-
-                 if (state.node_weight(v) == 0)
-                     return;
-
-                 auto r = state.node_state(v);
-
-                 decltype(r) s;
-                 #pragma omp critical (mcmc_move_proposal)
-                 {
-                      s = state.move_proposal(v, rng);
-                 }
-
-                 if (s == null_group)
-                     return;
-
-                 double dS, mP;
-                 std::tie(dS, mP) = state.virtual_move_dS(v, s);
-
-                 if (metropolis_accept(dS, mP, beta, rng))
-                 {
-                     best_move[v].first = s;
-                     best_move[v].second = dS;
-                 }
-
-                 if (state._verbose)
-                     cout << v << ": " << r << " -> " << s << " " << S << endl;
-             });
-
-        size_t nattempts = 0;
-        for (auto v : vlist)
-        {
-            nattempts++;
-            auto s = best_move[v].first;
-            double dS = best_move[v].second;
-            if (dS != numeric_limits<double>::max())
-            {
-                auto ddS = state.virtual_move_dS(v, s);
-
-                if (get<0>(ddS) > 0 && std::isinf(beta))
-                    continue;
-
-                state.perform_move(v, s);
-                nmoves++;
-                S += get<0>(ddS);
-            }
-        }
-    }
-    return std::make_tuple(S, nattempts, nmoves);
-}
-
 
 } // graph_tool namespace
 

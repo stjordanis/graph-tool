@@ -98,7 +98,7 @@ struct MCMC
 
         std::tuple<size_t, size_t> _e;
         std::vector<size_t> _vlist;
-        constexpr static std::tuple<size_t, double> _null_move = {0, .0};
+        constexpr static std::tuple<int, double> _null_move = {0, .0};
 
         std::tuple<size_t, size_t> get_edge()
         {
@@ -124,12 +124,6 @@ struct MCMC
         bool skip_node(T&)
         {
             return false;
-        }
-
-        template <class T>
-        size_t node_weight(T&)
-        {
-            return 1;
         }
 
         template <class RNG>
