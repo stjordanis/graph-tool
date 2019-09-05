@@ -25,7 +25,7 @@ using namespace std;
 using namespace boost;
 using namespace graph_tool;
 
-typedef UnityPropertyMap<uint8_t, GraphInterface::edge_t> ecmap_t;
+typedef UnityPropertyMap<int64_t, GraphInterface::edge_t> ecmap_t;
 typedef boost::mpl::push_back<edge_scalar_properties, ecmap_t>::type
         weight_props_t;
 
