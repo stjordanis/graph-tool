@@ -338,7 +338,6 @@ public:
                 _m_entries.template insert_delta<true>(_b[get<0>(rsd)],
                                                        _b[get<1>(rsd)],
                                                        get<3>(rsd));
-                update_edge(get<2>(rsd));
             }
         }
         else
@@ -348,7 +347,6 @@ public:
                 recs_propagate_insert(*this, _b[get<0>(rsd)], _b[get<1>(rsd)],
                                       get<2>(rsd), get<3>(rsd), get<4>(rsd),
                                       _m_entries);
-                update_edge(get<2>(rsd));
             }
         }
         apply_delta<true, true>(*this, _m_entries);
@@ -386,41 +384,7 @@ public:
                 _coupled_state->remove_edge(me);
         }
         assert(e != _emat.get_null_edge());
-        update_edge(e);
         boost::remove_edge(e, _g);
-    }
-
-    void update_edge(const GraphInterface::edge_t& e)
-    {
-        update_edge(e, is_weighted_t());
-    }
-
-    void update_edge(const GraphInterface::edge_t& e, std::true_type)
-    {
-        if (e == _emat.get_null_edge())
-            return;
-        auto u = source(e, _g);
-        auto v = target(e, _g);
-        auto ew = _eweight[e];
-        _neighbor_sampler.remove(u, v, e);
-        if (ew > 0)
-            _neighbor_sampler.insert(u, v, ew, e);
-        if (u != v)
-        {
-            _neighbor_sampler.remove(v, u, e);
-            if (ew > 0)
-                _neighbor_sampler.insert(v, u, ew, e);
-        }
-        if (_egroups_enabled && !_egroups.empty())
-        {
-            _egroups.remove_edge(e, _b, _g);
-            if (ew > 0)
-                _egroups.insert_edge(e, ew, _b, _g);
-        }
-    }
-
-    void update_edge(const GraphInterface::edge_t&, std::false_type)
-    {
     }
 
     void add_edge_rec(const GraphInterface::edge_t& e)
@@ -2457,8 +2421,9 @@ public:
     {
         if (!std::isinf(c))
         {
-            if (_egroups.empty())
-                _egroups.init(_b, _eweight, _g, _bg);
+            _egroups.clear();
+            _egroups.init(_b, _eweight, _g, _bg);
+            rebuild_neighbor_sampler();
         }
         else
         {
@@ -2489,7 +2454,7 @@ public:
 
     void rebuild_neighbor_sampler()
     {
-        _neighbor_sampler = neighbor_sampler_t(_g, _eweight);
+        _neighbor_sampler.init(_eweight);
     }
 
     void sync_emat()

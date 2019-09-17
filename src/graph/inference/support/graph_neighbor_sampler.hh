@@ -33,31 +33,26 @@ class NeighborSampler
 {
 public:
     typedef typename boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+    typedef typename boost::graph_traits<Graph>::edge_descriptor edge_t;
 
     template <class Eprop>
     NeighborSampler(Graph& g, Eprop& eweight, bool self_loops=false)
-        : _sampler(get(vertex_index_t(), g), num_vertices(g)),
-          _sampler_pos(get(vertex_index_t(), g), num_vertices(g)),
-          _eindex(get(edge_index_t(), g))
+        : _g(g),
+          _sampler(get(vertex_index_t(), g), num_vertices(g)),
+          _sampler_pos(get(edge_index_t(), g)),
+          _self_loops(self_loops)
     {
-        init(g, eweight, self_loops);
+        init(eweight);
     }
 
     template <class Eprop>
-    void init_vertex(Graph& g, size_t v, Eprop& eweight, bool self_loops)
+    void init_vertex(size_t v, Eprop& eweight)
     {
-        init_vertex(g, v, eweight, self_loops,
-                    typename boost::mpl::and_<Weighted,
-                                              typename boost::mpl::not_<Dynamic>::type>::type());
-    }
+        _sampler[v].clear();
 
-    template <class Eprop>
-    void init_vertex(Graph& g, size_t v, Eprop& eweight, bool self_loops,
-                     boost::mpl::false_)
-    {
-        for (auto e : out_edges_range(v, g))
+        for (auto e : out_edges_range(v, _g))
         {
-            auto u = target(e, g);
+            auto u = target(e, _g);
 
             double w = eweight[e];
 
@@ -66,7 +61,7 @@ public:
 
             if (u == v)
             {
-                if (!self_loops)
+                if (!_self_loops)
                     continue;
                 if constexpr (!is_directed_::apply<Graph>::type::value)
                     w /= 2;
@@ -78,11 +73,11 @@ public:
         if constexpr (is_directed_::apply<Graph>::type::value)
         {
 
-            for (auto e : in_edges_range(v, g))
+            for (auto e : in_edges_range(v, _g))
             {
-                auto u = source(e, g);
+                auto u = source(e, _g);
 
-                if (!self_loops && u == v)
+                if (!_self_loops && u == v)
                     continue;
 
                 auto w = eweight[e];
@@ -96,49 +91,10 @@ public:
     }
 
     template <class Eprop>
-    void init_vertex(Graph& g, size_t v, Eprop& eweight, bool self_loops,
-                     boost::mpl::true_)
+    void init(Eprop& eweight)
     {
-        std::vector<item_t> us;
-        std::vector<double> probs;
-        for (auto e : out_edges_range(v, g))
-        {
-            auto u = target(e, g);
-            double w = eweight[e];
-            if (w == 0)
-                continue;
-
-            if (u == v)
-            {
-                if (!self_loops)
-                    continue;
-                if constexpr (!is_directed_::apply<Graph>::type::value)
-                    w /= 2;
-            }
-            us.emplace_back(u, 0);
-            probs.push_back(w);
-        }
-
-        if constexpr (is_directed_::apply<Graph>::type::value)
-        {
-            for (auto e : in_edges_range(v, g))
-            {
-                auto u = source(e, g);
-                double w = eweight[e];
-                if (w == 0 || u == v)
-                    continue;
-                us.emplace_back(u, 0);
-                probs.push_back(w);
-            }
-        }
-        _sampler[v] = sampler_t(us, probs);
-    }
-
-    template <class Eprop>
-    void init(Graph& g, Eprop& eweight, bool self_loops)
-    {
-        for (auto v : vertices_range(g))
-            init_vertex(g, v, eweight, self_loops);
+        for (auto v : vertices_range(_g))
+            init_vertex(v, eweight);
     }
 
     template <class RNG>
@@ -146,7 +102,7 @@ public:
     {
         auto& sampler = _sampler[v];
         auto& item = sample_item(sampler, rng);
-        return item.first;
+        return get_u(item);
     }
 
     bool empty(vertex_t v)
@@ -157,31 +113,56 @@ public:
     void resize(size_t n)
     {
         _sampler.resize(n);
-        _sampler_pos.resize(n);
     }
 
     template <class Edge>
     void remove(vertex_t v, vertex_t u, Edge&& e)
     {
+        if (v == u && !_self_loops)
+            return;
         auto& sampler = _sampler[v];
-        auto& sampler_pos = _sampler_pos[v];
-
-        auto k = std::make_pair(u, _eindex[e]);
-        remove_item(k, sampler, sampler_pos);
+        auto& pos = _sampler_pos[e];
+        bool is_src = (get_src(e) == u);
+        remove_item({is_src, e}, sampler, pos);
     }
 
     template <class Weight, class Edge>
     void insert(vertex_t v, vertex_t u, Weight w, Edge&& e)
     {
+        if (v == u && !_self_loops)
+            return;
         auto& sampler = _sampler[v];
-        auto& sampler_pos = _sampler_pos[v];
-        auto k = std::make_pair(u, _eindex[e]);
-        insert_item(k, w, sampler, sampler_pos);
+        auto& pos = _sampler_pos[e];
+        bool is_src = (get_src(e) == u);
+        insert_item({is_src, e}, w, sampler, pos);
     }
 
 private:
-    typedef std::pair<vertex_t, size_t> item_t;
-    typedef gt_hash_map<item_t, size_t> pos_map_t;
+    typedef std::tuple<bool, edge_t> item_t;
+
+    vertex_t get_src(const edge_t& e)
+    {
+        if constexpr (is_directed_::apply<Graph>::type::value)
+            return source(e, _g);
+        else
+            return std::min(source(e, _g), target(e, _g));
+    }
+
+    vertex_t get_tgt(const edge_t& e)
+    {
+        if constexpr (is_directed_::apply<Graph>::type::value)
+            return target(e, _g);
+        else
+            return std::max(source(e, _g), target(e, _g));
+    }
+
+    vertex_t get_u(const item_t& item)
+    {
+        if (get<0>(item))
+            return get_src(get<1>(item));
+        else
+            return get_tgt(get<1>(item));
+    }
 
     template <class RNG>
     const item_t& sample_item(std::vector<item_t>& sampler, RNG& rng)
@@ -195,48 +176,56 @@ private:
         return sampler.sample(rng);
     }
 
-    void remove_item(item_t& u, std::vector<item_t>& sampler,
-                     pos_map_t& sampler_pos)
+    size_t& get_pos(const item_t& u, std::tuple<size_t, size_t>& pos)
     {
-        auto& back = sampler.back();
-        auto iter = sampler_pos.find(u);
-        if (iter == sampler_pos.end())
+        if (get<0>(u))
+            return get<0>(pos);
+        else
+            return get<1>(pos);
+    }
+
+    void remove_item(const item_t& u, std::vector<item_t>& sampler,
+                     std::tuple<size_t, size_t>& pos)
+    {
+        auto u_pos = get_pos(u, pos);
+        if (u_pos >= sampler.size() || sampler[u_pos] != u)
             return;
-        size_t pos = iter->second;
-        sampler_pos.erase(iter);
-        sampler_pos[back] = pos;
-        sampler[pos] = back;
+        auto& back = sampler.back();
+        auto& e = get<1>(back);
+        auto& bpos = _sampler_pos[e];
+        get_pos(back, bpos) = u_pos;
+        sampler[u_pos] = back;
         sampler.pop_back();
+
     }
 
     template <class Sampler>
-    void remove_item(item_t& u, Sampler& sampler,
-                     pos_map_t& sampler_pos)
+    void remove_item(const item_t& u, Sampler& sampler,
+                     std::tuple<size_t, size_t>& pos)
     {
-        auto iter = sampler_pos.find(u);
-        if (iter == sampler_pos.end())
+        auto i = get_pos(u, pos);
+        if (!sampler.is_valid(i) || sampler[i] != u)
             return;
-        size_t pos = iter->second;
-        sampler_pos.erase(iter);
-        sampler.remove(pos);
+        sampler.remove(i);
     }
 
 
     template <class Weight>
-    void insert_item(item_t& u, Weight, std::vector<item_t>& sampler,
-                     pos_map_t& sampler_pos)
+    void insert_item(const item_t& u, Weight, std::vector<item_t>& sampler,
+                     std::tuple<size_t, size_t>& pos)
     {
-        sampler_pos[u] = sampler.size();
+        get_pos(u, pos) = sampler.size();
         sampler.push_back(u);
     }
 
     template <class Weight>
-    void insert_item(item_t& u, Weight w, DynamicSampler<item_t>& sampler,
-                     pos_map_t& sampler_pos)
+    void insert_item(const item_t& u, Weight w, DynamicSampler<item_t>& sampler,
+                     std::tuple<size_t, size_t>& pos)
     {
-        assert(sampler_pos.find(u) == sampler_pos.end());
-        sampler_pos[u] = sampler.insert(u, w);
+        get_pos(u, pos) = sampler.insert(u, w);
     }
+
+    Graph& _g;
 
     typedef typename std::conditional<Weighted::value,
                                       typename std::conditional<Dynamic::value,
@@ -249,10 +238,10 @@ private:
     typedef typename vprop_map_t<sampler_t>::type::unchecked_t vsampler_t;
     vsampler_t _sampler;
 
-    typedef typename vprop_map_t<pos_map_t>::type::unchecked_t sampler_pos_t;
-    sampler_pos_t _sampler_pos;
+    typedef typename eprop_map_t<std::tuple<size_t, size_t>>::type pos_map_t;
+    pos_map_t _sampler_pos;
 
-    typename property_map<Graph, edge_index_t>::type _eindex;
+    bool _self_loops;
 };
 
 }
