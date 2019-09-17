@@ -219,7 +219,7 @@ public:
     }
 
     template <bool Add, class... DVals>
-    __attribute__((flatten))
+    inline __attribute__((always_inline)) __attribute__((flatten))
     void insert_delta(size_t s, size_t t, int d, DVals&&... delta)
     {
         auto& f = get_field(s, t);
@@ -307,7 +307,7 @@ struct is_loop_nop
 
 template <bool Remove, bool Add, class Vertex, class Graph, class Vprop,
           class Eprop, class MEntries, class Efilt, class IL, class... Eprops>
-__attribute__((flatten))
+inline __attribute__((always_inline)) __attribute__((flatten))
 void modify_entries(Vertex v, Vertex r, Vertex nr, Vprop& _b, Graph& g,
                     Eprop& eweights, MEntries& m_entries, Efilt&& efilt,
                     IL&& is_loop, Eprops&... eprops)
@@ -420,6 +420,7 @@ void modify_entries(Vertex v, Vertex r, Vertex nr, Vprop& _b, Graph& g,
 // after the move
 template <class Graph, class Vertex, class VProp, class Eprop,
           class MEntries, class EFilt, class IL, class... Eprops>
+inline __attribute__((always_inline))
 void move_entries(Vertex v, size_t r, size_t nr, VProp& _b, Graph& g,
                   Eprop& eweights, size_t B, MEntries& m_entries,
                   EFilt&& efilt, IL&& is_loop, Eprops&... eprops)
@@ -451,6 +452,7 @@ void move_entries(Vertex v, size_t r, size_t nr, VProp& _b, Graph& g,
 
 // operation on a set of entries
 template <class MEntries, class EMat, class OP>
+inline __attribute__((always_inline))
 void entries_op(MEntries& m_entries, EMat& emat, OP&& op)
 {
     const auto& entries = m_entries.get_entries();
@@ -468,6 +470,7 @@ void entries_op(MEntries& m_entries, EMat& emat, OP&& op)
 
 // operation on a set of entries, with edge covariates
 template <class MEntries, class EMat, class OP>
+inline __attribute__((always_inline))
 void wentries_op(MEntries& m_entries, EMat& emat, OP&& op)
 {
     const auto& entries = m_entries.get_entries();

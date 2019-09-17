@@ -136,13 +136,11 @@ public:
         assert(e != Edge());
         size_t r = b[get_source(e, g)];
         auto& r_elist = _egroups[r];
-        insert_edge(std::make_tuple(e, true), r_elist, weight,
-                    _epos[e].first);
+        insert_edge(std::make_tuple(e, true), r_elist, weight, _epos[e].first);
 
         size_t s = b[get_target(e, g)];
         auto& s_elist = _egroups[s];
-        insert_edge(std::make_tuple(e, false), s_elist, weight,
-                    _epos[e].second);
+        insert_edge(std::make_tuple(e, false), s_elist, weight, _epos[e].second);
     }
 
     template <class Edge, class EV>
@@ -183,15 +181,17 @@ public:
     {
         if (pos >= elist.size() || elist[pos] != e)
             return;
-        if (get<1>(elist.back()))
-            _epos[get<0>(elist.back())].first = pos;
+        auto& back = elist.back();
+        if (get<1>(back))
+            _epos[get<0>(back)].first = pos;
         else
-            _epos[get<0>(elist.back())].second = pos;
-        if (get<1>(elist[pos]))
-            _epos[get<0>(elist[pos])].first = numeric_limits<size_t>::max();
+            _epos[get<0>(back)].second = pos;
+        auto& epos = elist[pos];
+        if (get<1>(epos))
+            _epos[get<0>(epos)].first = numeric_limits<size_t>::max();
         else
-            _epos[get<0>(elist[pos])].second = numeric_limits<size_t>::max();
-        elist[pos] = elist.back();
+            _epos[get<0>(epos)].second = numeric_limits<size_t>::max();
+        epos = back;
         elist.pop_back();
 
         if (elist.empty())
@@ -203,10 +203,11 @@ public:
     {
         if (pos >= elist.size() || elist[pos] != e)
             return;
-        if (get<1>(elist[pos]))
-            _epos[get<0>(elist[pos])].first = numeric_limits<size_t>::max();
+        auto& epos = elist[pos];
+        if (get<1>(epos))
+            _epos[get<0>(epos)].first = numeric_limits<size_t>::max();
         else
-            _epos[get<0>(elist[pos])].second = numeric_limits<size_t>::max();
+            _epos[get<0>(epos)].second = numeric_limits<size_t>::max();
         elist.remove(pos);
 
         if (elist.empty())
