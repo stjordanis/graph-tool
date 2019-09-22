@@ -2603,7 +2603,7 @@ public:
     EGroups<g_t, is_weighted_t> _egroups;
     bool _egroups_enabled = true;
 
-    typedef NeighborSampler<g_t, is_weighted_t, is_weighted_t>
+    typedef NeighborSampler<g_t, is_weighted_t, mpl::false_>
         neighbor_sampler_t;
 
     neighbor_sampler_t _neighbor_sampler;
