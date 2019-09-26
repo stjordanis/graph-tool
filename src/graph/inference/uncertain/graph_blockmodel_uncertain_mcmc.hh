@@ -40,7 +40,7 @@ typedef std::vector<size_t> vlist_t;
     ((beta,, double, 0))                                                       \
     ((entropy_args,, uentropy_args_t, 0))                                      \
     ((edges_only,, bool, 0))                                                   \
-    ((verbose,, bool, 0))                                                      \
+    ((verbose,, int, 0))                                                       \
     ((niter,, size_t, 0))
 
 

@@ -34,12 +34,12 @@ using namespace std;
 
 typedef std::vector<size_t> vlist_t;
 
-#define MCMC_EPIDEMICS_STATE_params(State)                                  \
+#define MCMC_EPIDEMICS_STATE_params(State)                                     \
     ((__class__,&, mpl::vector<python::object>, 1))                            \
     ((state, &, State&, 0))                                                    \
     ((beta,, double, 0))                                                       \
     ((hstep,, double, 0))                                                      \
-    ((verbose,, bool, 0))                                                      \
+    ((verbose,, int, 0) )                                                      \
     ((niter,, size_t, 0))
 
 

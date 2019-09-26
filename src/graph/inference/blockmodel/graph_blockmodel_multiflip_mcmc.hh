@@ -44,7 +44,7 @@ using namespace std;
     ((psplit,, double, 0))                                                     \
     ((gibbs_sweeps,, size_t, 0))                                               \
     ((entropy_args,, entropy_args_t, 0))                                       \
-    ((verbose,, bool, 0))                                                      \
+    ((verbose,, int, 0))                                                       \
     ((niter,, size_t, 0))
 
 enum class move_t { single_node = 0, split, merge, null };
@@ -523,6 +523,9 @@ struct MCMC
 
         void perform_move(size_t r, move_t move)
         {
+            if (_verbose && move == move_t::merge)
+                cout << "merge: " << _groups[r].size() << " " << _groups[_s].size() << " " << endl;
+
             for (auto v : _vs)
                 move_vertex(v, _bnext[v]);
 
@@ -535,6 +538,8 @@ struct MCMC
                     add_element(_rlist, _rpos, _s);
                 break;
             case move_t::split:
+                if (_verbose)
+                    cout << "split: " << _groups[_s].size() << " " << _groups[_t].size() << " " << endl;
                 remove_element(_rlist, _rpos, r);
                 add_element(_rlist, _rpos, _s);
                 add_element(_rlist, _rpos, _t);

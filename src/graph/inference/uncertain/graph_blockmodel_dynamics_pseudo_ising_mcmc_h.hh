@@ -39,7 +39,7 @@ typedef std::vector<size_t> vlist_t;
     ((beta,, double, 0))                                                       \
     ((n,, size_t, 0))                                                          \
     ((hstep,, double, 0))                                                      \
-    ((verbose,, bool, 0))                                                      \
+    ((verbose,, int, 0))                                                       \
     ((niter,, size_t, 0))
 
 

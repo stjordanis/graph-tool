@@ -41,7 +41,7 @@ using namespace std;
     ((S_max, , double, 0))                                                     \
     ((f, , double, 0))                                                         \
     ((S, , double, 0))                                                         \
-    ((verbose,, bool, 0))
+    ((verbose,, int, 0))
 
 
 template <class State>

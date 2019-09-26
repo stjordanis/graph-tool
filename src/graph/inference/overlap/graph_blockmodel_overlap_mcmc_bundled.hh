@@ -44,7 +44,7 @@ using namespace std;
     ((allow_vacate,, bool, 0))                                                 \
     ((sequential,, bool, 0))                                                   \
     ((deterministic,, bool, 0))                                                \
-    ((verbose,, bool, 0))                                                      \
+    ((verbose,, int, 0))                                                       \
     ((niter,, size_t, 0))
 
 

@@ -95,7 +95,7 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
             if (state.skip_node(v))
                 continue;
 
-            auto r = (state._verbose) ? state.node_state(v)
+            auto r = (state._verbose > 1) ? state.node_state(v)
                 : decltype(state.node_state(v))();
 
             move_t s;
@@ -125,7 +125,7 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
 
             state.step(v, s);
 
-            if (state._verbose)
+            if (state._verbose > 1)
                 cout << v << ": " << r << " -> " << s << " " << accept << " " << dS << " " << mP << " " << -dS * beta + mP << " " << S << endl;
         }
 
