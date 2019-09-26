@@ -104,100 +104,103 @@ for i in range(3 * 8):
     g.add_edge(s, t)
 
 
-for nested in [False, True]:
-    for directed in [False, True]:
-        g.set_directed(directed)
-
-        hists = {}
+for directed in [False, True]:
+    g.set_directed(directed)
+    for nested in [False, True]:
 
         if nested:
             state = minimize_nested_blockmodel_dl(g, deg_corr=True)
-            state = state.copy(bs=[g.get_vertices()] + [zeros(1)] * 6, sampling=True)
         else:
             state = minimize_blockmodel_dl(g, deg_corr=True)
-            state = state.copy(B=g.num_vertices())
+
+        hists = {}
 
         cs = list(reversed([numpy.inf, 1, 0.1, 0.01, "gibbs", -numpy.inf, -1]))
+        inits = [1, "N"]
 
-        for i, c in enumerate(cs):
-            if c != "gibbs":
-                mcmc_args=dict(beta=.3, c=abs(c), niter=40)
-            else:
-                mcmc_args=dict(beta=.3, niter=40)
-
+        for init in inits:
             if nested:
-                get_B = lambda s: [sl.get_nonempty_B() for sl in s.levels]
+                bs = [g.get_vertices()] if init == "N" else [zeros(1)]
+                state = state.copy(bs=bs + [zeros(1)] * 6, sampling=True)
             else:
-                get_B = lambda s: [s.get_nonempty_B()]
+                state = state.copy(B=g.num_vertices() if init == "N" else 1)
 
-            if i == 0:
-                mcmc_equilibrate(state,
-                                 mcmc_args=mcmc_args,
-                                 gibbs=c=="gibbs",
-                                 multiflip = c != "gibbs" and c < 0,
-                                 nbreaks=5,
-                                 wait=1000,
-                                 callback=get_B,
-                                 verbose=(1, "c = %s (t) " % str(c)) if verbose else False)
-            hists[c] = mcmc_equilibrate(state,
-                                        mcmc_args=mcmc_args,
-                                        gibbs=c=="gibbs",
-                                        multiflip = c != "gibbs" and c < 0,
-                                        wait=6000,
-                                        nbreaks=10,
-                                        callback=get_B,
-                                        verbose=(1, "c = %s " % str(c)) if verbose else False,
-                                        history=True)
+            for i, c in enumerate(cs):
+                if c != "gibbs":
+                    mcmc_args=dict(beta=.3, c=abs(c), niter=40)
+                else:
+                    mcmc_args=dict(beta=.3, niter=40)
+
+                if nested:
+                    get_B = lambda s: [sl.get_nonempty_B() for sl in s.levels]
+                else:
+                    get_B = lambda s: [s.get_nonempty_B()]
+
+                hists[(c, init)] = mcmc_equilibrate(state,
+                                                    mcmc_args=mcmc_args,
+                                                    gibbs=c=="gibbs",
+                                                    multiflip = c != "gibbs" and c < 0,
+                                                    wait=6000,
+                                                    nbreaks=6,
+                                                    callback=get_B,
+                                                    verbose=(1, "c = %s " % str(c)) if verbose else False,
+                                                    history=True)
 
         output = open("test_mcmc_nested%s_directed%s-output" % (nested, directed), "w")
         for c1 in cs:
-            for c2 in cs:
-                try:
-                    if c2 < c1:
-                        continue
-                except TypeError:
-                    pass
-                Ss1 = array(list(zip(*hists[c1]))[2])
-                Ss2 = array(list(zip(*hists[c2]))[2])
-                # add very small normal noise, to solve discreteness issue
-                Ss1 += numpy.random.normal(0, 1e-2, len(Ss1))
-                Ss2 += numpy.random.normal(0, 1e-2, len(Ss2))
-                D, p = scipy.stats.ks_2samp(Ss1, Ss2)
-                D_c = 1.63 * sqrt((len(Ss1) + len(Ss2)) / (len(Ss1) * len(Ss2)))
-                print("nested:", nested, "directed:", directed, "c1:", c1,
-                      "c2:", c2, "D:", D, "D_c:", D_c, "p-value:", p,
-                      file=output)
-                if p < .001:
-                    print(("Warning, distributions for directed=%s (c1, c2) = " +
-                           "(%s, %s) are not the same, with a p-value: %g (D=%g, D_c=%g)") % 
-                          (str(directed), str(c1), str(c2), p, D, D_c),
-                          file=output)
-                output.flush()
+            for init1 in inits:
+                for c2 in cs:
+                    for init2 in inits:
+                        try:
+                            if (c2, init2) < (c1, init1):
+                                continue
+                        except TypeError:
+                            pass
+                        Ss1 = array(list(zip(*hists[(c1, init1)]))[2])
+                        Ss2 = array(list(zip(*hists[(c2, init2)]))[2])
+                        # add very small normal noise, to solve discreteness issue
+                        Ss1 += numpy.random.normal(0, 1e-2, len(Ss1))
+                        Ss2 += numpy.random.normal(0, 1e-2, len(Ss2))
+                        D, p = scipy.stats.ks_2samp(Ss1, Ss2)
+                        D_c = 1.63 * sqrt((len(Ss1) + len(Ss2)) / (len(Ss1) * len(Ss2)))
+                        print("nested:", nested, "directed:", directed, "c1:", c1,
+                              "init1:", init1, "c2:", c2, "init2:", init2, "D:",
+                              D, "D_c:", D_c, "p-value:", p,
+                              file=output)
+                        if p < .001:
+                            print(("Warning, distributions for directed=%s (c1, c2) = " +
+                                   "(%s, %s) are not the same, with a p-value: %g (D=%g, D_c=%g)") %
+                                  (str(directed), str((c1, init1)),
+                                   str((c2, init2)), p, D, D_c),
+                                  file=output)
+                        output.flush()
 
         for cum in [True, False]:
             clf()
             bins = None
             for c in cs:
-                hist = hists[c]
-                if cum:
-                    h = histogram(list(zip(*hist))[2], 1000000, density=True)
-                    y = numpy.cumsum(h[0])
-                    y /= y[-1]
-                    plot(h[-1][:-1], y, "-", label="c=%s" % str(c))
+                for init in inits:
+                    hist = hists[(c,init)]
+                    if cum:
+                        h = histogram(list(zip(*hist))[2], 1000000,
+                                      density=True)
+                        y = numpy.cumsum(h[0])
+                        y /= y[-1]
+                        plot(h[-1][:-1], y, "-", label="c=%s, init=%s" % (str(c), init))
 
-                    if c != numpy.inf:
-                        hist = hists[numpy.inf]
-                        h2 = histogram(list(zip(*hist))[2], bins=h[-1], density=True)
-                        y2 = numpy.cumsum(h2[0])
-                        y2 /= y2[-1]
-                        res = abs(y - y2)
-                        i = res.argmax()
-                        axvline(h[-1][i], color="grey")
-                else:
-                    h = histogram(list(zip(*hist))[2], 40, density=True)
-                    plot(h[-1][:-1], h[0], "s-", label="c=%s" % str(c))
-                    gca().set_yscale("log")
-
+                        if c != numpy.inf:
+                            hist = hists[(numpy.inf, 1)]
+                            h2 = histogram(list(zip(*hist))[2], bins=h[-1],
+                                           density=True)
+                            y2 = numpy.cumsum(h2[0])
+                            y2 /= y2[-1]
+                            res = abs(y - y2)
+                            i = res.argmax()
+                            axvline(h[-1][i], color="grey")
+                    else:
+                        h = histogram(list(zip(*hist))[2], 40, density=True)
+                        plot(h[-1][:-1], h[0], "s-", label="c=%s, init=%s" % (str(c), init))
+                        gca().set_yscale("log")
             if cum:
                 legend(loc="lower right")
             else:
