@@ -872,7 +872,12 @@ public:
     void set_partition(VMap&& b)
     {
         for (auto v : vertices_range(_g))
-            move_vertex(v, b[v]);
+        {
+            size_t r = b[v];
+            while (r >= num_vertices(_bg))
+                add_block();
+            move_vertex(v, r);
+        }
     }
 
     void set_partition(boost::any& ab)

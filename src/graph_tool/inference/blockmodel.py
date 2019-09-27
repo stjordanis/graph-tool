@@ -23,9 +23,9 @@ import sys
 if sys.version_info < (3,):
     range = xrange
 
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, PropertyMap, \
-    conv_pickle_state, Vector_size_t, Vector_double, group_vector_property, \
-    perfect_prop_hash
+from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, \
+    PropertyMap, VertexPropertyMap, conv_pickle_state, Vector_size_t, \
+    Vector_double, group_vector_property, perfect_prop_hash
 from .. generation import condensation_graph, random_rewire, generate_sbm, \
     solve_sbm_fugacities, generate_maxent_sbm
 from .. stats import label_self_loops, remove_parallel_edges, remove_self_loops
@@ -874,8 +874,10 @@ class BlockState(object):
         r"""Returns the property map which contains the block labels for each vertex."""
         return self.b
 
-    def set_blocks(self, b):
+    def set_state(self, b):
         r"""Sets the internal partition of the state."""
+        if not isinstance(b, VertexPropertyMap):
+            b = self.g.new_vp("int32_t", vals=b)
         if b.value_type() != "int32_t":
             b = b.copy("int32_t")
         self._state.set_partition(_prop("v", self.g, b))

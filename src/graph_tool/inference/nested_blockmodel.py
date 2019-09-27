@@ -215,6 +215,11 @@ class NestedBlockState(object):
         """
         return [s.b.fa for s in self.levels]
 
+    def set_state(self, bs):
+        r"""Sets the internal nested partition of the state."""
+        for i in range(len(bs)):
+            self.levels[i].set_state(bs[i])
+
     def get_levels(self):
         """Get hierarchy levels as a list of :class:`~graph_tool.inference.blockmodel.BlockState`
         instances."""
