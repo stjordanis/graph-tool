@@ -36,7 +36,7 @@ double log_q(T n, T k)
         return 0;
     if (k > n)
         k = n;
-    if (n < T(__q_cache.shape()[0]))
+    if (size_t(n) < __q_cache.shape()[0])
         return __q_cache[n][k];
     return log_q_approx(n, k);
 }

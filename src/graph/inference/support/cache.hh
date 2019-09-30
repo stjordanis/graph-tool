@@ -87,7 +87,7 @@ inline double lgamma_fast(T x)
 {
     if (size_t(x) >= __lgamma_cache.size())
     {
-        if (Init)
+        if constexpr (Init)
             init_lgamma(x);
         else
             return lgamma(x);

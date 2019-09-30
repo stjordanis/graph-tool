@@ -156,7 +156,7 @@ void export_overlap_blockmodel_state()
              typedef typename std::remove_reference<decltype(*s)>::type state_t;
 
              double (state_t::*virtual_move)(size_t, size_t, size_t,
-                                             entropy_args_t) =
+                                             const entropy_args_t&) =
                  &state_t::virtual_move;
              size_t (state_t::*sample_block)(size_t, double, double, rng_t&)
                  = &state_t::sample_block;

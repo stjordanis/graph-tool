@@ -76,7 +76,7 @@ void export_layered_overlap_blockmodel_state()
                           state_t;
 
                       double (state_t::*virtual_move)(size_t, size_t, size_t,
-                                                      entropy_args_t) =
+                                                      const entropy_args_t&) =
                           &state_t::virtual_move;
                       size_t (state_t::*sample_block)(size_t, double, double,
                                                       rng_t&)
@@ -88,7 +88,7 @@ void export_layered_overlap_blockmodel_state()
                                                      python::object) =
                           &state_t::move_vertices;
                       void (state_t::*couple_state)(LayeredBlockStateVirtualBase&,
-                                                    entropy_args_t) =
+                                                    const entropy_args_t&) =
                           &state_t::couple_state;
 
                       class_<state_t> c(name_demangle(typeid(state_t).name()).c_str(),

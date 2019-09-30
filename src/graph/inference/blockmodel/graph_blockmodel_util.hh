@@ -33,13 +33,13 @@ namespace graph_tool
 
 class BlockStateVirtualBase {
 public:
-    virtual double entropy(entropy_args_t eargs, bool propagate) = 0;
+    virtual double entropy(const entropy_args_t& eargs, bool propagate) = 0;
     virtual void add_partition_node(size_t v, size_t r) = 0;
     virtual void remove_partition_node(size_t v, size_t r) = 0;
     virtual void set_vertex_weight(size_t v, int w) = 0;
     virtual void coupled_resize_vertex(size_t v) = 0;
     virtual double virtual_move(size_t v, size_t r, size_t nr,
-                                entropy_args_t eargs) = 0;
+                                const entropy_args_t& eargs) = 0;
     virtual void sample_branch(size_t v, size_t u, rng_t& rng) = 0;
     virtual size_t sample_block(size_t v, double c, double d, rng_t& rng) = 0;
     virtual double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
@@ -55,7 +55,7 @@ public:
                           const std::vector<double>& rec) = 0;
     virtual void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e,
                              const std::vector<double>& rec) = 0;
-    virtual double edge_entropy_term(size_t u, size_t v, entropy_args_t ea) = 0;
+    virtual double edge_entropy_term(size_t u, size_t v, const entropy_args_t& ea) = 0;
     virtual void propagate_delta(size_t u, size_t v,
                                  std::vector<std::tuple<size_t, size_t,
                                              GraphInterface::edge_t, int,
@@ -64,10 +64,10 @@ public:
                                         std::vector<std::tuple<size_t, size_t,
                                                                GraphInterface::edge_t, int,
                                                                std::vector<double>>>& entries,
-                                        entropy_args_t& ea,
+                                        const entropy_args_t& ea,
                                         std::vector<double>& dBdx, int dL) = 0;
     virtual double get_delta_partition_dl(size_t v, size_t r, size_t nr,
-                                          entropy_args_t& ea) = 0;
+                                          const entropy_args_t& ea) = 0;
     virtual vprop_map_t<int32_t>::type::unchecked_t& get_b() = 0;
     virtual bool check_edge_counts(bool emat=true) = 0;
     virtual bool allow_move(size_t r, size_t nr) = 0;

@@ -49,7 +49,7 @@ void export_sbm_state()
              void (state_t::*move_vertices)(python::object, python::object) =
                  &state_t::move_vertices;
              double (state_t::*virtual_move)(size_t, size_t, size_t,
-                                             entropy_args_t) =
+                                             const entropy_args_t&) =
                  &state_t::virtual_move;
              size_t (state_t::*sample_block)(size_t, double, double, rng_t&) =
                  &state_t::sample_block;

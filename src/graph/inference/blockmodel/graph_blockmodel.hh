@@ -1356,7 +1356,7 @@ public:
 
 
     template <class MEntries>
-    double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t ea,
+    double virtual_move(size_t v, size_t r, size_t nr, const entropy_args_t& ea,
                         MEntries& m_entries)
     {
         assert(size_t(_b[v]) == r || r == null_group);
@@ -1483,7 +1483,7 @@ public:
     double propagate_entries_dS(size_t u, size_t v, int du, int dv,
                                 std::vector<std::tuple<size_t, size_t, GraphInterface::edge_t, int,
                                                        std::vector<double>>>& entries,
-                                entropy_args_t& ea, std::vector<double>& dBdx,
+                                const entropy_args_t& ea, std::vector<double>& dBdx,
                                 int dL)
     {
         openmp_scoped_lock lock(_lock);
@@ -1651,13 +1651,13 @@ public:
         return dS;
     }
 
-    double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t ea)
+    double virtual_move(size_t v, size_t r, size_t nr, const entropy_args_t& ea)
     {
         return virtual_move(v, r, nr, ea, _m_entries);
     }
 
     double get_delta_partition_dl(size_t v, size_t r, size_t nr,
-                                  entropy_args_t& ea)
+                                  const entropy_args_t& ea)
     {
         if (r == nr)
             return 0;
@@ -2029,7 +2029,7 @@ public:
         return S;
     }
 
-    double entropy(entropy_args_t ea, bool propagate=false)
+    double entropy(const entropy_args_t& ea, bool propagate=false)
     {
         double S = 0, S_dl = 0;
 
@@ -2162,7 +2162,7 @@ public:
     }
 
     template <bool Add>
-    double edge_entropy_term(size_t u, size_t v, entropy_args_t ea)
+    double edge_entropy_term(size_t u, size_t v, const entropy_args_t& ea)
     {
         double S = 0, S_dl = 0;
         size_t r = _b[u];
@@ -2348,14 +2348,14 @@ public:
         return S + S_dl * ea.beta_dl;
     }
 
-    double edge_entropy_term(size_t u, size_t v, entropy_args_t ea)
+    double edge_entropy_term(size_t u, size_t v, const entropy_args_t& ea)
     {
         return edge_entropy_term<true>(u, v, ea);
     }
 
     template <bool Add>
     double modify_edge_dS(size_t u, size_t v, GraphInterface::edge_t& e,
-                          const std::vector<double>& recs, entropy_args_t ea)
+                          const std::vector<double>& recs, const entropy_args_t& ea)
     {
         double dS = 0;
         dS -= edge_entropy_term<Add>(u, v, ea);
@@ -2441,7 +2441,7 @@ public:
             disable_partition_stats();
     }
 
-    void couple_state(BlockStateVirtualBase& s, entropy_args_t ea)
+    void couple_state(BlockStateVirtualBase& s, const entropy_args_t& ea)
     {
         _coupled_state = &s;
         _coupled_entropy_args = ea;

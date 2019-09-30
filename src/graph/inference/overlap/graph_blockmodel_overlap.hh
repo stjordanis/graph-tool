@@ -412,7 +412,7 @@ public:
     }
 
     template <class MEntries>
-    double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t ea,
+    double virtual_move(size_t v, size_t r, size_t nr, const entropy_args_t& ea,
                         MEntries& m_entries)
     {
         if (r == nr)
@@ -503,12 +503,13 @@ public:
         return dS + ea.beta_dl * dS_dl;
     }
 
-    double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t ea)
+    double virtual_move(size_t v, size_t r, size_t nr, const entropy_args_t& ea)
     {
         return virtual_move(v, r, nr, ea, _m_entries);
     }
 
-    double get_delta_partition_dl(size_t v, size_t r, size_t nr, entropy_args_t& ea)
+    double get_delta_partition_dl(size_t v, size_t r, size_t nr,
+                                  const entropy_args_t& ea)
     {
         if (r == nr)
             return 0;
@@ -833,7 +834,7 @@ public:
         throw GraphException("Dense entropy for overlapping model not implemented!");
     }
 
-    double entropy(entropy_args_t ea, bool propagate=false)
+    double entropy(const entropy_args_t& ea, bool propagate=false)
     {
         double S = 0, S_dl = 0;
         if (ea.adjacency)
@@ -926,7 +927,7 @@ public:
         return S;
     }
 
-    double edge_entropy_term(size_t, size_t, entropy_args_t)
+    double edge_entropy_term(size_t, size_t, const entropy_args_t&)
     {
         return 0;
     }
@@ -934,7 +935,7 @@ public:
                                 std::vector<std::tuple<size_t, size_t,
                                                        GraphInterface::edge_t, int,
                                                        std::vector<double>>>&,
-                                entropy_args_t&, std::vector<double>&, int)
+                                const entropy_args_t&, std::vector<double>&, int)
     {
         return 0;
     }
@@ -992,7 +993,7 @@ public:
         return _partition_stats[_pclabel[v]];
     }
 
-    void couple_state(BlockStateVirtualBase& s, entropy_args_t ea)
+    void couple_state(BlockStateVirtualBase& s, const entropy_args_t& ea)
     {
         _coupled_state = &s;
         _coupled_entropy_args = ea;

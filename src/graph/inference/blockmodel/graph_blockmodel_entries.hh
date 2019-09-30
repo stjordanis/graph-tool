@@ -157,6 +157,7 @@ public:
     const pair<size_t, size_t>& get_move() { return _rnr; }
 
     template <bool First, bool Source>
+    inline __attribute__((always_inline)) __attribute__((flatten))
     size_t& get_field_rnr(size_t s, size_t t)
     {
         auto& out_field = First ? _r_out_field : _nr_out_field;
@@ -171,6 +172,7 @@ public:
         }
     }
 
+    inline __attribute__((always_inline)) __attribute__((flatten))
     size_t& get_field(size_t s, size_t t)
     {
         if (s == _rnr.first)
@@ -185,6 +187,7 @@ public:
     }
 
     template <bool Add, class... DVals>
+    inline __attribute__((always_inline)) __attribute__((flatten))
     void insert_delta_dispatch(size_t s, size_t t, size_t& f, int d, DVals&&... delta)
     {
         if (f == _null)
@@ -196,7 +199,7 @@ public:
                 _edelta.emplace_back();
         }
 
-        if (Add)
+        if constexpr (Add)
         {
             _delta[f] += d;
             tuple_op(_edelta[f], [&](auto&& r, auto&& v){ r += v; },
@@ -211,7 +214,7 @@ public:
     }
 
     template <bool First, bool Source, bool Add, class... DVals>
-    __attribute__((flatten))
+    inline __attribute__((always_inline)) __attribute__((flatten))
     void insert_delta_rnr(size_t s, size_t t, int d, DVals&&... delta)
     {
         auto& f = get_field_rnr<First, Source>(s, t);
@@ -226,6 +229,7 @@ public:
         insert_delta_dispatch<Add>(s, t, f, d, std::forward<DVals>(delta)...);
     }
 
+    inline __attribute__((always_inline)) __attribute__((flatten))
     int get_delta(size_t r, size_t s)
     {
         size_t f = get_field(r, s);

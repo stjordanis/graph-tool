@@ -496,8 +496,8 @@ struct Layers
         }
 
         template <class MEntries>
-        double virtual_move(size_t v, size_t r, size_t s, entropy_args_t ea,
-                            MEntries& m_entries)
+        double virtual_move(size_t v, size_t r, size_t s,
+                            const entropy_args_t& ea, MEntries& m_entries)
         {
             if (s == r)
             {
@@ -582,7 +582,8 @@ struct Layers
             return dS;
         }
 
-        double virtual_move(size_t v, size_t r, size_t s, entropy_args_t ea)
+        double virtual_move(size_t v, size_t r, size_t s,
+                            const entropy_args_t& ea)
         {
             return virtual_move(v, r, s, ea, _m_entries);
         }
@@ -679,7 +680,7 @@ struct Layers
             // assert(check_edge_counts());
         }
 
-        double entropy(entropy_args_t ea, bool propagate=false)
+        double entropy(const entropy_args_t& ea, bool propagate=false)
         {
             double S = 0, S_dl = 0;
             if (_master)
@@ -799,7 +800,7 @@ struct Layers
             }
         }
 
-        double edge_entropy_term(size_t, size_t, entropy_args_t) { return 0; }
+        double edge_entropy_term(size_t, size_t, const entropy_args_t&) { return 0; }
 
         void enable_partition_stats()
         {
@@ -849,7 +850,7 @@ struct Layers
         }
 
         void couple_state(LayeredBlockStateVirtualBase& s,
-                          entropy_args_t ea)
+                          const entropy_args_t& ea)
         {
             _lcoupled_state = &s;
 
@@ -880,7 +881,7 @@ struct Layers
         }
 
         void couple_state(BlockStateVirtualBase& s,
-                          entropy_args_t ea)
+                          const entropy_args_t& ea)
         {
             BaseState::couple_state(s, ea);
         }
@@ -1022,7 +1023,7 @@ struct Layers
         double propagate_entries_dS(size_t u, size_t v, int du, int dv,
                                     std::vector<std::tuple<size_t, size_t, GraphInterface::edge_t, int,
                                                            std::vector<double>>>& entries,
-                                    entropy_args_t& ea, std::vector<double>& dBdx,
+                                    const entropy_args_t& ea, std::vector<double>& dBdx,
                                     int dL)
         {
             double dS = BaseState::propagate_entries_dS(u, v, du, dv, entries, ea, dBdx, dL);
@@ -1044,7 +1045,7 @@ struct Layers
         }
 
         double get_delta_partition_dl(size_t v, size_t r, size_t nr,
-                                      entropy_args_t& ea)
+                                      const entropy_args_t& ea)
         {
             return BaseState::get_delta_partition_dl(v, r, nr, ea);
         }

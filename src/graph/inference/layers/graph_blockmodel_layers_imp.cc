@@ -56,7 +56,7 @@ void export_lsbm()
                   {
                       typedef typename std::remove_reference<decltype(*s)>::type state_t;
 
-                      double (state_t::*virtual_move)(size_t, size_t, size_t, entropy_args_t) =
+                      double (state_t::*virtual_move)(size_t, size_t, size_t, const entropy_args_t&) =
                           &state_t::virtual_move;
                       size_t (state_t::*sample_block)(size_t, double, double, rng_t&)
                           = &state_t::sample_block;
@@ -74,7 +74,7 @@ void export_lsbm()
                       void (state_t::*add_vertices)(python::object, python::object) =
                           &state_t::add_vertices;
                       void (state_t::*couple_state)(LayeredBlockStateVirtualBase&,
-                                                    entropy_args_t) =
+                                                    const entropy_args_t&) =
                           &state_t::couple_state;
 
                       class_<state_t, bases<LayeredBlockStateVirtualBase>>

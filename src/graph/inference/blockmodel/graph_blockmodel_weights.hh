@@ -116,7 +116,7 @@ double poisson_w_log_P(DT N, double x, double alpha, double beta)
 
 
 template <class State>
-std::tuple<double,double> rec_entropy(State& state, entropy_args_t& ea)
+std::tuple<double,double> rec_entropy(State& state, const entropy_args_t& ea)
 {
     double S = 0, S_dl = 0;
     for (size_t i = 0; i < state._rec_types.size(); ++i)
@@ -200,7 +200,7 @@ std::tuple<double,double> rec_entropy(State& state, entropy_args_t& ea)
 
 template <class State, class MEntries>
 std::tuple<double, double> rec_entries_dS(State& state, MEntries& m_entries,
-                                          entropy_args_t& ea,
+                                          const entropy_args_t& ea,
                                           std::vector<double>& dBdx, int& dL)
 {
     int ddL = 0;
