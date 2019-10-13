@@ -1495,7 +1495,7 @@ class BlockState(object):
                                                           _get_rng())
 
 
-    def multiflip_mcmc_sweep(self, beta=1., c=1., a1=.95, psplit=.5,
+    def multiflip_mcmc_sweep(self, beta=1., c=1., a1=.95, psplit=.5, prec=.3,
                              d=0.01, gibbs_sweeps=10, niter=1, entropy_args={},
                              verbose=False, **kwargs):
         r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection
@@ -1517,6 +1517,8 @@ class BlockState(object):
         psplit : ``float`` (optional, default: ``.5``)
             Probability of proposing a group split. A group merge will be
             proposed with probability ``1-psplit``.
+        prec : ``float`` (optional, default: ``.3``)
+            Probability of proposing a group recombination.
         d : ``float`` (optional, default: ``.01``)
             Probability of selecting a new (i.e. empty) group for a given
             single-node move.

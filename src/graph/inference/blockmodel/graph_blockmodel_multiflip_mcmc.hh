@@ -41,13 +41,14 @@ using namespace std;
     ((c,, double, 0))                                                          \
     ((a1,, double, 0))                                                         \
     ((d,, double, 0))                                                          \
+    ((prec,, double, 0))                                                       \
     ((psplit,, double, 0))                                                     \
     ((gibbs_sweeps,, size_t, 0))                                               \
     ((entropy_args,, entropy_args_t, 0))                                       \
     ((verbose,, int, 0))                                                       \
     ((niter,, size_t, 0))
 
-enum class move_t { single_node = 0, split, merge, null };
+enum class move_t { single_node = 0, split, merge, recombine, null };
 
 template <class State>
 struct MCMC
@@ -182,20 +183,18 @@ struct MCMC
             double dS = 0;
             for (auto v : _vs)
             {
-                if (forward)
-                    _bprev[v] = t;
-                else
+                if constexpr (!forward)
                     _btemp[v] = _state._b[v];
 
                 if (rt[0] == null_group)
                 {
-                    if (forward)
-                        rt[0] = sample_new_group(v, rng);
+                    if constexpr (forward)
+                        rt[0] = (r == null_group) ? sample_new_group(v, rng) : r;
                     else
                         rt[0] = r;
                     dS += _state.virtual_move(v, _state._b[v], rt[0],
                                               _entropy_args);
-                    if (forward)
+                    if constexpr (forward)
                         move_vertex(v, rt[0]);
                     else
                         _state.move_vertex(v, rt[0]);
@@ -204,10 +203,8 @@ struct MCMC
 
                 if (rt[1] == null_group)
                 {
-                    if (forward)
-                        // rt[1] = (_state.virtual_remove_size(v) == 0) ?
-                        //     t : sample_new_group(v, rng);
-                        rt[1] = sample_new_group(v, rng);
+                    if constexpr (forward)
+                        rt[1] = (s == null_group) ? sample_new_group(v, rng) : s;
                     else
                         rt[1] = s;
                     dS += _state.virtual_move(v, _state._b[v], rt[1],
@@ -238,7 +235,7 @@ struct MCMC
                 std::bernoulli_distribution sample(exp(p0));
                 if (sample(rng))
                 {
-                    if (forward)
+                    if constexpr (forward)
                         move_vertex(v, rt[0]);
                     else
                         _state.move_vertex(v, rt[0]);
@@ -247,7 +244,7 @@ struct MCMC
                 }
                 else
                 {
-                    if (forward)
+                    if constexpr (forward)
                         move_vertex(v, rt[1]);
                     else
                         _state.move_vertex(v, rt[1]);
@@ -295,7 +292,7 @@ struct MCMC
                     std::bernoulli_distribution sample(exp(p[0]));
                     if (sample(rng))
                     {
-                        if (forward)
+                        if constexpr (forward)
                             move_vertex(v, nbv);
                         else
                             _state.move_vertex(v, nbv);
@@ -384,14 +381,15 @@ struct MCMC
 
 
         template <class RNG>
-        std::tuple<size_t, double> merge(size_t r, size_t s, RNG& rng)
+        std::tuple<size_t, double> merge(size_t r, size_t s, size_t t, RNG& rng)
         {
             double dS = 0;
 
             _vs = _groups[r];
             _vs.insert(_vs.end(), _groups[s].begin(), _groups[s].end());
 
-            size_t t = sample_new_group(_vs.front(), rng);
+            if (t == null_group)
+                t = sample_new_group(_vs.front(), rng);
 
             for (auto v : _vs)
             {
@@ -469,36 +467,93 @@ struct MCMC
             }
             else
             {
-                std::bernoulli_distribution do_split(_psplit);
-                if (do_split(rng))
+                std::bernoulli_distribution do_recomb(_prec);
+                if (!do_recomb(rng))
                 {
-                    if (_groups[r].size() < 2 || _rlist.size() > _N - 2)
-                        return {_null_move, 1};
-                    move = move_t::split;
-                    if (!std::isinf(_beta))
-                        pf = log(_psplit);
-                    std::tie(_s, _t, _dS, pf) = split(r, null_group, null_group, rng);
-                    if (!std::isinf(_beta))
-                        pb = merge_prob(_s, _t) + log(1 - _psplit);
+                    std::bernoulli_distribution do_split(_psplit);
+                    if (do_split(rng))
+                    {
+                        if (_groups[r].size() < 2 || _rlist.size() > _N - 2)
+                            return {_null_move, 1};
+                        move = move_t::split;
+                        if (!std::isinf(_beta))
+                            pf = log(_psplit);
+
+                        for (auto v : _groups[r])
+                            _bprev[v] = r;
+
+                        std::tie(_s, _t, _dS, pf) = split(r, null_group, null_group, rng);
+                        if (!std::isinf(_beta))
+                            pb = merge_prob(_s, _t) + log(1 - _psplit);
+
+                        if (_verbose)
+                            cout << "split proposal: " << _groups[r].size() << " "
+                                 << _groups[_s].size() << " " << _dS << " " << pb - pf
+                                 << " " << -_dS + pb - pf << endl;
+                    }
+                    else
+                    {
+                        if (_rlist.size() == 1 || _rlist.size() == _N)
+                            return {_null_move, 1};
+                        move = move_t::merge;
+                        _s = r;
+                        while (_s == r)
+                        {
+                            size_t v = uniform_sample(_groups[r], rng);
+                            _s = _state.sample_block(v, _c, 0, rng);
+                        }
+                        if (!allow_merge(r, _s))
+                            return {_null_move, _groups[r].size() + _groups[_s].size()};
+                         if (!std::isinf(_beta))
+                            pf = merge_prob(r, _s) + log(1 - _psplit);
+                         std::tie(_t, _dS) = merge(r, _s, null_group, rng);
+                        if (!std::isinf(_beta))
+                            pb = split_prob(_t, r, _s, rng) + log(_psplit);
+
+                        if (_verbose)
+                            cout << "merge proposal: " << _dS << " " << pb - pf
+                                 << " " << -_dS + pb - pf << endl;
+                    }
                 }
                 else
                 {
                     if (_rlist.size() == 1 || _rlist.size() == _N)
                         return {_null_move, 1};
-                    move = move_t::merge;
+                    move = move_t::recombine;
                     _s = r;
                     while (_s == r)
                     {
                         size_t v = uniform_sample(_groups[r], rng);
                         _s = _state.sample_block(v, _c, 0, rng);
                     }
+                    // merge r and s into t
                     if (!allow_merge(r, _s))
                         return {_null_move, _groups[r].size() + _groups[_s].size()};
-                     if (!std::isinf(_beta))
-                        pf = merge_prob(r, _s) + log(1 - _psplit);
-                    std::tie(_t, _dS) = merge(r, _s, rng);
+
                     if (!std::isinf(_beta))
-                        pb = split_prob(_t, r, _s, rng) + log(_psplit);
+                        pf = merge_prob(r, _s);
+
+                    std::tie(_t, _dS) = merge(r, _s, null_group, rng);
+
+                    if (!std::isinf(_beta))
+                        pb = split_prob(_t, r, _s, rng);
+
+                    // split t into r and s
+                    auto sret = split(_t, r, _s, rng);
+
+                    _dS += get<2>(sret);
+                    if (!std::isinf(_beta))
+                    {
+                        pf += get<3>(sret);
+                        pb += merge_prob(r, _s);
+
+                    }
+
+                    if (_verbose)
+                        cout << "recombine proposal: " << _groups[r].size() << " "
+                             << _groups[_s].size() << " " << _dS << " " << pb - pf
+                             << " " << -_dS + pb - pf << endl;
+
                 }
                 for (auto v : _vs)
                 {
@@ -523,8 +578,13 @@ struct MCMC
 
         void perform_move(size_t r, move_t move)
         {
-            if (_verbose && move == move_t::merge)
-                cout << "merge: " << _groups[r].size() << " " << _groups[_s].size() << " " << endl;
+            if (_verbose)
+            {
+                if (move == move_t::merge)
+                    cout << "merge: " << _groups[r].size() << " " << _groups[_s].size() << " " << endl;
+                if (move == move_t::recombine && abs(_dS) > 1e-8)
+                    cout << "recombine: " << _groups[r].size() << " " << _groups[_s].size() << " -> ";
+            }
 
             for (auto v : _vs)
                 move_vertex(v, _bnext[v]);
@@ -538,7 +598,7 @@ struct MCMC
                     add_element(_rlist, _rpos, _s);
                 break;
             case move_t::split:
-                if (_verbose)
+                if (_verbose && abs(_dS) > 1e-8)
                     cout << "split: " << _groups[_s].size() << " " << _groups[_t].size() << " " << endl;
                 remove_element(_rlist, _rpos, r);
                 add_element(_rlist, _rpos, _s);
@@ -548,6 +608,10 @@ struct MCMC
                 remove_element(_rlist, _rpos, r);
                 remove_element(_rlist, _rpos, _s);
                 add_element(_rlist, _rpos, _t);
+                break;
+            case move_t::recombine:
+                if (_verbose)
+                    cout << _groups[r].size() << " " << _groups[_s].size() << endl;
                 break;
             default:
                 break;
