@@ -24,6 +24,7 @@
 #include "hash_map_wrap.hh"
 #include "coroutine.hh"
 #include "graph_python_interface.hh"
+#include "../generation/sampler.hh"
 
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
@@ -595,6 +596,75 @@ python::object do_get_all_shortest_paths(GraphInterface& gi, size_t s, size_t t,
 #endif // HAVE_BOOST_COROUTINE
 }
 
+void get_weighted_succs(size_t t, boost::any apred, boost::any asucc,
+                        boost::any acount, boost::any avisited)
+{
+    typedef vprop_map_t<vector<int64_t>>::type pred_map_t;
+    typedef vprop_map_t<int64_t>::type count_map_t;
+    typedef vprop_map_t<uint8_t>::type visited_map_t;
+
+    pred_map_t pred = any_cast<pred_map_t>(apred);
+    pred_map_t succ = any_cast<pred_map_t>(asucc);
+    count_map_t count = any_cast<count_map_t>(acount);
+    visited_map_t visited = any_cast<visited_map_t>(avisited);
+
+    count[t] = 1;
+    visited[t] = true;
+
+    deque<size_t> queue = {t};
+    while (!queue.empty())
+    {
+        size_t v = queue.front();
+        queue.pop_front();
+        for (auto w : pred[v])
+        {
+            count[w] += count[v];
+            succ[w].push_back(v);
+
+            if (!visited[w])
+            {
+                visited[w] = true;
+                queue.push_back(w);
+            }
+        }
+    }
+};
+
+void get_random_shortest_path(size_t s, size_t t, boost::any asucc,
+                              boost::any acount, vector<size_t>& path,
+                              rng_t& rng)
+{
+    typedef vprop_map_t<vector<int64_t>>::type pred_map_t;
+    typedef vprop_map_t<int64_t>::type count_map_t;
+
+    pred_map_t succ = any_cast<pred_map_t>(asucc);
+    count_map_t count = any_cast<count_map_t>(acount);
+
+    vector<double> probs;
+    path.clear();
+
+    if (succ[s].empty())
+        return;
+
+    path.push_back(s);
+    size_t v = s;
+    while (v != t)
+    {
+        if (succ[v].size() == 1)
+        {
+            v = succ[v].front();
+        }
+        else
+        {
+            probs.clear();
+            for (auto w : succ[v])
+                probs.push_back(count[w]);
+            Sampler<int64_t> next(succ[v], probs);
+            v = next.sample(rng);
+        }
+        path.push_back(v);
+    }
+};
 
 template <bool edges, class Graph, class Yield, class VMap>
 void get_all_paths(size_t s, size_t t, size_t cutoff, VMap visited,
@@ -691,4 +761,7 @@ void export_dists()
     python::def("get_all_preds", &do_get_all_preds);
     python::def("get_all_shortest_paths", &do_get_all_shortest_paths);
     python::def("get_all_paths", &do_get_all_paths);
+
+    python::def("get_weighted_succs", &get_weighted_succs);
+    python::def("get_random_shortest_path", &get_random_shortest_path);
 };

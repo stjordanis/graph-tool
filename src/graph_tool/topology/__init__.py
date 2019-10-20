@@ -30,6 +30,8 @@ Summary
 
    shortest_distance
    shortest_path
+   random_shortest_path
+   count_shortest_paths
    all_shortest_paths
    all_predecessors
    all_paths
@@ -74,22 +76,23 @@ from __future__ import division, absolute_import, print_function
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_topology")
 
-from .. import _prop, Vector_int32_t, _check_prop_writable, \
+from .. import _prop, Vector_int32_t, Vector_size_t, _check_prop_writable, \
      _check_prop_scalar, _check_prop_vector, Graph, VertexPropertyMap, \
      EdgePropertyMap, PropertyMap, GraphView, libcore, _get_rng, _degree, \
      perfect_prop_hash, _limit_args
 from .. stats import label_self_loops
 import random, sys, numpy, collections
 
-__all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph", "max_cliques",
-           "max_cardinality_matching", "max_independent_vertex_set",
-           "min_spanning_tree", "random_spanning_tree", "dominator_tree",
-           "topological_sort", "transitive_closure", "tsp_tour",
-           "sequential_vertex_coloring", "label_components",
-           "label_largest_component", "extract_largest_component",
-           "label_biconnected_components", "label_out_component",
-           "vertex_percolation", "edge_percolation", "kcore_decomposition",
-           "shortest_distance", "shortest_path", "all_shortest_paths",
+__all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph",
+           "max_cliques", "max_cardinality_matching",
+           "max_independent_vertex_set", "min_spanning_tree",
+           "random_spanning_tree", "dominator_tree", "topological_sort",
+           "transitive_closure", "tsp_tour", "sequential_vertex_coloring",
+           "label_components", "label_largest_component",
+           "extract_largest_component", "label_biconnected_components",
+           "label_out_component", "vertex_percolation", "edge_percolation",
+           "kcore_decomposition", "shortest_distance", "shortest_path",
+           "random_shortest_path", "count_shortest_paths", "all_shortest_paths",
            "all_predecessors", "all_paths", "all_circuits", "pseudo_diameter",
            "is_bipartite", "is_DAG", "is_planar", "make_maximal_planar",
            "similarity", "vertex_similarity", "edge_reciprocity"]
@@ -1552,8 +1555,7 @@ def label_biconnected_components(g, eprop=None, vprop=None):
 
 def vertex_percolation(g, vertices, second=False):
     """Compute the size of the largest or second-largest component as vertices
-    are (virtually)
-    removed from the graph.
+    are (virtually) removed from the graph.
 
     Parameters
     ----------
@@ -2145,6 +2147,8 @@ def shortest_path(g, source, target, weights=None, negative_weights=False,
     else:
         max_w = None
 
+    source = g.vertex(source)
+    target = g.vertex(target)
     v = target
     while v != source:
         p = g.vertex(pred_map[v])
@@ -2181,7 +2185,7 @@ def all_predecessors(g, dist_map, pred_map, weights=None, epsilon=1e-8):
         Vertex property map with the predecessors in the search tree.
     weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
         The edge weights.
-    epsilon : `float` (optional, default: `1e-8`)
+    epsilon : ``float`` (optional, default: ``1e-8``)
         Maximum relative difference between distances to be considered "equal",
         in case floating-point weights are used.
 
@@ -2202,9 +2206,8 @@ def all_predecessors(g, dist_map, pred_map, weights=None, epsilon=1e-8):
                                          epsilon)
     return preds
 
-def all_shortest_paths(g, source, target, weights=None, negative_weights=False,
-                       dist_map=None, pred_map=None, all_preds_map=None,
-                       epsilon=1e-8, dag=False):
+def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
+                       all_preds_map=None, epsilon=1e-8, **kwargs):
     """Return an iterator over all shortest paths from `source` to `target`.
 
     Parameters
@@ -2215,10 +2218,6 @@ def all_shortest_paths(g, source, target, weights=None, negative_weights=False,
         Source vertex of the search.
     target : :class:`~graph_tool.Vertex`
         Target vertex of the search.
-    weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
-        The edge weights.
-    negative_weights : ``bool`` (optional, default: ``False``)
-        If ``True``, this will trigger the use of the Bellman-Ford algorithm.
     dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
         Vertex property map with the distances from ``source`` to all other
         vertices.
@@ -2230,14 +2229,12 @@ def all_shortest_paths(g, source, target, weights=None, negative_weights=False,
         Vector-valued vertex property map with all possible predecessors in the
         search tree. If this is provided, the shortest paths are obtained
         directly from this map.
-    epsilon : `float` (optional, default: `1e-8`)
+    epsilon : ``float`` (optional, default: ``1e-8``)
         Maximum relative difference between distances to be considered "equal",
         in case floating-point weights are used.
-    dag : ``bool`` (optional, default:``False``)
-        If ``True``, assume that the graph is a Directed Acyclic Graph (DAG),
-        which will be faster if ``weights`` are given, in which case they are
-        also allowed to contain negative values (irrespective of the parameter
-        ``negative_weights``).
+    **kwargs : Keyword parameter list
+        The remaining parameters will be passed to
+        :func:`~graph_tool.topology.shortest_path`.
 
     Returns
     -------
@@ -2248,13 +2245,11 @@ def all_shortest_paths(g, source, target, weights=None, negative_weights=False,
     Notes
     -----
 
-    The paths are computed with a breadth-first search (BFS) or Dijkstra's
-    algorithm [dijkstra]_, if weights are given. If ``negative_weights ==
-    True``, the Bellman-Ford algorithm is used [bellman-ford]_, which accepts
-    negative weights, as long as there are no negative loops.
+    The paths are computed in the same manner as in
+    :func:`~graph_tool.topology.shortest_path`, which is used internally.
 
-    If both ``dist_map`` and ``pred_map`` are provided, the search is not
-    actually performed.
+    If both ``dist_map`` and ``pred_map`` are provided, the
+    :func:`~graph_tool.topology.shortest_path` is not called.
 
     Examples
     --------
@@ -2267,25 +2262,18 @@ def all_shortest_paths(g, source, target, weights=None, negative_weights=False,
     [  92   82   94 5877 5879   34   45]
     [  92   89   94 5877 5879   34   45]
 
-    References
-    ----------
-    .. [bfs] Edward Moore, "The shortest path through a maze", International
-       Symposium on the Theory of Switching (1959), Harvard University
-       Press
-    .. [bfs-boost] http://www.boost.org/libs/graph/doc/breadth_first_search.html
-    .. [dijkstra] E. Dijkstra, "A note on two problems in connexion with
-       graphs." Numerische Mathematik, 1:269-271, 1959.
-    .. [dijkstra-boost] http://www.boost.org/libs/graph/doc/dijkstra_shortest_paths.html
-    .. [bellman-ford] http://www.boost.org/libs/graph/doc/bellman_ford_shortest.html
-
     """
 
     if dist_map is None or pred_map is None:
-        dist_map, pred_map = shortest_distance(g, source, weights=weights,
-                                               negative_weights=negative_weights,
-                                               pred_map=True, dag=dag)
+        dist_map, pred_map = shortest_distance(g, source, **dict(kwargs,
+                                                                 pred_map=True))
+
+    if pred_map[target] == int(target):
+        return
+
     if all_preds_map is None:
-        all_preds_map = all_predecessors(g, dist_map, pred_map, weights, epsilon)
+        all_preds_map = all_predecessors(g, dist_map, pred_map,
+                                         kwargs.get("weights", None), epsilon)
 
     path_iterator = \
         libgraph_tool_topology.get_all_shortest_paths(g._Graph__graph,
@@ -2294,6 +2282,187 @@ def all_shortest_paths(g, source, target, weights=None, negative_weights=False,
                                                       _prop("v", g, all_preds_map))
     for p in path_iterator:
         yield p
+
+def random_shortest_path(g, source, target, dist_map=None, pred_map=None,
+                         all_preds_map=None, epsilon=1e-8, nsamples=1,
+                         iterator=False, **kwargs):
+    """Return a random shortest path from `source` to `target`, uniformly sampled
+    from all paths of equal length.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be used.
+    source : :class:`~graph_tool.Vertex`
+        Source vertex of the search.
+    target : :class:`~graph_tool.Vertex`
+        Target vertex of the search.
+    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vertex property map with the distances from ``source`` to all other
+        vertices.
+    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vertex property map with the predecessors in the search tree. If this is
+        provided, the shortest paths are not computed, and are obtained directly
+        from this map.
+    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vector-valued vertex property map with all possible predecessors in the
+        search tree. If this is provided, the shortest paths are obtained
+        directly from this map.
+    epsilon : ``float`` (optional, default: ``1e-8``)
+        Maximum relative difference between distances to be considered "equal",
+        in case floating-point weights are used.
+    nsamples : ``int`` (optional, default: ``1``)
+        Number of paths to sample.
+    iterator : ``bool`` (optional, default: ``False``)
+        If ``True``, an iterator is returned.
+    **kwargs : Keyword parameter list
+        The remaining parameters will be passed to
+        :func:`~graph_tool.topology.shortest_path`.
+
+    Returns
+    -------
+    path : :class:`numpy.ndarray`, or list of :class:`numpy.ndarray` or iterator over :class:`numpy.ndarray`
+        Sequence of vertices from `source` to `target` in the shortest path. If
+        ``nsamples > 1`` a list (or iterator) over paths is returned.
+
+    Notes
+    -----
+
+    The paths are computed in the same manner as in
+    :func:`~graph_tool.topology.shortest_path`, which is used internally.
+
+    If both ``dist_map`` and ``pred_map`` are provided, the
+    :func:`~graph_tool.topology.shortest_path` is not called.
+
+    Examples
+    --------
+
+    .. testcode::
+       :hide:
+
+       gt.seed_rng(42)
+
+    >>> g = gt.collection.data["pgp-strong-2009"]
+    >>> path = gt.random_shortest_path(g, 92, 45)
+    >>> print(path)
+    [  92   89   94 5877 5879   34   45]
+    """
+
+    if dist_map is None or pred_map is None:
+        dist_map, pred_map = shortest_distance(g, source,
+                                               **dict(kwargs, pred_map=True))
+
+    if all_preds_map is None:
+        all_preds_map = all_predecessors(g, dist_map, pred_map,
+                                         kwargs.get("weights", None), epsilon)
+
+    all_succ_map = g.new_vp("vector<int64_t>")
+    count_map = g.new_vp("int64_t")
+    visited_map = g.new_vp("bool")
+
+    libgraph_tool_topology.get_weighted_succs(int(target),
+                                              all_preds_map._get_any(),
+                                              all_succ_map._get_any(),
+                                              count_map._get_any(),
+                                              visited_map._get_any())
+
+    def sample_gen():
+        if pred_map[target] == int(target):
+            return
+
+        for i in range(nsamples):
+            path = Vector_size_t()
+
+            libgraph_tool_topology.get_random_shortest_path(int(source),
+                                                            int(target),
+                                                            all_succ_map._get_any(),
+                                                            count_map._get_any(),
+                                                            path, _get_rng())
+            yield numpy.array(path.a)
+
+    if iterator:
+        return sample_gen()
+    else:
+        samples = list(sample_gen())
+        if len(samples) == 1:
+            return samples[0]
+        return samples
+
+def count_shortest_paths(g, source, target, dist_map=None, pred_map=None,
+                         all_preds_map=None, epsilon=1e-8, **kwargs):
+    """Return the number of shortest paths from `source` to `target`.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be used.
+    source : :class:`~graph_tool.Vertex`
+        Source vertex of the search.
+    target : :class:`~graph_tool.Vertex`
+        Target vertex of the search.
+    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vertex property map with the distances from ``source`` to all other
+        vertices.
+    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vertex property map with the predecessors in the search tree. If this is
+        provided, the shortest paths are not computed, and are obtained directly
+        from this map.
+    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vector-valued vertex property map with all possible predecessors in the
+        search tree. If this is provided, the shortest paths are obtained
+        directly from this map.
+    epsilon : ``float`` (optional, default: ``1e-8``)
+        Maximum relative difference between distances to be considered "equal",
+        in case floating-point weights are used.
+    **kwargs : Keyword parameter list
+        The remaining parameters will be passed to
+        :func:`~graph_tool.topology.shortest_path`.
+
+    Returns
+    -------
+    n_paths : ``int``
+        Number of shortest paths from `source` to `target`.
+
+    Notes
+    -----
+
+    The paths are computed in the same manner as in
+    :func:`~graph_tool.topology.shortest_path`, which is used internally.
+
+    If both ``dist_map`` and ``pred_map`` are provided, the
+    :func:`~graph_tool.topology.shortest_path` is not called.
+
+    Examples
+    --------
+
+    >>> g = gt.collection.data["pgp-strong-2009"]
+    >>> n_paths = gt.count_shortest_paths(g, 92, 45)
+    >>> print(n_paths)
+    4
+
+    """
+
+    if dist_map is None or pred_map is None:
+        dist_map, pred_map = shortest_distance(g, source,
+                                               **dict(kwargs, pred_map=True))
+    if pred_map[target] == int(target):
+        return 0
+
+    if all_preds_map is None:
+        all_preds_map = all_predecessors(g, dist_map, pred_map,
+                                         kwargs.get("weights", None), epsilon)
+
+    all_succ_map = g.new_vp("vector<int64_t>")
+    count_map = g.new_vp("int64_t")
+    visited_map = g.new_vp("bool")
+
+    libgraph_tool_topology.get_weighted_succs(int(target),
+                                              all_preds_map._get_any(),
+                                              all_succ_map._get_any(),
+                                              count_map._get_any(),
+                                              visited_map._get_any())
+
+    return count_map[source]
 
 def all_paths(g, source, target, cutoff=None, edges=False):
     """Return an iterator over all paths from `source` to `target`.
