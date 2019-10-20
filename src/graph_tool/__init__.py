@@ -1499,13 +1499,13 @@ class PropertyDict(object):
 
     def __len__(self):
         count = 0
-        for k in self.properties.iterkeys():
+        for k in self.properties.keys():
             if k[0] == self.t:
                 count += 1
         return count
 
     def __iter__(self):
-        return self.iterkeys()
+        return self.keys()
 
     def iterkeys(self):
         for k in self.properties.iterkeys():
@@ -1531,22 +1531,22 @@ class PropertyDict(object):
             if k[0] == self.t:
                 yield v
 
-    def keys(self):
-        return [k[1] for k in self.properties.keys() if k[0] == self.t]
-
     if sys.version_info < (3,):
+        def keys(self):
+            return list(self.iterkeys())
         def values(self):
-            return [v for k, v in self.properties.iteritems() if k[0] == self.t]
+            return list(self.itervalues())
         def __repr__(self):
             temp = dict([(k[1], v) for k, v in self.properties.iteritems() if k[0] == self.t])
             return repr(temp)
     else:
+        def keys(self):
+            return self.iterkeys()
         def values(self):
-            return [v for k, v in self.properties.items() if k[0] == self.t]
+            return self.itervalues()
         def __repr__(self):
             temp = dict([(k[1], v) for k, v in self.properties.items() if k[0] == self.t])
             return repr(temp)
-
 
     def __getattr__(self, attr):
         return self.__getitem__(attr)
@@ -1761,6 +1761,19 @@ class Graph(object):
         # provide more useful information
         d = "directed" if self.is_directed() else "undirected"
         fr = ", reversed" if self.is_reversed() and self.is_directed() else ""
+        p = []
+        if len(self.vp) == 1:
+            p.append("%d internal vertex %s" % (len(self.vp),
+                                                "property" if len(self.vp) == 1 else "properties"))
+        if len(self.ep) == 1:
+            p.append("%d internal edge %s" % (len(self.ep),
+                                              "property" if len(self.ep) == 1 else "properties"))
+        if len(self.gp) == 1:
+            p.append("%d internal graph %s" % (len(self.gp),
+                                               "property" if len(self.gp) == 1 else "properties"))
+        p = ", ".join(p)
+        if len(p) > 0:
+            p = ", " + p
         f = ""
         if self.get_edge_filter()[0] is not None:
             f += ", edges filtered by %s" % (str(self.get_edge_filter()))
@@ -1768,10 +1781,10 @@ class Graph(object):
             f += ", vertices filtered by %s" % (str(self.get_vertex_filter()))
         n = self.num_vertices()
         e = self.num_edges()
-        return "<%s object, %s%s, with %d %s and %d edge%s%s at 0x%x>"\
+        return "<%s object, %s%s, with %d %s and %d edge%s%s%s, at 0x%x>"\
                % (type(self).__name__, d, fr, n,
                   "vertex" if n == 1 else "vertices", e, "" if e == 1 else "s",
-                  f, id(self))
+                  p, f, id(self))
 
     # Graph access
     # ============
