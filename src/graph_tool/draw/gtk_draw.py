@@ -367,6 +367,33 @@ class GraphWidget(Gtk.DrawingArea):
         self.is_rotating = False
         self.is_drag_gesture = False
 
+    def update(self, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
+               nodesfirst=None, display_props=None,
+               fit_view=True, bg_color=None, **kwargs):
+
+        props, kwargs = parse_props("vertex", kwargs)
+        vprops.update(props)
+        props, kwargs = parse_props("edge", kwargs)
+        eprops.update(props)
+
+        if pos is not None:
+            self.pos = pos
+        self.vprops.update(vprops)
+        self.eprops.update(eprops)
+        if vorder is not None:
+            self.vorder = vorder
+        if eorder is not None:
+            self.eorder = eorder
+        if nodesfirst is not None:
+            self.nodesfirst = nodesfirst
+
+        self.fit_view = fit_view
+
+        self.display_prop = self.g.vertex_index if display_props is None \
+                            else display_props
+        self.bg_color = bg_color if bg_color is not None else [1, 1, 1, 1]
+
+
     def cleanup(self):
         """Cleanup callbacks."""
         if gobject is None:
@@ -1187,9 +1214,9 @@ _window_list = []
 
 def interactive_window(g, pos=None, vprops=None, eprops=None, vorder=None,
                        eorder=None, nodesfirst=False, geometry=(500, 400),
-                       update_layout=True, sync=True, main=True, **kwargs):
-    r"""
-    Display an interactive GTK+ window containing the given graph.
+                       update_layout=True, sync=True, main=True,
+                       window=None, return_window=False, **kwargs):
+    r"""Display an interactive GTK+ window containing the given graph.
 
     Parameters
     ----------
@@ -1216,10 +1243,13 @@ def interactive_window(g, pos=None, vprops=None, eprops=None, vorder=None,
         Window geometry.
     update_layout : bool (optional, default: ``True``)
         If ``True``, the layout will be updated dynamically.
-    sync : bool (optional, default: ``True``)
-        If ``False``, run asynchronously. (Requires :mod:`IPython`)
     main : bool (optional, default: ``True``)
         If ``False``, the GTK+ main loop will not be called.
+    window : :class:`~graph_tool.draw.GraphWindow` (optional, default: ``None``)
+        If provided, specifies the window where the drawing will
+        occur. Otherwise a new one will be created.
+    return_window : bool (optional, default: ``False``)
+        If ``True``, the GTK+ window will be returned.
     **kwargs
         Any extra parameters are passed to :class:`~graph_tool.draw.GraphWindow`,
         :class:`~graph_tool.draw.GraphWidget` and :func:`~graph_tool.draw.cairo_draw`.
@@ -1239,28 +1269,35 @@ def interactive_window(g, pos=None, vprops=None, eprops=None, vorder=None,
     information.
 
     """
-    if pos is None:
-        if update_layout:
-            pos = random_layout(g, [1, 1])
-        else:
-            pos = sfdp_layout(g)
-    win = GraphWindow(g, pos, geometry, vprops, eprops, vorder, eorder,
-                      nodesfirst, update_layout, **kwargs)
-    win.show_all()
-    _window_list.append(win)
+    if window is None:
+        if pos is None:
+            if update_layout:
+                pos = random_layout(g, [1, 1])
+            else:
+                pos = sfdp_layout(g)
+        win = GraphWindow(g, pos, geometry, vprops, eprops, vorder, eorder,
+                          nodesfirst, update_layout, **kwargs)
+        win.show_all()
+        _window_list.append(win)
+    else:
+        win = window
+        win.graph.update(pos, vprops, eprops, vorder, eorder, nodesfirst,
+                         **kwargs)
+        win.graph.regenerate_surface(complete=True)
+        win.graph.queue_draw()
+
     if main:
-        if not sync:
-            # just a placeholder for a proper main loop integration with gtk3 when
-            # ipython implements it
-            import IPython.lib.inputhook
-            f = lambda: Gtk.main_iteration_do(False)
-            IPython.lib.inputhook.set_inputhook(f)
-        else:
-            def destroy_callback(*args, **kwargs):
-                global _window_list
-                for w in _window_list:
-                    w.destroy()
-                Gtk.main_quit()
-            win.connect("delete_event", destroy_callback)
-            Gtk.main()
+        def destroy_callback(*args, **kwargs):
+            global _window_list
+            for w in _window_list:
+                w.destroy()
+            Gtk.main_quit()
+        win.connect("delete_event", destroy_callback)
+        Gtk.main()
+    else:
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+    if return_window:
+        return win
     return pos, win.graph.selected.copy()
