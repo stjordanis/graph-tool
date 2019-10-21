@@ -613,6 +613,8 @@ class TemperingState(object):
         if idx is None:
             self.idx = list(range(len(betas)))
         self.beta_dl = beta_dl
+        self.swap_attempts = 0
+        self.swaps = numpy.zeros(len(states), dtype="int")
 
     def entropy(self, **kwargs):
         """Returns the sum of the entropy of the parallel states. All keyword
@@ -638,7 +640,7 @@ class TemperingState(object):
             return [s.entropy(**kwargs) * beta for s, beta in
                     zip(self.states, self.betas)]
 
-    def states_swap(self, adjacent=True, **kwargs):
+    def states_swap(self,  **kwargs):
         """Perform a full sweep of the parallel states, where swaps are attempted. All
         relevant keyword arguments are propagated to the individual states'
         `entropy()` method."""
@@ -646,20 +648,12 @@ class TemperingState(object):
         verbose = kwargs.get("verbose", False)
         eargs = kwargs.get("entropy_args", {})
 
-        if adjacent:
-            idx = numpy.arange(len(self.states) - 1)
-        else:
-            idx = numpy.arange(len(self.states))
+        idx = numpy.arange(len(self.states) - 1)
         numpy.random.shuffle(idx)
         nswaps = 0
         dS = 0
         for i in idx:
-            if adjacent:
-                j = i + 1
-            else:
-                j = i
-                while j == i:
-                    j = numpy.random.randint(0, len(idx))
+            j = i + 1
 
             s1 = self.states[i]
             s2 = self.states[j]
@@ -673,18 +667,22 @@ class TemperingState(object):
                 P1_b = -s1.entropy(beta_dl=b1, **eargs)
                 P2_b = -s2.entropy(beta_dl=b2, **eargs)
             else:
-                P1_f = -s1.entropy(**eargs) * b2
-                P2_f = -s2.entropy(**eargs) * b1
+                S1 = s1.entropy(**eargs)
+                S2 = s2.entropy(**eargs)
+                P1_f = -S1 * b2
+                P2_f = -S2 * b1
 
-                P1_b = -s1.entropy(**eargs) * b1
-                P2_b = -s2.entropy(**eargs) * b2
+                P1_b = -S1 * b1
+                P2_b = -S2 * b2
 
             ddS = -(P1_f + P2_f - P1_b - P2_b)
 
+            self.swap_attempts += 1
             if ddS < 0 or numpy.random.random() < exp(-ddS):
                 self.states[j], self.states[i], self.idx[j], self.idx[i] = \
                             self.states[i], self.states[j], self.idx[i], self.idx[j]
                 nswaps += 1
+                self.swaps[i] += 1
                 dS += ddS
                 if check_verbose(verbose):
                     print(verbose_pad(verbose)
