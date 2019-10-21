@@ -255,6 +255,9 @@ class OverlapBlockState(BlockState):
 
         self.use_hash = self.B > self.max_BE
 
+        self.bfield = self.g.new_vp("vector<double>")
+        self.Bfield = Vector_double()
+
         self._abg = self.bg._get_any()
         self._state = libinference.make_overlap_block_state(self, _get_rng())
 

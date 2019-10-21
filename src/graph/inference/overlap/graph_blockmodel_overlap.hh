@@ -56,6 +56,8 @@ typedef mpl::vector2<std::true_type, std::false_type> use_hash_tr;
     ((candidate_pos,, vmap_t, 0))                                              \
     ((bclabel,, vmap_t, 0))                                                    \
     ((pclabel,, vmap_t, 0))                                                    \
+    ((bfield,, vprop_map_t<std::vector<double>>::type, 0))                     \
+    ((Bfield, &, std::vector<double>&, 0))                                     \
     ((deg_corr,, bool, 0))                                                     \
     ((rec_types,, std::vector<int>, 0))                                        \
     ((rec,, std::vector<eprop_map_t<double>::type>, 0))                        \
