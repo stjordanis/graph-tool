@@ -74,7 +74,7 @@ public:
                     std::vector<size_t>& bmap)
         : _bmap(bmap), _N(0), _E(E), _total_B(B)
     {
-        if (!use_rmap)
+        if constexpr (!use_rmap)
         {
             _hist.resize(num_vertices(g));
             _total.resize(num_vertices(g));
@@ -110,7 +110,7 @@ public:
 
     size_t get_r(size_t r)
     {
-        if (use_rmap)
+        if constexpr (use_rmap)
         {
             constexpr size_t null =
                 std::numeric_limits<size_t>::max();
