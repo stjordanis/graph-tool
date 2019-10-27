@@ -648,6 +648,7 @@ class TemperingState(object):
         verbose = kwargs.get("verbose", False)
         eargs = kwargs.get("entropy_args", {})
 
+        self.swap_attempts += 1
         idx = numpy.arange(len(self.states) - 1)
         numpy.random.shuffle(idx)
         nswaps = 0
@@ -677,7 +678,6 @@ class TemperingState(object):
 
             ddS = -(P1_f + P2_f - P1_b - P2_b)
 
-            self.swap_attempts += 1
             if ddS < 0 or numpy.random.random() < exp(-ddS):
                 self.states[j], self.states[i], self.idx[j], self.idx[i] = \
                             self.states[i], self.states[j], self.idx[i], self.idx[j]
