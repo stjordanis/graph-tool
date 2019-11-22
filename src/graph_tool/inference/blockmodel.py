@@ -1495,8 +1495,9 @@ class BlockState(object):
                                                           _get_rng())
 
 
-    def multiflip_mcmc_sweep(self, beta=1., c=1., a1=.95, psplit=.5, prec=.3,
-                             d=0.01, gibbs_sweeps=10, niter=1, entropy_args={},
+    def multiflip_mcmc_sweep(self, beta=1., c=1., psingle=100, psplit=1,
+                             pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
+                             niter=1, entropy_args={}, accept_stats=None,
                              verbose=False, **kwargs):
         r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection
         sampling MCMC with multiple simultaneous moves to sample network
@@ -1512,14 +1513,13 @@ class BlockState(object):
             node and their block connections; for :math:`c\to\infty` the blocks
             are sampled randomly. Note that only for :math:`c > 0` the MCMC is
             guaranteed to be ergodic.
-        a1 : ``float`` (optional, default: ``.95``)
-            Probability of proposing a single node move.
-        psplit : ``float`` (optional, default: ``.5``)
-            Probability of proposing a group split. A group merge will be
-            proposed with probability ``1-psplit``.
-        prec : ``float`` (optional, default: ``.3``)
-            Probability of proposing a group recombination.
-        d : ``float`` (optional, default: ``.01``)
+        psingle : ``float`` (optional, default: ``100``)
+            Relative probability of proposing a single node move.
+        psplit : ``float`` (optional, default: ``1``)
+            Relative probability of proposing a group split.
+        pmergesplit : ``float`` (optional, default: ``1``)
+            Relative probability of proposing a marge-split move.
+        d : ``float`` (optional, default: ``1``)
             Probability of selecting a new (i.e. empty) group for a given
             single-node move.
         gibbs_sweeps : ``int`` (optional, default: ``10``)
@@ -1551,6 +1551,9 @@ class BlockState(object):
         """
 
         gibbs_sweeps = max(gibbs_sweeps, 1)
+        nproposal = Vector_size_t(4)
+        nacceptance = Vector_size_t(4)
+        force_move = kwargs.pop("force_move", False)
         mcmc_state = DictState(locals())
         entropy_args = dict(self._entropy_args, **entropy_args)
         if (_bm_test() and entropy_args["multigraph"] and
@@ -1586,6 +1589,14 @@ class BlockState(object):
 
         if not dispatch:
             return mcmc_state
+
+        if accept_stats is not None:
+            for key in ["proposal", "acceptance"]:
+                if key not in accept_stats:
+                    accept_stats[key] = numpy.zeros(len(nproposal),
+                                                    dtype="uint64")
+            accept_stats["proposal"] += nproposal.a
+            accept_stats["acceptance"] += nacceptance.a
 
         return dS, nattempts, nmoves
 
