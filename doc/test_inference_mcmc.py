@@ -176,7 +176,7 @@ for directed in [False, True]:
                         output.flush()
 
         for cum in [True, False]:
-            clf()
+            figure(figsize=(10 * 4/3, 10))
             bins = None
             for c in cs:
                 for init in inits:
