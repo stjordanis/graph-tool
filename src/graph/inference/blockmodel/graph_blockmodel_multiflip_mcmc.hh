@@ -267,6 +267,10 @@ struct MCMC
             std::array<size_t, 2> rt = {null_group, null_group};
             std::array<double, 2> ps;
             double dS = 0;
+
+            std::uniform_real_distribution<> unit(0, 1);
+            double p = unit(rng);
+
             std::shuffle(vs.begin(), vs.end(), rng);
             for (auto v : vs)
             {
@@ -291,10 +295,11 @@ struct MCMC
                     continue;
                 }
 
-                ps[0] = ps[1] = 0;
+                ps[0] = log(p);
+                ps[1] = log1p(-p);
 
                 double Z = log_sum(ps[0], ps[1]);
-                double p0 = _beta * ps[0] - Z;
+                double p0 = ps[0] - Z;
                 std::bernoulli_distribution sample(exp(p0));
                 if (sample(rng))
                 {
