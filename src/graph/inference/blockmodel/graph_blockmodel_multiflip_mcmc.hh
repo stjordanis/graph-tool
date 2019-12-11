@@ -180,12 +180,10 @@ struct MCMC
             _state.get_empty_block(v);
             auto t = uniform_sample(_state._empty_blocks, rng);
 
+            auto r = _state._b[v];
             if (_state._coupled_state != nullptr)
-            {
-                auto r = _state._b[v];
                 _state._coupled_state->sample_branch(t, r, rng);
-                _state._bclabel[t] = _state._bclabel[r];
-            }
+            _state._bclabel[t] = _state._bclabel[r];
             if (t >= _groups.size())
             {
                 _groups.resize(t + 1);
