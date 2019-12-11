@@ -214,9 +214,9 @@ This means that we can inspect the hierarchical partition just as before:
 
    r = levels[0].get_blocks()[46]    # group membership of node 46 in level 0
    print(r)
-   r = levels[0].get_blocks()[r]     # group membership of node 46 in level 1
+   r = levels[1].get_blocks()[r]     # group membership of node 46 in level 1
    print(r)
-   r = levels[0].get_blocks()[r]     # group membership of node 46 in level 2
+   r = levels[2].get_blocks()[r]     # group membership of node 46 in level 2
    print(r)
 
 .. testoutput:: celegans
