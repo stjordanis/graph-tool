@@ -838,11 +838,11 @@ class PropertyMap(object):
 
     def _get_data(self):
         if self.key_type() == "v":
-            return VertexPropertyMap._get_data(self, k)
+            return VertexPropertyMap._get_data(self)
         if self.key_type() == "e":
-            return EdgePropertyMap._get_data(self, k)
+            return EdgePropertyMap._get_data(self)
         if self.key_type() == "g":
-            return GraphPropertyMap._get_data(self, k)
+            return GraphPropertyMap._get_data(self)
 
 
 class VertexPropertyMap(PropertyMap):
