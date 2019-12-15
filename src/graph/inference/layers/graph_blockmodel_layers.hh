@@ -1065,6 +1065,11 @@ struct Layers
             return BaseState::_b;
         }
 
+        vprop_map_t<int32_t>::type::unchecked_t& get_pclabel()
+        {
+            return BaseState::_pclabel;
+        }
+
         void sync_emat()
         {
             BaseState::sync_emat();

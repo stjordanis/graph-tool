@@ -69,6 +69,7 @@ public:
     virtual double get_delta_partition_dl(size_t v, size_t r, size_t nr,
                                           const entropy_args_t& ea) = 0;
     virtual vprop_map_t<int32_t>::type::unchecked_t& get_b() = 0;
+    virtual vprop_map_t<int32_t>::type::unchecked_t& get_pclabel() = 0;
     virtual bool check_edge_counts(bool emat=true) = 0;
     virtual bool allow_move(size_t r, size_t nr) = 0;
 };

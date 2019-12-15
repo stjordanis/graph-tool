@@ -1185,6 +1185,11 @@ public:
         return _b;
     }
 
+    vprop_map_t<int32_t>::type::unchecked_t& get_pclabel()
+    {
+        return _pclabel;
+    }
+
     void init_mcmc(double c, double dl)
     {
         if (!std::isinf(c))
