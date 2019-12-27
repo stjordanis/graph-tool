@@ -90,10 +90,10 @@ struct MCMC
                               _entropy_args.edges_dl));
             for (auto v : vertices_range(_state._g))
             {
-                if (_state._vweight[v] == 0)
+                if (_state.node_weight(v) == 0)
                     continue;
                 add_element(_groups[_state._b[v]], _vpos, v);
-                _N += _state._vweight[v];
+                _N += _state.node_weight(v);
             }
 
             for (auto r : vertices_range(_state._bg))
@@ -322,7 +322,7 @@ struct MCMC
                 else
                 {
                     dS += _state.virtual_move(v, _state._b[v], rt[1],
-                                                  _entropy_args);
+                                              _entropy_args);
                     move_vertex(v, rt[1]);
                 }
             }
@@ -725,7 +725,11 @@ struct MCMC
                     size_t s = get<0>(ret);
 
                     if (s == null_group)
+                    {
+                        while (!_bstack.empty())
+                            pop_b();
                         return {_null_move, 1};
+                    }
 
                     _dS += get<1>(ret);
                     pf += get<2>(ret);
