@@ -86,7 +86,7 @@ typedef mpl::vector1<std::false_type> rmap_tr;
     ((mrm,, vmap_t, 0))                                                        \
     ((wr,, vmap_t, 0))                                                         \
     ((b,, vmap_t, 0))                                                          \
-    ((empty_blocks, & ,std::vector<size_t>&, 0))                               \
+    ((empty_blocks, &, std::vector<size_t>&, 0))                               \
     ((empty_pos,, vmap_t, 0))                                                  \
     ((candidate_blocks, &, std::vector<size_t>&, 0))                           \
     ((candidate_pos,, vmap_t, 0))                                              \
@@ -1736,12 +1736,8 @@ public:
         }
         else
         {
-            do
-            {
-                s = uniform_sample(_candidate_blocks.begin() + 1,
-                                   _candidate_blocks.end(), rng);
-            }
-            while(_bclabel[s] != _bclabel[r]);
+            s = uniform_sample(_candidate_blocks.begin() + 1,
+                               _candidate_blocks.end(), rng);
         }
         _b[v] = s;
     }

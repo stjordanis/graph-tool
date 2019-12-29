@@ -182,11 +182,16 @@ struct MCMC
             auto t = uniform_sample(_state._empty_blocks, rng);
 
             auto r = _state._b[v];
+            _state._bclabel[t] = _state._bclabel[r];
             if (_state._coupled_state != nullptr)
             {
                 if constexpr (sample_branch)
                 {
-                    _state._coupled_state->sample_branch(t, r, rng);
+                    do
+                    {
+                        _state._coupled_state->sample_branch(t, r, rng);
+                    }
+                    while(!_state.allow_move(r, t));
                 }
                 else
                 {
@@ -196,7 +201,6 @@ struct MCMC
                 auto& hpclabel = _state._coupled_state->get_pclabel();
                 hpclabel[t] = _state._pclabel[v];
             }
-            _state._bclabel[t] = _state._bclabel[r];
 
             if (t >= _groups.size())
             {
