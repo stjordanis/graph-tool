@@ -99,6 +99,7 @@ State classes
 .. autosummary::
    :nosignatures:
 
+   ~graph_tool.inference.uncertain_blockmodel.LatentMultigraphBlockState
    ~graph_tool.inference.uncertain_blockmodel.MeasuredBlockState
    ~graph_tool.inference.uncertain_blockmodel.MixedMeasuredBlockState
    ~graph_tool.inference.uncertain_blockmodel.UncertainBlockState
@@ -154,6 +155,7 @@ __all__ = ["minimize_blockmodel_dl",
            "OverlapBlockState",
            "LayeredBlockState",
            "NestedBlockState",
+           "LatentMultigraphBlockState",
            "UncertainBlockState",
            "MeasuredBlockState",
            "UncertainBaseState",

@@ -390,6 +390,86 @@ class UncertainBlockState(UncertainBaseState):
                                                  self._state,
                                                  _get_rng())
 
+class LatentMultigraphBlockState(UncertainBaseState):
+    r"""Inference state of an erased Poisson multigraph, using the stochastic
+    block model as a prior.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Measured graph.
+    aE : ``float`` (optional, default: ``NaN``)
+        Expected total number of edges used in prior. If ``NaN``, a flat
+        prior will be used instead.
+    nested : ``boolean`` (optional, default: ``True``)
+        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        will be used, otherwise
+        :class:`~graph_tool.inference.blockmodel.BlockState`.
+    state_args : ``dict`` (optional, default: ``{}``)
+        Arguments to be passed to
+        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
+        :class:`~graph_tool.inference.blockmodel.BlockState`.
+    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+        If passed, this will be used to initialize the block state
+        directly.
+    self_loops : bool (optional, default: ``False``)
+        If ``True``, it is assumed that the uncertain graph can contain
+        self-loops.
+
+    References
+    ----------
+    .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
+       networks with unknown and heterogeneous errors", Phys. Rev. X 8
+       041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
+    """
+
+    def __init__(self, g, aE=numpy.nan, nested=True, state_args={},
+                 bstate=None, self_loops=False, **kwargs):
+
+        super(LatentMultigraphBlockState, self).__init__(g, nested=nested,
+                                                         state_args=state_args,
+                                                         bstate=bstate,
+                                                         self_loops=self_loops,
+                                                         **kwargs)
+
+        self.q = self.g.new_ep("double", val=numpy.inf)
+        self.q_default = -numpy.inf
+        self.S_const = 0
+
+        self.aE = aE
+        if numpy.isnan(aE):
+            self.E_prior = False
+        else:
+            self.E_prior = True
+
+        self._state = libinference.make_uncertain_state(self.bstate._state,
+                                                        self)
+    def __getstate__(self):
+        return dict(g=self.g, aE=self.aE, nested=self.nbstate is not None,
+                    bstate=(self.nbstate.copy() if self.nbstate is not None else
+                            self.bstate.copy()), self_loops=self.self_loops)
+
+    def __setstate__(self, state):
+        self.__init__(**state)
+
+    def copy(self, **kwargs):
+        """Return a copy of the state."""
+        return LatentMultigraphBlockState(**dict(self.__getstate__(), **kwargs))
+
+    def __copy__(self):
+        return self.copy()
+
+    def __repr__(self):
+        return "<LatentMultigraphBlockState object with %s, at 0x%x>" % \
+            (self.nbstate if self.nbstate is not None else self.bstate,
+             id(self))
+
+    def _mcmc_sweep(self, mcmc_state):
+        mcmc_state.edges_only = True
+        return libinference.mcmc_uncertain_sweep(mcmc_state,
+                                                 self._state,
+                                                 _get_rng())
+
 class MeasuredBlockState(UncertainBaseState):
     r"""Inference state of a measured graph, using the stochastic block model as a
     prior.
