@@ -470,6 +470,65 @@ class LatentMultigraphBlockState(UncertainBaseState):
                                                  self._state,
                                                  _get_rng())
 
+    def collect_marginal(self, g=None):
+        r"""Collect marginal inferred network during MCMC runs.
+
+        Parameters
+        ----------
+        g : :class:`~graph_tool.Graph` (optional, default: ``None``)
+            Previous marginal graph.
+
+        Returns
+        -------
+        g : :class:`~graph_tool.Graph`
+            New marginal graph, with internal edge
+            :class:`~graph_tool.EdgePropertyMap` ``"x"`` and ``"xdev"``,
+            containing the marginal mean and standard deviation of edge
+            multiplicities, respectively.
+
+        Notes
+        -----
+        The mean posterior marginal multiplicity of an edge :math:`(i,j)` is
+        defined as
+
+        .. math::
+
+           w_{ij} = \sum_{\boldsymbol A}A_{ij}P(\boldsymbol A|\boldsymbol D)
+
+        and likewise the variance is
+
+        .. math::
+
+           \sigma^2_{ij} = \sum_{\boldsymbol A}(A_{ij}-w_{ij})^2P(\boldsymbol A|\boldsymbol D)
+
+        where :math:`P(\boldsymbol A|\boldsymbol D)` is the posterior
+        probability given the data.
+
+        """
+
+        if g is None:
+            g = Graph(directed=self.g.is_directed())
+            g.add_vertex(self.g.num_vertices())
+            g.gp.count = g.new_gp("int", 0)
+            g.ep.count = g.new_ep("int")
+            g.ep.xsum = g.new_ep("double")
+            g.ep.x2sum = g.new_ep("double")
+            g.ep.x = g.new_ep("double")
+            g.ep.xdev = g.new_ep("double")
+
+        u = self.get_graph()
+        x = self.eweight.copy("double")
+        libinference.collect_xmarginal(g._Graph__graph,
+                                       u._Graph__graph,
+                                       _prop("e", u, x),
+                                       _prop("e", g, g.ep.count),
+                                       _prop("e", g, g.ep.xsum),
+                                       _prop("e", g, g.ep.x2sum))
+        g.gp.count += 1
+        g.ep.x.fa = g.ep.xsum.fa / g.gp.count
+        g.ep.xdev.fa = sqrt(g.ep.x2sum.fa / g.gp.count - g.ep.x.fa ** 2)
+        return g
+
 class MeasuredBlockState(UncertainBaseState):
     r"""Inference state of a measured graph, using the stochastic block model as a
     prior.
