@@ -468,52 +468,37 @@ struct MCMC
 
             std::shuffle(vs.begin(), vs.end(), rng);
 
-            double lp1 = 0, lp2 = 0;
-            for (bool swap : std::array<bool,2>({false, true}))
+            double lp = 0;
+            for (auto v : vs)
             {
-                if (!swap)
-                    push_b(vs);
+                size_t bv = _state._b[v];
+                size_t nbv = (bv == r) ? s : r;
+                double ddS;
+                if (_state.virtual_remove_size(v) > 0)
+                    ddS = _state.virtual_move(v, bv, nbv, _entropy_args);
+                else
+                    ddS = std::numeric_limits<double>::infinity();
 
-                for (auto v : vs)
+                if (!std::isinf(ddS))
+                    ddS *= _beta;
+
+                double Z = log_sum(0., -ddS);
+
+                size_t tbv = _btemp[v];
+                if (tbv == nbv)
                 {
-                    size_t bv = _state._b[v];
-                    size_t nbv = (bv == r) ? s : r;
-                    double ddS;
-                    if (_state.virtual_remove_size(v) > 0)
-                        ddS = _state.virtual_move(v, bv, nbv, _entropy_args);
-                    else
-                        ddS = std::numeric_limits<double>::infinity();
-
-                    if (!std::isinf(ddS))
-                        ddS *= _beta;
-
-                    double Z = log_sum(0., -ddS);
-
-                    size_t tbv = _btemp[v];
-                    double p;
-                    if ((swap) ? tbv != nbv : tbv == nbv)
-                    {
-                        move_vertex(v, nbv);
-                        p = -ddS - Z;
-                    }
-                    else
-                    {
-                        p = -Z;
-                    }
-
-                    if (swap)
-                        lp2 += p;
-                    else
-                        lp1 += p;
+                    move_vertex(v, nbv);
+                    lp += -ddS - Z;
                 }
-
-                if (!swap)
-                    pop_b();
+                else
+                {
+                    lp += -Z;
+                }
             }
 
             pop_b();
 
-            return log_sum(lp1, lp2) - log(2);
+            return lp;
         }
 
         bool allow_merge(size_t r, size_t s)
