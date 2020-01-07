@@ -512,6 +512,7 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
     state = NestedBlockState(g, bs=bs,
                              base_type=State,
                              deg_corr=deg_corr,
+                             sampling=False,
                              **dmask(state_args, ["deg_corr"]))
 
     bisection_args = dict(dict(mcmc_multilevel_args=mcmc_multilevel_args,

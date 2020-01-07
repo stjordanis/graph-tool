@@ -53,7 +53,7 @@ class NestedBlockState(object):
     hentropy_args : ``dict`` (optional, default: `{}`)
         Keyword arguments to be passed to the ``entropy()`` method of the
         higher-level states.
-    sampling : ``bool`` (optional, default: ``False``)
+    sampling : ``bool`` (optional, default: ``True``)
         If ``True``, the state will be properly prepared for MCMC sampling (as
         opposed to minimization).
     state_args : ``dict`` (optional, default: ``{}``)
@@ -64,7 +64,7 @@ class NestedBlockState(object):
     """
 
     def __init__(self, g, bs, base_type=BlockState, state_args={},
-                 hstate_args={}, hentropy_args={}, sampling=False, **kwargs):
+                 hstate_args={}, hentropy_args={}, sampling=True, **kwargs):
         self.g = g
         self.base_type = base_type
         if base_type is LayeredBlockState:
