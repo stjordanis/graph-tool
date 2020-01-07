@@ -8,6 +8,25 @@ import numpy.random
 from numpy.random import randint
 import scipy.stats
 
+try:
+    from data_cache import FSDataCache
+    cache = FSDataCache()
+    def get_lock(name, params):
+        return cache.get_lock(name, params, block=False)
+    def get_cache(name, params):
+        return cache.get(name, params)
+    def put_cache(name, params, val):
+        return cache.put(name, params, val)
+except ImportError:
+    from contextlib import contextmanager
+    @contextmanager
+    def get_lock(name, params):
+        return None
+    def get_cache(name, params):
+        raise KeyError()
+    def put_cache(name, params, val):
+        pass
+
 numpy.random.seed(43)
 seed_rng(43)
 
@@ -39,7 +58,7 @@ for directed in [True, False]:
         plot(res)
     gca().set_ylim(-.1, .1)
 
-    savefig("test_mcmc_reverse_prob_directed%s.pdf" % directed)
+    savefig("test_mcmc/test_mcmc_reverse_prob_directed%s.pdf" % directed)
 
 for directed in [True, False]:
     clf()
@@ -88,12 +107,12 @@ for directed in [True, False]:
                   (v, p))
             clf()
             plot(res)
-            savefig("test_mcmc_move_prob_directed%s_v%d.pdf" % (directed, int(v)))
+            savefig("test_mcmc/test_mcmc_move_prob_directed%s_v%d.pdf" % (directed, int(v)))
 
         plot(res)
     gca().set_ylim(-.1, .1)
 
-    savefig("test_mcmc_move_prob_directed%s.pdf" % directed)
+    savefig("test_mcmc/test_mcmc_move_prob_directed%s.pdf" % directed)
 
 g = graph_union(complete_graph(4), complete_graph(4))
 g.add_edge(3, 4)
@@ -103,108 +122,201 @@ for i in range(3 * 8):
     t = vs[randint(4) + 4]
     g.add_edge(s, t)
 
+g_small = g
 
-for directed in [False, True]:
-    g.set_directed(directed)
-    for nested in [False, True]:
+for wait in [5000, 25000, 50000, 100000]:
+    for g, name in [(g_small, "small"), (collection.data["lesmis"], "lesmis")]:
+        for directed in [False, True]:
+            g.set_directed(directed)
+            for nested in [False, True]:
 
-        if nested:
-            state = minimize_nested_blockmodel_dl(g, deg_corr=True)
-        else:
-            state = minimize_blockmodel_dl(g, deg_corr=True)
+                params = dict(name=name, directed=directed, nested=nested,
+                              wait=wait)
 
-        hists = {}
+                with get_lock("mcmc_test", params) as lock:
+                    if lock is None:
+                        continue
 
-        cs = list(reversed([numpy.inf, 1, 0.1, 0.01, "gibbs", -numpy.inf, -1]))
-        inits = [1, "N"]
+                    cs = list(reversed([numpy.inf, 0.01, "gibbs", -numpy.inf, -0.1]))
+                    inits = [1, "N"]
+                    try:
+                        hists = get_cache("hists", params)
+                    except KeyError:
+                        if nested:
+                            state = minimize_nested_blockmodel_dl(g, deg_corr=True)
+                        else:
+                            state = minimize_blockmodel_dl(g, deg_corr=True)
 
-        for init in inits:
-            if nested:
-                bs = [g.get_vertices()] if init == "N" else [zeros(1)]
-                state = state.copy(bs=bs + [zeros(1)] * 6, sampling=True)
-            else:
-                state = state.copy(B=g.num_vertices() if init == "N" else 1)
+                        hists = {}
 
-            for i, c in enumerate(cs):
-                if c != "gibbs":
-                    mcmc_args=dict(beta=.3, c=abs(c), niter=40)
-                else:
-                    mcmc_args=dict(beta=.3, niter=40)
+                        for init in inits:
+                            if nested:
+                                bs = [g.get_vertices()] if init == "N" else [zeros(1)]
+                                state = state.copy(bs=bs + [zeros(1)] * 6, sampling=True)
+                            else:
+                                state = state.copy(B=g.num_vertices() if init == "N" else 1)
 
-                if nested:
-                    get_B = lambda s: [sl.get_nonempty_B() for sl in s.levels]
-                else:
-                    get_B = lambda s: [s.get_nonempty_B()]
+                            step = 500
 
-                hists[(c, init)] = mcmc_equilibrate(state,
-                                                    mcmc_args=mcmc_args,
-                                                    gibbs=c=="gibbs",
-                                                    multiflip = c != "gibbs" and c < 0,
-                                                    wait=6000,
-                                                    nbreaks=6,
-                                                    callback=get_B,
-                                                    verbose=(1, "c = %s " % str(c)) if verbose else False,
-                                                    history=True)
+                            for i, c in enumerate(cs):
+                                if c != "gibbs":
+                                    mcmc_args=dict(beta=.3, c=abs(c), niter=step)
+                                else:
+                                    mcmc_args=dict(beta=.3, niter=step)
 
-        output = open("test_mcmc_nested%s_directed%s-output" % (nested, directed), "w")
-        for c1 in cs:
-            for init1 in inits:
-                for c2 in cs:
-                    for init2 in inits:
-                        try:
-                            if (c2, init2) < (c1, init1):
-                                continue
-                        except TypeError:
-                            pass
-                        Ss1 = array(list(zip(*hists[(c1, init1)]))[2])
-                        Ss2 = array(list(zip(*hists[(c2, init2)]))[2])
-                        # add very small normal noise, to solve discreteness issue
-                        Ss1 += numpy.random.normal(0, 1e-2, len(Ss1))
-                        Ss2 += numpy.random.normal(0, 1e-2, len(Ss2))
-                        D, p = scipy.stats.ks_2samp(Ss1, Ss2)
-                        D_c = 1.63 * sqrt((len(Ss1) + len(Ss2)) / (len(Ss1) * len(Ss2)))
-                        print("nested:", nested, "directed:", directed, "c1:", c1,
-                              "init1:", init1, "c2:", c2, "init2:", init2, "D:",
-                              D, "D_c:", D_c, "p-value:", p,
-                              file=output)
-                        if p < .001:
-                            print(("Warning, distributions for directed=%s (c1, c2) = " +
-                                   "(%s, %s) are not the same, with a p-value: %g (D=%g, D_c=%g)") %
-                                  (str(directed), str((c1, init1)),
-                                   str((c2, init2)), p, D, D_c),
-                                  file=output)
-                        output.flush()
+                                if name == "lesmis":
+                                    mcmc_args["beta"] = .9
 
-        for cum in [True, False]:
-            figure(figsize=(10 * 4/3, 10))
-            bins = None
-            for c in cs:
-                for init in inits:
-                    hist = hists[(c,init)]
-                    if cum:
-                        h = histogram(list(zip(*hist))[2], 1000000,
-                                      density=True)
-                        y = numpy.cumsum(h[0])
-                        y /= y[-1]
-                        plot(h[-1][:-1], y, "-", label="c=%s, init=%s" % (str(c), init))
+                                if nested:
+                                    get_B = lambda s: [s.levels[0].get_Be()]
+                                else:
+                                    get_B = lambda s: [s.get_Be()]
 
-                        if c != numpy.inf:
-                            hist = hists[(numpy.inf, 1)]
-                            h2 = histogram(list(zip(*hist))[2], bins=h[-1],
-                                           density=True)
-                            y2 = numpy.cumsum(h2[0])
-                            y2 /= y2[-1]
-                            res = abs(y - y2)
-                            i = res.argmax()
-                            axvline(h[-1][i], color="grey")
-                    else:
-                        h = histogram(list(zip(*hist))[2], 40, density=True)
-                        plot(h[-1][:-1], h[0], "s-", label="c=%s, init=%s" % (str(c), init))
-                        gca().set_yscale("log")
-            if cum:
-                legend(loc="lower right")
-            else:
-                legend(loc="best")
-            savefig("test_mcmc_nested%s_directed%s-cum%s.pdf" % (nested, directed, str(cum)))
+                                hists[(c, init)] = mcmc_equilibrate(state,
+                                                                    mcmc_args=mcmc_args,
+                                                                    gibbs=c=="gibbs",
+                                                                    multiflip = c != "gibbs" and c < 0,
+                                                                    force_niter=wait,
+                                                                    callback=get_B,
+                                                                    verbose=(1, "c = %s " % str(c)) if verbose else False,
+                                                                    history=True)
+                        put_cache("hists", params, hists)
 
-print("OK")
+                    output = open(f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-wait{wait}-output", "w")
+                    for c1 in cs:
+                        for init1 in inits:
+                            for c2 in cs:
+                                for init2 in inits:
+                                    try:
+                                        if (c2, init2) < (c1, init1):
+                                            continue
+                                    except TypeError:
+                                        pass
+                                    Ss1 = array(list(zip(*hists[(c1, init1)]))[2])
+                                    Ss2 = array(list(zip(*hists[(c2, init2)]))[2])
+                                    # add very small normal noise, to solve discreteness issue
+                                    Ss1 += numpy.random.normal(0, 1e-2, len(Ss1))
+                                    Ss2 += numpy.random.normal(0, 1e-2, len(Ss2))
+                                    D, p = scipy.stats.ks_2samp(Ss1, Ss2)
+                                    D_c = 1.63 * sqrt((len(Ss1) + len(Ss2)) / (len(Ss1) * len(Ss2)))
+                                    print("nested:", nested, "directed:", directed, "c1:", c1,
+                                          "init1:", init1, "c2:", c2, "init2:", init2, "D:",
+                                          D, "D_c:", D_c, "p-value:", p,
+                                          file=output)
+                                    if p < .001:
+                                        print(("Warning, distributions for directed=%s (c1, c2) = " +
+                                               "(%s, %s) are not the same, with a p-value: %g (D=%g, D_c=%g)") %
+                                              (str(directed), str((c1, init1)),
+                                               str((c2, init2)), p, D, D_c),
+                                              file=output)
+                                    output.flush()
+
+                    for cum in [True, False]:
+                        for Be in [True, False]:
+                            figure(figsize=(10 * 4/3, 10))
+                            hc = []
+                            for c in cs:
+                                for init in inits:
+                                    hist_i = hists[(c,init)]
+                                    vals = list(zip(*hist_i))
+                                    if Be:
+                                        hc += vals[-1]
+                                    else:
+                                        hc += vals[2]
+                            bins = linspace(min(hc), max(hc), 40)
+                            for c in cs:
+                                for init in inits:
+                                    hist_i = hists[(c,init)]
+                                    vals = list(zip(*hist_i))
+                                    if Be:
+                                        vals = vals[-1]
+                                    else:
+                                        vals = vals[2]
+
+                                    if cum:
+                                        h = histogram(vals, 1000000, density=True)
+                                        y = numpy.cumsum(h[0])
+                                        y /= y[-1]
+                                        plot(h[-1][:-1], y, "-", lw=.5,
+                                             label="c=%s, init=%s" % (str(c), init))
+
+                                        if c != numpy.inf:
+                                            hist_i = hists[(numpy.inf, 1)]
+                                            h2 = histogram(list(zip(*hist_i))[2], bins=h[-1],
+                                                           density=True)
+                                            y2 = numpy.cumsum(h2[0])
+                                            y2 /= y2[-1]
+                                            res = abs(y - y2)
+                                            i = res.argmax()
+                                            axvline(h[-1][i], color="grey")
+                                    else:
+                                        hist(vals, bins=bins, density=True, #log=True,
+                                             histtype="step", label="c=%s, init=%s" % (str(c), init))
+                            if cum:
+                                legend(loc="lower right")
+                            else:
+                                legend(loc="best")
+                            savefig(f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-cum{cum}-wait{wait}.pdf")
+
+                            if not cum:
+                                figure(figsize=(10 * 4/3, 10))
+
+                                vals = []
+                                for c in cs:
+                                    for init in inits:
+                                        hist_i = hists[(c,init)]
+                                        vals_i = list(zip(*hist_i))
+                                        if Be:
+                                            vals += vals_i[-1]
+                                        else:
+                                            vals += vals_i[2]
+                                x = linspace(min(vals), max(vals), 1000)
+                                for c in cs:
+                                    for init in inits:
+                                        hist_i = hists[(c,init)]
+                                        vals = list(zip(*hist_i))
+                                        if Be:
+                                            vals = vals[-1]
+                                        else:
+                                            vals = vals[2]
+
+                                        kernel = scipy.stats.gaussian_kde(vals)
+                                        y = kernel(x)
+                                        plot(x, y, "-", linewidth=.4,
+                                             label="c=%s, init=%s" % (str(c), init))
+                                legend(loc="best")
+                                savefig(f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-kde-wait{wait}.pdf")
+
+                                figure(figsize=(10 * 4/3, 10))
+                                ymean = zeros(len(x))
+                                count = 0
+                                for c in cs:
+                                    for init in inits:
+                                        hist_i = hists[(c,init)]
+                                        vals = list(zip(*hist_i))
+                                        if Be:
+                                            vals = vals[-1]
+                                        else:
+                                            vals = vals[2]
+
+                                        kernel = scipy.stats.gaussian_kde(vals)
+                                        ymean += kernel(x)
+                                        count += 1
+                                ymean /= count
+
+                                for c in cs:
+                                    for init in inits:
+                                        hist_i = hists[(c,init)]
+                                        vals = list(zip(*hist_i))
+                                        if Be:
+                                            vals = vals[-1]
+                                        else:
+                                            vals = vals[2]
+
+                                        kernel = scipy.stats.gaussian_kde(vals)
+                                        y = kernel(x) - ymean
+                                        plot(x, y, "-", linewidth=1.5,
+                                             label="c=%s, init=%s" % (str(c), init))
+                                legend(loc="best")
+                                savefig(f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-kde-res-wait{wait}.pdf")
+    print("OK")
