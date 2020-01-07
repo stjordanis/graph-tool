@@ -95,7 +95,10 @@ struct MCMC
         {
             if (!_allow_vacate && _state.is_last(v))
                 return _null_move;
-            return  _state.sample_block(v, _c, _d, rng);
+            size_t s = _state.sample_block(v, _c, _d, rng);
+            if (s == node_state(v))
+                return _null_move;
+            return s;
         }
 
         std::tuple<double, double>

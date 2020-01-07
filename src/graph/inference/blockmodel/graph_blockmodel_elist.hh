@@ -215,6 +215,7 @@ public:
     }
 
     template <class Vertex, class VProp>
+    [[gnu::hot]]
     void remove_vertex(Vertex v, VProp& b, Graph& g)
     {
         if (_egroups.empty())
@@ -230,6 +231,7 @@ public:
     }
 
     template <class Vertex, class Vprop, class Eprop>
+    [[gnu::hot]]
     void add_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
     {
         if (_egroups.empty())

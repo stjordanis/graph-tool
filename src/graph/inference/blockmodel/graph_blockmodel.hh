@@ -218,7 +218,7 @@ public:
           _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
           _degs(uncheck(__adegs, typename std::add_pointer<degs_t>::type())),
           _emat(other._emat),
-          _egroups_enabled(other._egroups_enabled),
+          _egroups_update(other._egroups_update),
           _neighbor_sampler(other._neighbor_sampler),
           _m_entries(num_vertices(_bg))
     {
@@ -313,7 +313,7 @@ public:
     // move a vertex from its current block to block nr
     void move_vertex(size_t v, size_t r, size_t nr)
     {
-        move_vertex(v, r, nr, [](auto&) {return false;});
+        move_vertex(v, r, nr, [](auto&) constexpr {return false;});
     }
 
     void move_vertex(size_t v, size_t nr)
@@ -444,7 +444,7 @@ public:
 
         _wr[r] -= _vweight[v];
 
-        if (!_egroups.empty() && _egroups_enabled)
+        if (!_egroups.empty() && _egroups_update)
             _egroups.remove_vertex(v, _b, _g);
 
         if (is_partition_stats_enabled())
@@ -459,7 +459,7 @@ public:
 
         _wr[r] += _vweight[v];
 
-        if (!_egroups.empty() && _egroups_enabled)
+        if (!_egroups.empty() && _egroups_update)
             _egroups.add_vertex(v, _b, _eweight, _g);
 
         if (is_partition_stats_enabled())
@@ -1356,6 +1356,7 @@ public:
 
 
     template <class MEntries>
+    [[gnu::hot]]
     double virtual_move(size_t v, size_t r, size_t nr, const entropy_args_t& ea,
                         MEntries& m_entries)
     {
@@ -1364,7 +1365,7 @@ public:
         if (r != null_group && nr != null_group && !allow_move(r, nr))
             return std::numeric_limits<double>::infinity();
 
-        get_move_entries(v, r, nr, m_entries, [](auto) { return false; });
+        get_move_entries(v, r, nr, m_entries, [](auto) constexpr { return false; });
 
         if (r == nr || _vweight[v] == 0)
             return 0;
@@ -1651,6 +1652,7 @@ public:
         return dS;
     }
 
+    [[gnu::hot]]
     double virtual_move(size_t v, size_t r, size_t nr, const entropy_args_t& ea)
     {
         return virtual_move(v, r, nr, ea, _m_entries);
@@ -2625,7 +2627,7 @@ public:
     emat_t _emat;
 
     EGroups<g_t, is_weighted_t> _egroups;
-    bool _egroups_enabled = true;
+    bool _egroups_update = true;
 
     typedef NeighborSampler<g_t, is_weighted_t, mpl::false_>
         neighbor_sampler_t;

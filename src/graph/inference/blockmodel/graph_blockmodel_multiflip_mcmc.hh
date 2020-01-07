@@ -648,6 +648,8 @@ struct MCMC
                     if (_groups[r].size() < 2)
                         return {_null_move, 1};
 
+                    _state._egroups_update = false;
+
                     _vs = _groups[r];
                     push_b(_vs);
 
@@ -668,6 +670,8 @@ struct MCMC
                     for (auto v : _vs)
                         _bnext[v] = _state._b[v];
                     pop_b();
+
+                    _state._egroups_update = true;
                 }
                 break;
 
@@ -680,6 +684,8 @@ struct MCMC
 
                     if (!allow_merge(r, s))
                         return {_null_move, 1};
+
+                    _state._egroups_update = false;
 
                     if (!std::isinf(_beta))
                     {
@@ -696,6 +702,8 @@ struct MCMC
                         _bnext[v] = _state._b[v];
                     pop_b();
 
+                    _state._egroups_update = true;
+
                     if (_verbose)
                         cout << "merge proposal: " <<  _groups[r].size() << " "
                              << _groups[s].size() << " " << _dS << " " << pb - pf
@@ -708,6 +716,8 @@ struct MCMC
                     if (_rlist.size() == 1)
                         return {_null_move, 1};
 
+                    _state._egroups_update = false;
+
                     push_b(_groups[r]);
 
                     auto ret = sample_merge(r, rng);
@@ -717,6 +727,7 @@ struct MCMC
                     {
                         while (!_bstack.empty())
                             pop_b();
+                        _state._egroups_update = true;
                         return {_null_move, 1};
                     }
 
@@ -741,6 +752,8 @@ struct MCMC
 
                     while (!_bstack.empty())
                         pop_b();
+
+                    _state._egroups_update = true;
 
                     if (_verbose)
                         cout << "mergesplit proposal: " << _dS << " " << pb - pf

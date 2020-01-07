@@ -88,7 +88,7 @@ public:
           _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
           _c_mrs(_mrs.get_checked()),
           _emat(_bg, rng),
-          _egroups_enabled(true),
+          _egroups_update(true),
           _overlap_stats(_g, _b, _half_edges, _node_index, num_vertices(_bg)),
           _coupled_state(nullptr)
     {
@@ -166,7 +166,7 @@ public:
           _B_E_D(other._B_E_D),
           _rt(other._rt),
           _emat(other._emat),
-          _egroups_enabled(other._egroups_enabled),
+          _egroups_update(other._egroups_update),
           _overlap_stats(other._overlap_stats),
           _coupled_state(nullptr)
     {
@@ -194,13 +194,13 @@ public:
         {
             _overlap_stats.add_half_edge(v, r, _b, _g);
             _b[v] = r;
-            if (!_egroups.empty() && _egroups_enabled)
+            if (!_egroups.empty() && _egroups_update)
                 _egroups.add_vertex(v, _b, _eweight, _g);
         }
         else
         {
             _overlap_stats.remove_half_edge(v, r, _b, _g);
-            if (!_egroups.empty() && _egroups_enabled)
+            if (!_egroups.empty() && _egroups_update)
                 _egroups.remove_vertex(v, _b, _g);
         }
 
@@ -1290,7 +1290,7 @@ public:
     emat_t _emat;
 
     EGroups<g_t, mpl::false_> _egroups;
-    bool _egroups_enabled;
+    bool _egroups_update;
 
     overlap_stats_t _overlap_stats;
     std::vector<overlap_partition_stats_t> _partition_stats;
