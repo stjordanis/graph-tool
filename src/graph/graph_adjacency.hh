@@ -233,29 +233,43 @@ public:
 
     typedef adjacency_iterator in_adjacency_iterator;
 
-    template <class Deference>
-    struct base_edge_iterator:
-        public boost::iterator_facade<base_edge_iterator<Deference>,
+    template <class Base>
+    struct edge_iter_facade:
+        public boost::iterator_facade<Base,
                                       edge_descriptor,
                                       std::random_access_iterator_tag,
                                       edge_descriptor>
+    {};
+
+    template <class Dereference>
+    struct base_edge_iterator:
+        public edge_iter_facade<base_edge_iterator<Dereference>>
     {
         base_edge_iterator() {}
+        [[gnu::always_inline]] [[gnu::flatten]]
         base_edge_iterator(vertex_t v, typename edge_list_t::const_iterator&& iter)
             : _v(v), _iter(std::forward<typename edge_list_t::const_iterator>(iter))
         {}
 
     private:
         friend class boost::iterator_core_access;
+        [[gnu::always_inline]] [[gnu::flatten]]
         void increment() { ++_iter; }
+
+        [[gnu::always_inline]] [[gnu::flatten]]
         void decrement() { --_iter; }
+
         template <class Distance>
+        [[gnu::always_inline]] [[gnu::flatten]]
         void advance(Distance n) { _iter += n; }
+
+        [[gnu::always_inline]] [[gnu::flatten]]
         auto distance_to(base_edge_iterator const& other) const
         {
             return other._iter - _iter;
         }
 
+        [[gnu::always_inline]] [[gnu::flatten]]
         bool equal(base_edge_iterator const& other) const
         {
             return _iter == other._iter;
@@ -264,7 +278,14 @@ public:
         [[gnu::always_inline]] [[gnu::flatten]]
         edge_descriptor dereference() const
         {
-            return Deference::def(_v, *_iter, *this);
+            return Dereference::def(_v, *_iter, *this);
+        }
+
+    public:
+        [[gnu::always_inline]] [[gnu::flatten]]
+        edge_descriptor operator*() const
+        {
+            return edge_iter_facade<base_edge_iterator>::operator*();
         }
 
     protected:
@@ -306,6 +327,7 @@ public:
     struct make_in_or_out_edge
     {
         template <class I>
+        [[gnu::always_inline]] [[gnu::flatten]]
         static edge_descriptor def(vertex_t u,
                                    const std::pair<vertex_t, vertex_t>& v,
                                    const I& i)
@@ -324,6 +346,7 @@ public:
                                                       reversed>>
     {
         all_edge_iterator_base() {}
+        [[gnu::always_inline]] [[gnu::flatten]]
         all_edge_iterator_base(vertex_t v,
                                typename edge_list_t::const_iterator&& iter,
                                const typename edge_list_t::const_iterator& pos)
@@ -350,6 +373,7 @@ public:
     {
     public:
         edge_iterator() {}
+        [[gnu::always_inline]] [[gnu::flatten]]
         explicit edge_iterator(const typename vertex_list_t::const_iterator& vi_begin,
                                const typename vertex_list_t::const_iterator& vi_end,
                                const typename vertex_list_t::const_iterator& vi,
@@ -363,6 +387,7 @@ public:
     private:
         friend class boost::iterator_core_access;
 
+        [[gnu::always_inline]] [[gnu::flatten]]
         void skip()
         {
             //skip empty vertices
@@ -375,12 +400,14 @@ public:
             }
         }
 
+        [[gnu::always_inline]] [[gnu::flatten]]
         void increment()
         {
             ++_ei;
             skip();
         }
 
+        [[gnu::always_inline]] [[gnu::flatten]]
         bool equal(edge_iterator const& other) const
         {
             if (_vi_begin == _vi_end)
@@ -388,6 +415,7 @@ public:
             return _vi == other._vi && _ei == other._ei;
         }
 
+        [[gnu::always_inline]] [[gnu::flatten]]
         edge_descriptor dereference() const
         {
             return edge_descriptor(vertex_t(_vi - _vi_begin),
@@ -480,7 +508,7 @@ public:
         _epos.shrink_to_fit();
     }
 
-    [[gnu::always_inline]]
+    [[gnu::always_inline]] [[gnu::flatten]]
     void reverse_edge(edge_descriptor& e) const
     {
         auto& elist = _edges[e.s];
