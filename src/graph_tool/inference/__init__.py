@@ -155,6 +155,7 @@ __all__ = ["minimize_blockmodel_dl",
            "OverlapBlockState",
            "LayeredBlockState",
            "NestedBlockState",
+           "VICenterState",
            "LatentMultigraphBlockState",
            "UncertainBlockState",
            "MeasuredBlockState",
@@ -199,3 +200,4 @@ from . blockmodel_em import *
 from . util import *
 from . modularity import *
 from . latent_multigraph import *
+from . partition_centroid import *
