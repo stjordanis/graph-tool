@@ -32,6 +32,7 @@ namespace graph_tool
 using namespace boost;
 
 template <class T1, class T2>
+[[gnu::const]]
 inline double lbinom(T1 N, T2 k)
 {
     if (N == 0 || k == 0 || k >= N)
@@ -42,6 +43,7 @@ inline double lbinom(T1 N, T2 k)
 }
 
 template <bool Init=true, class T1, class T2>
+[[gnu::const]]
 inline double lbinom_fast(T1 N, T2 k)
 {
     if (N == 0 || k == 0 || k > N)
@@ -50,6 +52,7 @@ inline double lbinom_fast(T1 N, T2 k)
 }
 
 template <class T1, class T2>
+[[gnu::const]]
 inline double lbinom_careful(T1 N, T2 k)
 {
     if (N == 0 || k == 0 || k >= N)
@@ -69,6 +72,7 @@ inline double lbinom_careful(T1 N, T2 k)
 }
 
 template <class T>
+[[gnu::const]]
 inline auto lbeta(T x, T y)
 {
     return (std::lgamma(x) + std::lgamma(y)) - std::lgamma(x + y);

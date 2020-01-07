@@ -39,6 +39,7 @@ extern vector<double> __lgamma_cache;
 void init_safelog(size_t x);
 
 template <class T>
+[[gnu::const]]
 inline double safelog(T x)
 {
     if (x == 0)
@@ -47,11 +48,12 @@ inline double safelog(T x)
 }
 
 template <bool Init=true, class T>
+[[gnu::pure]]
 inline double safelog_fast(T x)
 {
     if (size_t(x) >= __safelog_cache.size())
     {
-        if (Init)
+        if constexpr (Init)
             init_safelog(x);
         else
             return safelog(x);
@@ -62,17 +64,19 @@ inline double safelog_fast(T x)
 void init_xlogx(size_t x);
 
 template <class T>
+[[gnu::pure]]
 inline double xlogx(T x)
 {
     return x * safelog(x);
 }
 
 template <bool Init=true, class T>
+[[gnu::pure]]
 inline double xlogx_fast(T x)
 {
     if (size_t(x) >= __xlogx_cache.size())
     {
-        if (Init)
+        if constexpr (Init)
             init_xlogx(x);
         else
             return xlogx(x);
@@ -83,6 +87,7 @@ inline double xlogx_fast(T x)
 void init_lgamma(size_t x);
 
 template <bool Init=true, class T>
+[[gnu::pure]]
 inline double lgamma_fast(T x)
 {
     if (size_t(x) >= __lgamma_cache.size())

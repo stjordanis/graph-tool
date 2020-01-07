@@ -275,7 +275,7 @@ make_filt_graph(const Graph& g, EdgePredicate ep, VertexPredicate vp)
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 std::pair<typename filt_graph<G, EP, VP>::vertex_iterator,
         typename filt_graph<G, EP, VP>::vertex_iterator>
 vertices(const filt_graph<G, EP, VP>& g)
@@ -289,7 +289,7 @@ vertices(const filt_graph<G, EP, VP>& g)
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 std::pair<typename filt_graph<G, EP, VP>::edge_iterator,
         typename filt_graph<G, EP, VP>::edge_iterator>
 edges(const filt_graph<G, EP, VP>& g)
@@ -362,7 +362,7 @@ target(const typename filt_graph_base<G>::edge_descriptor& e,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::out_edge_iterator,
           typename filt_graph<G, EP, VP>::out_edge_iterator>
 out_edges(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -376,7 +376,7 @@ out_edges(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::out_edge_iterator,
           typename filt_graph<G, EP, VP>::out_edge_iterator>
 _all_edges_out(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -412,7 +412,7 @@ degree(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::adjacency_iterator,
           typename filt_graph<G, EP, VP>::adjacency_iterator>
 out_neighbors(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -426,7 +426,7 @@ out_neighbors(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::in_adjacency_iterator,
           typename filt_graph<G, EP, VP>::in_adjacency_iterator>
 in_neighbors(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -440,7 +440,7 @@ in_neighbors(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::adjacency_iterator,
           typename filt_graph<G, EP, VP>::adjacency_iterator>
 all_neighbors(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -454,7 +454,7 @@ all_neighbors(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::adjacency_iterator,
           typename filt_graph<G, EP, VP>::adjacency_iterator>
 adjacent_vertices(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -464,7 +464,7 @@ adjacent_vertices(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::in_edge_iterator,
         typename filt_graph<G, EP, VP>::in_edge_iterator>
 in_edges(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -478,7 +478,7 @@ in_edges(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::in_edge_iterator,
         typename filt_graph<G, EP, VP>::in_edge_iterator>
 _all_edges_in(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -505,7 +505,7 @@ in_degree(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename filt_graph<G, EP, VP>::all_edge_iterator,
           typename filt_graph<G, EP, VP>::all_edge_iterator>
 all_edges(typename filt_graph<G, EP, VP>::vertex_descriptor u,
@@ -532,7 +532,7 @@ edge(typename filt_graph<G, EP, VP>::vertex_descriptor u,
 }
 
 template <typename G, typename EP, typename VP>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 std::pair<typename filt_graph<G, EP, VP>::out_edge_iterator,
           typename filt_graph<G, EP, VP>::out_edge_iterator>
 edge_range(typename filt_graph<G, EP, VP>::vertex_descriptor u,

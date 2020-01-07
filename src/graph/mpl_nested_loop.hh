@@ -71,7 +71,7 @@ struct all_any_cast
         : _a(a), _args(args) {}
 
     template <class... Ts>
-    __attribute__((always_inline))
+    [[gnu::always_inline]]
     void operator()(Ts*... vs) const
     {
         dispatch(std::make_index_sequence<sizeof...(Ts)>(), vs...);
@@ -100,7 +100,7 @@ struct all_any_cast
     }
 
     template <std::size_t... Idx, class... Ts>
-    __attribute__((always_inline))
+    [[gnu::always_inline]]
     void dispatch(std::index_sequence<Idx...>, Ts*...) const
     {
         try
@@ -159,7 +159,7 @@ struct inner_loop<Action, std::tuple<Ts...>>
     inner_loop(Action a): _a(a) {}
 
     template <class T>
-    __attribute__((always_inline))
+    [[gnu::always_inline]]
     void operator()(T*) const
     { _a(typename std::add_pointer<Ts>::type()...,
          typename std::add_pointer<T>::type()); }  // innermost loop
@@ -172,7 +172,7 @@ struct inner_loop<Action, std::tuple<Ts...>, TR1, TRS...>
     inner_loop(Action a): _a(a) {}
 
     template <class T>
-    __attribute__((always_inline))
+    [[gnu::always_inline]]
     void operator()(T*) const
     {
         typedef inner_loop<Action, std::tuple<Ts..., T>, TRS...> inner_loop_t;

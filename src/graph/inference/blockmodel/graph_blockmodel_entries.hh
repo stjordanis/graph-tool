@@ -94,7 +94,7 @@ void tuple_op_imp(T& tuple, OP&& op, Ti&& v, Ts&&... vals)
 }
 
 template <class OP, class T, class... Ts>
-__attribute__((flatten))
+[[gnu::flatten]]
 void tuple_op(T& tuple, OP&& op, Ts&&... vals)
 {
     tuple_op_imp<0>(tuple, std::forward<OP>(op), std::forward<Ts>(vals)...);
@@ -157,7 +157,7 @@ public:
     const pair<size_t, size_t>& get_move() { return _rnr; }
 
     template <bool First, bool Source>
-    inline __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]] inline
     size_t& get_field_rnr(size_t s, size_t t)
     {
         auto& out_field = First ? _r_out_field : _nr_out_field;
@@ -172,7 +172,7 @@ public:
         }
     }
 
-    inline __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]] inline
     size_t& get_field(size_t s, size_t t)
     {
         if (s == _rnr.first)
@@ -187,7 +187,7 @@ public:
     }
 
     template <bool Add, class... DVals>
-    inline __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]] inline
     void insert_delta_dispatch(size_t s, size_t t, size_t& f, int d, DVals&&... delta)
     {
         if (f == _null)
@@ -214,7 +214,7 @@ public:
     }
 
     template <bool First, bool Source, bool Add, class... DVals>
-    inline __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]] inline
     void insert_delta_rnr(size_t s, size_t t, int d, DVals&&... delta)
     {
         auto& f = get_field_rnr<First, Source>(s, t);
@@ -222,14 +222,14 @@ public:
     }
 
     template <bool Add, class... DVals>
-    inline __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]] inline
     void insert_delta(size_t s, size_t t, int d, DVals&&... delta)
     {
         auto& f = get_field(s, t);
         insert_delta_dispatch<Add>(s, t, f, d, std::forward<DVals>(delta)...);
     }
 
-    inline __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]] inline
     int get_delta(size_t r, size_t s)
     {
         size_t f = get_field(r, s);
@@ -311,10 +311,10 @@ struct is_loop_nop
 
 template <bool Remove, bool Add, class Vertex, class Graph, class Vprop,
           class Eprop, class MEntries, class Efilt, class IL, class... Eprops>
-inline __attribute__((always_inline)) __attribute__((flatten))
-void modify_entries(Vertex v, Vertex r, Vertex nr, Vprop& _b, Graph& g,
-                    Eprop& eweights, MEntries& m_entries, Efilt&& efilt,
-                    IL&& is_loop, Eprops&... eprops)
+[[gnu::always_inline]] [[gnu::flatten]] inline
+void modify_entries(Vertex v, Vertex r, [[maybe_unused]] Vertex nr, Vprop& _b,
+                    Graph& g, Eprop& eweights, MEntries& m_entries,
+                    Efilt&& efilt, IL&& is_loop, Eprops&... eprops)
 {
     typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
     auto& eself_weight = m_entries._self_eweight;
@@ -337,11 +337,11 @@ void modify_entries(Vertex v, Vertex r, Vertex nr, Vprop& _b, Graph& g,
         vertex_t s = _b[u];
         int ew = eweights[e];
 
-        if (Remove)
+        if constexpr (Remove)
             m_entries.template insert_delta_rnr<true, true, false>
                 (r, s, ew, make_vadapter(eprops, e)...);
 
-        if (Add)
+        if constexpr (Add)
         {
             if (u == v)
                 s = nr;
@@ -372,10 +372,10 @@ void modify_entries(Vertex v, Vertex r, Vertex nr, Vprop& _b, Graph& g,
                             auto f = [](auto&...) {};
                             f(op(vals)...);
 
-                            if (Add)
+                            if constexpr (Add)
                                 m_entries.template insert_delta_rnr<false, true, false>
                                     (nr, nr, self_weight / 2, vals...);
-                            if (Remove)
+                            if constexpr (Remove)
                                 m_entries.template insert_delta_rnr<true, true, true>
                                     (r, r, self_weight / 2, vals...);
                         }, eself_weight);
@@ -424,7 +424,7 @@ void modify_entries(Vertex v, Vertex r, Vertex nr, Vprop& _b, Graph& g,
 // after the move
 template <class Graph, class Vertex, class VProp, class Eprop,
           class MEntries, class EFilt, class IL, class... Eprops>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 void move_entries(Vertex v, size_t r, size_t nr, VProp& _b, Graph& g,
                   Eprop& eweights, size_t B, MEntries& m_entries,
                   EFilt&& efilt, IL&& is_loop, Eprops&... eprops)
@@ -456,7 +456,7 @@ void move_entries(Vertex v, size_t r, size_t nr, VProp& _b, Graph& g,
 
 // operation on a set of entries
 template <class MEntries, class EMat, class OP>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 void entries_op(MEntries& m_entries, EMat& emat, OP&& op)
 {
     const auto& entries = m_entries.get_entries();
@@ -474,7 +474,7 @@ void entries_op(MEntries& m_entries, EMat& emat, OP&& op)
 
 // operation on a set of entries, with edge covariates
 template <class MEntries, class EMat, class OP>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 void wentries_op(MEntries& m_entries, EMat& emat, OP&& op)
 {
     const auto& entries = m_entries.get_entries();
@@ -493,6 +493,7 @@ void wentries_op(MEntries& m_entries, EMat& emat, OP&& op)
 
 // obtain the entropy difference given a set of entries in the e_rs matrix
 template <bool exact, class MEntries, class Eprop, class EMat, class BGraph>
+[[gnu::always_inline]] [[gnu::flatten]] [[gnu::hot]] inline
 double entries_dS(MEntries& m_entries, Eprop& mrs, EMat& emat, BGraph& bg)
 {
     double dS = 0;
@@ -512,6 +513,7 @@ double entries_dS(MEntries& m_entries, Eprop& mrs, EMat& emat, BGraph& bg)
 }
 
 template <bool Add, bool Remove, class State, class MEntries>
+[[gnu::always_inline]] [[gnu::flatten]] inline
 void apply_delta(State& state, MEntries& m_entries)
 {
     auto eops =

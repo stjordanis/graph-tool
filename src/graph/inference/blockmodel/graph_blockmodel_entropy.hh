@@ -56,6 +56,7 @@ struct entropy_args_t
 
 // exact microcanonical deg-corr entropy
 template <class Graph>
+[[gnu::always_inline]]
 inline double eterm_exact(size_t r, size_t s, size_t mrs, const Graph&)
 {
     double val = lgamma_fast(mrs + 1);
@@ -75,6 +76,7 @@ inline double eterm_exact(size_t r, size_t s, size_t mrs, const Graph&)
 }
 
 template <class Graph>
+[[gnu::always_inline]]
 inline double vterm_exact(size_t mrp, size_t mrm, size_t wr, bool deg_corr,
                           const Graph&)
 {
@@ -96,7 +98,8 @@ inline double vterm_exact(size_t mrp, size_t mrm, size_t wr, bool deg_corr,
 
 // "edge" term of the entropy
 template <class Graph>
-inline double eterm(size_t r, size_t s, size_t mrs, const Graph& )
+[[gnu::always_inline]]
+inline double eterm(size_t r, size_t s, size_t mrs, const Graph&)
 {
     if (!is_directed_::apply<Graph>::type::value && r == s)
         mrs *= 2;
@@ -111,8 +114,9 @@ inline double eterm(size_t r, size_t s, size_t mrs, const Graph& )
 
 // "vertex" term of the entropy
 template <class Graph>
+[[gnu::always_inline]]
 inline double vterm(size_t mrp, size_t mrm, size_t wr, bool deg_corr,
-                    Graph& )
+                    Graph&)
 {
     double one = 0.5;
 
@@ -132,10 +136,11 @@ inline double vterm(size_t mrp, size_t mrm, size_t wr, bool deg_corr,
 
 // "edge" term of the entropy
 template <class Graph>
+[[gnu::pure]]
 inline double eterm_dense(size_t r, size_t s, uint64_t ers, uint64_t wr_r,
                           uint64_t wr_s, bool multigraph, const Graph& g)
 {
-    uint64_t nrns; // avoid overflow for nr < 2^32
+    uint64_t nrns; // avoid overflow for nr > 2^32
 
     if (ers == 0)
         return 0.;

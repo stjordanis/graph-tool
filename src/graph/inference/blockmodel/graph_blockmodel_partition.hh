@@ -36,7 +36,7 @@ typedef vprop_map_t<std::vector<std::tuple<size_t, size_t, size_t>>>::type
 struct simple_degs_t {};
 
 template <class Graph, class Vprop, class Eprop, class F>
-__attribute__((always_inline)) __attribute__((flatten)) inline
+[[gnu::always_inline]] [[gnu::flatten]] inline
 void degs_op(size_t v, Vprop& vweight, Eprop& eweight, const simple_degs_t&,
              Graph& g, F&& f)
 {
@@ -44,7 +44,7 @@ void degs_op(size_t v, Vprop& vweight, Eprop& eweight, const simple_degs_t&,
 }
 
 template <class Graph, class Vprop, class Eprop, class F>
-__attribute__((always_inline)) __attribute__((flatten)) inline
+[[gnu::always_inline]] [[gnu::flatten]] inline
 void degs_op(size_t v, Vprop& vweight, Eprop& eweight,
              const typename degs_map_t::unchecked_t& degs, Graph& g, F&& f)
 {

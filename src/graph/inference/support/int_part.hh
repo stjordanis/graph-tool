@@ -30,6 +30,7 @@ double log_q_approx_small(size_t n, size_t k);
 extern boost::multi_array<double, 2> __q_cache;
 
 template <class T>
+[[gnu::const]] [[gnu::hot]]
 double log_q(T n, T k)
 {
     if (n <= 0 || k < 1)

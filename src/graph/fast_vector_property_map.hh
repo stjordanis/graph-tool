@@ -132,6 +132,7 @@ public:
     }
 
 public:
+    [[gnu::always_inline]]
     reference operator[](const key_type& v) const {
         auto i = get(_index, v);
         auto& store = *_store;
@@ -180,7 +181,7 @@ public:
     void shrink_to_fit() const { _checked.shrink_to_fit(); }
 
 
-    __attribute__((always_inline)) __attribute__((flatten))
+    [[gnu::always_inline]] [[gnu::flatten]]
     reference operator[](const key_type& v) const
     {
         return (*_checked._store)[get(_checked._index, v)];

@@ -164,7 +164,7 @@ public:
     typedef typename graph_traits<BGraph>::vertex_descriptor vertex_t;
     typedef typename graph_traits<BGraph>::edge_descriptor edge_t;
 
-    __attribute__((flatten)) __attribute__((hot))
+    [[gnu::flatten]] __attribute__((hot))
     const edge_t& get_me(vertex_t r, vertex_t s) const
     {
         if (!is_directed_::apply<BGraph>::type::value && r > s)

@@ -222,7 +222,7 @@ public:
     {
         get_vertex() {}
         typedef Vertex result_type;
-        __attribute__((always_inline))
+        [[gnu::always_inline]]
         Vertex operator()(const std::pair<vertex_t, vertex_t>& v) const
         { return v.first; }
     };
@@ -261,7 +261,7 @@ public:
             return _iter == other._iter;
         }
 
-        __attribute__((always_inline)) __attribute__((flatten))
+        [[gnu::always_inline]] [[gnu::flatten]]
         edge_descriptor dereference() const
         {
             return Deference::def(_v, *_iter, *this);
@@ -480,7 +480,7 @@ public:
         _epos.shrink_to_fit();
     }
 
-    __attribute__((always_inline))
+    [[gnu::always_inline]]
     void reverse_edge(edge_descriptor& e) const
     {
         auto& elist = _edges[e.s];
@@ -698,7 +698,7 @@ struct graph_property_type<adj_list<Vertex> >
 //========================================================================
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::vertex_iterator,
           typename adj_list<Vertex>::vertex_iterator>
 vertices(const adj_list<Vertex>& g)
@@ -709,7 +709,7 @@ vertices(const adj_list<Vertex>& g)
 
 
 template <class Vertex>
-inline  __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::edge_iterator,
           typename adj_list<Vertex>::edge_iterator>
 edges(const adj_list<Vertex>& g)
@@ -740,7 +740,7 @@ edges(const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 Vertex vertex(size_t i, const adj_list<Vertex>&)
 {
     return i;
@@ -764,7 +764,7 @@ edge(Vertex s, Vertex t, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 size_t out_degree(Vertex v, const adj_list<Vertex>& g)
 {
     const auto& pes = g._edges[v];
@@ -772,7 +772,7 @@ size_t out_degree(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 size_t in_degree(Vertex v, const adj_list<Vertex>& g)
 {
     const auto& pes = g._edges[v];
@@ -782,14 +782,14 @@ size_t in_degree(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 size_t degree(Vertex v, const adj_list<Vertex>& g)
 {
     return g._edges[v].second.size();
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::out_edge_iterator,
           typename adj_list<Vertex>::out_edge_iterator>
 out_edges(Vertex v, const adj_list<Vertex>& g)
@@ -802,7 +802,7 @@ out_edges(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline  __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::in_edge_iterator,
           typename adj_list<Vertex>::in_edge_iterator>
 in_edges(Vertex v, const adj_list<Vertex>& g)
@@ -815,7 +815,7 @@ in_edges(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::out_edge_iterator,
           typename adj_list<Vertex>::out_edge_iterator>
 _all_edges_out(Vertex v, const adj_list<Vertex>& g)
@@ -827,7 +827,7 @@ _all_edges_out(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::in_edge_iterator,
           typename adj_list<Vertex>::in_edge_iterator>
 _all_edges_in(Vertex v, const adj_list<Vertex>& g)
@@ -839,7 +839,7 @@ _all_edges_in(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::all_edge_iterator,
           typename adj_list<Vertex>::all_edge_iterator>
 all_edges(Vertex v, const adj_list<Vertex>& g)
@@ -852,7 +852,7 @@ all_edges(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::all_edge_iterator_reversed,
           typename adj_list<Vertex>::all_edge_iterator_reversed>
 _all_edges_reversed(Vertex v, const adj_list<Vertex>& g)
@@ -865,7 +865,7 @@ _all_edges_reversed(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::adjacency_iterator,
           typename adj_list<Vertex>::adjacency_iterator>
 out_neighbors(Vertex v, const adj_list<Vertex>& g)
@@ -878,7 +878,7 @@ out_neighbors(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::adjacency_iterator,
           typename adj_list<Vertex>::adjacency_iterator>
 in_neighbors(Vertex v, const adj_list<Vertex>& g)
@@ -891,7 +891,7 @@ in_neighbors(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::adjacency_iterator,
           typename adj_list<Vertex>::adjacency_iterator>
 all_neighbors(Vertex v, const adj_list<Vertex>& g)
@@ -903,7 +903,7 @@ all_neighbors(Vertex v, const adj_list<Vertex>& g)
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 std::pair<typename adj_list<Vertex>::adjacency_iterator,
           typename adj_list<Vertex>::adjacency_iterator>
 adjacent_vertices(Vertex v, const adj_list<Vertex>& g)
@@ -913,14 +913,14 @@ adjacent_vertices(Vertex v, const adj_list<Vertex>& g)
 
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 size_t num_vertices(const adj_list<Vertex>& g)
 {
     return g._edges.size();
 }
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 size_t num_edges(const adj_list<Vertex>& g)
 {
     return g._n_edges;
@@ -1061,7 +1061,7 @@ void remove_edge(const typename adj_list<Vertex>::edge_descriptor& e,
 }
 
 template <class Vertex>
-inline __attribute__((always_inline)) __attribute__((flatten))
+[[gnu::always_inline]] [[gnu::flatten]] inline
 Vertex add_vertex(adj_list<Vertex>& g)
 {
     g._edges.emplace_back();
@@ -1241,7 +1241,7 @@ void remove_vertex_fast(Vertex v, adj_list<Vertex>& g)
 
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 Vertex source(const typename adj_list<Vertex>::edge_descriptor& e,
               const adj_list<Vertex>&)
 {
@@ -1249,7 +1249,7 @@ Vertex source(const typename adj_list<Vertex>::edge_descriptor& e,
 }
 
 template <class Vertex>
-inline __attribute__((always_inline))
+[[gnu::always_inline]] inline
 Vertex target(const typename adj_list<Vertex>::edge_descriptor& e,
               const adj_list<Vertex>&)
 {
@@ -1327,7 +1327,7 @@ template <class Vertex>
 struct hash<boost::detail::adj_edge_descriptor<Vertex>>
 {
     template <class Edge>
-    __attribute__((always_inline))
+    [[gnu::always_inline]]
     std::size_t operator()(Edge const& e) const
     {
         return _h(e.idx);
