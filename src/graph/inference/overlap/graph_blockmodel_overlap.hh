@@ -1152,7 +1152,7 @@ public:
         for (auto& p : _partition_stats)
             p.add_block();
         if (!_egroups.empty())
-            _egroups.init(_b, _eweight, _g, _bg);
+            _egroups.add_block();
         if (_coupled_state != nullptr)
             _coupled_state->coupled_resize_vertex(r);
         sync_emat();

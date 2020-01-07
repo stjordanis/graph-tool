@@ -67,6 +67,11 @@ public:
         }
     }
 
+    void add_block()
+    {
+        _egroups.emplace_back();
+    }
+
     void clear()
     {
         _egroups.clear();
