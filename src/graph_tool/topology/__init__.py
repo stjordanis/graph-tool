@@ -2933,30 +2933,38 @@ def is_DAG(g):
     return is_DAG
 
 
-def max_cardinality_matching(g, heuristic=False, weight=None, minimize=True,
-                             match=None):
+def max_cardinality_matching(g, weight=None, init_match="extra_greedy",
+                             heuristic=False, minimize=False, edges=False,
+                             brute_force=False):
     r"""Find a maximum cardinality matching in the graph.
 
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    heuristic : bool (optional, default: `False`)
-        If true, a random heuristic will be used, which runs in linear time.
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: `None`)
-        If provided, the matching will minimize the edge weights (or maximize
-        if ``minimize == False``). This option has no effect if
-        ``heuristic == False``.
+        If provided, the matching will maximize the sum of edge weights.
+    init_match : string (optional, default: ``"extra_greedy"``)
+        Initial matching strategy. Can be one of: `"empty"`, `"greedy"`,
+        `"extra_greedy"`. Ignored if ``weight`` is given, or
+        ``heuristic == True``.
     minimize : bool (optional, default: `True`)
         If `True`, the matching will minimize the weights, otherwise they will
         be maximized. This option has no effect if ``heuristic == False``.
-    match : :class:`~graph_tool.EdgePropertyMap` (optional, default: `None`)
-        Edge property map where the matching will be specified.
+    heuristic : bool (optional, default: `False`)
+        If `True`, a random heuristic will be used, which runs in linear time.
+    edges : bool (optional, default: `False`)
+        If `True`, an edge property map will be returned, instead of a vertex
+        property map.
+    brute_force : bool (optional, default: `False`)
+        If `True`, and `weight` is not `None` and `heuristic` is `False`, a
+        slower, brute-force algorithm is used.
 
     Returns
     -------
-    match : :class:`~graph_tool.EdgePropertyMap`
-        Boolean edge property map where the matching is specified.
+    match : :class:`~graph_tool.VertexPropertyMap`
+        Vertex property map where the matching is specified. If ``edges ==
+        True`` a boolean-valued edge property map is returned instead.
 
     Notes
     -----
@@ -2964,19 +2972,24 @@ def max_cardinality_matching(g, heuristic=False, weight=None, minimize=True,
     share a common vertex. A *maximum cardinality matching* has maximum size
     over all matchings in the graph.
 
-    If the parameter ``weight`` is provided, as well as ``heuristic == True`` a
-    matching with maximum cardinality *and* maximum (or minimum) weight is
-    returned.
+    If the parameter ``weight`` is provided, a matching with maximum cardinality
+    *and* maximum weight is returned.
 
     If ``heuristic == True`` the algorithm does not necessarily return the
     maximum matching, instead the focus is to run on linear time.
 
     This algorithm runs in time :math:`O(EV\times\alpha(E,V))`, where
     :math:`\alpha(m,n)` is a slow growing function that is at most 4 for any
-    feasible input. If `heuristic == True`, the algorithm runs in time
-    :math:`O(V + E)`.
+    feasible input.
 
-    For a more detailed description, see [boost-max-matching]_.
+    If weights are given, the algorithm runs in time :math:`O(V^3)`.
+
+    If `heuristic == True`, the algorithm runs in time :math:`O(V + E)`.
+
+    If `brute_force == True`, the algorithm runs in time :math:`O(exp(E))`.
+
+    For a more detailed description, see [boost-max-matching]_ and
+    [boost-max-weighted-matching]_.
 
     Examples
     --------
@@ -2987,10 +3000,8 @@ def max_cardinality_matching(g, heuristic=False, weight=None, minimize=True,
        gt.seed_rng(43)
 
     >>> g = gt.GraphView(gt.price_network(300), directed=False)
-    >>> res = gt.max_cardinality_matching(g)
-    >>> print(res[1])
-    True
-    >>> w = res[0].copy("double")
+    >>> w = gt.max_cardinality_matching(g, edges=True)
+    >>> w = w.copy("double")
     >>> w.a = 2 * w.a + 2
     >>> gt.graph_draw(g, edge_color=res[0], edge_pen_width=w, vertex_fill_color="grey",
     ...               output="max_card_match.pdf")
@@ -3010,28 +3021,39 @@ def max_cardinality_matching(g, heuristic=False, weight=None, minimize=True,
     References
     ----------
     .. [boost-max-matching] http://www.boost.org/libs/graph/doc/maximum_matching.html
+    .. [boost-max-weighted-matching] http://www.boost.org/libs/graph/doc/maximum_weighted_matching.html
     .. [matching-heuristic] B. Hendrickson and R. Leland. "A Multilevel Algorithm
        for Partitioning Graphs." In S. Karin, editor, Proc. Supercomputing ’95,
        San Diego. ACM Press, New York, 1995, :doi:`10.1145/224170.224228`
 
     """
-    if match is None:
-        match = g.new_edge_property("bool")
-    _check_prop_scalar(match, "match")
-    _check_prop_writable(match, "match")
+    match = g.new_vp("int64_t")
     if weight is not None:
         _check_prop_scalar(weight, "weight")
 
     u = GraphView(g, directed=False)
     if not heuristic:
-        check = libgraph_tool_flow.\
-                max_cardinality_matching(u._Graph__graph, _prop("e", u, match))
-        return match, check
+        if weight is None:
+            libgraph_tool_topology.\
+                get_max_matching(u._Graph__graph, init_match,
+                                 _prop("v", u, match))
+        else:
+            libgraph_tool_topology.\
+                get_max_weighted_matching(u._Graph__graph,
+                                          _prop("e", u, weight),
+                                          _prop("v", u, match), brute_force)
     else:
-        libgraph_tool_topology.\
+         libgraph_tool_topology.\
                 random_matching(u._Graph__graph, _prop("e", u, weight),
-                                 _prop("e", u, match), minimize, _get_rng())
-        return match
+                                 _prop("v", u, match), minimize, _get_rng())
+
+    if edges:
+        ematch = g.new_ep("bool")
+        libgraph_tool_topology.match_edges(u._Graph__graph,
+                                           _prop("v", u, match),
+                                           _prop("e", u, ematch))
+        return ematch
+    return match
 
 
 def max_independent_vertex_set(g, high_deg=False, mivs=None):

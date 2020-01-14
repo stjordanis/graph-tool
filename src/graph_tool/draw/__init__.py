@@ -413,7 +413,7 @@ def _coarse_graph(g, vweight, eweight, mivs=False, groups=None):
             mivs = None
             m = max_cardinality_matching(GraphView(g, directed=False),
                                          heuristic=True, weight=eweight,
-                                         minimize=False)
+                                         minimize=False, edges=True)
             u = GraphView(g, efilt=m, directed=False)
             c = label_components(u)[0]
             c = g.own_property(c)

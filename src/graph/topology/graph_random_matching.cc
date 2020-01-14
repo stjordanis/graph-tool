@@ -43,8 +43,11 @@ struct do_random_matching
 
         vector<vertex_t> vlist;
         typename graph_traits<Graph>::vertex_iterator v, v_end;
-        for (tie(v, v_end) = vertices(g); v != v_end; ++v)
-            vlist.push_back(*v);
+        for (auto v : vertices_range(g))
+        {
+            vlist.push_back(v);
+            match[v] = numeric_limits<typename property_traits<MatchMap>::value_type>::max();
+        }
 
         unchecked_vector_property_map<uint8_t, VertexIndex>
             matched(vertex_index, num_vertices(g));
@@ -82,7 +85,8 @@ struct do_random_matching
             {
                 uniform_int_distribution<> sample(0, candidates.size() - 1);
                 size_t j = sample(rng);
-                match[candidates[j]] = true;
+                match[v] = target(candidates[j], g);
+                match[target(candidates[j], g)] = v;
                 matched[v] = true;
                 matched[target(candidates[j], g)] = true;
             }
@@ -103,7 +107,7 @@ void random_matching(GraphInterface& gi, boost::any weight, boost::any match,
     run_action<>()
         (gi, std::bind(do_random_matching(), std::placeholders::_1, gi.get_vertex_index(),
                        std::placeholders::_2, std::placeholders::_3, minimize, std::ref(rng)),
-         edge_props_t(), writable_edge_scalar_properties())(weight, match);
+         edge_props_t(), writable_vertex_scalar_properties())(weight, match);
 }
 
 void export_random_matching()
