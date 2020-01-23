@@ -31,9 +31,20 @@ namespace graph_tool
 using namespace boost;
 using namespace std;
 
-template <class Graph, class UGraph, class Eprop, class Xprop>
-void collect_marginal(Graph& g, UGraph& u, Eprop ecount, Xprop x, Xprop xsum,
-                      Xprop x2sum)
+class dummy_property
+{};
+
+template <class Key>
+constexpr double get(dummy_property&, Key&&) { return 0.; }
+
+template <class Key, class Val>
+constexpr void put(dummy_property&, Key&&, Val&&) {}
+
+
+template <class Graph, class UGraph, class Eprop, class Xprop, class XSprop, class Cprop>
+void collect_marginal(Graph& g, UGraph& u, Eprop ecount, Xprop x, XSprop xsum,
+                      XSprop x2sum, [[maybe_unused]] Cprop xs,
+                      [[maybe_unused]] Cprop xcount)
 {
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
     typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
@@ -57,7 +68,7 @@ void collect_marginal(Graph& g, UGraph& u, Eprop ecount, Xprop x, Xprop xsum,
         {
             ge = add_edge(get<0>(vs), get<1>(vs), g).first;
             emap[vs] = ge;
-            ecount[ge] = 0;
+            put(ecount, ge, 0);
             put(xsum, ge, 0);
             put(x2sum, ge, 0);
         }
@@ -65,9 +76,22 @@ void collect_marginal(Graph& g, UGraph& u, Eprop ecount, Xprop x, Xprop xsum,
         {
             ge = iter->second;
         }
-        ecount[ge]++;
+        put(ecount, ge, get(ecount, ge) + 1);
         put(xsum, ge, get(xsum, ge) + get(x, e));
         put(x2sum, ge, get(x2sum, ge) + get(x, e) * get(x, e));
+        if constexpr (!std::is_same_v<Cprop, dummy_property>)
+        {
+            auto xe = get(x, e);
+            auto& xs_e = xs[ge];
+            auto& xc_e = xcount[ge];
+            auto iter = std::lower_bound(xs_e.begin(), xs_e.end(), xe);
+            if (iter == xs_e.end() || *iter != xe)
+            {
+                iter = xs_e.insert(iter, xe);
+                xc_e.insert(xc_e.begin() + (iter - xs_e.begin()), 0);
+            }
+            xc_e[iter - xs_e.begin()]++;
+        }
     }
 }
 

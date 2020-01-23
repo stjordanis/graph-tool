@@ -63,6 +63,12 @@ void collect_xmarginal_dispatch(GraphInterface& gi, GraphInterface& ui,
                                 boost::any aecount, boost::any ax,
                                 boost::any axsum, boost::any ax2sum);
 
+void collect_marginal_count_dispatch(GraphInterface& gi, GraphInterface& ui,
+                                     boost::any aecount, boost::any aexs,
+                                     boost::any aexc);
+
+void marginal_count_entropy(GraphInterface& gi, boost::any aexc, boost::any aeh);
+
 void export_uncertain_state()
 {
     using namespace boost::python;
@@ -115,4 +121,6 @@ void export_uncertain_state()
 
     def("collect_marginal", &collect_marginal_dispatch);
     def("collect_xmarginal", &collect_xmarginal_dispatch);
+    def("collect_marginal_count", &collect_marginal_count_dispatch);
+    def("marginal_count_entropy", &marginal_count_entropy);
 }

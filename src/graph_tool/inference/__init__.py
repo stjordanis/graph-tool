@@ -78,6 +78,7 @@ Auxiliary functions
    ~graph_tool.inference.blockmodel.mf_entropy
    ~graph_tool.inference.blockmodel.bethe_entropy
    ~graph_tool.inference.blockmodel.microstate_entropy
+   ~graph_tool.inference.blockmodel.marginal_multigraph_entropy
    ~graph_tool.inference.overlap_blockmodel.half_edge_graph
    ~graph_tool.inference.overlap_blockmodel.get_block_edge_gradient
 
@@ -180,6 +181,7 @@ __all__ = ["minimize_blockmodel_dl",
            "mf_entropy",
            "bethe_entropy",
            "microstate_entropy",
+           "marginal_multigraph_entropy",
            "PartitionHist",
            "BlockPairHist",
            "half_edge_graph",

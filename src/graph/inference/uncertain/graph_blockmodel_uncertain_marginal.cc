@@ -21,15 +21,6 @@
 using namespace boost;
 using namespace graph_tool;
 
-class dummy_property
-{};
-
-template <class Key>
-constexpr double get(dummy_property&, Key&&) { return 0.; }
-
-template <class Key>
-constexpr void put(dummy_property&, Key&&, double) {}
-
 void collect_marginal_dispatch(GraphInterface& gi, GraphInterface& ui,
                                boost::any aecount)
 {
@@ -38,6 +29,8 @@ void collect_marginal_dispatch(GraphInterface& gi, GraphInterface& ui,
 
     gt_dispatch<>()
         ([&](auto& g, auto& u) { collect_marginal(g, u, ecount,
+                                                  dummy_property(),
+                                                  dummy_property(),
                                                   dummy_property(),
                                                   dummy_property(),
                                                   dummy_property()); },
@@ -59,7 +52,59 @@ void collect_xmarginal_dispatch(GraphInterface& gi, GraphInterface& ui,
 
     gt_dispatch<>()
         ([&](auto& g, auto& u) { collect_marginal(g, u, ecount,
-                                                  x, xsum, x2sum); },
+                                                  x, xsum, x2sum,
+                                                  dummy_property(),
+                                                  dummy_property()); },
          all_graph_views(), all_graph_views())(gi.get_graph_view(),
                                                ui.get_graph_view());
+}
+
+void collect_marginal_count_dispatch(GraphInterface& gi, GraphInterface& ui,
+                                     boost::any aex, boost::any aexs,
+                                     boost::any aexc)
+{
+    typedef eprop_map_t<int32_t>::type ecmap_t;
+    auto ex = any_cast<ecmap_t>(aex);
+
+    typedef eprop_map_t<std::vector<int32_t>>::type emap_t;
+    auto exs = any_cast<emap_t>(aexs);
+    auto exc = any_cast<emap_t>(aexc);
+
+    gt_dispatch<>()
+        ([&](auto& g, auto& u) { collect_marginal(g, u,
+                                                  dummy_property(),
+                                                  ex,
+                                                  dummy_property(),
+                                                  dummy_property(),
+                                                  exs, exc); },
+         all_graph_views(), all_graph_views())(gi.get_graph_view(),
+                                               ui.get_graph_view());
+}
+
+void marginal_count_entropy(GraphInterface& gi, boost::any aexc, boost::any aeh)
+{
+    typedef eprop_map_t<double>::type ehmap_t;
+    auto eh = any_cast<ehmap_t>(aeh);
+
+    gt_dispatch<>()
+        ([&](auto& g, auto exc)
+         {
+             for (auto e : edges_range(g))
+             {
+                 auto& S = eh[e];
+                 S = 0;
+                 size_t N = 0;
+                 for (auto n : exc[e])
+                 {
+                     S -= xlogx_fast(n);
+                     N += n;
+                 }
+                 if (N == 0)
+                     continue;
+                 S /= N;
+                 S += safelog_fast(N);
+             }
+         },
+        all_graph_views(), edge_scalar_vector_properties())
+        (gi.get_graph_view(), aexc);
 }

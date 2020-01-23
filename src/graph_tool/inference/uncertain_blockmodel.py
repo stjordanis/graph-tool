@@ -294,6 +294,49 @@ class UncertainBaseState(object):
         g.ep.eprob.fa /= g.gp.count
         return g
 
+    def collect_marginal_multigraph(self, g=None):
+        r"""Collect marginal latent multigraph during MCMC runs.
+
+        Parameters
+        ----------
+        g : :class:`~graph_tool.Graph` (optional, default: ``None``)
+            Previous marginal multigraph.
+
+        Returns
+        -------
+        g : :class:`~graph_tool.Graph`
+            New marginal graph, with internal edge
+            :class:`~graph_tool.EdgePropertyMap` ``"w"`` and ``"wcount"``,
+            containing the edge multiplicities and their respective counts.
+
+        Notes
+        -----
+
+        The mean posterior marginal multiplicity distribution of a multi-edge
+        :math:`(i,j)` is defined as
+
+        .. math::
+
+           \pi_{ij}(w) = \sum_{\boldsymbol G}\delta_{w,G_{ij}}P(\boldsymbol G|\boldsymbol D)
+
+        where :math:`P(\boldsymbol G|\boldsymbol D)` is the posterior
+        probability of a multigraph :math:`\boldsymbol G` given the data.
+
+        """
+
+        if g is None:
+            g = Graph(directed=self.g.is_directed())
+            g.add_vertex(self.g.num_vertices())
+            g.ep.w = g.new_ep("vector<int>")
+            g.ep.wcount = g.new_ep("vector<int>")
+
+        libinference.collect_marginal_count(g._Graph__graph,
+                                            self.u._Graph__graph,
+                                            _prop("e", self.u, self.eweight),
+                                            _prop("e", g, g.ep.w),
+                                            _prop("e", g, g.ep.wcount))
+        return g
+
 class UncertainBlockState(UncertainBaseState):
     r"""Inference state of an uncertain graph, using the stochastic block model as a
     prior.
@@ -469,65 +512,6 @@ class LatentMultigraphBlockState(UncertainBaseState):
         return libinference.mcmc_uncertain_sweep(mcmc_state,
                                                  self._state,
                                                  _get_rng())
-
-    def collect_marginal(self, g=None):
-        r"""Collect marginal inferred network during MCMC runs.
-
-        Parameters
-        ----------
-        g : :class:`~graph_tool.Graph` (optional, default: ``None``)
-            Previous marginal graph.
-
-        Returns
-        -------
-        g : :class:`~graph_tool.Graph`
-            New marginal graph, with internal edge
-            :class:`~graph_tool.EdgePropertyMap` ``"x"`` and ``"xdev"``,
-            containing the marginal mean and standard deviation of edge
-            multiplicities, respectively.
-
-        Notes
-        -----
-        The mean posterior marginal multiplicity of an edge :math:`(i,j)` is
-        defined as
-
-        .. math::
-
-           w_{ij} = \sum_{\boldsymbol A}A_{ij}P(\boldsymbol A|\boldsymbol D)
-
-        and likewise the variance is
-
-        .. math::
-
-           \sigma^2_{ij} = \sum_{\boldsymbol A}(A_{ij}-w_{ij})^2P(\boldsymbol A|\boldsymbol D)
-
-        where :math:`P(\boldsymbol A|\boldsymbol D)` is the posterior
-        probability given the data.
-
-        """
-
-        if g is None:
-            g = Graph(directed=self.g.is_directed())
-            g.add_vertex(self.g.num_vertices())
-            g.gp.count = g.new_gp("int", 0)
-            g.ep.count = g.new_ep("int")
-            g.ep.xsum = g.new_ep("double")
-            g.ep.x2sum = g.new_ep("double")
-            g.ep.x = g.new_ep("double")
-            g.ep.xdev = g.new_ep("double")
-
-        u = self.get_graph()
-        x = self.eweight.copy("double")
-        libinference.collect_xmarginal(g._Graph__graph,
-                                       u._Graph__graph,
-                                       _prop("e", u, x),
-                                       _prop("e", g, g.ep.count),
-                                       _prop("e", g, g.ep.xsum),
-                                       _prop("e", g, g.ep.x2sum))
-        g.gp.count += 1
-        g.ep.x.fa = g.ep.xsum.fa / g.gp.count
-        g.ep.xdev.fa = sqrt(g.ep.x2sum.fa / g.gp.count - g.ep.x.fa ** 2)
-        return g
 
 class MeasuredBlockState(UncertainBaseState):
     r"""Inference state of a measured graph, using the stochastic block model as a
@@ -1495,3 +1479,47 @@ class PseudoCIsingBlockState(IsingBaseBlockState):
     def _mcmc_sweep_h(self, mcmc_state):
         return libinference.mcmc_pseudo_cising_sweep_h(mcmc_state, self._state,
                                                        _get_rng())
+
+
+def marginal_multigraph_entropy(g, ecount):
+    r"""Compute the entropy of the marginal latent multigraph distribution.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Marginal multigraph.
+    ecount : :class:`~graph_tool.EdgePropertyMap`
+        Vector-valued edge property map containing the counts of edge
+        multiplicities.
+
+    Returns
+    -------
+    eh : :class:`~graph_tool.EdgePropertyMap`
+        Marginal entropy of edge multiplicities.
+
+    Notes
+    -----
+
+    The mean posterior marginal multiplicity distribution of a multi-edge
+    :math:`(i,j)` is defined as
+
+    .. math::
+
+       \pi_{ij}(w) = \sum_{\boldsymbol G}\delta_{w,G_{ij}}P(\boldsymbol G|\boldsymbol D)
+
+    where :math:`P(\boldsymbol G|\boldsymbol D)` is the posterior
+    probability of a multigraph :math:`\boldsymbol G` given the data.
+
+    The corresponding entropy is therefore given (in nats) by
+
+    .. math::
+
+       \mathcal{S}_{ij} = -\sum_w\pi_{ij}(w)\ln \pi_{ij}(w).
+
+    """
+
+    eh = g.new_ep("double")
+    libinference.marginal_count_entropy(g._Graph__graph,
+                                        _prop("e", g, ecount),
+                                        _prop("e", g, eh))
+    return eh
