@@ -132,7 +132,7 @@ struct get_histogram
         bin_list = hist.get_bins();
         python::object ret_bins = wrap_vector_owned(bin_list[0]);
         _ret_bins = ret_bins;
-        _hist = wrap_multi_array_owned<size_t,1>(hist.get_array());
+        _hist = wrap_multi_array_owned(hist.get_array());
     }
     python::object& _hist;
     const vector<long double>& _bins;

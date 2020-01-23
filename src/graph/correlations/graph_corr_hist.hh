@@ -73,7 +73,7 @@ struct get_correlation_histogram
         ret_bins.append(wrap_vector_owned(bins[0]));
         ret_bins.append(wrap_vector_owned(bins[1]));
         _ret_bins = ret_bins;
-        _hist = wrap_multi_array_owned<count_type,2>(hist.get_array());
+        _hist = wrap_multi_array_owned(hist.get_array());
     }
     python::object& _hist;
     const std::array<vector<long double>,2>& _bins;

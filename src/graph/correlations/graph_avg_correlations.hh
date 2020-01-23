@@ -91,8 +91,8 @@ struct get_avg_correlation
         python::list ret_bins;
         ret_bins.append(wrap_vector_owned(bins[0]));
         _ret_bins = ret_bins;
-        _avg = wrap_multi_array_owned<avg_type,1>(sum.get_array());
-        _dev = wrap_multi_array_owned<avg_type,1>(sum2.get_array());
+        _avg = wrap_multi_array_owned(sum.get_array());
+        _dev = wrap_multi_array_owned(sum2.get_array());
     }
     python::object& _avg;
     python::object& _dev;

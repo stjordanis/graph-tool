@@ -106,7 +106,7 @@ struct get_distance_histogram
         s_hist.gather();
 
         python::list ret;
-        ret.append(wrap_multi_array_owned<size_t,1>(hist.get_array()));
+        ret.append(wrap_multi_array_owned(hist.get_array()));
         ret.append(wrap_vector_owned<val_type>(hist.get_bins()[0]));
         phist = ret;
     }

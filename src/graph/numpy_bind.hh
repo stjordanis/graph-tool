@@ -138,17 +138,19 @@ boost::python::object wrap_vector_not_owned(const std::vector<std::array<ValueTy
     return o;
 }
 
-template <class ValueType, size_t Dim>
+template <class Array>
 boost::python::object
-wrap_multi_array_owned(const boost::multi_array<ValueType,Dim>& array)
+wrap_multi_array_owned(const Array& array)
 {
-    size_t val_type = boost::mpl::at<numpy_types,ValueType>::type::value;
-    npy_intp shape[Dim];
-    for (size_t i = 0; i < Dim; ++i)
+    typedef typename Array::element value_t;
+    constexpr int dim = Array::dimensionality;
+    size_t val_type = boost::mpl::at<numpy_types,value_t>::type::value;
+    npy_intp shape[dim];
+    for (size_t i = 0; i < dim; ++i)
         shape[i] = array.shape()[i];
     PyArrayObject* ndarray =
-        (PyArrayObject*) PyArray_SimpleNew(Dim, shape, val_type);
-    memcpy(PyArray_DATA(ndarray), array.data(), array.num_elements() * sizeof(ValueType));
+        (PyArrayObject*) PyArray_SimpleNew(dim, shape, val_type);
+    memcpy(PyArray_DATA(ndarray), array.data(), array.num_elements() * sizeof(value_t));
     PyArray_ENABLEFLAGS(ndarray, NPY_ARRAY_ALIGNED | NPY_ARRAY_C_CONTIGUOUS |
                         NPY_ARRAY_OWNDATA | NPY_ARRAY_WRITEABLE);
     boost::python::handle<> x((PyObject*) ndarray);
@@ -156,14 +158,19 @@ wrap_multi_array_owned(const boost::multi_array<ValueType,Dim>& array)
     return o;
 }
 
-template <class ValueType, size_t Dim>
+template <class Array>
 boost::python::object
-wrap_multi_array_not_owned(boost::multi_array<ValueType,Dim>& array)
+wrap_multi_array_not_owned(Array& array)
 {
-    size_t val_type = boost::mpl::at<numpy_types,ValueType>::type::value;
+    typedef typename Array::element value_t;
+    constexpr int dim = Array::dimensionality;
+    size_t val_type = boost::mpl::at<numpy_types,value_t>::type::value;
+    npy_intp shape[dim];
+    for (size_t i = 0; i < dim; ++i)
+        shape[i] = array.shape()[i];
     PyArrayObject* ndarray =
-        (PyArrayObject*) PyArray_SimpleNewFromData(Dim, array.shape(), val_type,
-                                                   array.origin());
+        (PyArrayObject*) PyArray_SimpleNewFromData(dim, shape, val_type,
+                                                   array.data());
     PyArray_ENABLEFLAGS(ndarray, NPY_ARRAY_ALIGNED | NPY_ARRAY_C_CONTIGUOUS |
                         NPY_ARRAY_WRITEABLE);
     boost::python::handle<> x((PyObject*) ndarray);
