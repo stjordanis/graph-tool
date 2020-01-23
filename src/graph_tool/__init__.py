@@ -1508,9 +1508,9 @@ class PropertyDict(object):
         return self.keys()
 
     def iterkeys(self):
-        for k in self.properties.iterkeys():
+        for k in self.properties.keys():
             if k[0] == self.t:
-                yield k[0]
+                yield k[1]
 
     def items(self):
         for k, v in self.properties.items():
@@ -1527,7 +1527,7 @@ class PropertyDict(object):
                     yield k[1], v
 
     def itervalues(self):
-        for k, v in self.properties.iteritems():
+        for k, v in self.properties.items():
             if k[0] == self.t:
                 yield v
 
