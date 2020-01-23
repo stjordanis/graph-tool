@@ -36,7 +36,7 @@ typedef multi_array_ref<int32_t,2> bs_t;
 typedef multi_array_ref<int32_t,1> b_t;
 
 #define BLOCK_STATE_params                                                     \
-    ((g, &, all_graph_views, 1))                                               \
+    ((g, &, always_directed_never_reversed, 1))                                \
     ((_abg, &, boost::any&, 0))                                                \
     ((bs,, bs_t, 0))                                                           \
     ((b,, b_t, 0))
@@ -282,6 +282,12 @@ public:
     {
         return true;
     }
+
+    template <class V>
+    void push_state(V&) {}
+    void pop_state() {}
+    void store_next_state(size_t) {}
+    void clear_next_state() {}
 
 };
 

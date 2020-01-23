@@ -130,6 +130,7 @@ struct MCMC
             auto& back = _bstack.back();
             for (auto v : vs)
                 back.emplace_back(v, _state._b[v]);
+            _state.push_state(vs);
             _push_b_dispatch(std::forward<Vs>(vvs)...);
         }
 
@@ -150,6 +151,7 @@ struct MCMC
                 move_vertex(v, s);
             }
             _bstack.pop_back();
+            _state.pop_state();
         }
 
         std::vector<size_t> _rlist;
@@ -214,10 +216,10 @@ struct MCMC
         void move_vertex(size_t v, size_t r)
         {
             size_t s = _state._b[v];
+            _state.move_vertex(v, r);
             if (s == r)
                 return;
             remove_element(_groups[s], _vpos, v);
-            _state.move_vertex(v, r);
             add_element(_groups[r], _vpos, v);
             _nmoves++;
         }
@@ -281,11 +283,11 @@ struct MCMC
         stage_split_random(std::vector<size_t>& vs, size_t r, size_t s, RNG& rng)
         {
             std::array<size_t, 2> rt = {null_group, null_group};
-            std::array<double, 2> ps;
             double dS = 0;
 
             std::uniform_real_distribution<> unit(0, 1);
-            double p = unit(rng);
+            double p0 = unit(rng);
+            std::bernoulli_distribution sample(p0);
 
             std::shuffle(vs.begin(), vs.end(), rng);
             for (auto v : vs)
@@ -311,12 +313,6 @@ struct MCMC
                     continue;
                 }
 
-                ps[0] = log(p);
-                ps[1] = log1p(-p);
-
-                double Z = log_sum(ps[0], ps[1]);
-                double p0 = ps[0] - Z;
-                std::bernoulli_distribution sample(exp(p0));
                 if (sample(rng))
                 {
                     dS += _state.virtual_move(v, _state._b[v], rt[0],
@@ -417,8 +413,7 @@ struct MCMC
         }
 
         template <class RNG, bool forward=true>
-        std::tuple<size_t, double, double> split(size_t r, size_t s,
-                                                 RNG& rng)
+        std::tuple<size_t, double, double> split(size_t r, size_t s, RNG& rng)
         {
             auto vs = _groups[r];
 
@@ -602,6 +597,7 @@ struct MCMC
             _dS = _a = 0;
             _vs.clear();
             _nmoves = 0;
+            _state.clear_next_state();
 
             move_t move = _move_sampler.sample(rng);
 
@@ -668,7 +664,10 @@ struct MCMC
                              << " " << -_dS + pb - pf << endl;
 
                     for (auto v : _vs)
+                    {
                         _bnext[v] = _state._b[v];
+                        _state.store_next_state(v);
+                    }
                     pop_b();
 
                     _state._egroups_update = true;
@@ -699,7 +698,10 @@ struct MCMC
                     _dS = merge(r, s);
 
                     for (auto v : _vs)
+                    {
                         _bnext[v] = _state._b[v];
+                        _state.store_next_state(v);
+                    }
                     pop_b();
 
                     _state._egroups_update = true;
@@ -748,6 +750,7 @@ struct MCMC
                             auto v = get<0>(vb);
                             _vs.push_back(v);
                             _bnext[v] = _state._b[v];
+                            _state.store_next_state(v);
                         }
 
                     while (!_bstack.empty())

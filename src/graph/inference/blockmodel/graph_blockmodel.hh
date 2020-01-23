@@ -2584,6 +2584,12 @@ public:
             assert(size_t(_wr[r]) == wr[r]);
     }
 
+    template <class V>
+    void push_state(V&) {}
+    void pop_state() {}
+    void store_next_state(size_t) {}
+    void clear_next_state() {}
+
 //private:
     typedef typename
         std::conditional<is_directed_::apply<g_t>::type::value,

@@ -1262,6 +1262,11 @@ public:
     void coupled_resize_vertex(size_t) { }
     void update_block_edge(const GraphInterface::edge_t&,
                            const std::vector<double>&) { }
+    template <class V>
+    void push_state(V&) {}
+    void pop_state() {}
+    void store_next_state(size_t) {}
+    void clear_next_state() {}
 
 //private:
     typedef typename

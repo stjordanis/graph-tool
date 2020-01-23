@@ -31,6 +31,10 @@ libgraph_tool_inference_la_SOURCES = \
     partition_centroid/graph_partition_centroid.cc \
     partition_centroid/graph_partition_centroid_mcmc.cc \
     partition_centroid/graph_partition_centroid_multiflip_mcmc.cc \
+    partition_modes/graph_partition_mode.cc \
+    partition_modes/graph_partition_mode_clustering.cc \
+    partition_modes/graph_partition_mode_clustering_mcmc.cc \
+    partition_modes/graph_partition_mode_clustering_multiflip_mcmc.cc \
     overlap/graph_blockmodel_overlap.cc \
     overlap/graph_blockmodel_overlap_exhaustive.cc \
     overlap/graph_blockmodel_overlap_gibbs.cc \
@@ -100,6 +104,8 @@ libgraph_tool_inference_la_include_HEADERS = \
     blockmodel/graph_blockmodel_util.hh \
     blockmodel/graph_blockmodel_weights.hh \
     partition_centroid/graph_partition_centroid.hh \
+    partition_modes/graph_partition_mode.hh \
+    partition_modes/graph_partition_mode_clustering.hh \
     overlap/graph_blockmodel_overlap.hh \
     overlap/graph_blockmodel_overlap_mcmc_bundled.hh \
     overlap/graph_blockmodel_overlap_util.hh \
