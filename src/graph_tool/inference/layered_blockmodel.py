@@ -869,7 +869,8 @@ class LayeredBlockState(OverlapBlockState, BlockState):
 
         try:
             new_es = []
-            for u, v, l in missing:
+            for i in range(len(missing)):
+                u, v, l = edge_list[i]
                 if not l[1]:
                     state = self.agg_state
                 else:
@@ -882,7 +883,8 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                 new_es.append((e, l))
 
             old_es = []
-            for u, v, l in spurious:
+            for i in range(len(spurious)):
+                u, v, l = edge_list[i + len(missing)]
                 if not l[1]:
                     state = self.agg_state
                     es = state.g.edge(u, v, all_edges=True)
