@@ -57,12 +57,29 @@ void export_mode_cluster_state()
                  .def("virtual_move", virtual_move)
                  .def("entropy", &state_t::entropy)
                  .def("posterior_entropy", &state_t::posterior_entropy)
+                 .def("posterior_dev", &state_t::posterior_dev)
+                 .def("posterior_cerror", &state_t::posterior_cerror)
                  .def("relabel_modes", &state_t::relabel_modes)
                  .def("replace_partitions", &state_t::replace_partitions)
                  .def("get_mode",
-                      +[](state_t& state, size_t r)
+                      +[](state_t& state, size_t r) -> PartitionModeState&
                        {
                            return state.get_mode(r);
+                       },
+                      return_internal_reference<>())
+                 .def("sample_partition",
+                      +[](state_t& state, bool MLE, rng_t& rng)
+                       {
+                           return wrap_vector_owned(state.sample_partition(MLE, rng));
+                       })
+                 .def("sample_nested_partition",
+                      +[](state_t& state, bool MLE, rng_t& rng)
+                       {
+                           python::list obv;
+                           auto bv = state.sample_nested_partition(MLE, rng);
+                           for (auto& b : bv)
+                               obv.append(wrap_vector_owned(b));
+                           return obv;
                        });
          });
 }

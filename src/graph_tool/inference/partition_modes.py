@@ -23,7 +23,8 @@ import sys
 if sys.version_info < (3,):
     range = xrange
 
-from .. import _degree, _prop, Graph, GraphView, _get_rng, Vector_size_t
+from .. import _degree, _prop, Graph, GraphView, _get_rng, Vector_int32_t, \
+    Vector_size_t
 from . blockmodel import DictState, get_entropy_args, _bm_test
 
 from .. dl_import import dl_import
@@ -33,26 +34,45 @@ import numpy as np
 import math
 
 class PartitionModeState(object):
-    def __init__(self, bs, relabel=True, **kwargs):
+    def __init__(self, bs, relabel=True, nested=False, **kwargs):
         self.bs = {}
+        self.nested = nested
 
         if len(kwargs) > 0:
-            N = kwargs["N"]
             self._base = kwargs["base"]
         else:
-            N = len(bs[0])
-            self._base = libinference.PartitionModeState(N)
+            self._base = libinference.PartitionModeState()
             for b in bs:
                 self.add_partition(b, relabel)
 
+    def __copy__(self):
+        return self.copy()
+
+    def copy(self, bs=None):
+        r"""Copies the state. The parameters override the state properties, and
+         have the same meaning as in the constructor."""
+        if bs is None:
+            bs = list(self.get_nested_partitions().values())
+        return PartitionModeState(bs=bs, relabel=False, nested=self.nested)
+
+    def __getstate__(self):
+        return dict(bs=list(self.get_nested_partitions().values()),
+                    nested=self.nested)
+
+    def __setstate__(self, state):
+        self.__init__(**state, relabel=False)
+
     def add_partition(self, b, relabel=True):
-        b = np.array(b, dtype="int32")
+        if self.nested:
+            b = [Vector_int32_t(init=x) for x in b]
+        else:
+            b = [Vector_int32_t(init=b)]
         i = self._base.add_partition(b, relabel)
         self.bs[i] = b
 
     def remove_partition(self, i):
         self._base.remove_partition(i)
-        if self.bs.has_key(i):
+        if i in self.bs:
             del self.bs[i]
 
     def replace_partitions(self):
@@ -61,8 +81,14 @@ class PartitionModeState(object):
     def get_partition(self, i):
         return self._base.get_partition(i)
 
+    def get_nested_partition(self, i):
+        return self._base.get_nested_partition(i)
+
     def get_partitions(self):
         return self._base.get_partitions()
+
+    def get_nested_partitions(self):
+        return self._base.get_nested_partitions()
 
     def relabel(self):
         return self._base.relabel()
@@ -70,20 +96,62 @@ class PartitionModeState(object):
     def entropy(self):
         return self._base.entropy()
 
-    def posterior_entropy(self):
-        return self._base.posterior_entropy()
+    def posterior_entropy(self, MLE=False):
+        return self._base.posterior_entropy(MLE)
+
+    def posterior_dev(self, MLE=False):
+        return self._base.posterior_dev(MLE)
+
+    def posterior_cerr(self, MLE=False):
+        return self._base.posterior_cerror(MLE)
+
+    def posterior_lprob(self, b, MLE=False):
+        b = np.asarray(b, dtype="int32")
+        return self._base.posterior_lprob(b, MLE)
+
+    def get_coupled_state(self):
+        base = self._base.get_coupled_state()
+        if base is None:
+            return None
+        return PartitionModeState(bs=None, base=base, nested=self.nested)
 
     def get_marginal(self, g):
         bm = g.new_vp("vector<int>")
         self._base.get_marginal(g._Graph__graph, bm._get_any())
         return bm
 
+    def get_map(self, g):
+        b = g.new_vp("int")
+        self._base.get_map(g._Graph__graph, b._get_any())
+        return b
+
+    def get_map_nested(self):
+        return self._base.get_map_bs()
+
+    def get_B(self):
+        return self._base.get_B()
+
+    def sample_partition(self, MLE=False):
+        return self._base.sample_partition(MLE, _get_rng())
+
+    def sample_nested_partition(self, MLE=False):
+        return self._base.sample_nested_partition(MLE, _get_rng())
+
 class ModeClusterState(object):
-    def __init__(self, bs, b=None, B=1, relabel=True):
-        self.bs = np.asarray(bs, dtype="int32")
+    def __init__(self, bs, b=None, B=1, nested=False, relabel=True):
+
+        self.bs = []
+        self.nested = nested
+
+        for bv in bs:
+            if self.nested:
+                bv = [Vector_int32_t(init=x) for x in bv]
+            else:
+                bv = [Vector_int32_t(init=bv)]
+            self.bs.append(bv)
 
         if b is None:
-            self.b = np.random.randint(0, B, self.bs.shape[0], dtype="int32")
+            self.b = np.random.randint(0, B, len(self.bs), dtype="int32")
         else:
             self.b = np.asarray(b, dtype="int32")
 
@@ -92,6 +160,7 @@ class ModeClusterState(object):
         self.g.add_vertex(self.b.shape[0])
         self.bg = self.g
         self._abg = self.bg._get_any()
+        self.obs = self.bs
         self._state = libinference.make_mode_cluster_state(self)
 
         self._entropy_args = dict(adjacency=True, deg_entropy=True, dl=True,
@@ -112,21 +181,26 @@ class ModeClusterState(object):
     def copy(self, bs=None, b=None):
         r"""Copies the state. The parameters override the state properties, and
          have the same meaning as in the constructor."""
-
-        return ModeClusterState(bs=bs if bs is not None else self.bs,
-                                b=b if b is not None else self.b,
-                                relabel=False)
+        if bs is None:
+            if not self.nested:
+                bs = [x[0] for x in self.bs]
+            else:
+                bs = self.bs
+        return ModeClusterState(bs=bs, b=b if b is not None else self.b,
+                                relabel=False, nested=self.nested)
 
 
     def __getstate__(self):
-        return dict(bs=self.bs, b=self.b)
+        return dict(bs=self.bs, b=self.b, nested=self.nested)
 
     def __setstate__(self, state):
+        if not state["nested"]:
+            state["bs"] = [x[0] for x in state["bs"]]
         self.__init__(**state, relabel=False)
 
     def get_mode(self, r):
         base = self._state.get_mode(r);
-        return PartitionModeState(None, N=self.bs.shape[1], base=base)
+        return PartitionModeState(None, base=base, nested=self.nested)
 
     def get_modes(self):
         return [self.get_mode(r) for r in np.unique(self.b)]
@@ -148,17 +222,29 @@ class ModeClusterState(object):
         w /= w.sum()
         return np.exp(-(w*np.log(w)).sum())
 
-    def relabel(self):
-        return self._state.relabel_modes()
+    def relabel(self, epsilon=1e-6, maxiter=100):
+        return self._state.relabel_modes(epsilon, maxiter)
 
     def entropy(self):
         return self._state.entropy()
 
-    def posterior_entropy(self):
-        return self._state.posterior_entropy()
+    def posterior_entropy(self, MLE=False):
+        return self._state.posterior_entropy(MLE)
+
+    def posterior_dev(self, MLE=False):
+        return self._state.posterior_dev(MLE)
+
+    def posterior_cerr(self, MLE=False):
+        return self._state.posterior_cerror(MLE)
 
     def replace_partitions(self):
         return self._state.replace_partitions()
+
+    def sample_partition(self, MLE=False):
+        return self._state.sample_partition(MLE, _get_rng())
+
+    def sample_nested_partition(self, MLE=False):
+        return self._state.sample_nested_partition(MLE, _get_rng())
 
     def mcmc_sweep(self, beta=np.inf, d=.01, niter=1, entropy_args={},
                    allow_vacate=True, sequential=True, deterministic=False,
@@ -235,3 +321,58 @@ class ModeClusterState(object):
             accept_stats["acceptance"] += nacceptance.a
 
         return dS, nattempts, nmoves
+
+
+def partition_overlap(x, y, norm=True):
+    x = np.asarray(x, dtype="int32")
+    y = np.asarray(y, dtype="int32")
+    if len(x) != len(y):
+        raise ValueError("x and y must be of the same length")
+    m = libinference.partition_overlap(x, y)
+    if norm:
+        m /= len(x)
+    return m
+
+def contingency_graph(x, y):
+    x = np.asarray(x, dtype="int32")
+    y = np.asarray(y, dtype="int32")
+    g = Graph(directed=False)
+    g.ep.mrs = g.new_ep("int32_t")
+    g.vp.label = g.new_vp("int32_t")
+    g.vp.partition = g.new_vp("bool")
+    libinference.get_contingency_graph(g._Graph__graph,
+                                       g.vp.label._get_any(),
+                                       g.ep.mrs._get_any(),
+                                       g.vp.partition._get_any(),
+                                       x, y)
+    return g
+
+def shuffle_partition_labels(x):
+    x = np.asarray(x, dtype="int32").copy()
+    libinference.partition_shuffle_labels(x, _get_rng())
+    return x
+
+def align_partition_labels(x, y):
+    x = np.asarray(x, dtype="int32").copy()
+    y = np.asarray(y, dtype="int32")
+    libinference.align_partition_labels(x, y)
+    return x
+
+
+def overlap_center(bs, init=None):
+    bs = np.asarray(bs, dtype="int")
+    N = len(bs[0])
+    if init is None:
+        c = np.arange(0, N, dtype="int")
+    else:
+        c = init
+    delta = 1
+    while delta > 0:
+        lc = c.copy()
+        for b in bs:
+            b[:] = align_partition_labels(b, c)
+        for i in range(len(c)):
+            nr = np.bincount(bs[:,i])
+            c[i] = nr.argmax()
+        delta = 1 - partition_overlap(c, lc)
+    return c

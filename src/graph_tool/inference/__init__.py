@@ -190,7 +190,12 @@ __all__ = ["minimize_blockmodel_dl",
            "get_block_edge_gradient",
            "get_hierarchy_tree",
            "modularity",
-           "latent_multigraph"]
+           "latent_multigraph",
+           "partition_overlap",
+           "contingency_graph",
+           "align_partition_labels",
+           "shuffle_partition_labels",
+           "overlap_center"]
 
 from . blockmodel import *
 from . overlap_blockmodel import *
