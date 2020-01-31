@@ -1180,7 +1180,7 @@ def hierarchy_minimize(state, B_min=None, B_max=None, b_min=None, b_max=None,
         if state.levels[-1].B > 1:
             bstate = state.levels[-1].get_block_state(**dict(state.hstate_args,
                                                              b=zeros(state.levels[-1].B),
-                                                             Lrecdx=levels[-1].Lrecdx))
+                                                             Lrecdx=state.levels[-1].Lrecdx))
             state.levels.append(bstate)
             state._regen_Lrecdx()
 
