@@ -1762,13 +1762,13 @@ class Graph(object):
         d = "directed" if self.is_directed() else "undirected"
         fr = ", reversed" if self.is_reversed() and self.is_directed() else ""
         p = []
-        if len(self.vp) == 1:
+        if len(self.vp) > 0:
             p.append("%d internal vertex %s" % (len(self.vp),
                                                 "property" if len(self.vp) == 1 else "properties"))
-        if len(self.ep) == 1:
+        if len(self.ep) > 0:
             p.append("%d internal edge %s" % (len(self.ep),
                                               "property" if len(self.ep) == 1 else "properties"))
-        if len(self.gp) == 1:
+        if len(self.gp) > 0:
             p.append("%d internal graph %s" % (len(self.gp),
                                                "property" if len(self.gp) == 1 else "properties"))
         p = ", ".join(p)
