@@ -87,7 +87,7 @@ libgraph_tool_inference_la_SOURCES = \
     graph_latent_multigraph.cc \
     graph_modularity.cc
 
-libgraph_tool_inference_la_include_HEADERS = \
+nobase_libgraph_tool_inference_la_include_HEADERS = \
     blockmodel/graph_blockmodel.hh \
     blockmodel/graph_blockmodel_em.hh \
     blockmodel/graph_blockmodel_emat.hh \
