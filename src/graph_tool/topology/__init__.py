@@ -2933,32 +2933,36 @@ def is_DAG(g):
     return is_DAG
 
 
-def max_cardinality_matching(g, weight=None, init_match="extra_greedy",
-                             heuristic=False, minimize=False, edges=False,
-                             brute_force=False):
+def max_cardinality_matching(g, weight=None, bipartite=False,
+                             init_match="extra_greedy", heuristic=False,
+                             minimize=False, edges=False, brute_force=False):
     r"""Find a maximum cardinality matching in the graph.
 
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: `None`)
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         If provided, the matching will maximize the sum of edge weights.
-    init_match : string (optional, default: ``"extra_greedy"``)
+    bipartite : ``bool`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``False``)
+        If ``True``, the graph will be assumed to be bipartite. If a
+        :class:`~graph_tool.VertexPropertyMap` is passed, it should correspond
+        to an existing bi-partition.
+    init_match : ``string`` (optional, default: ``"extra_greedy"``)
         Initial matching strategy. Can be one of: `"empty"`, `"greedy"`,
         `"extra_greedy"`. Ignored if ``weight`` is given, or
         ``heuristic == True``.
-    minimize : bool (optional, default: `True`)
-        If `True`, the matching will minimize the weights, otherwise they will
+    minimize : ``bool`` (optional, default: ``True``)
+        If ``True``, the matching will minimize the weights, otherwise they will
         be maximized. This option has no effect if ``heuristic == False``.
-    heuristic : bool (optional, default: `False`)
-        If `True`, a random heuristic will be used, which runs in linear time.
-    edges : bool (optional, default: `False`)
-        If `True`, an edge property map will be returned, instead of a vertex
+    heuristic : ``bool`` (optional, default: ``False``)
+        If ``True``, a random heuristic will be used, which runs in linear time.
+    edges : ``bool`` (optional, default: ``False``)
+        If ``True``, an edge property map will be returned, instead of a vertex
         property map.
-    brute_force : bool (optional, default: `False`)
-        If `True`, and `weight` is not `None` and `heuristic` is `False`, a
-        slower, brute-force algorithm is used.
+    brute_force : ``bool`` (optional, default: ``False``)
+        If ``True``, and ``weight`` is not ``None`` and ``heuristic`` is
+        ``False``, a slower, brute-force algorithm is used.
 
     Returns
     -------
@@ -3033,15 +3037,28 @@ def max_cardinality_matching(g, weight=None, init_match="extra_greedy",
 
     u = GraphView(g, directed=False)
     if not heuristic:
-        if weight is None:
-            libgraph_tool_topology.\
-                get_max_matching(u._Graph__graph, init_match,
-                                 _prop("v", u, match))
+        if bipartite is False:
+            if weight is None:
+                libgraph_tool_topology.\
+                    get_max_matching(u._Graph__graph, init_match,
+                                     _prop("v", u, match))
+            else:
+                libgraph_tool_topology.\
+                    get_max_weighted_matching(u._Graph__graph,
+                                              _prop("e", u, weight),
+                                              _prop("v", u, match), brute_force)
         else:
+            if isinstance(bipartite, VertexPropertyMap):
+                partition = bipartite
+            else:
+                is_bip, partition = is_bipartite(u, partition=True)
+                if not is_bip:
+                    raise ValueError("Supplied graph is not bipartite")
             libgraph_tool_topology.\
-                get_max_weighted_matching(u._Graph__graph,
-                                          _prop("e", u, weight),
-                                          _prop("v", u, match), brute_force)
+                get_max_bip_weighted_matching(u._Graph__graph,
+                                              _prop("v", u, partition),
+                                              _prop("e", u, weight),
+                                              _prop("v", u, match))
     else:
          libgraph_tool_topology.\
                 random_matching(u._Graph__graph, _prop("e", u, weight),

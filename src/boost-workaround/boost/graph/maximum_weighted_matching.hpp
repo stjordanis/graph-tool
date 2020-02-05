@@ -11,8 +11,6 @@
 #define BOOST_GRAPH_MAXIMUM_WEIGHTED_MATCHING_HPP
 
 #include <algorithm> // for std::iter_swap
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/graph/max_cardinality_matching.hpp>
 
 namespace boost
@@ -80,7 +78,7 @@ namespace boost
         {
         public:
 
-            typedef boost::shared_ptr<blossom> blossom_ptr_t;
+            typedef std::shared_ptr<blossom> blossom_ptr_t;
             std::vector<blossom_ptr_t> sub_blossoms;
             edge_property_t dual_var;
             blossom_ptr_t father;
@@ -148,7 +146,7 @@ namespace boost
             vertex_descriptor_t trivial_vertex;
         };
 
-        typedef boost::shared_ptr<blossom> blossom_ptr_t;
+        typedef std::shared_ptr<blossom> blossom_ptr_t;
         typedef typename std::vector<blossom_ptr_t>::iterator blossom_iterator_t;
         typedef typename map_vertex_to_<blossom_ptr_t>::type vertex_to_blossom_map_t;
 
@@ -190,8 +188,11 @@ namespace boost
             {
                 edge_property_t w = get(weight, *ei);
                 max_weight = std::max(max_weight, w);
-                if (abs(w) > 0)
-                    min_abs = std::min(min_abs, edge_property_t(abs(w)));
+                if constexpr (std::is_floating_point_v<edge_property_t>)
+                {
+                    if (abs(w) > 0)
+                        min_abs = std::min(min_abs, edge_property_t(abs(w)));
+                }
             }
 
             typename std::vector<std::vector<std::pair<edge_descriptor_t, bool> > >::iterator vei;
@@ -201,7 +202,7 @@ namespace boost
                 vertex_descriptor_t u = *vi;
                 mate[u] = get(arg_mate, u);
                 dual_var[u] = 2 * max_weight;
-                in_blossom[u] = boost::make_shared<trivial_blossom>(u);
+                in_blossom[u] = std::make_shared<trivial_blossom>(u);
                 outlet[u] = u;
                 critical_edge_vector.push_back(vertex_to_edge_map_t(vei->begin(), vm));
             }
@@ -721,7 +722,7 @@ namespace boost
                     is_old_base[*vi] = true;
             }
 
-            blossom_ptr_t b = boost::make_shared<blossom>();
+            blossom_ptr_t b = std::make_shared<blossom>();
             add_sub_blossom(b, nca);
 
             label_T[w_prime] = v;

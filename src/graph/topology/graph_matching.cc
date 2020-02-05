@@ -22,6 +22,8 @@
 #include <boost/graph/max_cardinality_matching.hpp>
 #include <boost/graph/maximum_weighted_matching.hpp>
 
+#include "graph_bipartite_weighted_matching.hh"
+
 using namespace std;
 using namespace boost;
 using namespace graph_tool;
@@ -99,7 +101,43 @@ void get_max_weighted_matching(GraphInterface& gi, boost::any oweight,
                      matching[v] = match[v];
              }
          },
-         writable_edge_scalar_properties())(oweight);
+         edge_scalar_properties())(oweight);
+}
+
+void get_max_bip_weighted_matching(GraphInterface& gi, boost::any opartition,
+                                   boost::any oweight, boost::any omatching)
+{
+    typedef typename vprop_map_t<int64_t>::type vprop_t;
+
+    vprop_t::unchecked_t matching = any_cast<vprop_t>(omatching).get_unchecked();
+
+    typedef UnityPropertyMap<int, GraphInterface::edge_t> ecmap_t;
+    typedef boost::mpl::push_back<edge_scalar_properties, ecmap_t>::type
+        weight_props_t;
+
+    if (oweight.empty())
+        oweight = ecmap_t();
+
+    run_action<graph_tool::detail::never_directed>()
+        (gi,
+         [&](auto& g, auto part, auto w)
+         {
+             typedef std::remove_reference_t<decltype(g)> g_t;
+
+             typedef typename graph_traits<g_t>::vertex_descriptor vertex_t;
+             typename vprop_map_t<vertex_t>::type match(get(vertex_index,g));
+
+             maximum_bipartite_weighted_matching(g, part, w, match);
+
+             for (auto v : vertices_range(g))
+             {
+                 if (match[v] == graph_traits<g_t>::null_vertex())
+                     matching[v] = std::numeric_limits<int64_t>::max();
+                 else
+                     matching[v] = match[v];
+             }
+         },
+         vertex_properties(), weight_props_t())(opartition, oweight);
 }
 
 void match_edges(GraphInterface& gi, boost::any omatching,
@@ -132,5 +170,6 @@ void export_matching()
 {
     def("get_max_matching", &get_max_matching);
     def("get_max_weighted_matching", &get_max_weighted_matching);
+    def("get_max_bip_weighted_matching", &get_max_bip_weighted_matching);
     def("match_edges", &match_edges);
 }
