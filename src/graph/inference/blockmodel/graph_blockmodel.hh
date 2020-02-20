@@ -1701,9 +1701,9 @@ public:
     // Move proposals
     // =========================================================================
 
-    size_t get_empty_block(size_t v)
+    size_t get_empty_block(size_t v, bool force_add = false)
     {
-        if (_empty_blocks.empty())
+        if (_empty_blocks.empty() || force_add)
         {
             add_block();
             auto s = _empty_blocks.back();

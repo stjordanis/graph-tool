@@ -193,7 +193,7 @@ public:
         return (Sa - Sb);
     }
 
-    size_t get_empty_block(size_t)
+    size_t get_empty_block(size_t, bool)
     {
         return _empty_blocks.back();
     }
