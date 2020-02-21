@@ -135,6 +135,8 @@ def mcmc_equilibrate(state, wait=1000, nbreaks=2, max_niter=numpy.inf,
         total_nattempts += nattempts
 
         if force_niter is not None:
+            max_S = max(S, max_S)
+            min_S = min(S, min_S)
             if niter >= force_niter:
                 break
         else:
