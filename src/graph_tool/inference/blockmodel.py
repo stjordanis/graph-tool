@@ -1495,7 +1495,7 @@ class BlockState(object):
                                                           _get_rng())
 
 
-    def multiflip_mcmc_sweep(self, beta=1., c=1., psingle=100, psplit=1,
+    def multiflip_mcmc_sweep(self, beta=1., c=1., psingle=None, psplit=1,
                              pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
                              niter=1, entropy_args={}, accept_stats=None,
                              verbose=False, **kwargs):
@@ -1513,8 +1513,9 @@ class BlockState(object):
             node and their block connections; for :math:`c\to\infty` the blocks
             are sampled randomly. Note that only for :math:`c > 0` the MCMC is
             guaranteed to be ergodic.
-        psingle : ``float`` (optional, default: ``100``)
-            Relative probability of proposing a single node move.
+        psingle : ``float`` (optional, default: ``None``)
+            Relative probability of proposing a single node move. If ``None``,
+            it will be selected as the number of nodes in the graph.
         psplit : ``float`` (optional, default: ``1``)
             Relative probability of proposing a group split.
         pmergesplit : ``float`` (optional, default: ``1``)
@@ -1550,6 +1551,8 @@ class BlockState(object):
 
         """
 
+        if psingle is None:
+            psingle = self.g.num_vertices()
         gibbs_sweeps = max(gibbs_sweeps, 1)
         nproposal = Vector_size_t(4)
         nacceptance = Vector_size_t(4)

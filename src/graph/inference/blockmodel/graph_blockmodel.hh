@@ -128,7 +128,7 @@ public:
           _vweight(uncheck(__avweight, typename std::add_pointer<vweight_t>::type())),
           _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
           _degs(uncheck(__adegs, typename std::add_pointer<degs_t>::type())),
-          _emat(_bg, rng),
+          _emat(_g, _bg, rng),
           _neighbor_sampler(_g, _eweight),
           _m_entries(num_vertices(_bg))
     {
@@ -1104,25 +1104,29 @@ public:
             d.emplace_back(get<0>(kn.first), get<1>(kn.first), kn.second);
     }
 
-    size_t add_block()
+    size_t add_block(size_t n = 1)
     {
-        size_t r = boost::add_vertex(_bg);
-        _wr.resize(num_vertices(_bg));
-        _mrm.resize(num_vertices(_bg));
-        _mrp.resize(num_vertices(_bg));
-        _wr[r] = _mrm[r] = _mrp[r] = 0;
-        _bclabel.resize(num_vertices(_bg));
-        _brecsum.resize(num_vertices(_bg));
-        _empty_pos.resize(num_vertices(_bg));
-        _candidate_pos.resize(num_vertices(_bg));
-        add_element(_empty_blocks, _empty_pos, r);
-        for (auto& p : _partition_stats)
-            p.add_block();
-        if (!_egroups.empty())
-            _egroups.add_block();
-        if (_coupled_state != nullptr)
-            _coupled_state->coupled_resize_vertex(r);
-        sync_emat();
+        _wr.resize(num_vertices(_bg) + n);
+        _mrm.resize(num_vertices(_bg) + n);
+        _mrp.resize(num_vertices(_bg) + n);
+        _bclabel.resize(num_vertices(_bg) + n);
+        _brecsum.resize(num_vertices(_bg) + n);
+        _empty_pos.resize(num_vertices(_bg) + n);
+        _candidate_pos.resize(num_vertices(_bg) + n);
+        size_t r = null_group;
+        for (size_t i = 0; i < n; ++i)
+        {
+            r = boost::add_vertex(_bg);
+            _wr[r] = _mrm[r] = _mrp[r] = 0;
+            add_element(_empty_blocks, _empty_pos, r);
+            for (auto& p : _partition_stats)
+                p.add_block();
+            if (!_egroups.empty())
+                _egroups.add_block();
+            if (_coupled_state != nullptr)
+                _coupled_state->coupled_resize_vertex(r);
+        }
+        _emat.add_block(_bg);
         return r;
     }
 

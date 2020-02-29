@@ -161,9 +161,8 @@ public:
         return _wr[_b[v]] - 1;
     }
 
-    constexpr size_t add_block()
+    constexpr void add_block(size_t)
     {
-        return 0;
     }
 
     double virtual_move(size_t v, size_t r, size_t nr)

@@ -87,7 +87,7 @@ public:
         : OverlapBlockStateVirtualBase<Ts...>(std::forward<ATs>(args)...),
           _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
           _c_mrs(_mrs.get_checked()),
-          _emat(_bg, rng),
+          _emat(_g, _bg, rng),
           _egroups_update(true),
           _overlap_stats(_g, _b, _half_edges, _node_index, num_vertices(_bg)),
           _coupled_state(nullptr)
@@ -1137,25 +1137,29 @@ public:
         }
     }
 
-    size_t add_block()
+    size_t add_block(size_t n = 1)
     {
-        size_t r = boost::add_vertex(_bg);
-        _wr.resize(num_vertices(_bg));
-        _mrm.resize(num_vertices(_bg));
-        _mrp.resize(num_vertices(_bg));
-        _wr[r] = _mrm[r] = _mrp[r] = 0;
-        _bclabel.resize(num_vertices(_bg));
-        _empty_pos.resize(num_vertices(_bg));
-        _candidate_pos.resize(num_vertices(_bg));
-        add_element(_empty_blocks, _empty_pos, r);
-        _overlap_stats.add_block();
-        for (auto& p : _partition_stats)
-            p.add_block();
-        if (!_egroups.empty())
-            _egroups.add_block();
-        if (_coupled_state != nullptr)
-            _coupled_state->coupled_resize_vertex(r);
-        sync_emat();
+        _wr.resize(num_vertices(_bg) + n);
+        _mrm.resize(num_vertices(_bg) + n);
+        _mrp.resize(num_vertices(_bg) + n);
+        _bclabel.resize(num_vertices(_bg) + n);
+        _empty_pos.resize(num_vertices(_bg) + n);
+        _candidate_pos.resize(num_vertices(_bg) + n);
+        size_t r = null_group;
+        for (size_t i = 0; i < n; ++i)
+        {
+            r = boost::add_vertex(_bg);
+            _wr[r] = _mrm[r] = _mrp[r] = 0;
+            add_element(_empty_blocks, _empty_pos, r);
+            _overlap_stats.add_block();
+            for (auto& p : _partition_stats)
+                p.add_block();
+            if (!_egroups.empty())
+                _egroups.add_block();
+            if (_coupled_state != nullptr)
+                _coupled_state->coupled_resize_vertex(r);
+        }
+        _emat.add_block(_bg);
         return r;
     }
 

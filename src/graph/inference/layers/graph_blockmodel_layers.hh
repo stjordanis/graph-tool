@@ -957,9 +957,9 @@ struct Layers
             BaseState::set_vertex_weight(v, w);
         }
 
-        size_t add_block()
+        size_t add_block(size_t n = 1)
         {
-            return BaseState::add_block();
+            return BaseState::add_block(n);
             // for (size_t l = 0; l < _layers.size(); ++l)
             // {
             //     auto& state = _layers[l];

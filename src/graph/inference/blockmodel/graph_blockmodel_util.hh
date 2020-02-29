@@ -44,7 +44,7 @@ public:
     virtual size_t sample_block(size_t v, double c, double d, rng_t& rng) = 0;
     virtual double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                                  bool reverse) = 0;
-    virtual size_t add_block() = 0;
+    virtual size_t add_block(size_t n = 1) = 0;
     virtual void add_edge(const GraphInterface::edge_t& e) = 0;
     virtual void remove_edge(const GraphInterface::edge_t& e) = 0;
     virtual void add_edge_rec(const GraphInterface::edge_t& e) = 0;

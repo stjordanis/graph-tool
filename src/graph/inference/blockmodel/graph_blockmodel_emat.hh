@@ -31,8 +31,8 @@ template <class BGraph>
 class EMat
 {
 public:
-    template <class RNG>
-    EMat(BGraph& bg, RNG&)
+    template <class Graph, class RNG>
+    EMat(Graph&, BGraph& bg, RNG&)
     {
         sync(bg);
     }
@@ -50,6 +50,11 @@ public:
             if (!is_directed_::apply<BGraph>::type::value)
                 _mat[target(e, bg)][source(e, bg)] = e;
         }
+    }
+
+    void add_block(BGraph& bg)
+    {
+        sync(bg);
     }
 
     typedef typename graph_traits<BGraph>::vertex_descriptor vertex_t;
@@ -125,9 +130,9 @@ class EHash
 {
 public:
 
-    template <class RNG>
-    EHash(BGraph& bg, RNG& rng)
-        : _hash_function(num_vertices(bg), _index, rng),
+    template <class Graph, class RNG>
+    EHash(Graph& g, BGraph& bg, RNG& rng)
+        : _hash_function(num_vertices(g), _index, rng),
           _hash(num_vertices(bg), ehash_t(0, _hash_function))
     {
         sync(bg);
@@ -159,6 +164,15 @@ public:
             assert(get_me(source(e, bg), target(e, bg)) == _null_edge);
             put_me(source(e, bg), target(e, bg), e);
         }
+    }
+
+    void add_block(BGraph& bg)
+    {
+        size_t N = _hash.size();
+        _hash_function.resize(num_vertices(bg));
+        _hash.resize(num_vertices(bg), ehash_t(0, _hash_function));
+        for (size_t i = N; i < _hash.size(); ++i)
+            _hash[i].max_load_factor(.3);
     }
 
     typedef typename graph_traits<BGraph>::vertex_descriptor vertex_t;

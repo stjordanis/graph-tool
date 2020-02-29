@@ -229,7 +229,6 @@ struct MCMC
             _nmoves++;
         }
 
-
         template <class RNG>
         std::tuple<double, double>
         gibbs_sweep(std::vector<size_t>& vs, size_t r, size_t s,
@@ -422,6 +421,13 @@ struct MCMC
 
             size_t pos = 0;
             std::array<size_t, 2> except = {r, s};
+
+            size_t nB = _groups[r].size();
+            if constexpr (!forward)
+                nB += _groups[s].size();
+            if (_state._empty_blocks.size() < nB)
+                _state.add_block(nB - _state._empty_blocks.size());
+
             for (auto v : _groups[r])
             {
                 size_t t;
