@@ -92,10 +92,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         be assumed, otherwise the traditional variant will be used.
     overlap : ``bool`` (optional, default: ``False``)
         If ``True``, the overlapping version of the model will be used.
-    max_BE : ``int`` (optional, default: ``1000``)
-        If the number of blocks exceeds this value, a sparse matrix is used for
-        the block graph. Otherwise a dense matrix will be used.
-
     """
 
     def __init__(self, g, ec, eweight=None, vweight=None, recs=[], rec_types=[],
@@ -117,9 +113,9 @@ class LayeredBlockState(OverlapBlockState, BlockState):
             self.C = len(kwargs.get("gs"))
         self.layers = layers
 
-        if "max_BE" in kwargs:
-            del kwargs["max_BE"]
-        max_BE = 0
+        if "dense_bg" in kwargs:
+            del kwargs["dense_bg"]
+        dense_bg = False
 
         if vweight is None:
             vweight = g.new_vp("int", 1)
@@ -149,7 +145,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                    rec_types=rec_types, rec_params=rec_params,
                                    clabel=clabel, pclabel=pclabel,
                                    deg_corr=deg_corr,
-                                   max_BE=max_BE, degs=tdegs,
+                                   dense_bg=dense_bg, degs=tdegs,
                                    Lrecdx=self.Lrecdx[0],
                                    use_rmap=True,
                                    **dmask(kwargs, ["degs", "lweights", "gs"]))
@@ -160,7 +156,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                           rec_types=rec_types,
                                           rec_params=rec_params, clabel=clabel,
                                           pclabel=pclabel, deg_corr=deg_corr,
-                                          max_BE=max_BE,
+                                          dense_bg=dense_bg,
                                           Lrecdx=self.Lrecdx[0],
                                           **dmask(kwargs, ["degs", "lweights",
                                                            "gs", "bfield"]))
@@ -267,7 +263,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
 
         self.layer_states = []
 
-        self.max_BE = max_BE
+        self.dense_bg = dense_bg
         self.bg = agg_state.bg
         self.wr = agg_state.wr
         self.mrs = agg_state.mrs
@@ -370,7 +366,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                vweight=u.vp["weight"],
                                deg_corr=self.deg_corr,
                                degs=degs,
-                               max_BE=self.max_BE,
+                               dense_bg=self.dense_bg,
                                use_rmap=True)
         else:
             base_u, node_index = self.__get_base_u(u)
@@ -385,7 +381,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                       node_index=node_index,
                                       base_g=base_u,
                                       deg_corr=self.deg_corr,
-                                      max_BE=self.max_BE)
+                                      dense_bg=self.dense_bg)
         state.block_rmap = u.vp["brmap"]
         state.vmap = u.vp["vmap"]
         return state
@@ -671,7 +667,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                   b=bg.vertex_index.copy("int") if b is None else b,
                                   deg_corr=deg_corr,
                                   overlap=overlap,
-                                  max_BE=self.max_BE,
+                                  dense_bg=self.dense_bg,
                                   layers=self.layers if layers is None else layers,
                                   ec_done=True,
                                   degs=degs, lweights=lweights,

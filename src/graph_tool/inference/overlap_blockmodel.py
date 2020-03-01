@@ -75,14 +75,13 @@ class OverlapBlockState(BlockState):
     deg_corr : ``bool`` (optional, default: ``True``)
         If ``True``, the degree-corrected version of the blockmodel ensemble will
         be assumed, otherwise the traditional variant will be used.
-    max_BE : ``int`` (optional, default: ``1000``)
-        If the number of blocks exceeds this number, a sparse representation of
-        the block graph is used, which is slightly less efficient, but uses less
-        memory,
+    dense_bg : ``bool`` (optional, default: ``False``)
+        If ``True`` a dense matrix is used for the block graph, otherwise a
+        sparse matrix will be used.
     """
 
     def __init__(self, g, b=None, B=None, recs=[], rec_types=[], rec_params=[],
-                 clabel=None, pclabel=None, deg_corr=True, max_BE=1000,
+                 clabel=None, pclabel=None, deg_corr=True, dense_bg=False,
                  **kwargs):
 
         kwargs = kwargs.copy()
@@ -251,9 +250,8 @@ class OverlapBlockState(BlockState):
                 if numpy.any(idx):
                     self.epsilon[i] = abs(self.rec[i].a[idx]).min() / 10
 
-        self.max_BE = max_BE
-
-        self.use_hash = self.B > self.max_BE
+        self.dense_bg = dense_bg
+        self.use_hash = not self.dense_bg
 
         self.bfield = self.g.new_vp("vector<double>")
         self.Bfield = Vector_double()
@@ -326,14 +324,14 @@ class OverlapBlockState(BlockState):
                                   half_edges=kwargs.get("half_edges", self.half_edges),
                                   node_index=kwargs.get("node_index", self.node_index),
                                   eindex=kwargs.get("eindex", self.eindex),
-                                  max_BE=kwargs.get("max_BE", self.max_BE),
+                                  dense_bg=kwargs.get("dense_bg", self.dense_bg),
                                   base_g=kwargs.get("base_g", self.base_g),
                                   Lrecdx=kwargs.pop("Lrecdx", self.Lrecdx.copy()),
                                   epsilon=kwargs.pop("epsilon",
                                                      self.epsilon.copy()),
                                   **dmask(kwargs, ["half_edges", "node_index",
                                                    "eindex", "base_g", "drec",
-                                                   "max_BE"]))
+                                                   "dense_bg"]))
         if self._coupled_state is not None:
             state._couple_state(state.get_block_state(b=state.get_bclabel(),
                                                       vweight="nonempty",
@@ -355,7 +353,7 @@ class OverlapBlockState(BlockState):
                      half_edges=self.half_edges,
                      node_index=self.node_index,
                      eindex=self.eindex,
-                     max_BE=self.max_BE,
+                     dense_bg=self.dense_bg,
                      base_g=self.base_g)
         return state
 

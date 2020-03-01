@@ -252,15 +252,14 @@ class BlockState(object):
     deg_corr : ``bool`` (optional, default: ``True``)
         If ``True``, the degree-corrected version of the blockmodel ensemble will
         be assumed, otherwise the traditional variant will be used.
-    max_BE : ``int`` (optional, default: ``1000``)
-        If the number of blocks exceeds this value, a sparse matrix is used for
-        the block graph. Otherwise a dense matrix will be used.
-
+    dense_bg : ``bool`` (optional, default: ``False``)
+        If ``True`` a dense matrix is used for the block graph, otherwise a
+        sparse matrix will be used.
     """
 
     def __init__(self, g, b=None, B=None, eweight=None, vweight=None, recs=[],
                  rec_types=[], rec_params=[], clabel=None, pclabel=None,
-                 bfield=None, Bfield=None, deg_corr=True, max_BE=1000, **kwargs):
+                 bfield=None, Bfield=None, deg_corr=True, dense_bg=False, **kwargs):
         kwargs = kwargs.copy()
 
         # initialize weights to unity, if necessary
@@ -419,9 +418,8 @@ class BlockState(object):
         self.bclabel = self.get_bclabel()
         self.hclabel = self.bg.new_vp("int")
 
-        self.max_BE = max_BE
-
-        self.use_hash = self.B > self.max_BE
+        self.dense_bg = dense_bg
+        self.use_hash = not self.dense_bg
         self.use_rmap = kwargs.pop("use_rmap", False)
 
         self.merge_map = kwargs.pop("merge_map",
@@ -596,7 +594,7 @@ class BlockState(object):
 
     def copy(self, g=None, eweight=None, vweight=None, b=None, B=None,
              deg_corr=None, clabel=None, overlap=False, pclabel=None,
-             bfield=None, max_BE=None, **kwargs):
+             bfield=None, dense_bg=None, **kwargs):
         r"""Copies the block state. The parameters override the state properties, and
          have the same meaning as in the constructor."""
 
@@ -610,7 +608,7 @@ class BlockState(object):
                                pclabel=self.pclabel if pclabel is None else pclabel,
                                bfield=self.bfield if bfield is None else bfield,
                                deg_corr=self.deg_corr if deg_corr is None else deg_corr,
-                               max_BE=self.max_BE if max_BE is None else max_BE,
+                               dense_bg=self.dense_bg if dense_bg is None else dense_bg,
                                degs=self.degs.copy() if eweight is None else None,
                                merge_map=kwargs.pop("merge_map",
                                                     self.merge_map.copy()),
@@ -635,7 +633,7 @@ class BlockState(object):
                                       clabel=self.clabel if clabel is None else clabel,
                                       pclabel=self.pclabel if pclabel is None else pclabel,
                                       deg_corr=self.deg_corr if deg_corr is None else deg_corr,
-                                      max_BE=self.max_BE if max_BE is None else max_BE,
+                                      dense_bg=self.dense_bg if dense_bg is None else dense_bg,
                                       Lrecdx=kwargs.pop("Lrecdx", self.Lrecdx.copy()),
                                       epsilon=kwargs.pop("epsilon",self.epsilon.copy()),
                                       **kwargs)
@@ -659,7 +657,7 @@ class BlockState(object):
                      pclabel=self.pclabel,
                      bfield=self.bfield,
                      deg_corr=self.deg_corr,
-                     max_BE=self.max_BE,
+                     dense_bg=self.dense_bg,
                      recs=self.rec,
                      drec=self.drec,
                      rec_types=self.rec_types,
@@ -778,7 +776,7 @@ class BlockState(object):
                            rec_params=rec_params,
                            clabel=kwargs.pop("clabel", self.get_bclabel()),
                            pclabel=kwargs.pop("pclabel", self.get_bpclabel()),
-                           max_BE=self.max_BE,
+                           dense_bg=self.dense_bg,
                            epsilon=kwargs.pop("epsilon",
                                               self.epsilon.copy()),
                            **kwargs)
@@ -873,6 +871,10 @@ class BlockState(object):
     def get_blocks(self):
         r"""Returns the property map which contains the block labels for each vertex."""
         return self.b
+
+    def get_state(self):
+        """Alias to :meth:`~BlockState.get_blocks`."""
+        return self.get_blocks()
 
     def set_state(self, b):
         r"""Sets the internal partition of the state."""

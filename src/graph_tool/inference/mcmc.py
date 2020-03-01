@@ -730,7 +730,7 @@ class TemperingState(object):
     def mcmc_sweep(self, **kwargs):
         """Perform a full mcmc sweep of the parallel states, where swap or moves are
         chosen randomly. It accepts an keyword argument ``r`` (default: ``0.1``)
-        specifying the relative probability with which state swaps is performed
+        specifying the relative probability with which state swaps are performed
         with respect to node moves.  All remaining keyword arguments are
         propagated to the individual states' `mcmc_sweep()` method.
         """
@@ -741,7 +741,7 @@ class TemperingState(object):
     def multiflip_mcmc_sweep(self, **kwargs):
         """Perform a full mcmc sweep of the parallel states, where swap or moves are
         chosen randomly. It accepts an keyword argument ``r`` (default: ``0.1``)
-        specifying the relative probability with which state swaps is performed
+        specifying the relative probability with which state swaps are performed
         with respect to node moves.  All remaining keyword arguments are
         propagated to the individual states' `mcmc_sweep()` method.
         """
@@ -752,7 +752,7 @@ class TemperingState(object):
     def gibbs_sweep(self, **kwargs):
         """Perform a full Gibbs mcmc sweep of the parallel states, where swap or moves
         are chosen randomly. It accepts an keyword argument ``r`` (default:
-        ``0.1``) specifying the relative probability with which state swaps is
+        ``0.1``) specifying the relative probability with which state swaps are
         performed with respect to node moves.  All remaining keyword arguments
         are propagated to the individual states' `gibbs_sweep()` method.
         """

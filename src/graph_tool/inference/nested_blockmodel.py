@@ -215,6 +215,10 @@ class NestedBlockState(object):
         """
         return [s.b.fa for s in self.levels]
 
+    def get_state(self):
+        """Alias to :meth:`~NestedBlockState.get_bs`."""
+        return self.get_bs()
+
     def set_state(self, bs):
         r"""Sets the internal nested partition of the state."""
         for i in range(len(bs)):
