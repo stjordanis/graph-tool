@@ -1063,8 +1063,8 @@ def group_vector_property(props, value_type=None, vprop=None, pos=None):
             else:
                 vprop = g.new_graph_property(value_type)
         else:
-            ValueError("Can't automatically determine property map value" +
-                       " type. Please provide the 'value_type' parameter.")
+            raise ValueError("Can't automatically determine property map value" +
+                             " type. Please provide the 'value_type' parameter.")
     _check_prop_vector(vprop, name="vprop", scalar=False)
 
     for i, p in enumerate(props):
