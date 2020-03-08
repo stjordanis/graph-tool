@@ -1614,7 +1614,7 @@ class BlockState(object):
                                                  [s._state for s in states],
                                                  _get_rng())
 
-    def gibbs_sweep(self, beta=1., niter=1, entropy_args={}, allow_vacate=True,
+    def gibbs_sweep(self, beta=1., niter=1, entropy_args={},
                     allow_new_group=True, sequential=True, deterministic=False,
                     vertices=None, verbose=False, **kwargs):
         r"""Perform ``niter`` sweeps of a rejection-free Gibbs sampling MCMC
@@ -1630,10 +1630,8 @@ class BlockState(object):
         entropy_args : ``dict`` (optional, default: ``{}``)
             Entropy arguments, with the same meaning and defaults as in
             :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
-        allow_vacate : ``bool`` (optional, default: ``True``)
-            Allow groups to be vacated.
         allow_new_group : ``bool`` (optional, default: ``True``)
-            Allow the number of groups to increase.
+            Allow the number of groups to increase and decrease.
         sequential : ``bool`` (optional, default: ``True``)
             If ``sequential == True`` each vertex move attempt is made
             sequentially, where vertices are visited in random order. Otherwise

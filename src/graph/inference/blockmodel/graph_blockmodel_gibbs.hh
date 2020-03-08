@@ -39,7 +39,6 @@ using namespace std;
     ((vlist,&, std::vector<size_t>&, 0))                                       \
     ((beta,, double, 0))                                                       \
     ((entropy_args,, entropy_args_t, 0))                                       \
-    ((allow_vacate,, bool, 0))                                                 \
     ((allow_new_group,, bool, 0))                                              \
     ((sequential,, bool, 0))                                                   \
     ((deterministic,, bool, 0))                                                \
@@ -97,10 +96,13 @@ struct Gibbs
         double virtual_move_dS(size_t v, size_t nr, rng_t& rng)
         {
             size_t r = _state._b[v];
+            if (!_allow_new_group && nr != r && _state.virtual_remove_size(v) == 0)
+                return numeric_limits<double>::infinity();
             if (nr == null_group)
             {
                 if (!_allow_new_group ||
-                    _state._candidate_blocks.size() - 1 == num_vertices(_state._g))
+                    _state._candidate_blocks.size() - 1 == num_vertices(_state._g) ||
+                    _state.virtual_remove_size(v) == 0)
                     return numeric_limits<double>::infinity();
                 _state.get_empty_block(v);
                 _nr = nr = uniform_sample(_state._empty_blocks, rng);
