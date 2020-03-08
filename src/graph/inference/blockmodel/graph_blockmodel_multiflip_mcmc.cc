@@ -119,14 +119,6 @@ python::object do_multiflip_mcmc_sweep_parallel(python::object omcmc_states,
     return orets;
 }
 
-namespace graph_tool
-{
-std::ostream& operator<<(std::ostream& os, move_t move)
-{
-    return os << static_cast<int>(move);
-}
-}
-
 void export_blockmodel_multiflip_mcmc()
 {
     using namespace boost::python;

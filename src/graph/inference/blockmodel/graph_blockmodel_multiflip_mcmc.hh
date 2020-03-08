@@ -92,13 +92,15 @@ struct MCMC
             {
                 if (_state.node_weight(v) == 0)
                     continue;
-                add_element(_groups[_state._b[v]], _vpos, v);
+                auto r = _state._b[v];
+                add_element(_groups[r], _vpos, v);
                 _N += _state.node_weight(v);
+                _vertices.push_back(v);
             }
 
             for (auto r : vertices_range(_state._bg))
             {
-                if (_state._wr[r] == 0)
+                if (_groups[r].empty())
                     continue;
                 add_element(_rlist, _rpos, r);
             }
@@ -113,9 +115,9 @@ struct MCMC
 
         typename state_t::g_t& _g;
 
+        std::vector<size_t> _vertices;
         std::vector<std::vector<size_t>> _groups;
         typename vprop_map_t<size_t>::type::unchecked_t _vpos;
-        typename vprop_map_t<size_t>::type::unchecked_t _rpos;
         size_t _nmoves = 0;
 
         std::vector<std::vector<std::tuple<size_t, size_t>>> _bstack;
@@ -155,12 +157,16 @@ struct MCMC
         }
 
         std::vector<size_t> _rlist;
+        std::vector<size_t> _rlist_split;
+        typename vprop_map_t<size_t>::type::unchecked_t _rpos;
+
         std::vector<size_t> _vs;
+        move_t _move;
 
         typename vprop_map_t<int>::type::unchecked_t _bnext;
         typename vprop_map_t<int>::type::unchecked_t _btemp;
 
-        constexpr static move_t _null_move = move_t::null;
+        constexpr static size_t _null_move = 1;
 
         size_t _N = 0;
 
@@ -177,8 +183,8 @@ struct MCMC
             return false;
         }
 
-        template <bool sample_branch=true, class VS = std::array<size_t,0>>
-        size_t sample_new_group(size_t v, rng_t& rng, VS&& except = VS())
+        template <bool sample_branch=true, class RNG, class VS = std::array<size_t,0>>
+        size_t sample_new_group(size_t v, RNG& rng, VS&& except = VS())
         {
             _state.get_empty_block(v, except.size() >= _state._empty_blocks.size());
             size_t t;
@@ -575,20 +581,30 @@ struct MCMC
                 else
                     ddS = std::numeric_limits<double>::infinity();
 
-                if (!std::isinf(ddS))
-                    ddS *= _beta;
-
-                double Z = log_sum(0., -ddS);
-
                 size_t tbv = _btemp[v];
-                if (tbv == nbv)
+
+                if (!std::isinf(ddS))
                 {
-                    move_vertex(v, nbv);
-                    lp += -ddS - Z;
+                    ddS *= _beta;
+                    double Z = log_sum(0., -ddS);
+
+                    if (tbv == nbv)
+                    {
+                        move_vertex(v, nbv);
+                        lp += -ddS - Z;
+                    }
+                    else
+                    {
+                        lp += -Z;
+                    }
                 }
                 else
                 {
-                    lp += -Z;
+                    if (tbv == nbv)
+                    {
+                        lp = -std::numeric_limits<double>::infinity();
+                        break;
+                    }
                 }
             }
 
@@ -621,18 +637,17 @@ struct MCMC
         template <class RNG>
         size_t sample_move(size_t r, RNG& rng)
         {
+            size_t v = uniform_sample(_groups[r], rng);
             auto s = r;
             while (s == r)
-            {
-                size_t v = uniform_sample(_groups[r], rng);
-                s  = _state.sample_block(v, _c, 0, rng);
-            }
+                s = _state.sample_block(v, _c, 0, rng);
             return s;
         }
 
         double get_move_prob(size_t r, size_t s)
         {
-            double prs = 0, prr = 0;
+            double prs = 0;
+            double prr = 0;
             for (auto v : _groups[r])
             {
                 prs += _state.get_move_prob(v, r, s, _c, 0, false);
@@ -654,7 +669,7 @@ struct MCMC
         {
             size_t s = sample_move(r, rng);
 
-            if (!allow_merge(r, s))
+            if (s == r || !allow_merge(r, s))
                 return {null_group, 0., 0., 0.};
 
             double pf = 0, pb = 0;
@@ -692,7 +707,8 @@ struct MCMC
         }
 
         template <class RNG>
-        std::tuple<move_t,size_t> move_proposal(size_t r, RNG& rng)
+        std::tuple<size_t, size_t>
+        move_proposal(size_t, RNG& rng)
         {
             double pf = 0, pb = 0;
             _dS = _a = 0;
@@ -700,38 +716,31 @@ struct MCMC
             _nmoves = 0;
             _state.clear_next_state();
 
-            move_t move = _move_sampler.sample(rng);
+            auto move = _move_sampler.sample(rng);
 
             switch (move)
             {
             case move_t::single:
                 {
-                    auto v = uniform_sample(_groups[r], rng);
+                    auto v = uniform_sample(_vertices, rng);
+                    size_t r = _state._b[v];
                     auto s = _state.sample_block(v, _c, _d, rng);
                     if (s >= _groups.size())
                     {
-                        _groups.resize(s+ 1);
-                        _rpos.resize(s+ 1);
+                        _groups.resize(s + 1);
+                        _rpos.resize(s + 1);
                     }
-                    if (r == s || !_state.allow_move(r, s))
-                        return {_null_move, 1};
-                    if (_d == 0 && _groups[r].size() == 1 && !std::isinf(_beta))
-                        return {_null_move, 1};
+                    if (r == s || !_state.allow_move(r, s) ||
+                        (_d == 0 && _groups[r].size() == 1 && !std::isinf(_beta)))
+                    {
+                        move = move_t::null;
+                        break;
+                    }
                     _dS = _state.virtual_move(v, r, s, _entropy_args);
                     if (!std::isinf(_beta))
                     {
                         pf = log(_state.get_move_prob(v, r, s, _c, _d, false));
                         pb = log(_state.get_move_prob(v, s, r, _c, _d, true));
-
-                        pf += -safelog_fast(_rlist.size());
-                        pf += -safelog_fast(_groups[r].size());
-                        int dB = 0;
-                        if (_groups[s].empty())
-                            dB++;
-                        if (_groups[r].size() == 1)
-                            dB--;
-                        pb += -safelog_fast(_rlist.size() + dB);
-                        pb += -safelog_fast(_groups[s].size() + 1);
                     }
                     _vs.clear();
                     _vs.push_back(v);
@@ -742,8 +751,13 @@ struct MCMC
 
             case move_t::split:
                 {
+                    auto r = uniform_sample(_rlist, rng);
+
                     if (_groups[r].size() < 2)
-                        return {_null_move, 1};
+                    {
+                        move = move_t::null;
+                        break;
+                    }
 
                     _state._egroups_update = false;
 
@@ -756,7 +770,12 @@ struct MCMC
                     if (!std::isinf(_beta))
                     {
                         pf += log(_psplit);
-                        pb = merge_prob(s, r) + log(_pmerge);
+                        pf += -safelog_fast(_rlist.size());
+
+                        pb = merge_prob(s, r);
+                        pb += -safelog_fast(_rlist.size()+1);
+
+                        pb += log(_pmerge);
                     }
 
                     if (_verbose)
@@ -778,19 +797,29 @@ struct MCMC
             case move_t::merge:
                 {
                     if (_rlist.size() == 1)
-                        return {_null_move, 1};
-
+                    {
+                        move = move_t::null;
+                        break;
+                    }
+                    auto r = uniform_sample(_rlist, rng);
                     auto s = sample_move(r, rng);
-
                     if (!allow_merge(r, s))
-                        return {_null_move, 1};
+                    {
+                        move = move_t::null;
+                        break;
+                    }
 
                     _state._egroups_update = false;
 
                     if (!std::isinf(_beta))
                     {
-                        pf = merge_prob(r, s) + log(_pmerge);
-                        pb = split_prob(s, r, rng) + log(_psplit);
+                        pf += log(_pmerge);
+                        pf += -safelog_fast(_rlist.size());
+                        pf += merge_prob(r, s);
+
+                        pb = -safelog_fast(_rlist.size()-1);
+                        pb += split_prob(s, r, rng);
+                        pb += log(_psplit);
                     }
 
                     _vs = _groups[r];
@@ -817,7 +846,12 @@ struct MCMC
             case move_t::mergesplit:
                 {
                     if (_rlist.size() == 1)
-                        return {_null_move, 1};
+                    {
+                        move = move_t::null;
+                        break;
+                    }
+
+                    size_t r = uniform_sample(_rlist, rng);
 
                     _state._egroups_update = false;
 
@@ -831,7 +865,8 @@ struct MCMC
                         while (!_bstack.empty())
                             pop_b();
                         _state._egroups_update = true;
-                        return {_null_move, 1};
+                        move = move_t::null;
+                        break;
                     }
 
                     _dS += get<1>(ret);
@@ -866,9 +901,14 @@ struct MCMC
                 break;
 
             default:
-                return {_null_move, 0};
+                move = move_t::null;
                 break;
             }
+
+            if (move == move_t::null)
+                return {_null_move, std::max(1, _nmoves)};
+
+            _move = move;
 
             _a = pb - pf;
 
@@ -885,36 +925,39 @@ struct MCMC
                 _a = _dS * _beta + 1;
             }
 
-            return {move, _nmoves};
+            return {0, _nmoves};
         }
 
         std::tuple<double, double>
-        virtual_move_dS(size_t, move_t)
+        virtual_move_dS(size_t, size_t)
         {
             return {_dS, _a};
         }
 
-        void perform_move(size_t, move_t move)
+        void perform_move(size_t, size_t)
         {
             for (auto v : _vs)
             {
                 size_t r = _state._b[v];
                 size_t s = _bnext[v];
+                if (r == s)
+                    continue;
+
                 if (_groups[s].empty())
                     add_element(_rlist, _rpos, s);
 
                 move_vertex(v, s);
 
-                if (_groups[r].empty() && has_element(_rlist, _rpos, r))
+                if (_groups[r].empty())
                     remove_element(_rlist, _rpos, r);
             }
 
-            _nacceptance[size_t(move)]++;
+            _nacceptance[size_t(_move)]++;
         }
 
         constexpr bool is_deterministic()
         {
-            return false;
+            return true;
         }
 
         constexpr bool is_sequential()
@@ -922,9 +965,10 @@ struct MCMC
             return false;
         }
 
+        std::array<size_t, 1> _vlist = {0};
         auto& get_vlist()
         {
-            return _rlist;
+            return _vlist;
         }
 
         size_t get_N()
@@ -942,13 +986,11 @@ struct MCMC
             return _niter;
         }
 
-        constexpr void step(size_t, move_t)
+        constexpr void step(size_t, size_t)
         {
         }
     };
 };
-
-std::ostream& operator<<(std::ostream& os, move_t move);
 
 } // graph_tool namespace
 

@@ -64,7 +64,7 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
     auto beta = state.get_beta();
 
     typedef std::remove_const_t<decltype(state._null_move)> move_t;
-    constexpr bool single_step =
+     constexpr bool single_step =
         std::is_same_v<decltype(state.move_proposal(vlist.front(), rng)),
                        move_t>;
 
@@ -87,7 +87,7 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
                     return state.get_N();
             };
 
-        for (size_t vi = 0; vi < get_N(); vi += nsteps)
+        for (size_t vi = 0; vi < get_N(); ++vi)
         {
             auto v = (state.is_sequential()) ?
                 vlist[vi] : uniform_sample(vlist, rng);

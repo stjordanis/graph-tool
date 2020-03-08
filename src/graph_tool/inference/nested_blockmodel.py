@@ -852,6 +852,9 @@ class NestedBlockState(object):
 
         """
 
+        psingle = kwargs.get("psingle", self.g.num_vertices())
+        kwargs["psingle"] = psingle
+
         c = kwargs.pop("c", 1)
         if not isinstance(c, collections.Iterable):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
