@@ -897,7 +897,7 @@ class EdgePropertyMap(PropertyMap):
         try:
             self._PropertyMap__map[k] = v
         except TypeError:
-            self._PropertyMap__map[k] = self.__convert(v)
+            self._PropertyMap__map[k] = self._PropertyMap__convert(v)
 
     def __iter__(self):
         g = self.get_graph()
