@@ -65,7 +65,7 @@ for ac_cgal_iterate in $ac_cgal_dirs ; do
                 CGAL_LDFLAGS="-L$ac_cgal_iterate/lib -lCGAL -lCGAL_Core -lgmp ${BOOST_THREAD_LIB}"
             fi
             LDFLAGS_SAVED="$LDFLAGS"
-            LDFLAGS="$LDFLAGS $CGAL_LDFLAGS"
+            LDFLAGS="$LDFLAGS $BOOST_LDFLAGS $CGAL_LDFLAGS"
             export LDFLAGS
 
             AC_MSG_CHECKING([whether CGAL is available in $ac_cgal_iterate])
