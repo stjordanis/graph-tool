@@ -1285,11 +1285,13 @@ def fit_to_view(rec, output_size, adjust_aspect=False, pad=.9):
             output_size[0] = int(round(float(output_size[1] * w / h)))
         else:
             output_size[1] = int(round(float(output_size[0] * h / w)))
-    else:
-        x -= (d-w)/2
-        y -= (d-h)/2
 
-    zoom = min(output_size[0] / w, output_size[1] / h) * pad
+    zoom = min(output_size[0] / w, output_size[1] / h)
+
+    x -= (output_size[0] / zoom - w) / 2
+    y -= (output_size[1] / zoom - h) / 2
+
+    zoom *= pad
 
     x -= (1-pad) / 2 * output_size[0] / zoom
     y -= (1-pad) / 2 * output_size[1] / zoom
