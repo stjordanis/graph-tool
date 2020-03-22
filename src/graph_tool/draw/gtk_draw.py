@@ -506,8 +506,7 @@ class GraphWidget(Gtk.DrawingArea):
 
         if (self.base is None or self.base_geometry[0] != geometry[0] or
             self.base_geometry[1] != geometry[1] or reset):
-            # self.base = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-            #                                *geometry)
+
             w = self.get_window()
             if w is None:
                 return False
@@ -767,30 +766,37 @@ class GraphWidget(Gtk.DrawingArea):
         if g is None:
             g = self.g
         pos = g.own_property(self.pos)
-        cr = self.get_window().cairo_create()
         if self.fit_view != False:
             try:
                 x, y, w, h = self.fit_view
                 zoom = min(geometry[0] / w, geometry[1] / h)
-                offset = (x * zoom, y * zoom)
             except TypeError:
-                pad = self.fit_view if self.fit_view != True else 0.95
-                offset, zoom = fit_to_view(g, pos, geometry,
-                                           self.vprops.get("size", 0),
-                                           self.vprops.get("pen_width", 0),
-                                           self.tmatrix.multiply(self.smatrix),
-                                           self.vprops.get("text", None),
-                                           self.vprops.get("font_family",
-                                                           _vdefaults["font_family"]),
-                                           self.vprops.get("font_size",
-                                                           _vdefaults["font_size"]),
-                                           pad,
-                                           cr)
+                pad = self.fit_view if self.fit_view is not True else 0.9
+
+                M = self.tmatrix.multiply(self.smatrix)
+                pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
+                P = np.zeros((2, len(pos_x.fa)))
+                P[0, :] = pos_x.fa
+                P[1, :] = pos_y.fa
+                T = np.zeros((2, 2))
+                O = np.zeros(2)
+                T[0, 0], T[1, 0], T[0, 1], T[1, 1], O[0], O[1] = M
+                P = np.dot(T, P)
+                P[0] += O[0]
+                P[1] += O[1]
+                pos_x.fa = P[0, :]
+                pos_y.fa = P[1, :]
+                pos = group_vector_property([pos_x, pos_y])
+
+                x, y, zoom = fit_to_view_ink(g, pos, geometry, self.vprops,
+                                             self.eprops, pad=pad)
         else:
-            offset, zoom = (0,0), 1
+            x, y, zoom = 0, 0, 1
+
         m = cairo.Matrix()
-        m.translate(offset[0] + ox, offset[1] + oy)
+        m.translate(ox, oy)
         m.scale(zoom, zoom)
+        m.translate(-x, -y)
         self.tmatrix = self.tmatrix.multiply(self.smatrix.multiply(m))
         self.smatrix = cairo.Matrix()
         if ink:

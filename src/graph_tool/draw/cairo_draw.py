@@ -151,7 +151,7 @@ _edefaults = {
     "font_weight": cairo.FONT_WEIGHT_NORMAL,
     "font_size": 12.,
     "sloppy": False,
-    "seamless": False
+    "seamless": True
     }
 
 _vtypes = {
@@ -312,7 +312,7 @@ def centered_rotation(g, pos, text_pos=True):
     x, y = ungroup_vector_property(pos, [0, 1])
     cm = (x.fa.mean(), y.fa.mean())
     dx = x.fa - cm[0]
-    dy = y.fa - cm[0]
+    dy = y.fa - cm[1]
     angle = g.new_vertex_property("double")
     angle.fa = numpy.arctan2(dy, dx)
     pi = numpy.pi
@@ -561,8 +561,8 @@ def parse_props(prefix, args):
 
 def cairo_draw(g, pos, cr, vprops=None, eprops=None, vorder=None, eorder=None,
                nodesfirst=False, vcmap=default_cm, ecmap=default_cm,
-               loop_angle=numpy.nan, parallel_distance=None, fit_view=False,
-               res=0, max_render_time=-1, **kwargs):
+               loop_angle=numpy.nan, parallel_distance=None, res=0,
+               max_render_time=-1, **kwargs):
     r"""Draw a graph to a :mod:`cairo` context.
 
     Parameters
@@ -600,12 +600,6 @@ def cairo_draw(g, pos, cr, vprops=None, eprops=None, vorder=None, eorder=None,
     parallel_distance : float (optional, default: ``None``)
         Distance used between parallel edges. If not provided, it will be
         determined automatically.
-    fit_view : bool or float or tuple (optional, default: ``True``)
-        If ``True``, the layout will be scaled to fit the entire clip region.
-        If a float value is given, it will be interpreted as ``True``, and in
-        addition the viewport will be scaled out by that factor. If a tuple
-        value is given, it should have four values ``(x, y, w, h)`` that
-        specify the view in user coordinates.
     bg_color : str or sequence (optional, default: ``None``)
         Background color. The default is transparent.
     res : float (optional, default: ``0.``):
@@ -646,28 +640,6 @@ def cairo_draw(g, pos, cr, vprops=None, eprops=None, vorder=None, eorder=None,
         warnings.warn("Unknown parameter: " + k, UserWarning)
 
     cr.save()
-    if fit_view != False:
-        extents = cr.clip_extents()
-        output_size = (extents[2] - extents[0], extents[3] - extents[1])
-        try:
-            x, y, w, h = fit_view
-            zoom = min(output_size[0] / w, output_size[1] / h)
-            offset = (x * zoom, y * zoom)
-            cr.translate(x, y)
-            cr.scale(zoom, zoom)
-        except TypeError:
-            pad = fit_view if fit_view != True else 0.95
-            offset, zoom = fit_to_view(g, pos, output_size,
-                                       vprops.get("size", _vdefaults["size"]),
-                                       vprops.get("pen_width", _vdefaults["pen_width"]),
-                                       None, vprops.get("text", None),
-                                       vprops.get("font_family",
-                                                  _vdefaults["font_family"]),
-                                       vprops.get("font_size",
-                                                  _vdefaults["font_size"]),
-                                       pad, cr)
-            cr.translate(offset[0], offset[1])
-            cr.scale(zoom, zoom)
 
     if "control_points" not in eprops:
         if parallel_distance is None:
@@ -760,10 +732,12 @@ def auto_colors(g, bg, pos, back):
     map_property_values(bgc_pos, c, conv)
     return c
 
+
+
 def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                nodesfirst=False, output_size=(600, 600), fit_view=True,
-               inline=is_draw_inline, mplfig=None, output=None, fmt="auto",
-               **kwargs):
+               adjust_aspect=True, ink_scale=1, inline=is_draw_inline,
+               inline_scale=2, mplfig=None, output=None, fmt="auto", **kwargs):
     r"""Draw a graph to screen or to a file using :mod:`cairo`.
 
     Parameters
@@ -796,9 +770,16 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         addition the viewport will be scaled out by that factor. If a tuple
         value is given, it should have four values ``(x, y, w, h)`` that
         specify the view in user coordinates.
+    adjust_aspect : bool (optional, default: ``True``)
+        If ``True``, and ``fit_view == True`` the output size will be decreased
+        in the width or height to remove empty spaces.
+    ink_scale : float (optional, default: ``1.``)
+        Scale all sizes and widths by this factor.
     inline : bool (optional, default: ``False``)
         If ``True`` and an `IPython notebook <http://ipython.org/notebook>`_  is
         being used, an inline version of the drawing will be returned.
+    inline_scale : float (optional, default: ``2.``):
+        Resolution scaling factor for inline images.
     mplfig : :mod:`matplotlib` container object (optional, default: ``None``)
         The ``mplfig`` object needs to have an ``artists`` attribute. This can
         for example be a :class:`matplotlib.figure.Figure` or
@@ -1021,21 +1002,17 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
     ...               output="graph-draw.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, vertex_size=deg, vertex_fill_color=deg, vorder=deg,
-                     edge_color=ebet, eorder=eorder, edge_pen_width=ebet,
-                     edge_control_points=control,
-                     output="graph-draw.png")
+       conv_png("graph-draw.pdf")
 
+    .. figure:: graph-draw.png
+       :align: center
+       :width: 80%
 
-    .. figure:: graph-draw.*
-        :align: center
-
-        SFDP force-directed layout of a Price network with 1500 nodes. The
-        vertex size and color indicate the degree, and the edge color and width
-        the edge betweenness centrality.
+       SFDP force-directed layout of a Price network with 1500 nodes. The
+       vertex size and color indicate the degree, and the edge color and width
+       the edge betweenness centrality.
 
     """
 
@@ -1064,7 +1041,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
             pos = sfdp_layout(g)
     else:
         _check_prop_vector(pos, name="pos", floating=True)
-        if output is None and not inline:
+        if output is None and not inline and mplfig is None:
             if "layout_K" not in kwargs:
                 kwargs["layout_K"] = _avg_edge_distance(g, pos)
             if "update_layout" not in kwargs:
@@ -1108,24 +1085,28 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         else:
             ctr = mplfig
 
-        artist = GraphArtist(g, pos, vprops, eprops, vorder, eorder, nodesfirst,
-                             ax, **kwargs)
+        x, y = ungroup_vector_property(pos, [0, 1])
+        l, r = x.a.min(), x.a.max()
+        b, t = y.a.min(), y.a.max()
+
+        adjust_default_sizes(g, (r - l, t - b), vprops, eprops)
+
+        artist = GraphArtist(g, pos, vprops, eprops, ax, vorder=vorder,
+                             eorder=eorder, nodesfirst=nodesfirst, **kwargs)
+
         ctr.artists.append(artist)
 
         if fit_view != False and ax is not None:
             try:
                 x, y, w, h = fit_view
             except TypeError:
-                x, y = ungroup_vector_property(pos, [0, 1])
-                l, r = x.a.min(), x.a.max()
-                b, t = y.a.min(), y.a.max()
                 w = r - l
                 h = t - b
             if fit_view != True:
                 w *= float(fit_view)
                 h *= float(fit_view)
             ax.set_xlim(l - w * .1, r + w * .1)
-            ax.set_ylim(b - h * .1, t + h * .1)
+            ax.set_ylim(t + h * .1, b - h * .1)
 
         return pos
 
@@ -1143,6 +1124,28 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                                   nodesfirst, geometry=output_size,
                                   fit_view=fit_view, **kwargs)
     else:
+        adjust_default_sizes(g, output_size, vprops, eprops)
+
+        if ink_scale != 1:
+            scale_ink(ink_scale, vprops, eprops)
+
+        if inline and fmt != "svg":
+            output_size = [int(x * inline_scale) for x in output_size]
+            scale_ink(inline_scale, vprops, eprops)
+
+        if fit_view != False:
+            try:
+                x, y, w, h = fit_view
+                zoom = min(output_size[0] / w, output_size[1] / h)
+            except TypeError:
+                pad = fit_view if fit_view is not True else 0.9
+                output_size = list(output_size)
+                x, y, zoom = fit_to_view_ink(g, pos, output_size, vprops,
+                                             eprops, adjust_aspect, pad=pad)
+        else:
+            x, y, zoom = x, y, 1
+
+
         if isinstance(output, (str, unicode)):
             out, auto_fmt = open_file(output, mode="wb")
         else:
@@ -1161,6 +1164,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
             srf.set_eps(True)
         elif fmt == "svg":
             srf = cairo.SVGSurface(out, output_size[0], output_size[1])
+            srf.restrict_to_version(cairo.SVG_VERSION_1_2)
         elif fmt == "png":
             srf = cairo.ImageSurface(cairo.FORMAT_ARGB32, output_size[0],
                                      output_size[1])
@@ -1169,38 +1173,11 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
 
         cr = cairo.Context(srf)
 
-        adjust_default_sizes(g, output_size, vprops, eprops)
-        if fit_view != False:
-            try:
-                x, y, w, h = fit_view
-                zoom = min(output_size[0] / w, output_size[1] / h)
-                offset = (x * zoom, y * zoom)
-            except TypeError:
-                pad = fit_view if fit_view != True else 0.95
-                offset, zoom = fit_to_view(g, pos, output_size, vprops["size"],
-                                           vprops["pen_width"], None,
-                                           vprops.get("text", None),
-                                           vprops.get("font_family",
-                                                      _vdefaults["font_family"]),
-                                           vprops.get("font_size",
-                                                      _vdefaults["font_size"]),
-                                           pad, cr)
-            fit_view = False
-        else:
-            offset, zoom = [0, 0], 1
-
-        if "bg_color" in kwargs:
-            bg_color = kwargs["bg_color"]
-            del  kwargs["bg_color"]
-            cr.set_source_rgba(bg_color[0], bg_color[1],
-                               bg_color[2], bg_color[3])
-            cr.paint()
-
-        cr.translate(offset[0], offset[1])
         cr.scale(zoom, zoom)
+        cr.translate(-x, -y)
 
         cairo_draw(g, pos, cr, vprops, eprops, vorder, eorder,
-                   nodesfirst, fit_view=fit_view, **kwargs)
+                   nodesfirst, **kwargs)
 
         srf.flush()
         if fmt == "png":
@@ -1213,7 +1190,9 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         if inline and output_file is None:
             img = None
             if fmt == "png":
-                img = IPython.display.Image(data=out.getvalue())
+                img = IPython.display.Image(data=out.getvalue(),
+                                            width=int(output_size[0]/inline_scale),
+                                            height=int(output_size[1]/inline_scale))
             elif fmt == "svg":
                 img = IPython.display.SVG(data=out.getvalue())
             elif img is None:
@@ -1226,7 +1205,9 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                 inl_cr.paint()
                 inl_srf.write_to_png(inl_out)
                 del inl_srf
-                img = IPython.display.Image(data=inl_out.getvalue())
+                img = IPython.display.Image(data=inl_out.getvalue(),
+                                            width=int(output_size[0]/inline_scale),
+                                            height=int(output_size[1]/inline_scale))
             srf.finish()
             IPython.display.display(img)
         del srf
@@ -1249,129 +1230,96 @@ def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
         if "marker_size" not in eprops or force:
             eprops["marker_size"] = size * 0.8
 
+    if "font_size" not in vprops or force:
+        size = vprops["size"]
+        if isinstance(vprops["size"], PropertyMap):
+            size = vprops["size"].fa.mean()
+        vprops["font_size"] =  size * .6
 
-def scale_ink(scale, vprops, eprops):
-    if "size" not in vprops:
-        vprops["size"] = _vdefaults["size"]
-    if "pen_width" not in vprops:
-        vprops["pen_width"] = _vdefaults["pen_width"]
-    if "font_size" not in vprops:
-        vprops["font_size"] = _vdefaults["font_size"]
-    if "pen_width" not in eprops:
-        eprops["pen_width"] = _edefaults["pen_width"]
-    if "marker_size" not in eprops:
-        eprops["marker_size"] = _edefaults["marker_size"]
-    if "font_size" not in eprops:
-        eprops["font_size"] = _edefaults["font_size"]
-    if "text_distance" not in eprops:
-        eprops["text_distance"] = _edefaults["text_distance"]
+    if "font_size" not in eprops or force:
+        size = vprops["size"]
+        if isinstance(vprops["size"], PropertyMap):
+            size = vprops["size"].fa.mean()
+        eprops["font_size"] =  size * .6
 
-    for props in [vprops, eprops]:
-        if isinstance(props["pen_width"], PropertyMap):
-            props["pen_width"].fa *= scale
+
+def scale_ink(scale, vprops, eprops, copy=False):
+    vink_props = ["size", "pen_width", "font_size", "text_out_width"]
+    eink_props = ["marker_size", "pen_width", "font_size", "text_distance",
+                  "text_out_width"]
+    if copy:
+        vprops = dict(vprops)
+        eprops = dict(eprops)
+    for p in vink_props:
+        if p not in vprops:
+            vprops[p] = _vdefaults[p]
+        if isinstance(vprops[p], PropertyMap):
+            if copy:
+                vprops[p] = vprops[p].copy()
+            vprops[p].fa *= scale
         else:
-            props["pen_width"] *= scale
-    if isinstance(vprops["size"], PropertyMap):
-        vprops["size"].fa *= scale
-    else:
-        vprops["size"] *= scale
-    if isinstance(vprops["font_size"], PropertyMap):
-        vprops["font_size"].fa *= scale
-    else:
-        vprops["font_size"] *= scale
-    if isinstance(eprops["marker_size"], PropertyMap):
-        eprops["marker_size"].fa *= scale
-    else:
-        eprops["marker_size"] *= scale
-    if isinstance(eprops["font_size"], PropertyMap):
-        eprops["font_size"].fa *= scale
-    else:
-        eprops["font_size"] *= scale
-    if isinstance(eprops["text_distance"], PropertyMap):
-        eprops["text_distance"].fa *= scale
-    else:
-        eprops["text_distance"] *= scale
+            vprops[p] = vprops[p] * scale
+    for p in eink_props:
+        if p not in eprops:
+            eprops[p] = _edefaults[p]
+        if isinstance(eprops[p], PropertyMap):
+            if copy:
+                eprops[p] = eprops[p].copy()
+            eprops[p].fa *= scale
+        else:
+            eprops[p] = eprops[p] * scale
+    if copy:
+        return vprops, eprops
 
-def get_bb(g, pos, size, pen_width, size_scale=1, text=None, font_family=None,
-           font_size=None, cr=None):
-    size = size.fa if isinstance(size, PropertyMap) else size
-    pen_width = pen_width.fa if isinstance(pen_width, PropertyMap) else pen_width
+def get_bb(g, pos):
     pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
-    if text is not None and text != "":
-        if not isinstance(size, PropertyMap):
-            uniform = (not isinstance(font_size, PropertyMap) and
-                       not isinstance(font_family, PropertyMap))
-            size = np.ones(len(pos_x.fa)) * size
-        else:
-            uniform = False
-        for i, v in enumerate(g.vertices()):
-            ff = font_family[v] if isinstance(font_family, PropertyMap) \
-               else font_family
-            cr.select_font_face(ff)
-            fs = font_size[v] if isinstance(font_size, PropertyMap) \
-               else font_size
-            if not isinstance(font_size, PropertyMap):
-                cr.set_font_size(fs)
-            t = text[v] if isinstance(text, PropertyMap) else text
-            if not isinstance(t, (str, unicode)):
-                t = str(t)
-            extents = cr.text_extents(t)
-            s = max(extents[2], extents[3]) * 1.4
-            size[i] = max(size[i] * size_scale, s) / size_scale
-            if uniform:
-                size[:] = size[i]
-                break
-    sl = label_self_loops(g)
-    slm = sl.fa.max() * 0.75 if g.num_edges() > 0 else 0
-    delta = (size * size_scale * (slm + 1)) / 2 + pen_width * 2
     x_range = [pos_x.fa.min(), pos_x.fa.max()]
     y_range = [pos_y.fa.min(), pos_y.fa.max()]
-    x_delta = [x_range[0] - (pos_x.fa - delta).min(),
-               (pos_x.fa + delta).max() - x_range[1]]
-    y_delta = [y_range[0] - (pos_y.fa - delta).min(),
-               (pos_y.fa + delta).max() - y_range[1]]
-    return x_range, y_range, x_delta, y_delta
+    return x_range[0], y_range[1], x_range[1] - x_range[0], y_range[1] - y_range[0]
 
+def fit_to_view(rec, output_size, adjust_aspect=False, pad=.9):
+    x, y, w, h = rec
+    d = max(w, h)
+    if adjust_aspect:
+        if h > w:
+            output_size[0] = int(round(float(output_size[1] * w / h)))
+        else:
+            output_size[1] = int(round(float(output_size[0] * h / w)))
+    else:
+        x -= (d-w)/2
+        y -= (d-h)/2
 
-def fit_to_view(g, pos, geometry, size, pen_width, M=None, text=None,
-                font_family=None, font_size=None, pad=0.95, cr=None):
-    if g.num_vertices() == 0:
-        return [0, 0], 1
-    if M is not None:
-        pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
-        P = np.zeros((2, len(pos_x.fa)))
-        P[0, :] = pos_x.fa
-        P[1, :] = pos_y.fa
-        T = np.zeros((2, 2))
-        O = np.zeros(2)
-        T[0, 0], T[1, 0], T[0, 1], T[1, 1], O[0], O[1] = M
-        P = np.dot(T, P)
-        P[0] += O[0]
-        P[1] += O[1]
-        pos_x.fa = P[0, :]
-        pos_y.fa = P[1, :]
-        pos = group_vector_property([pos_x, pos_y])
-    x_range, y_range, x_delta, y_delta = get_bb(g, pos, size, pen_width,
-                                                1, text, font_family,
-                                                font_size, cr)
-    dx = (x_range[1] - x_range[0])
-    dy = (y_range[1] - y_range[0])
-    if dx == 0:
-        dx = 1
-    if dy == 0:
-        dy = 1
-    zoom_x = (geometry[0] - sum(x_delta)) / dx
-    zoom_y = (geometry[1] - sum(y_delta)) / dy
-    if np.isnan(zoom_x) or np.isinf(zoom_x) or zoom_x == 0:
-        zoom_x = 1
-    if np.isnan(zoom_y) or np.isinf(zoom_y) or zoom_y == 0:
-        zoom_y = 1
-    zoom = min(zoom_x, zoom_y) * pad
-    empty_x = (geometry[0] - sum(x_delta)) - dx * zoom
-    empty_y = (geometry[1] - sum(y_delta)) - dy * zoom
-    offset = [-x_range[0] * zoom + empty_x / 2 + x_delta[0],
-              -y_range[0] * zoom + empty_y / 2 + y_delta[0]]
-    return offset, zoom
+    zoom = min(output_size[0] / w, output_size[1] / h) * pad
+
+    x -= (1-pad) / 2 * output_size[0] / zoom
+    y -= (1-pad) / 2 * output_size[1] / zoom
+
+    return x, y, zoom
+
+def fit_to_view_ink(g, pos, output_size, vprops, eprops, adjust_aspect=False,
+                    pad=0.9):
+    x, y, zoom = fit_to_view(get_bb(g, pos), output_size, pad=pad)
+
+    srf = cairo.RecordingSurface(cairo.Content.COLOR_ALPHA,
+                                 cairo.Rectangle(-output_size[0] * 5,
+                                                 -output_size[1] * 5,
+                                                 output_size[0] * 10,
+                                                 output_size[1] * 10))
+    cr = cairo.Context(srf)
+
+    cr.scale(zoom, zoom)
+    cr.translate(-x, -y)
+
+    cairo_draw(g, pos, cr, vprops, eprops)
+
+    bb = list(srf.ink_extents())
+
+    bb[0], bb[1] = cr.device_to_user(bb[0], bb[1])
+    bb[2], bb[3] = cr.device_to_user_distance(bb[2], bb[3])
+
+    x, y, zoom = fit_to_view(bb, output_size,
+                             adjust_aspect=adjust_aspect, pad=pad)
+    return x, y, zoom
 
 
 def transform_scale(M, scale):
@@ -1451,10 +1399,11 @@ def get_hierarchy_control_points(g, t, tpos, beta=0.8, cts=None, is_tree=True,
 
     .. testcleanup:: nested_cts
 
-       gt.graph_draw(g, pos=pos, vertex_fill_color=b, vertex_shape=shape, edge_control_points=cts, edge_color=[0, 0, 0, 0.3], vertex_anchor=0, output="netscience_nested_mdl.png")
+       conv_png("netscience_nested_mdl.pdf")
 
-    .. figure:: netscience_nested_mdl.*
+    .. figure:: netscience_nested_mdl.png
        :align: center
+       :width: 80%
 
        Block partition of a co-authorship network, which minimizes the description
        length of the network according to the nested (degree-corrected) stochastic blockmodel.
@@ -1535,26 +1484,22 @@ class GraphArtist(matplotlib.artist.Artist):
 
     .. warning::
 
-        Only Cairo-based backends are supported.
+        Only cairo-based backends are supported.
 
     """
 
-    def __init__(self, g, pos, vprops, eprops, vorder, eorder,
-                nodesfirst, ax=None, **kwargs):
+    def __init__(self, g, pos, vprops, eprops, ax=None, **kwargs):
         matplotlib.artist.Artist.__init__(self)
         self.g = g
         self.pos = pos
         self.vprops = vprops
         self.eprops = eprops
-        self.vorder = vorder
-        self.eorder = eorder
-        self.nodesfirst = nodesfirst
         self.ax = ax
         self.kwargs = kwargs
 
     def draw(self, renderer):
         if not isinstance(renderer, matplotlib.backends.backend_cairo.RendererCairo):
-            raise NotImplementedError("graph plotting is supported only on Cairo backends")
+            raise NotImplementedError("graph plotting is supported only on cairo backends")
 
         ctx = renderer.gc.ctx
 
@@ -1563,24 +1508,75 @@ class GraphArtist(matplotlib.artist.Artist):
 
         ctx.save()
 
-        if self.ax is not None:
-            m = self.ax.transData.get_affine().get_matrix()
-            m = cairo.Matrix(m[0,0], m[1, 0], m[0, 1], m[1, 1], m[0, 2], m[1,2])
-            ctx.set_matrix(m)
+        pos = self.pos.copy()
+        eprops = dict(self.eprops)
+        vprops = dict(self.vprops)
 
+        if self.ax is not None:
+            transform = (self.ax.transData.get_affine() +
+                         matplotlib.transforms.Affine2D().scale(1, -1).translate(0, renderer.height))
+
+            m = transform.get_matrix()
+
+            m_s = ctx.get_matrix()
+            cm = cairo.Matrix(m[0,0], m[1,0], m[0,1], m[1,1], m[0,2], m[1,2])
+            ctx.transform(cm)
             l, r = self.ax.get_xlim()
             b, t = self.ax.get_ylim()
+            ctx.new_path()
             ctx.rectangle(l, b, r-l, t-b)
             ctx.clip()
+            ctx.set_matrix(m_s)
 
-        # flip y direction
-        x, y = ungroup_vector_property(self.pos, [0, 1])
-        l, t, r, b = ctx.clip_extents()
-        y.fa = b + t - y.fa
-        pos = group_vector_property([x, y])
+            vprops, eprops = scale_ink(np.mean([m[0,0], m[1,1]]), vprops, eprops,
+                                       copy=True)
 
-        cairo_draw(self.g, pos, ctx, self.vprops, self.eprops,
-                   self.vorder, self.eorder, self.nodesfirst, **self.kwargs)
+            x = np.ones(3)
+            for v in self.g.vertices():
+                x[:2] = pos[v].a
+                pos[v].a = np.dot(m, x)[:2]
+
+            cp = eprops.get("control_points", None)
+            if isinstance(cp, PropertyMap):
+                ctx.save()
+                cp = cp.copy()
+                for e in self.g.edges():
+                    s = self.pos[e.source()].a
+                    t = self.pos[e.target()].a
+                    a = np.arctan2(t[1] - s[1],
+                                   t[0] - s[0])
+                    l = np.sqrt((t[1] - s[1]) ** 2 +
+                                (t[0] - s[0]) ** 2)
+                    c = cp[e]
+                    for i in range(len(c) // 2):
+                        x[:2] = c.a[i*2:(i+1)*2]
+                        ctx.identity_matrix()
+                        ctx.translate(s[0], s[1])
+                        ctx.rotate(a)
+                        ctx.scale(l, 1)
+                        x[:2] = ctx.user_to_device(x[0], x[1])
+                        x = np.dot(m, x)
+                        c.a[i*2:(i+1)*2] = x[:2]
+
+                    s = pos[e.source()].a
+                    t = pos[e.target()].a
+                    a = np.arctan2(t[1] - s[1],
+                                   t[0] - s[0])
+                    l = np.sqrt((t[1] - s[1]) ** 2 +
+                                (t[0] - s[0]) ** 2)
+
+                    for i in range(len(c) // 2):
+                        x[:2] = c.a[i*2:(i+1)*2]
+                        ctx.identity_matrix()
+                        ctx.scale(1/l, 1)
+                        ctx.rotate(-a)
+                        ctx.translate(-s[0], -s[1])
+                        x[:2] = ctx.user_to_device(x[0], x[1])
+                        c.a[i*2:(i+1)*2] = x[:2]
+                ctx.restore()
+                eprops["control_points"] = cp
+
+        cairo_draw(self.g, pos, ctx, vprops, eprops, **self.kwargs)
 
         ctx.restore()
 
@@ -1708,10 +1704,11 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
 
     .. testcleanup:: draw_hierarchy
 
-       gt.draw_hierarchy(state, output="celegansneural_nested_mdl.png")
+       conv_png("celegansneural_nested_mdl.pdf")
 
-    .. figure:: celegansneural_nested_mdl.*
+    .. figure:: celegansneural_nested_mdl.png
        :align: center
+       :width: 80%
 
        Hierarchical block partition of the C. elegans neural network, which
        minimizes the description length of the network according to the nested
@@ -1800,6 +1797,10 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
         tpos = t.own_property(layout)
 
     hvvisible = t.new_vertex_property("bool", True)
+    if hide is None:
+        L = len([s for s in state.levels if s.get_nonempty_B() > 0])
+        hide = len(state.levels) - L
+
     if hide > 0:
         root = t.vertex(t.num_vertices(True) - 1)
         dist = shortest_distance(t, source=root)
@@ -1824,8 +1825,17 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
     vprops.setdefault("fill_color", b)
     vprops.setdefault("color", b)
     vprops.setdefault("shape", _vdefaults["shape"] if not overlap else "pie")
-    s = max(200 / numpy.sqrt(g.num_vertices()), 5)
+
+    output_size = kwargs.get("output_size", (600, 600))
+    if kwargs.get("mplfig", None) is not None:
+        x, y = ungroup_vector_property(pos, [0, 1])
+        w = x.a.max() - x.a.min()
+        h = y.a.max() - y.a.min()
+        output_size = (w, h)
+    s = numpy.mean(output_size) / (4 * numpy.sqrt(g.num_vertices()))
     vprops.setdefault("size", prop_to_size(g.degree_property_map("total"), s/5, s))
+
+    adjust_default_sizes(g, output_size, vprops, eprops)
 
     if vprops.get("text_position", None) == "centered":
         angle, text_pos = centered_rotation(g, pos, text_pos=True)
@@ -1875,7 +1885,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
     hvprops.setdefault("fill_color", blue)
     hvprops.setdefault("color", [1, 1, 1, 0])
     hvprops.setdefault("shape", "square")
-    hvprops.setdefault("size", 10)
+    hvprops.setdefault("size", s)
 
     if hvprops.get("text_position", None) == "centered":
         angle, text_pos = centered_rotation(t, tpos, text_pos=True)
@@ -1898,8 +1908,8 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
 
     heprops.setdefault("color", blue)
     heprops.setdefault("end_marker", "arrow")
-    heprops.setdefault("marker_size", 8.)
-    heprops.setdefault("pen_width", 1.)
+    heprops.setdefault("marker_size", s * .8)
+    heprops.setdefault("pen_width", s / 10)
 
     heprops = _convert_props(heprops, "e", t, kwargs.get("ecmap", default_cm),
                              pmap_default=True)
@@ -2018,7 +2028,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
 
                 nstate = NestedBlockState(u, bs=bs,
                                           base_type=type(state.levels[0]),
-                                          deg_corr=state.deg_corr)
+                                          state_args=state.state_args)
 
                 kwargs_ = kwargs_orig.copy()
                 if "no_main" in kwargs_:
@@ -2053,7 +2063,8 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
             widget.regenerate_surface(reset=True)
             widget.queue_draw()
 
-    if "output" not in kwargs and not kwargs.get("inline", is_draw_inline):
+    if ("output" not in kwargs and not kwargs.get("inline", is_draw_inline) and
+        kwargs.get("mplfig", None) is None):
         kwargs["layout_callback"] = update_cts
         kwargs["key_press_callback"] = draw_branch
 
