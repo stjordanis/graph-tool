@@ -137,7 +137,7 @@ for wait in [50000, 100000, 250000, 500000, 1000000]:
             for nested in [False, True]:
 
                 cs = list(reversed([numpy.inf, 0.01, "gibbs", -numpy.inf, -0.1]))
-                inits = ["N", "1"]
+                inits = ["N"]
                 state = None
                 hists = {}
 
