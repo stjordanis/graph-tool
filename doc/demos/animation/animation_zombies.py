@@ -23,7 +23,7 @@ seed(42)
 seed_rng(42)
 
 # We need some Gtk and gobject functions
-from gi.repository import Gtk, Gdk, GdkPixbuf, GObject
+from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, GLib
 
 # We will use the karate-club network
 g = collection.data["karate"]
@@ -158,7 +158,7 @@ def update_state():
 
 
 # Bind the function above as an 'idle' callback.
-cid = GObject.idle_add(update_state)
+cid = GLib.idle_add(update_state)
 
 # We will give the user the ability to stop the program by closing the window.
 win.connect("delete_event", Gtk.main_quit)

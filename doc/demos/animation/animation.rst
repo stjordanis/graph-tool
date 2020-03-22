@@ -9,6 +9,32 @@ manner. Here we show some examples which uses `GTK+
 file. The idea is to easily generate visualisations which can be used in
 presentations, and embedded in websites.
 
+Simple interactive animations
+-----------------------------
+
+The :func:`~graph_tool.draw.graph_draw` function can optionally return
+and be passed a GTK+ window object where drawing can be updated. In this
+way, simple animations can be done very easily, specially when done in
+an interactive shell. For example, the following will simulate from an
+Ising model (see :class:`~graph_tool.dynamics.IsingGlauberState`) and
+show the states in an interactive window:
+
+.. doctest::
+
+   >>> g = gt.collection.data["football"]
+   >>> state = gt.IsingGlauberState(g, beta=1.5/10)
+   >>> win = None
+   >>> for i in range(100):
+   ...     ret = state.iterate_sync(niter=100)
+   ...     win = gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.get_state(), 
+   ...                         vcmap=matplotlib.cm.bone_r, window=win, return_window=True,
+   ...                         main=False)
+   
+   
+Although sufficient for many simple animations, the above method is not
+the most efficient, as it requires a certain amount of redundant
+processing for each drawing. The examples below show more efficient
+approaches that can be more suitable in some more elaborate scenarios.
 
 SIRS epidemics
 --------------
@@ -155,7 +181,7 @@ format <http://www.webmproject.org>`_:
 .. code-block:: bash
 
    $ mencoder mf://frames/dancing*.png -mf w=500:h=400:type=png -ovc raw -of rawvideo -vf format=i420 -nosound -o dancing.yuy
-   $ vpxenc dancing.yuy -o dancing.webm -w 500 -h 400 --fps=100/1 --target-bitrate=5000 --good --threads=4
+   $ vpxenc dancing.yuy -o dancing.webm -w 500 -h 400 --fps=100/1 --target-bitrate=5000 --good --threads=16
 
 
 .. doctest::
@@ -164,7 +190,7 @@ format <http://www.webmproject.org>`_:
    >>> import subprocess
    >>> subprocess.call("mencoder mf://frames/dancing*.png -mf w=500:h=400:type=png -ovc raw -of rawvideo -vf format=i420 -nosound -o demos/animation/dancing.yuy".split())
    0
-   >>> subprocess.call("vpxenc demos/animation/dancing.yuy -o demos/animation/dancing.webm -w 500 -h 400 --fps=100/1 --target-bitrate=2000 --good --threads=4".split())
+   >>> subprocess.call("vpxenc demos/animation/dancing.yuy -o demos/animation/dancing.webm -w 500 -h 400 --fps=100/1 --target-bitrate=2000 --good --threads=16".split())
    0
 
 
@@ -209,7 +235,7 @@ file, so we can encode the animation with the `WebM format
 .. code-block:: bash
 
    $ mencoder mf://frames/bfs*.png -mf w=type=png -ovc raw -of rawvideo -vf format=i420,scale=500:400 -nosound -o bfs.yuy
-   $ vpxenc bfs.yuy -o bfs.webm -w 500 -h 400 --fps=5/1 --target-bitrate=5000 --good --threads=4
+   $ vpxenc bfs.yuy -o bfs.webm -w 500 -h 400 --fps=5/1 --target-bitrate=5000 --good --threads=16
 
 
 .. doctest::
@@ -218,7 +244,7 @@ file, so we can encode the animation with the `WebM format
    >>> import subprocess
    >>> subprocess.call("mencoder mf://frames/bfs*.png -mf type=png -ovc raw -of rawvideo -vf format=i420,scale=500:400 -nosound -o demos/animation/bfs.yuy".split())
    0
-   >>> subprocess.call("vpxenc demos/animation/bfs.yuy -o demos/animation/bfs.webm -w 500 -h 400 --fps=5/1 --target-bitrate=2000 --good --threads=4".split())
+   >>> subprocess.call("vpxenc demos/animation/bfs.yuy -o demos/animation/bfs.webm -w 500 -h 400 --fps=5/1 --target-bitrate=2000 --good --threads=16".split())
    0
 
 
