@@ -93,6 +93,27 @@ void collect_marginal(Graph& g, UGraph& u, Eprop ecount, Xprop x, XSprop xsum,
             xc_e[iter - xs_e.begin()]++;
         }
     }
+
+    if constexpr (!std::is_same_v<Cprop, dummy_property>)
+    {
+        for (auto v : vertices_range(u))
+        {
+            auto e = edge(v, v, u);
+            if (e.second)
+                continue;
+            auto ge = edge(v, v, g);
+            if (!ge.second)
+                ge = add_edge(v, v, g);
+            auto& xs_e = xs[ge.first];
+            auto& xc_e = xcount[ge.first];
+            if (xs_e.empty() || xs_e.front() != 0)
+            {
+                xs_e.insert(xs_e.begin(), 0);
+                xc_e.insert(xc_e.begin(), 0);
+            }
+            xc_e.front()++;
+        }
+    }
 }
 
 
