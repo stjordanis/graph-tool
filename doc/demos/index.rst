@@ -9,4 +9,5 @@ Contents:
 
    inference/inference
    animation/animation
+   matplotlib/matplotlib
    cppextensions/cppextensions
