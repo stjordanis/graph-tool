@@ -46,7 +46,7 @@ from __future__ import division, absolute_import, print_function
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_clustering as _gt")
 
-from .. import _degree, _prop, Graph, GraphView, PropertyMap, _get_rng
+from .. import _degree, _prop, Graph, GraphView, VertexPropertyMap, _get_rng
 from .. topology import isomorphism
 from .. generation import random_rewire
 from .. stats import vertex_hist
@@ -415,7 +415,7 @@ def motifs(g, k, p=1.0, motif_list=None, return_maps=False):
         vertex_maps = [x[2] for x in list_hist]
         for i, vlist in enumerate(vertex_maps):
             sub = sub_list[i]
-            vertex_maps[i] = [PropertyMap(vm, sub, "v") for vm in vlist]
+            vertex_maps[i] = [VertexPropertyMap(vm, sub) for vm in vlist]
         return sub_list, hist, vertex_maps
     return sub_list, hist
 
