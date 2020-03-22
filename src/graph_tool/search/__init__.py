@@ -62,15 +62,8 @@ In this module, most documentation examples will make use of the network
 >>> pos = g.vp["pos"]
 >>> gt.graph_draw(g, pos, vertex_text=name, vertex_font_size=12, vertex_shape="double_circle",
 ...               vertex_fill_color="#729fcf", vertex_pen_width=3,
-...               edge_pen_width=weight, output="search_example.pdf")
+...               edge_pen_width=weight, output="search_example.svg")
 <...>
-
-.. testcode::
-   :hide:
-
-   gt.graph_draw(g, pos=pos, vertex_text=name, vertex_font_size=12, vertex_shape="double_circle",
-                 vertex_fill_color="#729fcf", vertex_pen_width=3,
-                 edge_pen_width=weight, output="search_example.png")
 
 .. figure:: search_example.*
    :alt: search example
@@ -1643,15 +1636,8 @@ def astar_search(g, source, weight, visitor=AStarVisitor(),
     ...     v = p
     >>> gt.graph_draw(g, pos=pos, output_size=(300, 300), vertex_fill_color=touch_v,
     ...               vcmap=matplotlib.cm.binary, edge_color=ecolor,
-    ...               edge_pen_width=ewidth, output="astar-delaunay.pdf")
+    ...               edge_pen_width=ewidth, output="astar-delaunay.svg")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300, 300), vertex_fill_color=touch_v,
-                     vcmap=matplotlib.cm.binary, edge_color=ecolor,
-                     edge_pen_width=ewidth, output="astar-delaunay.png")
 
     .. figure:: astar-delaunay.*
        :align: center
@@ -1762,15 +1748,7 @@ def astar_search(g, source, weight, visitor=AStarVisitor(),
     ...     v = p
     >>> vcolor[v] = "black"
     >>> pos = gt.graph_draw(g, output_size=(300, 300), vertex_fill_color=vcolor, edge_color=ecolor,
-    ...                     edge_pen_width=ewidth, output="astar-implicit.pdf")
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300, 300), vertex_fill_color=vcolor,
-                     edge_color=ecolor, edge_pen_width=ewidth,
-                     output="astar-implicit.png")
-
+    ...                     edge_pen_width=ewidth, output="astar-implicit.svg")
 
     .. figure:: astar-implicit.*
        :align: center

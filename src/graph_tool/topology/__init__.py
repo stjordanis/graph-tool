@@ -410,6 +410,8 @@ def vertex_similarity(g, sim_type="jaccard", vertex_pairs=None, eweight=None,
 
     where :math:`A_{wu}` is the weighted adjacency matrix.
 
+    See [liben-nowell-link-prediction-2007]_ for a review of the above.
+
     The algorithm runs with complexity :math:`O(\left<k\right>N^2)` if
     ``vertex_pairs is None``, otherwise with :math:`O(\left<k\right>P)` where
     :math:`P` is the length of ``vertex_pairs``.
@@ -430,16 +432,8 @@ def vertex_similarity(g, sim_type="jaccard", vertex_pairs=None, eweight=None,
     >>> gt.graph_draw(g, pos=g.vp.pos, vertex_text=g.vertex_index,
     ...               vertex_color=color, vertex_fill_color=color,
     ...               vcmap=matplotlib.cm.inferno,
-    ...               output="polbooks-jaccard.pdf")
+    ...               output="polbooks-jaccard.svg")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=g.vp.pos, vertex_text=g.vertex_index,
-                     vertex_color=color, vertex_fill_color=color,
-                     vcmap=matplotlib.cm.inferno,
-                     output="polbooks-jaccard.png")
 
     .. figure:: polbooks-jaccard.*
        :align: center
@@ -679,11 +673,11 @@ def subgraph_isomorphism(sub, g, max_n=0, vertex_label=None, edge_label=None,
 
     Notes
     -----
-    The implementation is based on the VF2 algorithm, introduced by Cordella et al.
-    [cordella-improved-2001]_ [cordella-subgraph-2004]_. The spatial complexity
-    is of order :math:`O(V)`, where :math:`V` is the (maximum) number of vertices
-    of the two graphs. Time complexity is :math:`O(V^2)` in the best case and
-    :math:`O(V!\times V)` in the worst case.
+    The implementation is based on the VF2 algorithm, introduced by Cordella et
+    al. [cordella-improved-2001]_ [cordella-subgraph-2004]_. The spatial
+    complexity is of order :math:`O(V)`, where :math:`V` is the (maximum) number
+    of vertices of the two graphs. Time complexity is :math:`O(V^2)` in the best
+    case and :math:`O(V!\times V)` in the worst case [boost-subgraph-iso]_.
 
     Examples
     --------
@@ -706,22 +700,22 @@ def subgraph_isomorphism(sub, g, max_n=0, vertex_label=None, edge_label=None,
     >>> ewidth.a += 0.5
     >>> ewidth.a *= 2
     >>> gt.graph_draw(g, vertex_fill_color=vmask, edge_color=emask,
-    ...               edge_pen_width=ewidth, output_size=(200, 200),
+    ...               edge_pen_width=ewidth,
     ...               output="subgraph-iso-embed.pdf")
     <...>
-    >>> gt.graph_draw(sub, output_size=(200, 200), output="subgraph-iso.pdf")
+    >>> gt.graph_draw(sub, output="subgraph-iso.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, vertex_fill_color=vmask, edge_color=emask,
-                     edge_pen_width=ewidth, output_size=(200, 200),
-                     output="subgraph-iso-embed.png")
-       gt.graph_draw(sub, output_size=(200, 200), output="subgraph-iso.png")
+       conv_png("subgraph-iso-embed.pdf")
+       conv_png("subgraph-iso.pdf")
 
-    .. image:: subgraph-iso.*
-    .. image:: subgraph-iso-embed.*
+
+    .. image:: subgraph-iso.png
+       :width: 30%
+    .. image:: subgraph-iso-embed.png
+       :width: 30%
 
 
     **Left:** Subgraph searched, **Right:** One isomorphic subgraph found in main graph.
@@ -821,7 +815,7 @@ def max_cliques(g):
     [bron-kerbosh-wiki]_ with pivoting [tomita_worst-case_2006]_
     [cazals_note_2008]_.
 
-    The worst-case complexity of this algorithm is :math:`O(3^{V/3})` for a
+    The worst case complexity of this algorithm is :math:`O(3^{V/3})` for a
     graph of :math:`V` vertices, but for sparse graphs it is typically much
     faster.
 
@@ -833,17 +827,16 @@ def max_cliques(g):
     ...     print(c)
     ...     if i == 9:
     ...         break
-    [513   4]
-    [  4 720]
-    [   4  719 1436]
-    [736   5]
-    [453   6]
-    [  7 263  39 753 179 180]
-    [  7 263  39 179 603]
-    [  7 263 392  39 753 180 277 223]
-    [  7 263 392  39 180 277 571 223]
-    [  7 263  39 603 223]
-
+    [   0 1434 1244]
+    [   0  643  433 1244]
+    [   0   20 1244]
+    [   0  640 1130  366  567]
+    [  0 640 322  67  54 154]
+    [  0 640  67 114  54 154]
+    [  0 640 322 240  84  54 154]
+    [  0 640 433 114  84  54 154]
+    [  0 640 641  20  54 154]
+    [  0 640 322  20  54 154]
 
     References
     ----------
@@ -916,15 +909,14 @@ def min_spanning_tree(g, weights=None, root=None, tree_map=None):
     >>> gt.graph_draw(u, pos=pos, output="triang_min_span_tree.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="triang_orig.png")
-       gt.graph_draw(u, pos=pos, output="triang_min_span_tree.png")
+       conv_png("triang_orig.pdf")
+       conv_png("triang_min_span_tree.pdf")
 
-    .. image:: triang_orig.*
+    .. image:: triang_orig.png
         :width: 400px
-    .. image:: triang_min_span_tree.*
+    .. image:: triang_min_span_tree.png
         :width: 400px
 
     *Left:* Original graph, *Right:* The minimum spanning tree.
@@ -985,7 +977,7 @@ def random_spanning_tree(g, weights=None, root=None, tree_map=None):
     -----
 
     The running time for this algorithm is :math:`O(\tau)`, with :math:`\tau`
-    being the mean hitting time of a random walk on the graph. In the worse case,
+    being the mean hitting time of a random walk on the graph. In the worst case,
     we have :math:`\tau \sim O(V^3)`, with :math:`V` being the number of
     vertices in the graph. However, in much more typical cases (e.g. sparse
     random graphs) the running time is simply :math:`O(V)`.
@@ -1015,18 +1007,17 @@ def random_spanning_tree(g, weights=None, root=None, tree_map=None):
     >>> gt.graph_draw(u2, pos=pos, output="triang_random_span_tree2.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="rtriang_orig.png")
-       gt.graph_draw(u, pos=pos, output="triang_random_span_tree.png")
-       gt.graph_draw(u2, pos=pos, output="triang_random_span_tree2.png")
+       conv_png("rtriang_orig.pdf")
+       conv_png("triang_random_span_tree.pdf")
+       conv_png("triang_random_span_tree2.pdf")
 
-    .. image:: rtriang_orig.*
+    .. image:: rtriang_orig.png
         :width: 300px
-    .. image:: triang_random_span_tree.*
+    .. image:: triang_random_span_tree.png
         :width: 300px
-    .. image:: triang_random_span_tree2.*
+    .. image:: triang_random_span_tree2.png
         :width: 300px
 
     *Left:* Original graph, *Middle:* A random spanning tree, *Right:* Another
@@ -1388,7 +1379,7 @@ def extract_largest_component(g, directed=None, prune=False):
     >>> g = gt.random_graph(100, lambda: poisson(1), directed=False)
     >>> u = gt.extract_largest_component(g)
     >>> print(u)
-    <GraphView object, undirected, with 14 vertices and 13 edges, edges filtered by (<EdgePropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False), vertices filtered by (<VertexPropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False) at 0x...>
+    <GraphView object, undirected, with 14 vertices and 13 edges, edges filtered by (<EdgePropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False), vertices filtered by (<VertexPropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False), at 0x...>
 
     """
 
@@ -1762,16 +1753,12 @@ def kcore_decomposition(g, vprop=None):
     >>> g = gt.collection.data["netscience"]
     >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))
     >>> kcore = gt.kcore_decomposition(g)
-    >>> gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=kcore, vertex_text=kcore, output="netsci-kcore.pdf")
+    >>> gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=kcore, vertex_text=kcore, output="netsci-kcore.svg")
     <...>
 
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=kcore, vertex_text=kcore, output="netsci-kcore.png")
-
-    .. figure:: netsci-kcore.*
+    .. figure:: netsci-kcore.svg
         :align: center
+        :width: 80%
 
         K-core decomposition of a network of network scientists.
 
@@ -2539,7 +2526,7 @@ def all_circuits(g, unique=False):
 
     Notes
     -----
-    This algorithm [hawick-enumerating-2008]_ runs in worse time
+    This algorithm [hawick-enumerating-2008]_ runs in worst time
     :math:`O[(V + E)(C + 1)]`, where :math:`C` is the number of circuits.
 
     Examples
@@ -2689,16 +2676,16 @@ def is_bipartite(g, partition=False, find_odd_cycle=False):
     >>> is_bi, part = gt.is_bipartite(g, partition=True)
     >>> print(is_bi)
     True
-    >>> gt.graph_draw(g, vertex_fill_color=part, output_size=(300, 300), output="bipartite.pdf")
+    >>> gt.graph_draw(g, vertex_fill_color=part, output="bipartite.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, vertex_fill_color=part, output_size=(300, 300), output="bipartite.png")
+       conv_png("bipartite.pdf")
 
-    .. figure:: bipartite.*
+    .. figure:: bipartite.png
         :align: center
+        :width: 40%
 
         Bipartition of a 2D lattice.
 
@@ -2795,18 +2782,18 @@ def is_planar(g, embedding=False, kuratowski=False):
     >>> print(p)
     False
     >>> g.set_edge_filter(kur, True)
-    >>> gt.graph_draw(g, output_size=(300, 300), output="kuratowski.pdf")
+    >>> gt.graph_draw(g, output="kuratowski.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, output_size=(300, 300), output="kuratowski.png")
+       conv_png("kuratowski.pdf")
 
-    .. figure:: kuratowski.*
-        :align: center
+    .. figure:: kuratowski.png
+       :align: center
+       :width: 40%
 
-        Obstructing Kuratowski subgraph of a random graph.
+       Obstructing Kuratowski subgraph of a random graph.
 
     References
     ----------
@@ -2874,16 +2861,16 @@ def make_maximal_planar(g):
     >>> print(g.num_vertices(), g.num_edges())
     100 294
     >>> pos = gt.planar_layout(g)
-    >>> gt.graph_draw(g, pos, output_size=(300, 300), output="maximal_planar.pdf")
+    >>> gt.graph_draw(g, pos, output="maximal_planar.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos, output_size=(300, 300), output="maximal_planar.png")
+       conv_png("maximal_planar.pdf")
 
-    .. figure:: maximal_planar.*
+    .. figure:: maximal_planar.png
         :align: center
+        :width: 40%
 
         A maximally planar graph.
 
@@ -2980,7 +2967,8 @@ def max_cardinality_matching(g, weight=None, bipartite=False,
     *and* maximum weight is returned.
 
     If ``heuristic == True`` the algorithm does not necessarily return the
-    maximum matching, instead the focus is to run on linear time.
+    maximum matching, instead the focus is to run on linear time
+    [matching-heuristic]_.
 
     This algorithm runs in time :math:`O(EV\times\alpha(E,V))`, where
     :math:`\alpha(m,n)` is a slow growing function that is at most 4 for any
@@ -3007,20 +2995,19 @@ def max_cardinality_matching(g, weight=None, bipartite=False,
     >>> w = gt.max_cardinality_matching(g, edges=True)
     >>> w = w.copy("double")
     >>> w.a = 2 * w.a + 2
-    >>> gt.graph_draw(g, edge_color=res[0], edge_pen_width=w, vertex_fill_color="grey",
+    >>> gt.graph_draw(g, edge_color=w, edge_pen_width=w, vertex_fill_color="grey",
     ...               output="max_card_match.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, edge_color=res[0], edge_pen_width=w, vertex_fill_color="grey",
-                     output="max_card_match.png")
+       conv_png("max_card_match.pdf")
 
-    .. figure:: max_card_match.*
-        :align: center
+    .. figure:: max_card_match.png
+       :align: center
+       :width: 80%
 
-        Edges belonging to the matching are in yellow.
+       Edges belonging to the matching are in yellow.
 
     References
     ----------
@@ -3113,15 +3100,15 @@ def max_independent_vertex_set(g, high_deg=False, mivs=None):
     >>> gt.graph_draw(g, vertex_fill_color=res, output="mivs.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, vertex_fill_color=res, output="mivs.png")
+       conv_png("mivs.pdf")
 
-    .. figure:: mivs.*
-        :align: center
+    .. figure:: mivs.png
+       :align: center
+       :width: 80%
 
-        Vertices belonging to the set are in yellow.
+       Vertices belonging to the set are in yellow.
 
     References
     ----------
@@ -3189,9 +3176,10 @@ def edge_reciprocity(g):
     ----------
     .. [reciprocity] S. Wasserman and K. Faust, "Social Network Analysis".
        (Cambridge University Press, Cambridge, 1994)
-    .. [lopez-reciprocity-2007] Gorka Zamora-López, Vinko Zlatić, Changsong Zhou, Hrvoje Štefančić, and Jürgen Kurths
-       "Reciprocity of networks with degree correlations and arbitrary degree sequences", Phys. Rev. E 77, 016106 (2008)
-       :doi:`10.1103/PhysRevE.77.016106`, :arxiv:`0706.3372`
+    .. [lopez-reciprocity-2007] Gorka Zamora-López, Vinko Zlatić, Changsong
+       Zhou, Hrvoje Štefančić, and Jürgen Kurths "Reciprocity of networks with
+       degree correlations and arbitrary degree sequences", Phys. Rev. E 77,
+       016106 (2008) :doi:`10.1103/PhysRevE.77.016106`, :arxiv:`0706.3372`
 
     """
 

@@ -64,16 +64,16 @@ The following network will be used as an example throughout the documentation.
     gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(cap, mi=0, ma=3, power=1),
                   output="flow-example.pdf")
 
-.. testcode::
-   :hide:
+.. testcleanup::
 
-   gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(cap, mi=0, ma=3, power=1), output="flow-example.png")
+   conv_png("flow-example.pdf")
 
-.. figure:: flow-example.*
-    :align: center
+.. figure:: flow-example.png
+   :align: center
+   :width: 80%
 
-    Example network used in the documentation below. The edge capacities are
-    represented by the edge width.
+   Example network used in the documentation below. The edge capacities are
+   represented by the edge width.
 
 """
 
@@ -145,17 +145,17 @@ def edmonds_karp_max_flow(g, source, target, capacity, residual=None):
     >>> gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(res, mi=0, ma=5, power=1), output="example-edmonds-karp.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(res, mi=0, ma=5, power=1), output="example-edmonds-karp.png")
+       conv_png("example-edmonds-karp.pdf")
 
-    .. figure:: example-edmonds-karp.*
-        :align: center
+    .. figure:: example-edmonds-karp.png
+       :align: center
+       :width: 80%
 
-        Edge flows obtained with the Edmonds-Karp algorithm. The source and
-        target are on the upper left and lower right corners, respectively. The
-        edge flows are represented by the edge width.
+       Edge flows obtained with the Edmonds-Karp algorithm. The source and
+       target are on the upper left and lower right corners, respectively. The
+       edge flows are represented by the edge width.
 
 
     References
@@ -226,18 +226,18 @@ def push_relabel_max_flow(g, source, target, capacity, residual=None):
     >>> gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(res, mi=0, ma=5, power=1), output="example-push-relabel.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(res, mi=0, ma=5, power=1), output="example-push-relabel.png")
+       conv_png("example-push-relabel.pdf")
 
-    .. figure:: example-push-relabel.*
-        :align: center
+    .. figure:: example-push-relabel.png
+       :align: center
+       :width: 80%
 
 
-        Edge flows obtained with the push-relabel algorithm. The source and
-        target are on the upper left and lower right corners, respectively. The
-        edge flows are represented by the edge width.
+       Edge flows obtained with the push-relabel algorithm. The source and
+       target are on the upper left and lower right corners, respectively. The
+       edge flows are represented by the edge width.
 
     References
     ----------
@@ -308,17 +308,17 @@ def boykov_kolmogorov_max_flow(g, source, target, capacity, residual=None):
     >>> gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(res, mi=0, ma=3, power=1), output="example-kolmogorov.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(res, mi=0, ma=3, power=1), output="example-kolmogorov.png")
+       conv_png("example-kolmogorov.pdf")
 
-    .. figure:: example-kolmogorov.*
-        :align: center
+    .. figure:: example-kolmogorov.png
+       :align: center
+       :width: 80%
 
-        Edge flows obtained with the Boykov-Kolmogorov algorithm. The source and
-        target are on the upper left and lower right corners, respectively. The
-        edge flows are represented by the edge width.
+       Edge flows obtained with the Boykov-Kolmogorov algorithm. The source and
+       target are on the upper left and lower right corners, respectively. The
+       edge flows are represented by the edge width.
 
     References
     ----------
@@ -394,20 +394,18 @@ def min_st_cut(g, source, capacity, residual):
     ...               vertex_font_size=18, edge_font_size=18, output="example-min-st-cut.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(cap, mi=3, ma=10, power=1),
-                     edge_text=res, vertex_fill_color=part, vertex_text=g.vertex_index,
-                     vertex_font_size=18, edge_font_size=18, output="example-min-st-cut.png")
+       conv_png("example-min-st-cut.pdf")
 
-    .. figure:: example-min-st-cut.*
-        :align: center
+    .. figure:: example-min-st-cut.png
+       :align: center
+       :width: 30%
 
-        Edge flows obtained with the Boykov-Kolmogorov algorithm. The source and
-        target are labeled ``0`` and ``7``, respectively. The edge capacities are
-        represented by the edge width, and the maximum flow by the edge labels.
-        Vertices of the same color are on the same side the minimum cut.
+       Edge flows obtained with the Boykov-Kolmogorov algorithm. The source and
+       target are labeled ``0`` and ``7``, respectively. The edge capacities are
+       represented by the edge width, and the maximum flow by the edge labels.
+       Vertices of the same color are on the same side the minimum cut.
 
     References
     ----------
@@ -469,17 +467,16 @@ def min_cut(g, weight):
     ...               output="example-min-cut.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, edge_pen_width=gt.prop_to_size(weight, mi=2, ma=8), vertex_fill_color=part,
-                     output="example-min-cut.png")
+       conv_png("example-min-cut.pdf")
 
-    .. figure:: example-min-cut.*
-        :align: center
+    .. figure:: example-min-cut.png
+       :align: center
+       :width: 30%
 
-        Vertices of the same color are on the same side of a minimum cut. The
-        edge weights are represented by the edge width.
+       Vertices of the same color are on the same side of a minimum cut. The
+       edge weights are represented by the edge width.
 
     References
     ----------

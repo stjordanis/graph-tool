@@ -132,12 +132,7 @@ def adjacency(g, weight=None, index=None):
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
     >>> tight_layout()
-    >>> savefig("adjacency-spectrum.pdf")
-
-    .. testcode::
-       :hide:
-
-       savefig("adjacency-spectrum.svg")
+    >>> savefig("adjacency-spectrum.svg")
 
     .. figure:: adjacency-spectrum.*
         :align: center
@@ -258,12 +253,7 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
     >>> tight_layout()
-    >>> savefig("laplacian-spectrum.pdf")
-
-    .. testcode::
-       :hide:
-
-       savefig("laplacian-spectrum.svg")
+    >>> savefig("laplacian-spectrum.svg")
 
     .. figure:: laplacian-spectrum.*
         :align: center
@@ -282,12 +272,7 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
     >>> tight_layout()
-    >>> savefig("norm-laplacian-spectrum.pdf")
-
-    .. testcode::
-       :hide:
-
-       savefig("norm-laplacian-spectrum.svg")
+    >>> savefig("norm-laplacian-spectrum.svg")
 
     .. figure:: norm-laplacian-spectrum.*
         :align: center
@@ -486,12 +471,7 @@ def transition(g, weight=None, index=None):
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
     >>> tight_layout()
-    >>> savefig("transition-spectrum.pdf")
-
-    .. testcode::
-       :hide:
-
-       savefig("transition-spectrum.svg")
+    >>> savefig("transition-spectrum.svg")
 
     .. figure:: transition-spectrum.*
         :align: center
@@ -583,12 +563,7 @@ def modularity_matrix(g, weight=None, index=None):
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
     >>> tight_layout()
-    >>> savefig("modularity-spectrum.pdf")
-
-    .. testcode::
-       :hide:
-
-       savefig("modularity-spectrum.svg")
+    >>> savefig("modularity-spectrum.svg")
 
     .. figure:: modularity-spectrum.*
         :align: center
@@ -653,7 +628,7 @@ def hashimoto(g, index=None, compact=False):
 
     Notes
     -----
-    The Hashimoto (a.k.a. non-backtracking) matrix is defined as
+    The Hashimoto (a.k.a. non-backtracking) matrix [hashimoto]_ is defined as
 
     .. math::
 
@@ -680,7 +655,7 @@ def hashimoto(g, index=None, compact=False):
         \end{array}\right)
 
     where :math:`\boldsymbol A` is the adjacency matrix, and :math:`\boldsymbol
-    D` is the diagonal matrix with the node degrees.
+    D` is the diagonal matrix with the node degrees [krzakala_spectral]_.
 
     Examples
     --------
@@ -701,12 +676,7 @@ def hashimoto(g, index=None, compact=False):
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
     >>> tight_layout()
-    >>> savefig("hashimoto-spectrum.pdf")
-
-    .. testcode::
-       :hide:
-
-       savefig("hashimoto-spectrum.svg")
+    >>> savefig("hashimoto-spectrum.svg")
 
     .. figure:: hashimoto-spectrum.*
         :align: center

@@ -461,9 +461,8 @@ class LatentMultigraphBlockState(UncertainBaseState):
 
     References
     ----------
-    .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
-       networks with unknown and heterogeneous errors", Phys. Rev. X 8
-       041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
+    .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
+       networks with heterogeneous density", :arxiv:`2002.07803`
     """
 
     def __init__(self, g, aE=numpy.nan, nested=True, state_args={},

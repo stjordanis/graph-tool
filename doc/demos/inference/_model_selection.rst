@@ -25,8 +25,8 @@ we have
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   Non-degree-corrected DL:	 8470.198169...
-   Degree-corrected DL:	 8273.840277...
+   Non-degree-corrected DL:	 8553.474528...
+   Degree-corrected DL:	 8266.554118...
    
 Since it yields the smallest description length, the degree-corrected
 fit should be preferred. The statistical significance of the choice can
@@ -52,13 +52,13 @@ fits. In our particular case, we have
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  -196.357892...
+   ln Λ:  -286.92041...
 
 The precise threshold that should be used to decide when to `reject a
 hypothesis <https://en.wikipedia.org/wiki/Hypothesis_testing>`_ is
 subjective and context-dependent, but the value above implies that the
-particular degree-corrected fit is around :math:`\mathrm{e}^{196}
-\approx 10^{85}` times more likely than the non-degree corrected one,
+particular degree-corrected fit is around :math:`\mathrm{e}^{287}
+\approx 10^{124}` times more likely than the non-degree corrected one,
 and hence it can be safely concluded that it provides a substantially
 better fit.
 
@@ -80,11 +80,11 @@ example, for the American football network above, we have:
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   Non-degree-corrected DL:     1733.525685...
+   Non-degree-corrected DL:     1738.138494...
    Degree-corrected DL:         1780.576716...
-   ln Λ:                         -47.051031...
+   ln Λ:                        -42.4382219...
 
-Hence, with a posterior odds ratio of :math:`\Lambda \approx \mathrm{e}^{-47} \approx
-10^{-20}` in favor of the non-degree-corrected model, we conclude that the
+Hence, with a posterior odds ratio of :math:`\Lambda \approx \mathrm{e}^{-42} \approx
+10^{-18}` in favor of the non-degree-corrected model, we conclude that the
 degree-corrected variant is an unnecessarily complex description for
 this network.

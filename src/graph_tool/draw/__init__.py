@@ -185,13 +185,14 @@ def planar_layout(g, pos=None):
     >>> gt.graph_draw(g, pos=pos, output="lattice-planar.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="lattice-planar.png")
+       conv_png("lattice-planar.pdf")
 
-    .. figure:: lattice-planar.*
+
+    .. figure:: lattice-planar.png
         :align: center
+        :width: 60%
 
         Straight-line drawing of planar graph (a 2D square lattice).
 
@@ -278,15 +279,15 @@ def fruchterman_reingold_layout(g, weight=None, a=None, r=1., scale=None,
     >>> gt.graph_draw(g, pos=pos, output="graph-draw-fr.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="graph-draw-fr.png")
+       conv_png("graph-draw-fr.pdf")
 
-    .. figure:: graph-draw-fr.*
-        :align: center
+    .. figure:: graph-draw-fr.png
+       :align: center
+       :width: 60%
 
-        Fruchterman-Reingold layout of a Price network.
+       Fruchterman-Reingold layout of a Price network.
 
     References
     ----------
@@ -368,15 +369,15 @@ def arf_layout(g, weight=None, d=0.5, a=10, dt=0.001, epsilon=1e-6,
     >>> gt.graph_draw(g, pos=pos, output="graph-draw-arf.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="graph-draw-arf.png")
+       conv_png("graph-draw-arf.pdf")
 
-    .. figure:: graph-draw-arf.*
-        :align: center
+    .. figure:: graph-draw-arf.png
+       :align: center
+       :width: 60%
 
-        ARF layout of a Price network.
+       ARF layout of a Price network.
 
     References
     ----------
@@ -665,15 +666,15 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
     >>> gt.graph_draw(g, pos=pos, output="graph-draw-sfdp.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="graph-draw-sfdp.png")
+       conv_png("graph-draw-sfdp.pdf")
 
-    .. figure:: graph-draw-sfdp.*
-        :align: center
+    .. figure:: graph-draw-sfdp.png
+       :align: center
+       :width: 60%
 
-        SFDP layout of a Price network.
+       SFDP layout of a Price network.
 
     References
     ----------
@@ -816,15 +817,15 @@ def radial_tree_layout(g, root, rel_order=None, rel_order_leaf=False,
     >>> gt.graph_draw(g, pos=pos, output="graph-draw-radial.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="graph-draw-radial.png")
+       conv_png("graph-draw-radial.pdf")
 
-    .. figure:: graph-draw-radial.*
-        :align: center
+    .. figure:: graph-draw-radial.png
+       :align: center
+       :width: 60%
 
-        Radial tree layout of a Price network.
+       Radial tree layout of a Price network.
 
     """
 

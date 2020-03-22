@@ -48,6 +48,10 @@
     :no-undoc-members:
     :show-inheritance:
 
+.. automodule:: graph_tool.inference.latent_multigraph
+    :no-undoc-members:
+    :show-inheritance:
+
 .. automodule:: graph_tool.inference.mcmc
     :no-undoc-members:
     :show-inheritance:

@@ -88,19 +88,17 @@ visualize the graph we created so far with the
 
 .. doctest::
 
-   >>> graph_draw(g, vertex_text=g.vertex_index, vertex_font_size=18,
-   ...            output_size=(200, 200), output="two-nodes.png")
+   >>> graph_draw(g, vertex_text=g.vertex_index, output="two-nodes.pdf")
    <...>
 
-.. doctest::
-   :hide:
+.. testcleanup::
 
-   graph_draw(g, vertex_text=g.vertex_index, vertex_font_size=18,
-              output_size=(200, 200), output="two-nodes.pdf")
+    conv_png("two-nodes.pdf")
 
-
-.. figure:: two-nodes.*
+   
+.. figure:: two-nodes.png
    :align: center
+   :width: 200px
 
    A simple directed graph with two vertices and one edge, created by
    the commands above.
@@ -641,10 +639,15 @@ use the :func:`~graph_tool.draw.graph_draw` function.
    pos = sfdp_layout(g)
    graph_draw(g, pos, output_size=(1000, 1000), vertex_color=[1,1,1,0],
               vertex_fill_color=age, vertex_size=1, edge_pen_width=1.2,
-              vcmap=matplotlib.cm.gist_heat_r, output="price.png")
+              vcmap=matplotlib.cm.gist_heat_r, output="price.pdf")
 
-.. figure:: price.*
+.. testcleanup::
+
+   conv_png("price.pdf")
+
+.. figure:: price.png
    :align: center
+   :width: 95%        
 
    A Price network with :math:`10^5` nodes. The vertex colors represent
    the age of the vertex, from older (red) to newer (black).
@@ -688,12 +691,6 @@ edge filtering.
    tree = min_spanning_tree(g)
    graph_draw(g, pos=pos, edge_color=tree, output="min_tree.svg")
 
-.. testcode::
-   :hide:
-
-   graph_draw(g, pos=pos, edge_color=tree, output_size=(400, 400),
-              output="min_tree.pdf")
-
 
 The ``tree`` property map has a bool type, with value "1" if the edge belongs to
 the tree, and "0" otherwise. Below is an image of the original graph, with the
@@ -709,11 +706,6 @@ We can now filter out the edges which don't belong to the minimum spanning tree.
 
    g.set_edge_filter(tree)
    graph_draw(g, pos=pos, output="min_tree_filtered.svg")
-
-.. testcode::
-   :hide:
-
-   graph_draw(g, pos=pos, output_size=(400, 400), output="min_tree_filtered.pdf")
 
 This is how the graph looks when filtered:
 
@@ -733,12 +725,6 @@ and draws them as colors and line thickness in the graph.
     graph_draw(g, pos=pos, vertex_fill_color=bv, edge_pen_width=be,
                output="filtered-bt.svg")
 
-.. testcode::
-   :hide:
-
-   graph_draw(g, pos=pos, vertex_fill_color=bv, edge_pen_width=be,
-              output_size=(400, 400), output="filtered-bt.pdf")
-
 .. figure:: filtered-bt.*
    :align: center
    :figwidth: 400
@@ -753,12 +739,6 @@ The original graph can be recovered by setting the edge filter to ``None``.
     be.a /= be.a.max() / 5
     graph_draw(g, pos=pos, vertex_fill_color=bv, edge_pen_width=be,
                output="nonfiltered-bt.svg")
-
-.. testcode::
-   :hide:
-
-   graph_draw(g, pos=pos, vertex_fill_color=bv, edge_pen_width=be,
-              output_size=(400, 400), output="nonfiltered-bt.pdf")
 
 .. figure:: nonfiltered-bt.*
    :align: center
@@ -818,13 +798,6 @@ Like above, the result should be the isolated minimum spanning tree:
     ...            edge_pen_width=be, output="mst-view.svg")
     <...>
 
-.. testcode::
-   :hide:
-
-   graph_draw(tv, pos=pos, vertex_fill_color=bv,
-              edge_pen_width=be, output_size=(400, 400),
-              output="mst-view.pdf")
-
 .. figure:: mst-view.*
    :align: center
    :figwidth: 400
@@ -870,13 +843,6 @@ The graph view constructed above can be visualized as
     >>> graph_draw(u, pos=pos, vertex_fill_color=bv, output="central-edges-view.svg")
     <...>
 
-.. testcode::
-   :hide:
-
-   graph_draw(u, pos=pos, vertex_fill_color=bv, output_size=(400, 400),
-              output="central-edges-view.pdf")
-
-
 .. figure:: central-edges-view.*
    :align: center
    :figwidth: 400
@@ -904,11 +870,6 @@ The resulting graph view can be visualized as
 
     >>> graph_draw(u, pos=pos, output="composed-filter.svg")
     <...>
-
-.. testcode::
-   :hide:
-
-   graph_draw(u, pos=pos, output_size=(400, 400), output="composed-filter.pdf")
 
 .. figure:: composed-filter.*
    :align: center

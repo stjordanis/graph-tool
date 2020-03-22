@@ -31,7 +31,7 @@ def latent_multigraph(g, epsilon=1e-8, max_niter=0, verbose=False):
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
-        Graph to be used.
+        Graph to be used. This is expected to be a simple graph.
     epsilon : ``float`` (optional, default: ``1e-8``)
         Convergence criterion.
     max_niter : ``int`` (optional, default: ``0``)
@@ -44,7 +44,41 @@ def latent_multigraph(g, epsilon=1e-8, max_niter=0, verbose=False):
     u : :class:`~graph_tool.Graph`
         Latent graph.
     w : :class:`~graph_tool.EdgePropertyMap`
-        Edge property map with inferred multiplicity parameter.
+        Edge property map with inferred edge multiplicities.
+
+    Notes
+    -----
+    This implements the expectation maximization algorithm described in
+    [peixoto-latent-2020]_ which consists in iterating the following steps
+    until convergence:
+
+    1. In the "expectation" step we obtain the marginal mean multiedge
+       multiplicities via:
+
+       .. math::
+
+           w_{ij} =
+           \begin{cases}
+               \frac{\theta_i\theta_j}{1-\mathrm{e}^{-\theta_i\theta_j}} & \text{ if } G_{ij} = 1,\\
+               \theta_i^2 & \text{ if } i = j,\\
+               0 & \text{ otherwise.}
+           \end{cases}
+
+    2. In the "maximization" step we use the current values of
+       :math:`\boldsymbol w` to update the values of :math:`\boldsymbol \theta`:
+
+       .. math::
+
+            \theta_i = \frac{d_i}{\sqrt{\sum_jd_j}}, \quad\text{ with } d_i = \sum_jw_{ji}. 
+
+    The equations above are adapted accordingly if the supplied graph is
+    directed, where we have :math:`\theta_i\theta_j\to\theta_i^-\theta_j^+`,
+    :math:`\theta_i^2\to\theta_i^-\theta_i^+`, and
+    :math:`\theta_i^{\pm}=\frac{d_i^{\pm}}{\sqrt{\sum_jd_j^{\pm}}}`, with
+    :math:`d^+_i = \sum_jw_{ji}` and :math:`d^-_i = \sum_jw_{ij}`.
+
+    A single EM iteration takes time :math:`O(V + E)`. If enabled during
+    compilation, this algorithm runs in parallel.
 
     Examples
     --------
@@ -52,8 +86,14 @@ def latent_multigraph(g, epsilon=1e-8, max_niter=0, verbose=False):
     >>> gt.scalar_assortativity(g, "out")
     (-0.198384..., 0.001338...)
     >>> u, w = gt.latent_multigraph(g)
-    >>> scalar_assortativity(u, "out", eweight=w)
+    >>> gt.scalar_assortativity(u, "out", eweight=w)
     (-0.048426..., 0.034526...)
+
+    References
+    ----------
+    .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
+       networks with heterogeneous density", :arxiv:`2002.07803`
+
     """
 
     g = g.copy()

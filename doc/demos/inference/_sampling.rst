@@ -27,62 +27,44 @@ large networks.
 
 In order to perform such moves, one needs again to operate with
 :class:`~graph_tool.inference.blockmodel.BlockState` or
-:class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` instances, and calling
-their :meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` methods. For
-example, the following will perform 1000 sweeps of the algorithm with
-the network of characters in the novel Les Misérables, starting from a
-random partition into 20 groups
+:class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+instances, and calling either their
+:meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` or
+:meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`
+methods. The former implements a simpler MCMC where a single node is
+moved at a time, where the latter is a more efficient version that
+performs merges and splits [peixoto-merge-split-2020]_, which should be
+in general preferred.
+
+For example, the following will perform 1000 sweeps of the algorithm
+with the network of characters in the novel Les Misérables, starting
+from a random partition into 20 groups
 
 .. testcode:: model-averaging
 
    g = gt.collection.data["lesmis"]
 
-   state = gt.BlockState(g, B=20)   # This automatically initializes the state
-                                    # with a random partition into B=20
-                                    # nonempty groups; The user could
-                                    # also pass an arbitrary initial
-                                    # partition using the 'b' parameter.
+   state = gt.BlockState(g, B=1)   # This automatically initializes the state with a partition
+                                   # into one group. The user could also pass a higher number
+                                   # to start with a random partition of a given size, or pass a
+                                   # specific initial partition using the 'b' parameter.
 
    # Now we run 1,000 sweeps of the MCMC. Note that the number of groups
    # is allowed to change, so it will eventually move from the initial
-   # value of B=20 to whatever is most appropriate for the data.
+   # value of B=1 to whatever is most appropriate for the data.
 
-   dS, nattempts, nmoves = state.mcmc_sweep(niter=1000)
+   dS, nattempts, nmoves = state.multiflip_mcmc_sweep(niter=1000)
 
    print("Change in description length:", dS)
    print("Number of accepted vertex moves:", nmoves)
 
 .. testoutput:: model-averaging
 
-   Change in description length: -353.848032...
-   Number of accepted vertex moves: 37490
+   Change in description length: -71.707346...
+   Number of accepted vertex moves: 44055
 
-.. note::
-
-   Starting from a random partition is rarely the best option, since it
-   may take a long time for it to equilibrate. It was done above simply
-   as an illustration on how to initialize
-   :class:`~graph_tool.inference.blockmodel.BlockState` by hand. Instead, a much
-   better option in practice is to start from an approximation to the
-   "ground state" obtained with
-   :func:`~graph_tool.inference.minimize.minimize_blockmodel_dl`, e.g.
-
-    .. testcode:: model-averaging
-
-       state = gt.minimize_blockmodel_dl(g)
-       state = state.copy(B=g.num_vertices())
-       dS, nattempts, nmoves = state.mcmc_sweep(niter=1000)
-
-       print("Change in description length:", dS)
-       print("Number of accepted vertex moves:", nmoves)
-
-    .. testoutput:: model-averaging
-
-       Change in description length: 31.622518...
-       Number of accepted vertex moves: 43152
-
-Although the above is sufficient to implement model averaging, there is a
-convenience function called
+Although the above is sufficient to implement sampling from the
+posterior, there is a convenience function called
 :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` that is intend to
 simplify the detection of equilibration, by keeping track of the maximum
 and minimum values of description length encountered and how many sweeps
@@ -93,58 +75,7 @@ have been made without a "record breaking" event. For example,
    # We will accept equilibration if 10 sweeps are completed without a
    # record breaking event, 2 consecutive times.
 
-   gt.mcmc_equilibrate(state, wait=10, nbreaks=2, mcmc_args=dict(niter=10), verbose=True)
-
-will output:
-
-.. testoutput:: model-averaging
-    :options: +NORMALIZE_WHITESPACE
-
-    niter:     1  count:    0  breaks:  0  min_S: 703.94152  max_S: 730.97213  S: 703.94152  ΔS:     -27.0306  moves:   431 
-    niter:     2  count:    1  breaks:  0  min_S: 703.94152  max_S: 730.97213  S: 708.61840  ΔS:      4.67688  moves:   413 
-    niter:     3  count:    2  breaks:  0  min_S: 703.94152  max_S: 730.97213  S: 704.60994  ΔS:     -4.00847  moves:   416 
-    niter:     4  count:    0  breaks:  0  min_S: 700.85336  max_S: 730.97213  S: 700.85336  ΔS:     -3.75658  moves:   391 
-    niter:     5  count:    1  breaks:  0  min_S: 700.85336  max_S: 730.97213  S: 713.22553  ΔS:      12.3722  moves:   387 
-    niter:     6  count:    2  breaks:  0  min_S: 700.85336  max_S: 730.97213  S: 703.57357  ΔS:     -9.65196  moves:   434 
-    niter:     7  count:    3  breaks:  0  min_S: 700.85336  max_S: 730.97213  S: 715.02440  ΔS:      11.4508  moves:   439 
-    niter:     8  count:    0  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 700.68857  ΔS:     -14.3358  moves:   427 
-    niter:     9  count:    1  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 717.95725  ΔS:      17.2687  moves:   409 
-    niter:    10  count:    2  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 720.02079  ΔS:      2.06354  moves:   435 
-    niter:    11  count:    3  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 718.15880  ΔS:     -1.86199  moves:   399 
-    niter:    12  count:    4  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 708.06732  ΔS:     -10.0915  moves:   436 
-    niter:    13  count:    5  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 712.76007  ΔS:      4.69274  moves:   432 
-    niter:    14  count:    6  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 705.60582  ΔS:     -7.15425  moves:   409 
-    niter:    15  count:    7  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 704.37333  ΔS:     -1.23249  moves:   434 
-    niter:    16  count:    8  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 717.54492  ΔS:      13.1716  moves:   426 
-    niter:    17  count:    9  breaks:  0  min_S: 700.68857  max_S: 730.97213  S: 715.05767  ΔS:     -2.48725  moves:   449 
-    niter:    18  count:    0  breaks:  1  min_S: 715.77940  max_S: 715.77940  S: 715.77940  ΔS:     0.721731  moves:   448 
-    niter:    19  count:    0  breaks:  1  min_S: 708.38072  max_S: 715.77940  S: 708.38072  ΔS:     -7.39868  moves:   447 
-    niter:    20  count:    0  breaks:  1  min_S: 705.63447  max_S: 715.77940  S: 705.63447  ΔS:     -2.74625  moves:   441 
-    niter:    21  count:    1  breaks:  1  min_S: 705.63447  max_S: 715.77940  S: 707.01766  ΔS:      1.38319  moves:   434 
-    niter:    22  count:    2  breaks:  1  min_S: 705.63447  max_S: 715.77940  S: 708.21127  ΔS:      1.19361  moves:   447 
-    niter:    23  count:    0  breaks:  1  min_S: 703.12325  max_S: 715.77940  S: 703.12325  ΔS:     -5.08802  moves:   454 
-    niter:    24  count:    0  breaks:  1  min_S: 703.05106  max_S: 715.77940  S: 703.05106  ΔS:   -0.0721911  moves:   433 
-    niter:    25  count:    1  breaks:  1  min_S: 703.05106  max_S: 715.77940  S: 704.77370  ΔS:      1.72264  moves:   423 
-    niter:    26  count:    0  breaks:  1  min_S: 701.61368  max_S: 715.77940  S: 701.61368  ΔS:     -3.16003  moves:   441 
-    niter:    27  count:    0  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 721.54373  ΔS:      19.9301  moves:   434 
-    niter:    28  count:    1  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 703.33612  ΔS:     -18.2076  moves:   439 
-    niter:    29  count:    2  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 710.79425  ΔS:      7.45813  moves:   437 
-    niter:    30  count:    3  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 706.35044  ΔS:     -4.44381  moves:   429 
-    niter:    31  count:    4  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 713.56014  ΔS:      7.20970  moves:   463 
-    niter:    32  count:    5  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 720.16436  ΔS:      6.60422  moves:   445 
-    niter:    33  count:    6  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 714.76845  ΔS:     -5.39591  moves:   404 
-    niter:    34  count:    7  breaks:  1  min_S: 701.61368  max_S: 721.54373  S: 703.21572  ΔS:     -11.5527  moves:   410 
-    niter:    35  count:    0  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 701.53898  ΔS:     -1.67675  moves:   434 
-    niter:    36  count:    1  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 708.14043  ΔS:      6.60146  moves:   433 
-    niter:    37  count:    2  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 704.07209  ΔS:     -4.06835  moves:   410 
-    niter:    38  count:    3  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 704.76811  ΔS:     0.696023  moves:   413 
-    niter:    39  count:    4  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 703.54823  ΔS:     -1.21988  moves:   398 
-    niter:    40  count:    5  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 713.59891  ΔS:      10.0507  moves:   388 
-    niter:    41  count:    6  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 704.40168  ΔS:     -9.19724  moves:   403 
-    niter:    42  count:    7  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 707.57723  ΔS:      3.17556  moves:   400 
-    niter:    43  count:    8  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 704.09679  ΔS:     -3.48044  moves:   423 
-    niter:    44  count:    9  breaks:  1  min_S: 701.53898  max_S: 721.54373  S: 704.64514  ΔS:     0.548354  moves:   419 
-    niter:    45  count:   10  breaks:  2  min_S: 701.53898  max_S: 721.54373  S: 715.92329  ΔS:      11.2781  moves:   411 
+   gt.mcmc_equilibrate(state, wait=10, nbreaks=2, mcmc_args=dict(niter=10))
 
 Note that the value of ``wait`` above was made purposefully low so that
 the output would not be overly long. The most appropriate value requires
@@ -153,7 +84,7 @@ experimentation, but a typically good value is ``wait=1000``.
 The function :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` accepts a
 ``callback`` argument that takes an optional function to be invoked
 after each call to
-:meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep`. This function
+:meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`. This function
 should accept a single parameter which will contain the actual
 :class:`~graph_tool.inference.blockmodel.BlockState` instance. We will use this in
 the example below to collect the posterior vertex marginals (via
@@ -237,12 +168,6 @@ give us a distribution over hierarchies. The whole procedure is fairly
 analogous, but now we make use of
 :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` instances.
 
-.. note::
-
-    When using :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` instances
-    to perform model averaging, they need to be constructed with the
-    option ``sampling=True``.
-
 Here we perform the sampling of hierarchical partitions using the same
 network as above.
 
@@ -250,35 +175,39 @@ network as above.
 
    g = gt.collection.data["lesmis"]
 
-   state = gt.minimize_nested_blockmodel_dl(g) # Initialize he Markov
-                                               # chain from the "ground
-                                               # state"
-
-   # Before doing model averaging, the need to create a NestedBlockState
-   # by passing sampling = True.
-
-   # We also want to increase the maximum hierarchy depth to L = 10
-
-   # We can do both of the above by copying.
-
-   bs = state.get_bs()                     # Get hierarchical partition.
-   bs += [np.zeros(1)] * (10 - len(bs))    # Augment it to L = 10 with
-                                           # single-group levels.
-
-   state = state.copy(bs=bs, sampling=True)
+   state = gt.NestedBlockState(g)   # By default this creates a state with an initial single-group
+                                    # hierarchy of depth ceil(log2(g.num_vertices()).
 
    # Now we run 1000 sweeps of the MCMC
 
-   dS, nattempts, nmoves = state.mcmc_sweep(niter=1000)
+   dS, nmoves = 0, 0
+   for i in range(100):
+       ret = state.multiflip_mcmc_sweep(niter=10)
+       dS += ret[0]
+       nmoves += ret[1]
 
    print("Change in description length:", dS)
    print("Number of accepted vertex moves:", nmoves)
 
 .. testoutput:: nested-model-averaging
 
-   Change in description length: 15.483135...
-   Number of accepted vertex moves: 57684
+   Change in description length: -73.716766...
+   Number of accepted vertex moves: 366160
 
+
+.. warning::
+
+   When using
+   :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`, a
+   single call to
+   :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.multiflip_mcmc_sweep`
+   or
+   :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.mcmc_sweep`
+   performs ``niter`` sweeps at each hierarchical level once. This means
+   that in order for the chain to equilibrate, we need to call these
+   functions several times, i.e. it is not enough to call it once with a
+   large value of ``niter``.
+   
 Similarly to the the non-nested case, we can use
 :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` to do most of the boring
 work, and we can now obtain vertex marginals on all hierarchical levels:
@@ -293,7 +222,8 @@ work, and we can now obtain vertex marginals on all hierarchical levels:
 
    def collect_marginals(s):
       global pv
-      pv = [sl.collect_vertex_marginals(pv[l]) for l, sl in enumerate(s.get_levels())]
+      bs = [gt.perfect_prop_hash([s.b])[0] for s in state.get_levels()]
+      pv = [s.collect_vertex_marginals(pv[l], b=bs[l]) for l, s in enumerate(s.get_levels())]
 
    # Now we collect the marginals for exactly 100,000 sweeps
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
@@ -362,7 +292,8 @@ distribution.
 .. testcode:: nested-model-averaging
 
    for i in range(10):
-       state.mcmc_sweep(niter=1000)
+       for j in range(100):
+           state.multiflip_mcmc_sweep(niter=10)
        state.draw(output="lesmis-partition-sample-%i.svg" % i, empty_branches=False)
 
 .. image:: lesmis-partition-sample-0.svg

@@ -7,7 +7,7 @@ Inferring modular network structure
 of networks in the :mod:`~graph_tool.inference` submodule. Here we
 explain the basic functionality with self-contained examples. For a more
 thorough theoretical introduction to the methods described here, the
-reader is referred to [peixoto-bayesian-2017]_.
+reader is referred to [peixoto-bayesian-2019]_.
 
 
 .. include:: _background.rst
@@ -24,8 +24,10 @@ reader is referred to [peixoto-bayesian-2017]_.
 References
 ----------
 
-.. [peixoto-bayesian-2017] Tiago P. Peixoto, "Bayesian stochastic blockmodeling",
-   :arxiv:`1705.10225`
+.. [peixoto-bayesian-2019] Tiago P. Peixoto, "Bayesian stochastic blockmodeling",
+   Advances in Network Clustering and Blockmodeling, edited
+   by P. Doreian, V. Batagelj, A. Ferligoj, (Wiley, New York, 2019)
+   :doi:`10.1002/9781119483298.ch11`, :arxiv:`1705.10225`
 
 .. [holland-stochastic-1983] Paul W. Holland, Kathryn Blackmond Laskey,
    Samuel Leinhardt, "Stochastic blockmodels: First steps", Social Networks
@@ -72,12 +74,19 @@ References
    Rev. E 89, 012804 (2014). :doi:`10.1103/PhysRevE.89.012804`,
    :arxiv:`1310.4378`
 
+.. [peixoto-merge-split-2020] Tiago P. Peixoto, "Merge-split Markov
+   chain Monte Carlo for community detection", :arxiv:`2003.07070`
+
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8
    041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
 
 .. [peixoto-network-2019] Tiago P. Peixoto, "Network reconstruction and
-   community detection from dynamics", :arxiv:`1903.10833`
+   community detection from dynamics", Phys. Rev. Lett. 123 128301
+   (2019), :doi:`10.1103/PhysRevLett.123.128301`, :arxiv:`1903.10833`
+
+.. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
+   networks with heterogeneous density", :arxiv:`2002.07803`
 
 .. [martin-structural-2015] Travis Martin, Brian Ball, M. E. J. Newman,
    "Structural inference for uncertain networks", Phys. Rev. E 93,

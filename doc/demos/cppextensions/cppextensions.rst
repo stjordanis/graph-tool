@@ -162,7 +162,7 @@ In graph-tool iteration can also be done in a more convenient way using
    }
 
 Both approaches above are equivalent. Graph-tool also provides
-``edges_range()``, ``out_edges_range()``, ``in_edges_range()``, etc. in
+``edges_range()``, ``out_edges_range()``, ``in_edges_range()``, etc., in
 an analogous fashion.
    
 Extracting specific property maps

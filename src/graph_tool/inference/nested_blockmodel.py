@@ -40,8 +40,9 @@ class NestedBlockState(object):
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be modeled.
-    bs : ``list`` of :class:`~graph_tool.VertexPropertyMap` or :class:`numpy.ndarray`
-        Hierarchical node partition.
+    bs : ``list`` of :class:`~graph_tool.VertexPropertyMap` or :class:`numpy.ndarray` (optional, default: ``None``)
+        Hierarchical node partition. If not provided it will correspond to a
+        single-group hierarchy of length :math:`\lceil\log_2(N)\rceil`.
     base_type : ``type`` (optional, default: :class:`~graph_tool.inference.blockmodel.BlockState`)
         State type for lowermost level
         (e.g. :class:`~graph_tool.inference.blockmodel.BlockState`,
@@ -61,11 +62,20 @@ class NestedBlockState(object):
     **kwargs :  keyword arguments
         Keyword arguments to be passed to base type constructor. The
         ``state_args`` parameter overrides this.
+
     """
 
-    def __init__(self, g, bs, base_type=BlockState, state_args={},
+    def __init__(self, g, bs=None, base_type=BlockState, state_args={},
                  hstate_args={}, hentropy_args={}, sampling=True, **kwargs):
         self.g = g
+
+        if bs is None:
+            if base_type is OverlapBlockState or state_args.get("overlap", False):
+                b = zeros(2 * g.num_vertices(), dtype="int")
+            else:
+                b = zeros(g.num_vertices(), dtype="int")
+            bs = [b] + [zeros(1, dtype="int")] * int(ceil(log2(len(b))))
+
         self.base_type = base_type
         if base_type is LayeredBlockState:
             self.Lrecdx = []
@@ -809,6 +819,14 @@ class NestedBlockState(object):
         ``c * 2 ** l`` for ``l`` in the range ``[0, L-1]``. Optionally, a list
         of values may be passed instead, which specifies the value of ``c[l]``
         to be used at each level.
+
+        .. warning::
+
+           This function performs ``niter`` sweeps at each hierarchical level
+           once. This means that in order for the chain to equilibrate, we need
+           to call this function several times, i.e. it is not enough to call
+           it once with a large value of ``niter``.
+
         """
 
         c = kwargs.pop("c", 1)
@@ -850,6 +868,13 @@ class NestedBlockState(object):
         of values may be passed instead, which specifies the value of ``c[l]``
         to be used at each level.
 
+        .. warning::
+
+           This function performs ``niter`` sweeps at each hierarchical level
+           once. This means that in order for the chain to equilibrate, we need
+           to call this function several times, i.e. it is not enough to call
+           it once with a large value of ``niter``.
+
         """
 
         psingle = kwargs.get("psingle", self.g.num_vertices())
@@ -887,6 +912,14 @@ class NestedBlockState(object):
 
         The arguments accepted are the same as in
         :meth:`graph_tool.inference.blockmodel.BlockState.gibbs_sweep`.
+
+        .. warning::
+
+           This function performs ``niter`` sweeps at each hierarchical level
+           once. This means that in order for the chain to equilibrate, we need
+           to call this function several times, i.e. it is not enough to call
+           it once with a large value of ``niter``.
+
         """
         if _bm_test():
             kwargs = dict(kwargs, test=False)
@@ -1305,8 +1338,12 @@ def get_hierarchy_tree(state, empty_branches=True):
 
         last_pos = pos
         g = s
-        if g.num_vertices() == 1:
-            break
+        if empty_branches:
+            if g.num_vertices() == 1:
+                break
+        else:
+            if g.vp.count.fa.sum() == 1:
+                break
         b = g.vp["b"]
 
     if not empty_branches:

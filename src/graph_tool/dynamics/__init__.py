@@ -234,14 +234,9 @@ class SIState(EpidemicStateBase):
            >>> ylabel(r"Infected nodes")
            Text(...)
            >>> tight_layout()
-           >>> savefig("SI.pdf")
+           >>> savefig("SI.svg")
 
-        .. testcode:: SI
-           :hide:
-
-           savefig("SI.svg")
-
-        .. figure:: SI.*
+        .. figure:: SI.svg
            :align: center
 
            Number of infected nodes vs. time for an SI dynamics.
@@ -341,14 +336,9 @@ class SISState(DiscreteStateBase):
            >>> ylabel(r"Infected nodes")
            Text(...)
            >>> tight_layout()
-           >>> savefig("SI.pdf")
+           >>> savefig("SIS.svg")
 
-        .. testcode:: SIS
-           :hide:
-
-           savefig("SIS.svg")
-
-        .. figure:: SIS.*
+        .. figure:: SIS.svg
            :align: center
 
            Number of infected nodes vs. time for an SIS dynamics.
@@ -457,14 +447,9 @@ class SIRState(DiscreteStateBase):
            >>> legend(loc="best")
            <...>
            >>> tight_layout()
-           >>> savefig("SIR.pdf")
+           >>> savefig("SIR.svg")
 
-        .. testcode:: SIR
-           :hide:
-
-           savefig("SIR.svg")
-
-        .. figure:: SIR.*
+        .. figure:: SIR.svg
            :align: center
 
            Number of susceptible, infected, and recovered nodes vs. time for an
@@ -580,14 +565,9 @@ class SIRSState(DiscreteStateBase):
            >>> legend(loc="best")
            <...>
            >>> tight_layout()
-           >>> savefig("SIRS.pdf")
+           >>> savefig("SIRS.svg")
 
-        .. testcode:: SIRS
-           :hide:
-
-           savefig("SIRS.svg")
-
-        .. figure:: SIRS.*
+        .. figure:: SIRS.svg
            :align: center
 
            Number of susceptible, infected, and recovered nodes vs. time for an
@@ -671,14 +651,9 @@ class VoterState(DiscreteStateBase):
            >>> legend(loc="best")
            <...>
            >>> tight_layout()
-           >>> savefig("voter.pdf")
+           >>> savefig("voter.svg")
 
-        .. testcode:: voter
-           :hide:
-
-           savefig("voter.svg")
-
-        .. figure:: voter.*
+        .. figure:: voter.svg
            :align: center
 
            Number of nodes with a given opinion vs. time for a voter model
@@ -764,14 +739,9 @@ class MajorityVoterState(DiscreteStateBase):
            >>> legend(loc="best")
            <...>
            >>> tight_layout()
-           >>> savefig("majority-voter.pdf")
+           >>> savefig("majority-voter.svg")
 
-        .. testcode:: majority-voter
-           :hide:
-
-           savefig("majority-voter.svg")
-
-        .. figure:: majority-voter.*
+        .. figure:: majority-voter.svg
            :align: center
 
            Number of nodes with a given opinion vs. time for a majority voter
@@ -845,18 +815,16 @@ class BinaryThresholdState(DiscreteStateBase):
            >>> state = gt.BinaryThresholdState(g, r=0.25)
            >>> ret = state.iterate_sync(niter=1000)
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-           ...               output_size=(700,400), output="binary-threshold.pdf")
+           ...               output="binary-threshold.pdf")
            <...>
 
-        .. testcode:: binary-threshold
-           :hide:
+        .. testcleanup:: binary-threshold
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
-                         edge_sloppy=True, vcmap=cm.bone,
-                         output_size=(700,400), output="binary-threshold.svg")
+           conv_png("binary-threshold.pdf")
 
-        .. figure:: binary-threshold.*
+        .. figure:: binary-threshold.png
            :align: center
+           :width: 80%
 
            State of a binary threshold dynamics on a political blog network.
         """
@@ -928,18 +896,16 @@ class IsingGlauberState(DiscreteStateBase):
            >>> state = gt.IsingGlauberState(g, beta=.05)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-           ...               output_size=(700,400), output="glauber-ising.pdf")
+           ...               output="glauber-ising.pdf")
            <...>
 
-        .. testcode:: glauber-ising
-           :hide:
+        .. testcleanup:: glauber-ising
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-                         edge_sloppy=True, output_size=(700,400),
-                         output="glauber-ising.svg")
+           conv_png("glauber-ising.pdf")
 
-        .. figure:: glauber-ising.*
+        .. figure:: glauber-ising.png
            :align: center
+           :width: 80%
 
            State of a Glauber Ising dynamics on a political blog network.
 
@@ -1016,18 +982,16 @@ class CIsingGlauberState(DiscreteStateBase):
            >>> state = gt.CIsingGlauberState(g, beta=.2)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.magma,
-           ...               output_size=(700,400), output="glauber-cising.pdf")
+           ...               output="glauber-cising.pdf")
            <...>
 
-        .. testcode:: glauber-cising
-           :hide:
+        .. testcleanup:: glauber-cising
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.magma,
-                         edge_sloppy=True,
-                         output_size=(700,400), output="glauber-cising.svg")
+           conv_png("glauber-cising.pdf")
 
-        .. figure:: glauber-cising.*
+        .. figure:: glauber-cising.png
            :align: center
+           :width: 80%
 
            State of a continuous Glauber Ising dynamics on a political blog network.
 
@@ -1102,18 +1066,16 @@ class IsingMetropolisState(DiscreteStateBase):
            >>> state = gt.IsingMetropolisState(g, beta=.1)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-           ...               output_size=(700,400), output="metropolis-ising.pdf")
+           ...               output="metropolis-ising.pdf")
            <...>
 
-        .. testcode:: metropolis-ising
-           :hide:
+        .. testcleanup:: metropolis-ising
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-                         edge_sloppy=True, output_size=(700,400),
-                         output="metropolis-ising.svg")
+           conv_png("metropolis-ising.pdf")
 
-        .. figure:: metropolis-ising.*
+        .. figure:: metropolis-ising.png
            :align: center
+           :width: 80%
 
            State of a Metropolis-Hastings Ising dynamics on a political blog network.
 
@@ -1197,18 +1159,16 @@ class PottsGlauberState(DiscreteStateBase):
            >>> state = gt.PottsGlauberState(g, f)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
-           ...               output_size=(700,400), output="glauber-potts.pdf")
+           ...               output="glauber-potts.pdf")
            <...>
 
-        .. testcode:: glauber-potts
-           :hide:
+        .. testcleanup:: glauber-potts
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
-                         edge_sloppy=True, output_size=(700,400),
-                         output="glauber-potts.svg")
+           conv_png("glauber-potts.pdf")
 
-        .. figure:: glauber-potts.*
+        .. figure:: glauber-potts.png
            :align: center
+           :width: 80%
 
            State of a Glauber Potts dynamics with :math:`q=4` on a political
            blog network.
@@ -1297,18 +1257,16 @@ class PottsMetropolisState(DiscreteStateBase):
            >>> state = gt.PottsGlauberState(g, f)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
-           ...               output_size=(700,400), output="metropolis-potts.pdf")
+           ...               output="metropolis-potts.pdf")
            <...>
 
-        .. testcode:: metropolis-potts
-           :hide:
+        .. testcleanup:: metropolis-potts
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
-                         edge_sloppy=True, output_size=(700,400),
-                         output="metropolis-potts.svg")
+           conv_png("metropolis-potts.pdf")
 
-        .. figure:: metropolis-potts.*
+        .. figure:: metropolis-potts.png
            :align: center
+           :width: 80%
 
            State of a Metropolis-Hastings Potts dynamics with :math:`q=4` on a
            political blog network.
@@ -1401,18 +1359,16 @@ class KirmanState(DiscreteStateBase):
            >>> state = gt.KirmanState(g)
            >>> ret = state.iterate_sync(niter=1000)
            >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-           ...               output_size=(700,400), output="kirman.pdf")
+           ...               output="kirman.pdf")
            <...>
 
-        .. testcode:: kirman
-           :hide:
+        .. testcleanup:: kirman
 
-           gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
-                         edge_sloppy=True, output_size=(700,400),
-                         output="kirman.svg")
+           conv_png("kirman.pdf")
 
-        .. figure:: kirman.*
+        .. figure:: kirman.png
            :align: center
+           :width: 80%
 
            State of Kirman's model on a political blog network.
 
@@ -1496,19 +1452,16 @@ class AxelrodState(DiscreteStateBase):
            >>> ret = state.iterate_async(niter=10000000)
            >>> gt.graph_draw(g, g.vp.pos,
            ...               vertex_fill_color=gt.perfect_prop_hash([state.s])[0],
-           ...               vcmap=cm.magma, output_size=(700,400), output="axelrod.pdf")
+           ...               vcmap=cm.magma, output="axelrod.pdf")
            <...>
 
-        .. testcode:: axelrod
-           :hide:
+        .. testcleanup:: axelrod
 
-           gt.graph_draw(g, g.vp.pos,
-                         vertex_fill_color=gt.perfect_prop_hash([state.s])[0],
-                         edge_sloppy=True, vcmap=cm.magma, output_size=(700,400),
-                         output="axelrod.svg")
+           conv_png("axelrod.pdf")
 
-        .. figure:: axelrod.*
+        .. figure:: axelrod.png
            :align: center
+           :width: 80%
 
            State of Axelrod's model on a political blog network.
 
@@ -1734,17 +1687,12 @@ class KuramotoState(ContinuousStateBase):
            >>> ylabel(r"$\theta_i - \left<\theta\right>$")
            Text(...)
            >>> tight_layout()
-           >>> savefig("karate-kuramoto.pdf")
+           >>> savefig("karate-kuramoto.svg")
 
-        .. testcode:: kuramoto
-           :hide:
-
-           savefig("karate-kuramoto.svg")
-
-        .. figure:: karate-kuramoto.*
+        .. figure:: karate-kuramoto.svg
            :align: center
 
-           Kuramoto oscilator dynamics on the Karate Club network.
+           Kuramoto oscillator dynamics on the Karate Club network.
 
         References
         ----------

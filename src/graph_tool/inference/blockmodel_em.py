@@ -260,12 +260,12 @@ def em_infer(state, max_iter=1000, max_e_iter=1, epsilon=1e-3,
        >>> g = gt.collection.data["polbooks"]
        >>> state = gt.EMBlockState(g, B=3)
        >>> delta, niter = gt.em_infer(state)
-       >>> state.draw(pos=g.vp["pos"], output="polbooks_EM_B3.pdf")
+       >>> state.draw(pos=g.vp["pos"], output="polbooks_EM_B3.svg")
        <...>
 
     .. testcleanup:: em_infer
 
-       state.draw(pos=g.vp["pos"], output="polbooks_EM_B3.png")
+       state.draw(pos=g.vp["pos"], output="polbooks_EM_B3.svg")
 
     .. figure:: polbooks_EM_B3.*
        :align: center

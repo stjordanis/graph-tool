@@ -78,7 +78,7 @@ Auxiliary functions
    ~graph_tool.inference.blockmodel.mf_entropy
    ~graph_tool.inference.blockmodel.bethe_entropy
    ~graph_tool.inference.blockmodel.microstate_entropy
-   ~graph_tool.inference.blockmodel.marginal_multigraph_entropy
+   ~graph_tool.inference.uncertain_blockmodel.marginal_multigraph_entropy
    ~graph_tool.inference.overlap_blockmodel.half_edge_graph
    ~graph_tool.inference.overlap_blockmodel.get_block_edge_gradient
 
@@ -112,6 +112,14 @@ State classes
    ~graph_tool.inference.uncertain_blockmodel.CIsingGlauberBlockState
    ~graph_tool.inference.uncertain_blockmodel.PseudoIsingBlockState
    ~graph_tool.inference.uncertain_blockmodel.PseudoCIsingBlockState
+
+Expectation-maximization Inference
+==================================
+
+.. autosummary::
+   :nosignatures:
+
+   ~graph_tool.inference.latent_multigraph.latent_multigraph
 
 Semiparametric stochastic block model inference
 +++++++++++++++++++++++++++++++++++++++++++++++

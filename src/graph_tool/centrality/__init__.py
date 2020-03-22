@@ -156,17 +156,9 @@ def pagerank(g, damping=0.85, pers=None, weight=None, prop=None, epsilon=1e-6,
        ...               output="polblogs_pr.pdf")
        <...>
 
-    .. testcode:: pagerank
-       :hide:
-
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=pr,
-                     vertex_size=gt.prop_to_size(pr, mi=5, ma=15),
-                     vorder=pr, vcmap=matplotlib.cm.gist_heat,
-                     output="polblogs_pr.png")
-
-
-    .. figure:: polblogs_pr.*
+    .. figure:: polblogs_pr.png
        :align: center
+       :width: 80%
 
        PageRank values of the a political blogs network of [adamic-polblogs]_.
 
@@ -185,17 +177,15 @@ def pagerank(g, damping=0.85, pers=None, weight=None, prop=None, epsilon=1e-6,
        ...               output="polblogs_pr_pers.pdf")
        <...>
 
-    .. testcode:: pagerank
-       :hide:
+    .. testcleanup:: pagerank
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=pr,
-                     vertex_size=gt.prop_to_size(pr, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=pr, output="polblogs_pr_pers.png")
+       conv_png("polblogs_pr.pdf")
+       conv_png("polblogs_pr_pers.pdf")
 
 
-    .. figure:: polblogs_pr_pers.*
+    .. figure:: polblogs_pr_pers.png
        :align: center
+       :width: 80%
 
        Personalized PageRank values of the a political blogs network of
        [adamic-polblogs]_, where vertices with very low degree are given
@@ -310,18 +300,13 @@ def betweenness(g, pivots=None, vprop=None, eprop=None, weight=None, norm=True):
        ...               vorder=vp, output="polblogs_betweenness.pdf")
        <...>
 
-    .. testcode:: betweenness
-       :hide:
+    .. testcleanup:: betweenness
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=vp,
-                     vertex_size=gt.prop_to_size(vp, mi=5, ma=15),
-                     edge_pen_width=gt.prop_to_size(ep, mi=0.5, ma=5),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=vp, output="polblogs_betweenness.png")
+       conv_png("polblogs_betweenness.pdf")
 
-
-    .. figure:: polblogs_betweenness.*
+    .. figure:: polblogs_betweenness.png
        :align: center
+       :width: 80%
 
        Betweenness values of the a political blogs network of [adamic-polblogs]_.
 
@@ -442,17 +427,13 @@ def closeness(g, weight=None, source=None, vprop=None, norm=True, harmonic=False
        ...               vorder=c, output="polblogs_closeness.pdf")
        <...>
 
-    .. testcode:: closeness
-       :hide:
+    .. testcleanup:: closeness
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=c,
-                     vertex_size=gt.prop_to_size(c, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=c, output="polblogs_closeness.png")
+       conv_png("polblogs_closeness.pdf")
 
-
-    .. figure:: polblogs_closeness.*
+    .. figure:: polblogs_closeness.png
        :align: center
+       :width: 80%
 
        Closeness values of the a political blogs network of [adamic-polblogs]_.
 
@@ -533,7 +514,7 @@ def central_point_dominance(g, betweenness):
     >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))
     >>> vp, ep = gt.betweenness(g)
     >>> print(gt.central_point_dominance(g, vp))
-    0.105683...
+    0.116106...
 
     References
     ----------
@@ -625,17 +606,13 @@ def eigenvector(g, weight=None, vprop=None, epsilon=1e-6, max_iter=None):
        ...               vorder=x, output="polblogs_eigenvector.pdf")
        <...>
 
-    .. testcode:: eigenvector
-       :hide:
+    .. testcleanup:: eigenvector
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=x,
-                     vertex_size=gt.prop_to_size(x, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=x, output="polblogs_eigenvector.png")
+       conv_png("polblogs_eigenvector.pdf")
 
-
-    .. figure:: polblogs_eigenvector.*
+    .. figure:: polblogs_eigenvector.png
        :align: center
+       :width: 80%
 
        Eigenvector values of the a political blogs network of
        [adamic-polblogs]_, with random weights attributed to the edges.
@@ -746,17 +723,13 @@ def katz(g, alpha=0.01, beta=None, weight=None, vprop=None, epsilon=1e-6,
        ...               vorder=x, output="polblogs_katz.pdf")
        <...>
 
-    .. testcode:: katz
-       :hide:
+    .. testcleanup:: katz
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=x,
-                     vertex_size=gt.prop_to_size(x, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=x, output="polblogs_katz.png")
+       conv_png("polblogs_katz.pdf")
 
-
-    .. figure:: polblogs_katz.*
+    .. figure:: polblogs_katz.png
        :align: center
+       :width: 80%
 
        Katz centrality values of the a political blogs network of
        [adamic-polblogs]_, with random weights attributed to the edges.
@@ -871,27 +844,21 @@ def hits(g, weight=None, xprop=None, yprop=None, epsilon=1e-6, max_iter=None):
        ...               vorder=y, output="polblogs_hits_hubs.pdf")
        <...>
 
-    .. testcode:: hits
-       :hide:
+    .. testcleanup:: hits
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=x,
-                     vertex_size=gt.prop_to_size(x, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=x, output="polblogs_hits_auths.png")
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=y,
-                     vertex_size=gt.prop_to_size(y, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=y, output="polblogs_hits_hubs.png")
+       conv_png("polblogs_hits_auths.pdf")
+       conv_png("polblogs_hits_hubs.pdf")
 
-
-    .. figure:: polblogs_hits_auths.*
+    .. figure:: polblogs_hits_auths.png
        :align: center
+       :width: 80%
 
        HITS authority values of the a political blogs network of
        [adamic-polblogs]_.
 
-    .. figure:: polblogs_hits_hubs.*
+    .. figure:: polblogs_hits_hubs.png
        :align: center
+       :width: 80%
 
        HITS hub values of the a political blogs network of [adamic-polblogs]_.
 
@@ -996,17 +963,13 @@ def eigentrust(g, trust_map, vprop=None, norm=False, epsilon=1e-6, max_iter=0,
        ...               vorder=t, output="polblogs_eigentrust.pdf")
        <...>
 
-    .. testcode:: eigentrust
-       :hide:
+    .. testcleanup:: eigentrust
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=t,
-                     vertex_size=gt.prop_to_size(t, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=t, output="polblogs_eigentrust.png")
+       conv_png("polblogs_eigentrust.pdf")
 
-
-    .. figure:: polblogs_eigentrust.*
+    .. figure:: polblogs_eigentrust.png
        :align: center
+       :width: 80%
 
        Eigentrust values of the a political blogs network of
        [adamic-polblogs]_, with random weights attributed to the edges.
@@ -1127,17 +1090,13 @@ def trust_transitivity(g, trust_map, source=None, target=None, vprop=None):
        ...               vorder=t, output="polblogs_trust_transitivity.pdf")
        <...>
 
-    .. testcode:: trust_transitivity
-       :hide:
+    .. testcleanup:: trust_transitivity
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=t,
-                     vertex_size=gt.prop_to_size(t, mi=5, ma=15),
-                     vcmap=matplotlib.cm.gist_heat,
-                     vorder=t, output="polblogs_trust_transitivity.png")
+       conv_png("polblogs_trust_transitivity.pdf")
 
-
-    .. figure:: polblogs_trust_transitivity.*
+    .. figure:: polblogs_trust_transitivity.png
        :align: center
+       :width: 80%
 
        Trust transitivity values from source vertex 42 of the a political blogs
        network of [adamic-polblogs]_, with random weights attributed to the

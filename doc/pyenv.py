@@ -49,6 +49,7 @@ from numpy import *
 import graph_tool.all as gt
 import graph_tool.draw
 import random as prandom
+import subprocess
 
 figure()
 
@@ -56,6 +57,10 @@ try:
     gt.openmp_set_num_threads(1)
 except RuntimeError:
     pass
+
+def conv_png(f):
+    subprocess.check_output(['pdftocairo', "-png", "-singlefile", "-transp",
+                             "-r", "600", f])
 
 prandom.seed(42)
 np.random.seed(42)

@@ -99,6 +99,9 @@ class OverlapBlockState(BlockState):
         if node_index is not None and self.base_g is None:
             raise ValueError("Must specify base graph if node_index is specified...")
 
+        if B is None and b is None:
+            B = 1
+
         # create overlapping structure
         if node_index is None:
             # keep base graph

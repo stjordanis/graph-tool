@@ -30,7 +30,7 @@ from . util import *
 from . nested_blockmodel import NestedBlockState
 
 def mcmc_equilibrate(state, wait=1000, nbreaks=2, max_niter=numpy.inf,
-                     force_niter=None, epsilon=0, gibbs=False, multiflip=False,
+                     force_niter=None, epsilon=0, gibbs=False, multiflip=True,
                      mcmc_args={}, entropy_args={}, history=False,
                      callback=None, verbose=False):
     r"""Equilibrate a MCMC with a given starting state.
@@ -55,7 +55,7 @@ def mcmc_equilibrate(state, wait=1000, nbreaks=2, max_niter=numpy.inf,
     gibbs : ``bool`` (optional, default: ``False``)
         If ``True``, each step will call ``state.gibbs_sweep`` instead of
         ``state.mcmc_sweep``.
-    multiflip : ``bool`` (optional, default: ``False``)
+    multiflip : ``bool`` (optional, default: ``True``)
         If ``True``, each step will call ``state.multiflip_mcmc_sweep`` instead of
         ``state.mcmc_sweep``.
     mcmc_args : ``dict`` (optional, default: ``{}``)
@@ -265,7 +265,7 @@ def mcmc_anneal(state, beta_range=(1., 10.), niter=100, history=False,
             S = ret[0][-1]
         else:
             S = ret[0]
-            attempts += ret[1]
+            nattempts += ret[1]
             nmoves += ret[2]
 
         beta *= speed
@@ -344,6 +344,7 @@ def mcmc_multilevel(state, B, r=2, b_cache=None, anneal=False,
         raise ValueError("'mcmc_equilibrate_args' should be passed directly " +
                          "to mcmc_multilevel(), not via 'anneal_args'")
 
+    mcmc_equilibrate_args = dict(dict(multiflip=False), **mcmc_equilibrate_args)
     mcmc_args = mcmc_equilibrate_args.get("mcmc_args", {})
     if not mcmc_equilibrate_args.get("gibbs", False):
         mcmc_args["d"] = 0
@@ -392,7 +393,7 @@ class MulticanonicalState(object):
 
     Parameters
     ----------
-    state : :class:`~graph_tool.inference.Blockstate` or :class:`~graph_tool.inference.OverlapBlockstate` or :class:`~graph_tool.inference.NestedBlockstate`
+    state : :class:`~graph_tool.inference.blockmodel.BlockState` or :class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState` or :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
         Block state to be used.
     S_min : ``float``
         Minimum energy.

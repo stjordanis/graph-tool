@@ -119,11 +119,15 @@ the weights, as follows:
 
    state.draw(edge_color=g.ep.weight, ecmap=(matplotlib.cm.inferno, .6),
               eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 1, 4, power=1),
-              edge_gradient=[], output="moreno-train-wsbm.svg")
+              edge_gradient=[], output="moreno-train-wsbm.pdf")
 
-.. figure:: moreno-train-wsbm.*
+.. testcleanup:: weighted-model
+
+   conv_png("moreno-train-wsbm.pdf")
+
+.. figure:: moreno-train-wsbm.png
    :align: center
-   :width: 350px
+   :width: 450px
 
    Best fit of the Binomial-weighted degree-corrected SBM for a network
    of terror suspects, using the strength of connection as edge
@@ -154,7 +158,7 @@ follows:
        os.chdir("demos/inference")
    except FileNotFoundError:
        pass
-   gt.seed_rng(44)
+   gt.seed_rng(44 + 4)
          
 .. testcode:: food-web
 
@@ -169,11 +173,15 @@ follows:
 
    state.draw(edge_color=gt.prop_to_size(g.ep.weight, power=1, log=True), ecmap=(matplotlib.cm.inferno, .6),
               eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 1, 4, power=1, log=True),
-              edge_gradient=[], output="foodweb-wsbm.svg")
+              edge_gradient=[], output="foodweb-wsbm.pdf")
 
-.. figure:: foodweb-wsbm.*
+.. testcleanup:: food-web
+
+   conv_png("foodweb-wsbm.pdf")
+              
+.. figure:: foodweb-wsbm.png
    :align: center
-   :width: 350px
+   :width: 450px
 
    Best fit of the exponential-weighted degree-corrected SBM for a food
    web, using the energy flow as edge covariates (indicated by the edge
@@ -204,11 +212,15 @@ can fit this alternative model simply by using the transformed weights:
 
    state_ln.draw(edge_color=gt.prop_to_size(g.ep.weight, power=1, log=True), ecmap=(matplotlib.cm.inferno, .6),
                  eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 1, 4, power=1, log=True),
-                 edge_gradient=[], output="foodweb-wsbm-lognormal.svg")
+                 edge_gradient=[], output="foodweb-wsbm-lognormal.pdf")
 
-.. figure:: foodweb-wsbm-lognormal.*
+.. testcleanup:: food-web
+
+   conv_png("foodweb-wsbm-lognormal.pdf")
+                 
+.. figure:: foodweb-wsbm-lognormal.png
    :align: center
-   :width: 350px
+   :width: 450px
 
    Best fit of the log-normal-weighted degree-corrected SBM for a food
    web, using the energy flow as edge covariates (indicated by the edge
@@ -245,9 +257,9 @@ Therefore, we can compute the posterior odds ratio between both models as:
 .. testoutput:: food-web
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  -24.246389...
+   ln Λ:  -16.814693...
 
-A value of :math:`\Lambda \approx \mathrm{e}^{-24} \approx 10^{-10}` in
+A value of :math:`\Lambda \approx \mathrm{e}^{-17} \approx 10^{-7}` in
 favor the exponential model indicates that the log-normal model does not
 provide a better fit for this particular data. Based on this, we
 conclude that the exponential model should be preferred in this case.

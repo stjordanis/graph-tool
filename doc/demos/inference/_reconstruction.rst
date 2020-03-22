@@ -132,8 +132,8 @@ simple example, using
       os.chdir("demos/inference")
    except FileNotFoundError:
        pass
-   np.random.seed(42)
-   gt.seed_rng(44)
+   np.random.seed(43)
+   gt.seed_rng(45)
 
 .. testcode:: measured
 
@@ -151,14 +151,11 @@ simple example, using
    n[e] = 2                 # pretend we have measured non-edge (15, 73) twice,
    x[e] = 1                 # but observed it as an edge once.
 
-   bs = [g.get_vertices()] + [zeros(1)] * 5  # initial hierarchical partition
-
    # We inititialize MeasuredBlockState, assuming that each non-edge has
    # been measured only once (as opposed to twice for the observed
    # edges), as specified by the 'n_default' and 'x_default' parameters.
 
-   state = gt.MeasuredBlockState(g, n=n, n_default=1, x=x, x_default=0,
-                                 state_args=dict(bs=bs))
+   state = gt.MeasuredBlockState(g, n=n, n_default=1, x=x, x_default=0)
 
    # We will first equilibrate the Markov chain
    gt.mcmc_equilibrate(state, wait=1000, mcmc_args=dict(niter=10))
@@ -191,9 +188,9 @@ Which yields the following output:
    
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 0.742674...
-   Posterior probability of non-edge (15, 73): 0.020702...
-   Estimated average local clustering: 0.572384 ± 0.003466...
+   Posterior probability of edge (11, 36): 0.768976...
+   Posterior probability of non-edge (15, 73): 0.039203...
+   Estimated average local clustering: 0.571939 ± 0.003534...
 
 We have a successful reconstruction, where both ambiguous adjacency
 matrix entries are correctly recovered. The value for the average
@@ -287,8 +284,7 @@ with uniform error rates, as we see with the same example:
 
 .. testcode:: measured
 
-   state = gt.MixedMeasuredBlockState(g, n=n, n_default=1, x=x, x_default=0,
-                                      state_args=dict(bs=bs))
+   state = gt.MixedMeasuredBlockState(g, n=n, n_default=1, x=x, x_default=0)
 
    # We will first equilibrate the Markov chain
    gt.mcmc_equilibrate(state, wait=1000, mcmc_args=dict(niter=10))
@@ -312,9 +308,9 @@ Which yields:
    
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 0.839483...
-   Posterior probability of non-edge (15, 73): 0.061106...
-   Estimated average local clustering: 0.572476 ± 0.004370...
+   Posterior probability of edge (11, 36): 0.631563...
+   Posterior probability of non-edge (15, 73): 0.022402...
+   Estimated average local clustering: 0.570065 ± 0.007145...
 
 The results are very similar to the ones obtained with the uniform model
 in this case, but can be quite different in situations where a large
@@ -401,15 +397,13 @@ inference:
    e = g.add_edge(15, 73)
    q[e] = .5                     # ambiguous spurious edge
    
-   bs = [g.get_vertices()] + [zeros(1)] * 5  # initial hierarchical partition
-
    # We inititialize UncertainBlockState, assuming that each non-edge
    # has an uncertainty of q_default, chosen to preserve the expected
    # density of the original network:
 
    q_default = (E - q.a.sum()) / ((N * (N - 1))/2 - E)
    
-   state = gt.UncertainBlockState(g, q=q, q_default=q_default, state_args=dict(bs=bs))
+   state = gt.UncertainBlockState(g, q=q, q_default=q_default)
 
    # We will first equilibrate the Markov chain
    gt.mcmc_equilibrate(state, wait=2000, mcmc_args=dict(niter=10))
@@ -441,9 +435,9 @@ The above yields the output:
    
 .. testoutput:: uncertain
 
-   Posterior probability of edge (11, 36): 0.891889...
-   Posterior probability of non-edge (15, 73): 0.026002...
-   Estimated average local clustering: 0.544468 ± 0.021562...
+   Posterior probability of edge (11, 36): 0.775777...
+   Posterior probability of non-edge (15, 73): 0.010001...
+   Estimated average local clustering: 0.523013 ± 0.017268...
 
 The reconstruction is accurate, despite the two ambiguous entries having
 the same measurement probability. The reconstructed network is visualized below.
@@ -486,6 +480,76 @@ the same measurement probability. The reconstructed network is visualized below.
    shown in green, both have probability :math:`0.5`. Despite the
    ambiguity, both errors are successfully corrected by the
    reconstruction. The pie fractions on the nodes correspond to the
+   probability of being in group associated with the respective color.
+
+
+Latent Poisson multigraphs
+++++++++++++++++++++++++++
+
+Even in situations where measurement errors can be neglected, it can
+still be useful to assume a given network is the outcome of a "hidden"
+multigraph model, i.e. more than one edge between nodes is allowed, but
+then its multiedges are "erased" by transforming them into simple
+edges. In this way, it is possible to construct generative models that
+can better handle situations where the underlying network possesses
+heterogeneous density, such as strong community structure and broad
+degree distributions [peixoto-latent-2020]_. This can be incorporated
+into the scheme of Eq. :eq:`posterior-reconstruction` by considering
+the data to be the observed simple graph,
+:math:`\boldsymbol{\mathcal{D}} = \boldsymbol G`.  We proceed in same
+way as in the previous reconstruction scenarios, but using instead
+:class:`~graph_tool.inference.uncertain_blockmodel.LatentMultigraphBlockState`.
+
+For example, in the following we will obtain the community structure and
+latent multiedges of a network of political books:
+
+.. testcode:: erased-poisson
+
+   g = gt.collection.data["polbooks"]
+
+   state = gt.LatentMultigraphBlockState(g)
+
+   # We will first equilibrate the Markov chain
+   gt.mcmc_equilibrate(state, wait=100, mcmc_args=dict(niter=10))
+
+   # Now we collect the marginals for exactly 100,000 sweeps, at
+   # intervals of 10 sweeps:
+
+   u = None              # marginal posterior multigraph
+   pv = None             # marginal posterior group membership probabilities
+   
+   def collect_marginals(s):
+      global pv, u
+      u = s.collect_marginal_multigraph(u)
+      bstate = state.get_block_state()
+      b = gt.perfect_prop_hash([bstate.levels[0].b])[0] 
+      pv = bstate.levels[0].collect_vertex_marginals(pv, b=b)
+
+   gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
+                       callback=collect_marginals)
+
+   # compute average multiplicities
+
+   ew = u.new_ep("double")
+   w = u.ep.w
+   wcount = u.ep.wcount
+   for e in u.edges():
+       ew[e] = (wcount[e].a * w[e].a).sum() / wcount[e].a.sum()
+   
+   bstate = state.get_block_state()
+   bstate = bstate.levels[0].copy(g=u)
+   pv = u.own_property(pv)
+   bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
+               edge_pen_width=gt.prop_to_size(ew, .1, 8, power=1), edge_gradient=None,
+               output="polbooks-erased-poisson.svg")
+   
+.. figure:: polbooks-erased-poisson.*
+   :align: center
+   :width: 450px
+
+   Reconstructed latent Poisson degree-corrected SBM for a network of
+   political books, showing the marginal mean edge multiplicities as
+   line thickness.  The pie fractions on the nodes correspond to the
    probability of being in group associated with the respective color.
 
 .. include:: _reconstruction_dynamics.rst

@@ -48,7 +48,7 @@ Examples
 
     >>> g = gt.collection.data["karate"]
     >>> print(g)
-    <Graph object, undirected, with 34 vertices and 78 edges at 0x...>
+    <Graph object, undirected, with 34 vertices and 78 edges, 1 internal vertex property, 2 internal graph properties, at 0x...>
     >>> print(g.gp.readme)
     The file karate.gml contains the network of friendships between the 34
     members of a karate club at a US university, as described by Wayne Zachary

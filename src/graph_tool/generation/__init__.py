@@ -242,11 +242,6 @@ def random_graph(N, deg_sampler, directed=True,
     >>> tight_layout()
     >>> savefig("combined-deg-hist.svg")
 
-    .. testcode::
-       :hide:
-
-       savefig("combined-deg-hist.pdf")
-
     .. figure:: combined-deg-hist.*
         :align: center
 
@@ -273,7 +268,7 @@ def random_graph(N, deg_sampler, directed=True,
 
     Lets plot the average degree correlations to check.
 
-    >>> figure(figsize=(6,3))
+    >>> figure(figsize=(8,3))
     <...>
     >>> corr = gt.avg_neighbor_corr(g, "in", "in")
     >>> errorbar(corr[2][:-1], corr[0], yerr=corr[1], fmt="o-",
@@ -301,11 +296,6 @@ def random_graph(N, deg_sampler, directed=True,
     >>> box = gca().get_position()
     >>> gca().set_position([box.x0, box.y0, box.width * 0.7, box.height])
     >>> savefig("deg-corr-dir.svg")
-
-    .. testcode::
-       :hide:
-
-       savefig("deg-corr-dir.pdf")
 
     .. figure:: deg-corr-dir.*
         :align: center
@@ -336,15 +326,15 @@ def random_graph(N, deg_sampler, directed=True,
     >>> gt.graph_draw(g, vertex_fill_color=bm, edge_color="black", output="blockmodel.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, vertex_fill_color=bm, edge_color="black", output="blockmodel.png")
+       conv_png("blockmodel.pdf")
 
-    .. figure:: blockmodel.*
-        :align: center
+    .. figure:: blockmodel.png
+       :align: center
+       :width: 80%
 
-        Simple blockmodel with 10 blocks.
+       Simple blockmodel with 10 blocks.
 
 
     References
@@ -634,57 +624,48 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
 
     >>> g, pos = gt.triangulation(np.random.random((1000,2)))
     >>> pos = gt.arf_layout(g)
-    >>> gt.graph_draw(g, pos=pos, output="rewire_orig.pdf", output_size=(300, 300))
+    >>> gt.graph_draw(g, pos=pos, output="rewire_orig.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output="rewire_orig.png", output_size=(300, 300))
 
     >>> ret = gt.random_rewire(g, "constrained-configuration")
     >>> pos = gt.arf_layout(g)
-    >>> gt.graph_draw(g, pos=pos, output="rewire_corr.pdf", output_size=(300, 300))
+    >>> gt.graph_draw(g, pos=pos, output="rewire_corr.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output="rewire_corr.png", output_size=(300, 300))
 
     >>> ret = gt.random_rewire(g)
     >>> pos = gt.arf_layout(g)
-    >>> gt.graph_draw(g, pos=pos, output="rewire_uncorr.pdf", output_size=(300, 300))
+    >>> gt.graph_draw(g, pos=pos, output="rewire_uncorr.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output="rewire_uncorr.png", output_size=(300, 300))
 
     >>> ret = gt.random_rewire(g, "erdos")
     >>> pos = gt.arf_layout(g)
-    >>> gt.graph_draw(g, pos=pos, output="rewire_erdos.pdf", output_size=(300, 300))
+    >>> gt.graph_draw(g, pos=pos, output="rewire_erdos.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output="rewire_erdos.png", output_size=(300, 300))
+       conv_png("rewire_orig.pdf")
+       conv_png("rewire_corr.pdf")
+       conv_png("rewire_uncorr.pdf")
+       conv_png("rewire_erdos.pdf")
 
     Some `ridiculograms <http://www.youtube.com/watch?v=YS-asmU3p_4>`_ :
 
-    .. image:: rewire_orig.*
-    .. image:: rewire_corr.*
-    .. image:: rewire_uncorr.*
-    .. image:: rewire_erdos.*
+    .. image:: rewire_orig.png
+       :width: 24%
+    .. image:: rewire_corr.png
+       :width: 24%
+    .. image:: rewire_uncorr.png
+       :width: 24%
+    .. image:: rewire_erdos.png
+       :width: 24%
 
     **From left to right**: Original graph; Shuffled graph, with degree correlations;
     Shuffled graph, without degree correlations; Shuffled graph, with random degrees.
 
     We can try with larger graphs to get better statistics, as follows.
 
-    >>> figure(figsize=(6,3))
+    >>> figure(figsize=(8,3))
     <...>
     >>> g = gt.random_graph(30000, lambda: sample_k(20), model="probabilistic-configuration",
     ...                     edge_probs=lambda i, j: exp(abs(i-j)), directed=False,
@@ -715,12 +696,6 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
     >>> gca().set_position([box.x0, box.y0, box.width * 0.7, box.height])
     >>> savefig("shuffled-stats.svg")
 
-    .. testcode::
-       :hide:
-
-       savefig("shuffled-stats.pdf")
-
-
     .. figure:: shuffled-stats.*
         :align: center
 
@@ -736,7 +711,7 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
     ...                     model="probabilistic-configuration",
     ...                     edge_probs=lambda a, b: (p.pmf(a[0], b[1]) * p.pmf(a[1], 20 - b[0])),
     ...                     n_iter=100)
-    >>> figure(figsize=(6,3))
+    >>> figure(figsize=(9,3))
     <...>
     >>> corr = gt.avg_neighbor_corr(g, "in", "out")
     >>> errorbar(corr[2][:-1], corr[0], yerr=corr[1], fmt="o-",
@@ -774,11 +749,6 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
     >>> box = gca().get_position()
     >>> gca().set_position([box.x0, box.y0, box.width * 0.55, box.height])
     >>> savefig("shuffled-deg-corr-dir.svg")
-
-    .. testcode::
-       :hide:
-
-       savefig("shuffled-deg-corr-dir.pdf")
 
     .. figure:: shuffled-deg-corr-dir.*
         :align: center
@@ -897,8 +867,9 @@ def generate_sbm(b, probs, out_degs=None, in_degs=None, directed=False,
     -----
 
     The algorithm generates multigraphs with self-loops, according to the
-    Poisson degree-corrected stochastic block model (SBM), which includes the
-    traditional SBM as a special case.
+    Poisson degree-corrected stochastic block model (SBM)
+    [karrer-stochastic-2011]_, which includes the traditional SBM as a special
+    case.
 
     The multigraphs are generated with probability
 
@@ -949,9 +920,9 @@ def generate_sbm(b, probs, out_degs=None, in_degs=None, directed=False,
     In case the parameter ``micro_degs == True`` is passed, a `microcanical
     <https://en.wikipedia.org/wiki/Microcanonical_ensemble>`_ model is used
     instead, where both the number of edges between groups as well as the
-    degrees of the nodes are preserved `exactly`, instead of only on
-    expectation. In this case, the parameters are interpreted as
-    :math:`{\boldsymbol\lambda}\equiv{\boldsymbol e}` and
+    degrees of the nodes are preserved `exactly`, instead of only on expectation
+    [peixoto-nonparametric-2017]_. In this case, the parameters are interpreted
+    as :math:`{\boldsymbol\lambda}\equiv{\boldsymbol e}` and
     :math:`{\boldsymbol\theta}\equiv{\boldsymbol k}`, where :math:`e_{rs}` is
     the number of edges between groups :math:`r` and :math:`s` (or twice that if
     :math:`r=s` in the undirected case), and :math:`k_i` is the degree of node
@@ -1002,14 +973,20 @@ def generate_sbm(b, probs, out_degs=None, in_degs=None, directed=False,
     ...                                             state.get_ers()).T,
     ...                     g.degree_property_map("out").a,
     ...                     g.degree_property_map("in").a, directed=True)
-    >>> gt.graph_draw(g, g.vp.pos, output="polblogs-sbm.png")
+    >>> gt.graph_draw(g, g.vp.pos, output="polblogs-sbm.pdf")
     <...>
-    >>> gt.graph_draw(u, u.own_property(g.vp.pos), output="polblogs-sbm-generated.png")
+    >>> gt.graph_draw(u, u.own_property(g.vp.pos), output="polblogs-sbm-generated.pdf")
     <...>
 
-    .. image:: polblogs-sbm.*
+    .. testcleanup::
+
+       conv_png("polblogs-sbm.pdf")
+       conv_png("polblogs-sbm-generated.pdf")
+
+
+    .. image:: polblogs-sbm.png
         :width: 40%
-    .. image:: polblogs-sbm-generated.*
+    .. image:: polblogs-sbm-generated.png
         :width: 40%
 
     *Left:* Political blogs network. *Right:* Sample from the degree-corrected
@@ -1147,6 +1124,10 @@ def solve_sbm_fugacities(b, ers, out_degs=None, in_degs=None, multigraph=False,
     For undirected graphs, we have the above equations with
     :math:`\theta^+_i=\theta^-_i=\theta_i`, and :math:`\mu_{rs} = \mu_{sr}`.
 
+    References
+    ----------
+    .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
+       networks with heterogeneous density", :arxiv:`2002.07803`
     """
 
     b = numpy.asarray(b, dtype="int32")
@@ -1306,8 +1287,9 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
     -----
 
     The algorithm generates simple or multigraphs according to the
-    degree-corrected maximum-entropy stochastic block model (SBM), which
-    includes the non-degree-corrected SBM as a special case.
+    degree-corrected maximum-entropy stochastic block model (SBM)
+    [peixoto-latent-2020]_, which includes the non-degree-corrected SBM as a
+    special case.
 
     The simple graphs are generated with probability:
 
@@ -1335,6 +1317,11 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
         P({\boldsymbol A}|{\boldsymbol \theta}^+,{\boldsymbol \theta}^-,{\boldsymbol \mu},{\boldsymbol b})
             &= \prod_{i\ne j} \left(\theta_i^+\theta_j^-\mu_{b_i,b_j}\right)^{A_{ij}}(1-\theta_i^+\theta_j^-\mu_{b_i,b_j}) & \quad\text{(multigraphs)}.
 
+    References
+    ----------
+    .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
+       networks with heterogeneous density", :arxiv:`2002.07803`
+
     Examples
     --------
 
@@ -1349,18 +1336,24 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
     >>> in_degs = g.degree_property_map("in").a
     >>> mrs, theta_out, theta_in = gt.solve_sbm_fugacities(state.b.a, ers, out_degs, in_degs)
     >>> u = gt.generate_maxent_sbm(state.b.a, mrs, theta_out, theta_in, directed=True)
-    >>> gt.graph_draw(g, g.vp.pos, output="polblogs-maxent-sbm.png")
+    >>> gt.graph_draw(g, g.vp.pos, output="polblogs-maxent-sbm.pdf")
     <...>
-    >>> gt.graph_draw(u, u.own_property(g.vp.pos), output="polblogs-maxent-sbm-generated.png")
+    >>> gt.graph_draw(u, u.own_property(g.vp.pos), output="polblogs-maxent-sbm-generated.pdf")
     <...>
 
-    .. image:: polblogs-maxent-sbm.*
+    .. testcleanup::
+
+       conv_png("polblogs-maxent-sbm.pdf")
+       conv_png("polblogs-maxent-sbm-generated.pdf")
+
+    .. image:: polblogs-maxent-sbm.png
         :width: 40%
-    .. image:: polblogs-maxent-sbm-generated.*
+    .. image:: polblogs-maxent-sbm-generated.png
         :width: 40%
 
     *Left:* Political blogs network. *Right:* Sample from the maximum-entropy
     degree-corrected SBM fitted to the original network.
+
     """
 
     g = Graph(directed=directed)
@@ -1409,17 +1402,17 @@ def line_graph(g):
 
     Notes
     -----
-    Given an undirected graph G, its line graph L(G) is a graph such that
+    Given an undirected graph G, its line graph L(G) is a graph such that:
 
-        * each vertex of L(G) represents an edge of G; and
-        * two vertices of L(G) are adjacent if and only if their corresponding
+        * Each vertex of L(G) represents an edge of G; and
+        * Two vertices of L(G) are adjacent if and only if their corresponding
           edges share a common endpoint ("are adjacent") in G.
 
     For a directed graph, the second criterion becomes:
 
-       * Two vertices representing directed edges from u to v and from w to x in
-         G are connected by an edge from uv to wx in the line digraph when v =
-         w.
+        * Two vertices representing directed edges from u to v and from w to x
+          in G are connected by an edge from uv to wx in the line digraph when v
+          = w.
 
 
     Examples
@@ -1427,17 +1420,15 @@ def line_graph(g):
 
     >>> g = gt.collection.data["lesmis"]
     >>> lg, vmap = gt.line_graph(g)
-    >>> pos = gt.graph_draw(lg, output_size=(300, 300), output="lesmis-lg.pdf")
+    >>> pos = gt.graph_draw(lg, output="lesmis-lg.pdf")
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(lg, pos=pos, output_size=(300, 300), output="lesmis-lg.png")
-
-
+       conv_png("lesmis-lg.pdf")
 
     .. figure:: lesmis-lg.png
        :align: center
+       :width: 40%
 
        Line graph of the coappearance of characters in Victor Hugo's novel "Les
        Misérables".
@@ -1509,36 +1500,29 @@ def graph_union(g1, g2, intersection=None, props=None, include=False,
     >>> ug = gt.graph_union(g, g)
     >>> uug = gt.graph_union(g, ug)
     >>> pos = gt.sfdp_layout(g)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="graph_original.pdf")
+    >>> gt.graph_draw(g, pos=pos, adjust_aspect=False, output="graph_original.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="graph_original.png")
 
     >>> pos = gt.sfdp_layout(ug)
-    >>> gt.graph_draw(ug, pos=pos, output_size=(300,300), output="graph_union.pdf")
+    >>> gt.graph_draw(ug, pos=pos, adjust_aspect=False, output="graph_union.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(ug, pos=pos, output_size=(300,300), output="graph_union.png")
 
     >>> pos = gt.sfdp_layout(uug)
-    >>> gt.graph_draw(uug, pos=pos, output_size=(300,300), output="graph_union2.pdf")
+    >>> gt.graph_draw(uug, pos=pos, adjust_aspect=False, output="graph_union2.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(uug, pos=pos, output_size=(300,300), output="graph_union2.png")
+       conv_png("graph_original.pdf")
+       conv_png("graph_union.pdf")
+       conv_png("graph_union2.pdf")
 
-
-    .. image:: graph_original.*
-    .. image:: graph_union.*
-    .. image:: graph_union2.*
+    .. image:: graph_original.png
+       :width: 33%
+    .. image:: graph_union.png
+       :width: 33%
+    .. image:: graph_union2.png
+       :width: 33%
 
     """
     pnames = None
@@ -1731,15 +1715,9 @@ def triangulation(points, type="simple", periodic=False):
     ...                          array(pos[e.target()]))**2))
     >>> b = gt.betweenness(g, weight=weight)
     >>> b[1].a *= 100
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), vertex_fill_color=b[0],
+    >>> gt.graph_draw(g, pos=pos, vertex_fill_color=b[0],
     ...               edge_pen_width=b[1], output="triang.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300,300), vertex_fill_color=b[0],
-                     edge_pen_width=b[1], output="triang.png")
 
     >>> g, pos = gt.triangulation(points, type="delaunay")
     >>> weight = g.new_edge_property("double")
@@ -1748,21 +1726,21 @@ def triangulation(points, type="simple", periodic=False):
     ...                          array(pos[e.target()]))**2))
     >>> b = gt.betweenness(g, weight=weight)
     >>> b[1].a *= 120
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), vertex_fill_color=b[0],
+    >>> gt.graph_draw(g, pos=pos, vertex_fill_color=b[0],
     ...               edge_pen_width=b[1], output="triang-delaunay.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output_size=(300,300), vertex_fill_color=b[0],
-                     edge_pen_width=b[1], output="triang-delaunay.png")
-
+       conv_png("triang.pdf")
+       conv_png("triang-delaunay.pdf")
 
     2D triangulation of random points:
 
-    .. image:: triang.*
-    .. image:: triang-delaunay.*
+    .. image:: triang.png
+       :width: 40%
+    .. image:: triang-delaunay.png
+       :width: 40%
 
     *Left:* Simple triangulation. *Right:* Delaunay triangulation. The vertex
     colors and the edge thickness correspond to the weighted betweenness
@@ -1820,38 +1798,31 @@ def lattice(shape, periodic=False):
 
     >>> g = gt.lattice([10,10])
     >>> pos = gt.sfdp_layout(g, cooling_step=0.95, epsilon=1e-2)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="lattice.pdf")
+    >>> gt.graph_draw(g, pos=pos, output="lattice.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="lattice.png")
 
     >>> g = gt.lattice([10,20], periodic=True)
     >>> pos = gt.sfdp_layout(g, cooling_step=0.95, epsilon=1e-2)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="lattice_periodic.pdf")
+    >>> gt.graph_draw(g, pos=pos, output="lattice_periodic.pdf")
     <...>
-
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="lattice_periodic.png")
 
     >>> g = gt.lattice([10,10,10])
     >>> pos = gt.sfdp_layout(g, cooling_step=0.95, epsilon=1e-2)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="lattice_3d.pdf")
+    >>> gt.graph_draw(g, pos=pos, output="lattice_3d.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="lattice_3d.png")
+       conv_png("lattice.pdf")
+       conv_png("lattice_periodic.pdf")
+       conv_png("lattice_3d.pdf")
 
-
-    .. image:: lattice.*
-    .. image:: lattice_periodic.*
-    .. image:: lattice_3d.*
+    .. image:: lattice.png
+       :width: 33%
+    .. image:: lattice_periodic.png
+       :width: 33%
+    .. image:: lattice_3d.png
+       :width: 33%
 
     *Left:* 10x10 2D lattice. *Middle:* 10x20 2D periodic lattice (torus).
     *Right:* 10x10x10 3D lattice.
@@ -1889,16 +1860,15 @@ def complete_graph(N, self_loops=False, directed=False):
 
     >>> g = gt.complete_graph(30)
     >>> pos = gt.sfdp_layout(g, cooling_step=0.95, epsilon=1e-2)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="complete.pdf")
+    >>> gt.graph_draw(g, pos=pos, output="complete.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="complete.png")
+       conv_png("complete.pdf")
 
-
-    .. figure:: complete.*
+    .. figure:: complete.png
+       :width: 20%
 
        A complete graph with :math:`N=30` vertices.
 
@@ -1937,15 +1907,15 @@ def circular_graph(N, k=1, self_loops=False, directed=False):
 
     >>> g = gt.circular_graph(30, 2)
     >>> pos = gt.sfdp_layout(g, cooling_step=0.95)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="circular.pdf")
+    >>> gt.graph_draw(g, pos=pos, output="circular.pdf")
     <...>
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="circular.png")
+       conv_png("circular.pdf")
 
-    .. figure:: circular.*
+    .. figure:: circular.png
+       :width: 20%
 
        A circular graph with :math:`N=30` vertices, and :math:`k=2`.
 
@@ -2005,25 +1975,21 @@ def geometric_graph(points, radius, ranges=None):
 
     >>> points = random((500, 2)) * 4
     >>> g, pos = gt.geometric_graph(points, 0.3)
-    >>> gt.graph_draw(g, pos=pos, output_size=(300,300), output="geometric.pdf")
+    >>> gt.graph_draw(g, pos=pos, output="geometric.pdf")
     <...>
 
-    .. testcode::
-       :hide:
-
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="geometric.png")
-
     >>> g, pos = gt.geometric_graph(points, 0.3, [(0,4), (0,4)])
-    >>> pos = gt.graph_draw(g, output_size=(300,300), output="geometric_periodic.pdf")
+    >>> pos = gt.graph_draw(g, output="geometric_periodic.pdf")
 
-    .. testcode::
-       :hide:
+    .. testcleanup::
 
-       gt.graph_draw(g, pos=pos, output_size=(300,300), output="geometric_periodic.png")
+       conv_png("geometric.pdf")
+       conv_png("geometric_periodic.pdf")
 
-
-    .. image:: geometric.*
-    .. image:: geometric_periodic.*
+    .. image:: geometric.png
+       :width: 40%
+    .. image:: geometric_periodic.png
+       :width: 40%
 
     *Left:* Geometric network with random points. *Right:* Same network, but
      with periodic boundary conditions.
@@ -2144,25 +2110,34 @@ def price_network(N, m=1, c=None, gamma=1, directed=True, seed_graph=None):
     >>> g = gt.price_network(20000)
     >>> gt.graph_draw(g, pos=gt.sfdp_layout(g, cooling_step=0.99),
     ...               vertex_fill_color=g.vertex_index, vertex_size=2,
-    ...               edge_pen_width=1, output="price-network.png")
+    ...               vcmap=matplotlib.cm.plasma,
+    ...               edge_pen_width=1, output="price-network.pdf")
     <...>
     >>> g = gt.price_network(20000, c=0.1)
     >>> gt.graph_draw(g, pos=gt.sfdp_layout(g, cooling_step=0.99),
     ...               vertex_fill_color=g.vertex_index, vertex_size=2,
-    ...               edge_pen_width=1, output="price-network-broader.png")
+    ...               vcmap=matplotlib.cm.plasma,
+    ...               edge_pen_width=1, output="price-network-broader.pdf")
     <...>
 
-    .. figure:: price-network.png
-        :align: center
+    .. testcleanup::
 
-        Price network with :math:`N=2\times 10^4` nodes and :math:`c=1`.  The colors
-        represent the order in which vertices were added.
+       conv_png("price-network.pdf")
+       conv_png("price-network-broader.pdf")
+
+    .. figure:: price-network.png
+       :align: center
+       :width: 60%
+
+       Price network with :math:`N=2\times 10^4` nodes and :math:`c=1`.  The
+       colors represent the order in which vertices were added.
 
     .. figure:: price-network-broader.png
-        :align: center
+       :align: center
+       :width: 60%
 
-        Price network with :math:`N=2\times 10^4` nodes and :math:`c=0.1`.  The colors
-        represent the order in which vertices were added.
+       Price network with :math:`N=2\times 10^4` nodes and :math:`c=0.1`.  The
+       colors represent the order in which vertices were added.
 
 
     References
@@ -2274,11 +2249,12 @@ def condensation_graph(g, prop, vweight=None, eweight=None, avprops=None,
     .. doctest:: condensation_graph
 
        >>> g = gt.collection.data["polbooks"]
-       >>> # fit a SBM with 5 groups
-       >>> state = gt.BlockState(g, B=5, deg_corr=True)
+       >>> # fit a SBM
+       >>> state = gt.BlockState(g)
        >>> gt.mcmc_equilibrate(state, wait=1000)
        (...)
        >>> b = state.get_blocks()
+       >>> b = gt.perfect_prop_hash([b])[0]
        >>> gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=b, vertex_shape=b,
        ...               output="polbooks_blocks_B5.pdf")
        <...>
@@ -2296,25 +2272,23 @@ def condensation_graph(g, prop, vweight=None, eweight=None, avprops=None,
        >>> gt.graph_draw(bg, pos=avp[0], vertex_fill_color=bb, vertex_shape=bb,
        ...               vertex_size=gt.prop_to_size(vcount, mi=40, ma=100),
        ...               edge_pen_width=gt.prop_to_size(ecount, mi=2, ma=10),
-       ...               output="polbooks_blocks_B5_cond.pdf")
+       ...               fit_view=.8, output="polbooks_blocks_B5_cond.pdf")
        <...>
 
     .. testcleanup:: condensation_graph
 
-       gt.graph_draw(g, pos=g.vp["pos"], vertex_fill_color=b, vertex_shape=b,
-                     output="polbooks_blocks_B5.png")
-       gt.graph_draw(bg, pos=avp[0], vertex_fill_color=bb, vertex_shape=bb,
-                     vertex_size=gt.prop_to_size(vcount, mi=40, ma=100),
-                     edge_pen_width=gt.prop_to_size(ecount, mi=2, ma=10),
-                     output="polbooks_blocks_B5_cond.png")
+       conv_png("polbooks_blocks_B5.pdf")
+       conv_png("polbooks_blocks_B5_cond.pdf")
 
-    .. figure:: polbooks_blocks_B5.*
+    .. figure:: polbooks_blocks_B5.png
        :align: center
+       :width: 60%
 
        Block partition of a political books network with :math:`B=5`.
 
-    .. figure:: polbooks_blocks_B5_cond.*
+    .. figure:: polbooks_blocks_B5_cond.png
        :align: center
+       :width: 60%
 
        Condensation graph of the obtained block partition.
 

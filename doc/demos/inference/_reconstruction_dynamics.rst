@@ -111,7 +111,7 @@ epidemic process.
 
    # Create reconstruction state
    rstate = gt.EpidemicsBlockState(u, s=ss, beta=None, r=1e-6, global_beta=.1,  
-                                   state_args=dict(B=1), nested=False, aE=g.num_edges()) 
+                                   nested=False, aE=g.num_edges()) 
  
    # Now we collect the marginals for exactly 100,000 sweeps, at 
    # intervals of 10 sweeps: 
@@ -143,8 +143,8 @@ The reconstruction can accurately recover the hidden network and the infection p
                  
 .. testoutput:: dynamics
 
-   Posterior similarity:  0.978091...
-   Inferred infection probability: 0.68809 ± 0.054207
+   Posterior similarity:  0.990587...
+   Inferred infection probability: 0.692324 ± 0.0496223
 
 The figure below shows the reconstructed network and the inferred community structure.   
                  

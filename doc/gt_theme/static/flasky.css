@@ -392,17 +392,44 @@ ol.arabic li dl dt {
     background-color: inherit;
 }
 
-/* .brackets:before { */
-/*   content: "["; */
-/* } */
-
-/* .brackets:after { */
-/*   content: "]"; */
-/* } */
-
-.fn-backref {
-    margin-right: 10px;
+.brackets:before {
+  content: "[";
 }
+
+.brackets:after {
+  content: "]";
+  margin-right: 10px;
+}
+
+a.brackets::before, span.brackets > a::before
+{
+  content: "";
+}
+
+a.brackets::before, span.brackets > a::after
+{
+  content: "";
+}
+
+a.fn-backref:before {
+  content: "";
+}
+
+a.fn-backref:after {
+  content: "";
+}
+
+dl.footnote.brackets:before {
+  content: "";
+}
+
+dl.footnote.brackets:after {
+  content: "";
+}
+
+/* .fn-backref { */
+/*     margin-right: 10px; */
+/* } */
 
 pre {
     background: #eee;

@@ -311,6 +311,9 @@ class BlockState(object):
             else:
                 self.degs = libinference.get_empty_degs(self.g._Graph__graph)
 
+        if B is None and b is None:
+            B = 1
+
         # ensure we have at most as many blocks as nodes
         if B is not None and b is None:
             B = min(B, self.g.num_vertices())
@@ -1156,11 +1159,7 @@ class BlockState(object):
            <...>
            >>> matshow(m.todense())
            <...>
-           >>> savefig("bloc_mat.pdf")
-
-        .. testcleanup:: get_matrix
-
-           savefig("bloc_mat.png")
+           >>> savefig("bloc_mat.svg")
 
         .. figure:: bloc_mat.*
            :align: center
@@ -2117,7 +2116,7 @@ class BlockState(object):
            ...     ret = state.mcmc_sweep(niter=10)
            ...     pe = state.collect_edge_marginals(pe)
            >>> gt.bethe_entropy(g, pe)[0]
-           12.204791...
+           1.7733496...
         """
 
         if p is None:
@@ -2177,15 +2176,10 @@ class BlockState(object):
            ...     ret = state.mcmc_sweep(niter=10)
            ...     pv = state.collect_vertex_marginals(pv)
            >>> gt.mf_entropy(g, pv)
-           16.904653...
+           22.237735...
            >>> gt.graph_draw(g, pos=g.vp["pos"], vertex_shape="pie",
-           ...               vertex_pie_fractions=pv, output="polbooks_blocks_soft_B4.pdf")
+           ...               vertex_pie_fractions=pv, output="polbooks_blocks_soft_B4.svg")
            <...>
-
-        .. testcleanup:: cvm
-
-           gt.graph_draw(g, pos=g.vp["pos"], vertex_shape="pie", vertex_pie_fractions=pv,
-                         output="polbooks_blocks_soft_B4.png")
 
         .. figure:: polbooks_blocks_soft_B4.*
            :align: center
@@ -2246,7 +2240,7 @@ class BlockState(object):
            ...     ret = state.mcmc_sweep(niter=10)
            ...     ph = state.collect_partition_histogram(ph)
            >>> gt.microstate_entropy(ph)
-           137.024741...
+           132.254124...
         """
 
         if h is None:
@@ -2299,7 +2293,9 @@ class BlockState(object):
         Notes
         -----
         This function is just a convenience wrapper to
-        :func:`~graph_tool.generation.generate_sbm`.
+        :func:`~graph_tool.generation.generate_sbm`. However, if
+        ``max_ent==True`` and ``canonical == False`` it wraps
+        :func:`~graph_tool.generation.random_rewire` instead.
 
         Examples
         --------
@@ -2309,14 +2305,14 @@ class BlockState(object):
            >>> state = gt.minimize_blockmodel_dl(g, B_max=3)
            >>> u = state.sample_graph(canonical=True, self_loops=False, multigraph=False)
            >>> ustate = gt.BlockState(u, b=state.b)
-           >>> state.draw(pos=g.vp.pos, output="polbooks-sbm.png")
+           >>> state.draw(pos=g.vp.pos, output="polbooks-sbm.svg")
            <...>
-           >>> ustate.draw(pos=u.own_property(g.vp.pos), output="polbooks-sbm-sampled.png")
+           >>> ustate.draw(pos=u.own_property(g.vp.pos), output="polbooks-sbm-sampled.svg")
            <...>
 
-        .. image:: polbooks-sbm.*
+        .. image:: polbooks-sbm.svg
             :width: 40%
-        .. image:: polbooks-sbm-sampled.*
+        .. image:: polbooks-sbm-sampled.svg
             :width: 40%
 
         *Left:* Political books network. *Right:* Sample from the degree-corrected

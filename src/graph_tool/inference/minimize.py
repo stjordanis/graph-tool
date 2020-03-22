@@ -198,13 +198,8 @@ def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
        >>> g = gt.collection.data["polbooks"]
        >>> state = gt.minimize_blockmodel_dl(g)
        >>> state.draw(pos=g.vp["pos"], vertex_shape=state.get_blocks(),
-       ...            output="polbooks_blocks_mdl.pdf")
+       ...            output="polbooks_blocks_mdl.svg")
        <...>
-
-    .. testcleanup:: mdl
-
-       state.draw(pos=g.vp["pos"], vertex_shape=state.get_blocks(),
-                  output="polbooks_blocks_mdl.png")
 
     .. figure:: polbooks_blocks_mdl.*
        :align: center
@@ -223,12 +218,8 @@ def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
 
        >>> g = gt.collection.data["polbooks"]
        >>> state = gt.minimize_blockmodel_dl(g, overlap=True)
-       >>> state.draw(pos=g.vp["pos"], output="polbooks_overlap_blocks_mdl.pdf")
+       >>> state.draw(pos=g.vp["pos"], output="polbooks_overlap_blocks_mdl.svg")
        <...>
-
-    .. testcleanup:: mdl_overlap
-
-       state.draw(pos=g.vp["pos"], output="polbooks_overlap_blocks_mdl.png")
 
     .. figure:: polbooks_overlap_blocks_mdl.*
        :align: center
@@ -240,34 +231,9 @@ def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
 
     References
     ----------
-    .. [holland-stochastic-1983] Paul W. Holland, Kathryn Blackmond Laskey,
-       Samuel Leinhardt, "Stochastic blockmodels: First steps",
-       Carnegie-Mellon University, Pittsburgh, PA 15213, U.S.A.,
-       :doi:`10.1016/0378-8733(83)90021-7`.
-    .. [faust-blockmodels-1992] Katherine Faust, and Stanley
-       Wasserman. "Blockmodels: Interpretation and Evaluation." Social Networks
-       14, no. 1-2 (1992): 5-61, :doi:`10.1016/0378-8733(92)90013-W`.
-    .. [karrer-stochastic-2011] Brian Karrer, and M. E. J. Newman. "Stochastic
-       Blockmodels and Community Structure in Networks." Physical Review E 83,
-       no. 1 (2011): 016107, :doi:`10.1103/PhysRevE.83.016107`.
-    .. [peixoto-entropy-2012] Tiago P. Peixoto "Entropy of Stochastic Blockmodel
-       Ensembles." Physical Review E 85, no. 5 (2012): 056122,
-       :doi:`10.1103/PhysRevE.85.056122`, :arxiv:`1112.6028`.
-    .. [peixoto-parsimonious-2013] Tiago P. Peixoto, "Parsimonious module
-       inference in large networks", Phys. Rev. Lett. 110, 148701 (2013),
-       :doi:`10.1103/PhysRevLett.110.148701`, :arxiv:`1212.4794`.
     .. [peixoto-efficient-2014] Tiago P. Peixoto, "Efficient Monte Carlo and greedy
        heuristic for the inference of stochastic block models", Phys. Rev. E 89,
        012804 (2014), :doi:`10.1103/PhysRevE.89.012804`, :arxiv:`1310.4378`.
-    .. [peixoto-model-2016] Tiago P. Peixoto, "Model selection and hypothesis
-       testing for large-scale network models with overlapping groups",
-       Phys. Rev. X 5, 011033 (2016), :doi:`10.1103/PhysRevX.5.011033`,
-       :arxiv:`1409.3059`.
-    .. [peixoto-inferring-2016] Tiago P. Peixoto, "Inferring the mesoscale
-       structure of layered, edge-valued and time-varying networks",
-       Phys. Rev. E 92, 042807 (2015), :doi:`10.1103/PhysRevE.92.042807`,
-       :arXiv:`1504.02381`.
-
     """
 
     b_cache = {} # keep a global cache
@@ -408,10 +374,11 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
 
     .. testcleanup:: nested_mdl
 
-       state.draw(output="power_nested_mdl.png")
+       conv_png("power_nested_mdl.pdf")
 
-    .. figure:: power_nested_mdl.*
+    .. figure:: power_nested_mdl.png
        :align: center
+       :width: 60%
 
        Hierarchical Block partition of a power-grid network, which minimizes
        the description length of the network according to the nested
@@ -427,10 +394,11 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
 
     .. testcleanup:: nested_mdl_overlap
 
-       state.draw(output="celegans_nested_mdl_overlap.png")
+       conv_png("celegans_nested_mdl_overlap.pdf")
 
-    .. figure:: celegans_nested_mdl_overlap.*
+    .. figure:: celegans_nested_mdl_overlap.png
        :align: center
+       :width: 60%
 
        Overlapping block partition of the *C. elegans* neural network, which
        minimizes the description length of the network according to the nested
@@ -438,24 +406,10 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
 
     References
     ----------
-
     .. [peixoto-hierarchical-2014] Tiago P. Peixoto, "Hierarchical block
        structures and high-resolution model selection in large networks ",
        Phys. Rev. X 4, 011047 (2014), :doi:`10.1103/PhysRevX.4.011047`,
        :arxiv:`1310.4377`.
-    .. [peixoto-efficient-2014] Tiago P. Peixoto, "Efficient Monte Carlo and
-       greedy heuristic for the inference of stochastic block models",
-       Phys. Rev. E 89, 012804 (2014), :doi:`10.1103/PhysRevE.89.012804`,
-       :arxiv:`1310.4378`.
-    .. [peixoto-model-2016] Tiago P. Peixoto, "Model selection and hypothesis
-       testing for large-scale network models with overlapping groups",
-       Phys. Rev. X 5, 011033 (2016), :doi:`10.1103/PhysRevX.5.011033`,
-       :arxiv:`1409.3059`.
-    .. [peixoto-inferring-2016] Tiago P. Peixoto, "Inferring the mesoscale
-       structure of layered, edge-valued and time-varying networks",
-       Phys. Rev. E 92, 042807 (2015), :doi:`10.1103/PhysRevE.92.042807`,
-       :arXiv:`1504.02381`.
-
     """
 
     mcmc_multilevel_args = \
