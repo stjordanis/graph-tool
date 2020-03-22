@@ -88,7 +88,7 @@ def load_koblenz_dir(dirname):
                         meta[v] = line.strip()
                         count += 1
                 except ValueError as e:
-                    warnings.warn("error automatically reading node metadata from file '%s': %s" % (file, str(e)))
+                    warnings.warn("error automatically reading node metadata from file '%s': %s" % (f, str(e)))
     return g
 
 def get_koblenz_network_data(name):
