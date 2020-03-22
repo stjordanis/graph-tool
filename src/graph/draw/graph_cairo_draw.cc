@@ -66,6 +66,8 @@ enum vertex_attr_t {
     VERTEX_TEXT_POSITION,
     VERTEX_TEXT_ROTATION,
     VERTEX_TEXT_OFFSET,
+    VERTEX_TEXT_OUT_WIDTH,
+    VERTEX_TEXT_OUT_COLOR,
     VERTEX_FONT_FAMILY,
     VERTEX_FONT_SLANT,
     VERTEX_FONT_WEIGHT,
@@ -90,6 +92,8 @@ enum edge_attr_t {
     EDGE_TEXT_COLOR,
     EDGE_TEXT_DISTANCE,
     EDGE_TEXT_PARALLEL,
+    EDGE_TEXT_OUT_WIDTH,
+    EDGE_TEXT_OUT_COLOR,
     EDGE_FONT_FAMILY,
     EDGE_FONT_SLANT,
     EDGE_FONT_WEIGHT,
@@ -130,7 +134,7 @@ typedef pair<double, double> pos_t;
 typedef std::tuple<double, double, double, double> color_t;
 typedef gt_hash_map<int, boost::any> attrs_t;
 
-typedef boost::mpl::map43<
+typedef boost::mpl::map47<
     boost::mpl::pair<boost::mpl::int_<VERTEX_SHAPE>, vertex_shape_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_FILL_COLOR>, color_t>,
@@ -147,6 +151,8 @@ typedef boost::mpl::map43<
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_POSITION>, double>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_ROTATION>, double>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OFFSET>, vector<double> >,
+    boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OUT_WIDTH>, double>,
+    boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OUT_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_FONT_FAMILY>, string>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_FONT_SLANT>, int32_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_FONT_WEIGHT>, int32_t>,
@@ -168,6 +174,8 @@ typedef boost::mpl::map43<
     boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_DISTANCE>, double>,
     boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_PARALLEL>, uint8_t>,
+    boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_OUT_WIDTH>, double>,
+    boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_OUT_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_FONT_FAMILY>, string>,
     boost::mpl::pair<boost::mpl::int_<EDGE_FONT_SLANT>, int32_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_FONT_WEIGHT>, int32_t>,
@@ -1011,10 +1019,20 @@ public:
 
                     cr.translate(anchor.first, anchor.second);
                 }
+
+                cr.text_path(text);
+                color = _attrs.template get<color_t>(VERTEX_TEXT_OUT_COLOR);
+                cr.set_source_rgba(get<0>(color), get<1>(color), get<2>(color),
+                                   get<3>(color));
+                cr.set_line_width(_attrs.template get<double>(VERTEX_TEXT_OUT_WIDTH));
+                cr.stroke();
+
+                cr.begin_new_path();
                 color = _attrs.template get<color_t>(VERTEX_TEXT_COLOR);
                 cr.set_source_rgba(get<0>(color), get<1>(color), get<2>(color),
                                    get<3>(color));
                 cr.show_text(text);
+
                 cr.begin_new_path();
                 cr.restore();
             }
@@ -1366,10 +1384,18 @@ public:
                 cr.translate(text_dist, 0);
             }
 
+            color = _attrs.template get<color_t>(EDGE_TEXT_OUT_COLOR);
+            cr.set_source_rgba(get<0>(color), get<1>(color), get<2>(color),
+                               get<3>(color));
+            cr.set_line_width(_attrs.template get<double>(EDGE_TEXT_OUT_WIDTH));
+            cr.stroke();
+
+            cr.begin_new_path();
             color = _attrs.template get<color_t>(EDGE_TEXT_COLOR);
             cr.set_source_rgba(get<0>(color), get<1>(color), get<2>(color),
                                get<3>(color));
             cr.show_text(text);
+
             cr.begin_new_path();
             cr.restore();
         }
@@ -2188,6 +2214,8 @@ BOOST_PYTHON_MODULE(libgraph_tool_draw)
         .value("text_position", VERTEX_TEXT_POSITION)
         .value("text_rotation", VERTEX_TEXT_ROTATION)
         .value("text_offset", VERTEX_TEXT_OFFSET)
+        .value("text_out_color", VERTEX_TEXT_OUT_COLOR)
+        .value("text_out_width", VERTEX_TEXT_OUT_WIDTH)
         .value("font_family", VERTEX_FONT_FAMILY)
         .value("font_slant", VERTEX_FONT_SLANT)
         .value("font_weight", VERTEX_FONT_WEIGHT)
@@ -2211,6 +2239,8 @@ BOOST_PYTHON_MODULE(libgraph_tool_draw)
         .value("text_color", EDGE_TEXT_COLOR)
         .value("text_distance", EDGE_TEXT_DISTANCE)
         .value("text_parallel", EDGE_TEXT_PARALLEL)
+        .value("text_out_color", EDGE_TEXT_OUT_COLOR)
+        .value("text_out_width", EDGE_TEXT_OUT_WIDTH)
         .value("font_family", EDGE_FONT_FAMILY)
         .value("font_slant", EDGE_FONT_SLANT)
         .value("font_weight", EDGE_FONT_WEIGHT)

@@ -118,6 +118,8 @@ _vdefaults = {
     "text_position": -1.,
     "text_rotation": 0.,
     "text_offset": [0., 0.],
+    "text_out_width": .1,
+    "text_out_color": [0., 0., 0., 0.],
     "font_family": "serif",
     "font_slant": cairo.FONT_SLANT_NORMAL,
     "font_weight": cairo.FONT_WEIGHT_NORMAL,
@@ -142,6 +144,8 @@ _edefaults = {
     "text_color": (0., 0., 0., 1.),
     "text_distance": 5,
     "text_parallel": True,
+    "text_out_width": .1,
+    "text_out_color": [0., 0., 0., 0.],
     "font_family": "serif",
     "font_slant": cairo.FONT_SLANT_NORMAL,
     "font_weight": cairo.FONT_WEIGHT_NORMAL,
@@ -167,10 +171,12 @@ _vtypes = {
     "text_position": "double",
     "text_rotation": "double",
     "text_offset": "vector<double>",
+    "text_out_width": "double",
+    "text_out_color": "vector<double>",
     "font_family": "string",
     "font_slant": "int",
     "font_weight": "int",
-    "font_size": "float",
+    "font_size": "double",
     "surface": "object",
     "pie_fractions": "vector<double>",
     "pie_colors": "vector<double>"
@@ -191,6 +197,8 @@ _etypes = {
     "text_color": "vector<double>",
     "text_distance": "double",
     "text_parallel": "bool",
+    "text_out_width": "double",
+    "text_out_color": "vector<double>",
     "font_family": "string",
     "font_slant": "int",
     "font_weight": "int",
@@ -394,8 +402,9 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
             else:
                 return new_val
     elif attr in [vertex_attrs.color, vertex_attrs.fill_color,
-                  vertex_attrs.text_color, vertex_attrs.halo_color,
-                  edge_attrs.color, edge_attrs.text_color]:
+                  vertex_attrs.text_color, vertex_attrs.text_out_color,
+                  vertex_attrs.halo_color, edge_attrs.color,
+                  edge_attrs.text_color, edge_attrs.text_out_color]:
         if isinstance(val, list):
             new_val = val
         elif isinstance(val, (tuple, np.ndarray)):
@@ -828,94 +837,98 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
     Notes
     -----
 
-
     .. table:: **List of vertex properties**
 
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | Name          | Description                                       | Accepted types         | Default Value                    |
-        +===============+===================================================+========================+==================================+
-        | shape         | The vertex shape. Can be one of the following     | ``str`` or ``int``     | ``"circle"``                     |
-        |               | strings: "circle", "triangle", "square",          |                        |                                  |
-        |               | "pentagon", "hexagon", "heptagon", "octagon"      |                        |                                  |
-        |               | "double_circle", "double_triangle",               |                        |                                  |
-        |               | "double_square", "double_pentagon",               |                        |                                  |
-        |               | "double_hexagon", "double_heptagon",              |                        |                                  |
-        |               | "double_octagon", "pie", "none".                  |                        |                                  |
-        |               | Optionally, this might take a numeric value       |                        |                                  |
-        |               | corresponding to position in the list above.      |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | color         | Color used to stroke the lines of the vertex.     | ``str`` or list of     | ``[0., 0., 0., 1]``              |
-        |               |                                                   | ``floats``             |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | fill_color    | Color used to fill the interior of the vertex.    | ``str`` or list of     | ``[0.640625, 0, 0, 0.9]``        |
-        |               |                                                   | ``floats``             |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | size          | The size of the vertex, in the default units of   | ``float`` or ``int``   | ``5``                            |
-        |               | the output format (normally either pixels or      |                        |                                  |
-        |               | points).                                          |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | aspect        | The aspect ratio of the vertex.                   | ``float`` or ``int``   | ``1.0``                          |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | rotation      | Angle (in radians) to rotate the vertex.          | ``float``              | ``0.``                           |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | anchor        | Specifies how the edges anchor to the vertices.   |  ``int``               | ``1``                            |
-        |               | If `0`, the anchor is at the center of the vertex,|                        |                                  |
-        |               | otherwise it is at the border.                    |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | pen_width     | Width of the lines used to draw the vertex, in    | ``float`` or ``int``   | ``0.8``                          |
-        |               | the default units of the output format (normally  |                        |                                  |
-        |               | either pixels or points).                         |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | halo          | Whether to draw a circular halo around the        | ``bool``               | ``False``                        |
-        |               | vertex.                                           |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | halo_color    | Color used to draw the halo.                      | ``str`` or list of     | ``[0., 0., 1., 0.5]``            |
-        |               |                                                   | ``floats``             |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | halo_size     | Relative size of the halo.                        | ``float``              | ``1.5``                          |
-        |               |                                                   |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | text          | Text to draw together with the vertex.            | ``str``                | ``""``                           |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | text_color    | Color used to draw the text. If the value is      | ``str`` or list of     | ``"auto"``                       |
-        |               | ``"auto"``, it will be computed based on          | ``floats``             |                                  |
-        |               | fill_color to maximize contrast.                  |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | text_position | Position of the text relative to the vertex.      | ``float`` or ``int``   | ``-1``                           |
-        |               | If the passed value is positive, it will          |  or ``"centered"``     |                                  |
-        |               | correspond to an angle in radians, which will     |                        |                                  |
-        |               | determine where the text will be placed outside   |                        |                                  |
-        |               | the vertex. If the value is negative, the text    |                        |                                  |
-        |               | will be placed inside the vertex. If the value is |                        |                                  |
-        |               | ``-1``, the vertex size will be automatically     |                        |                                  |
-        |               | increased to accommodate the text. The special    |                        |                                  |
-        |               | value ``"centered"`` positions the texts rotated  |                        |                                  |
-        |               | radially around the center of mass.               |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | text_offset   | Text position offset.                             | list of ``float``      | ``[0.0, 0.0]``                   |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | text_rotation | Angle of rotation (in radians) for the text.      | ``float``              | ``0.0``                          |
-        |               | The center of rotation is the position of the     |                        |                                  |
-        |               | vertex.                                           |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | font_family   | Font family used to draw the text.                | ``str``                | ``"serif"``                      |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | font_slant    | Font slant used to draw the text.                 | ``cairo.FONT_SLANT_*`` | :data:`cairo.FONT_SLANT_NORMAL`  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | font_weight   | Font weight used to draw the text.                | ``cairo.FONT_WEIGHT_*``| :data:`cairo.FONT_WEIGHT_NORMAL` |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | font_size     | Font size used to draw the text.                  | ``float`` or ``int``   | ``12``                           |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | surface       | The cairo surface used to draw the vertex. If     | :class:`cairo.Surface` | ``None``                         |
-        |               | the value passed is a string, it is interpreted   | or ``str``             |                                  |
-        |               | as an image file name to be loaded.               |                        |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | pie_fractions | Fractions of the pie sections for the vertices if | list of ``int`` or     | ``[0.75, 0.25]``                 |
-        |               | ``shape=="pie"``.                                 | ``float``              |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
-        | pie_colors    | Colors used in the pie sections if                | list of strings or     | ``('b','g','r','c','m','y','k')``|
-        |               | ``shape=="pie"``.                                 | ``float``.             |                                  |
-        +---------------+---------------------------------------------------+------------------------+----------------------------------+
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | Name           | Description                                       | Accepted types         | Default Value                    |
+        +================+===================================================+========================+==================================+
+        | shape          | The vertex shape. Can be one of the following     | ``str`` or ``int``     | ``"circle"``                     |
+        |                | strings: "circle", "triangle", "square",          |                        |                                  |
+        |                | "pentagon", "hexagon", "heptagon", "octagon"      |                        |                                  |
+        |                | "double_circle", "double_triangle",               |                        |                                  |
+        |                | "double_square", "double_pentagon",               |                        |                                  |
+        |                | "double_hexagon", "double_heptagon",              |                        |                                  |
+        |                | "double_octagon", "pie", "none".                  |                        |                                  |
+        |                | Optionally, this might take a numeric value       |                        |                                  |
+        |                | corresponding to position in the list above.      |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | color          | Color used to stroke the lines of the vertex.     | ``str`` or list of     | ``[0., 0., 0., 1]``              |
+        |                |                                                   | ``floats``             |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | fill_color     | Color used to fill the interior of the vertex.    | ``str`` or list of     | ``[0.640625, 0, 0, 0.9]``        |
+        |                |                                                   | ``floats``             |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | size           | The size of the vertex, in the default units of   | ``float`` or ``int``   | ``5``                            |
+        |                | the output format (normally either pixels or      |                        |                                  |
+        |                | points).                                          |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | aspect         | The aspect ratio of the vertex.                   | ``float`` or ``int``   | ``1.0``                          |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | rotation       | Angle (in radians) to rotate the vertex.          | ``float``              | ``0.``                           |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | anchor         | Specifies how the edges anchor to the vertices.   |  ``int``               | ``1``                            |
+        |                | If `0`, the anchor is at the center of the vertex,|                        |                                  |
+        |                | otherwise it is at the border.                    |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | pen_width      | Width of the lines used to draw the vertex, in    | ``float`` or ``int``   | ``0.8``                          |
+        |                | the default units of the output format (normally  |                        |                                  |
+        |                | either pixels or points).                         |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | halo           | Whether to draw a circular halo around the        | ``bool``               | ``False``                        |
+        |                | vertex.                                           |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | halo_color     | Color used to draw the halo.                      | ``str`` or list of     | ``[0., 0., 1., 0.5]``            |
+        |                |                                                   | ``floats``             |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | halo_size      | Relative size of the halo.                        | ``float``              | ``1.5``                          |
+        |                |                                                   |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text           | Text to draw together with the vertex.            | ``str``                | ``""``                           |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_color     | Color used to draw the text. If the value is      | ``str`` or list of     | ``"auto"``                       |
+        |                | ``"auto"``, it will be computed based on          | ``floats``             |                                  |
+        |                | fill_color to maximize contrast.                  |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_position  | Position of the text relative to the vertex.      | ``float`` or ``int``   | ``-1``                           |
+        |                | If the passed value is positive, it will          |  or ``"centered"``     |                                  |
+        |                | correspond to an angle in radians, which will     |                        |                                  |
+        |                | determine where the text will be placed outside   |                        |                                  |
+        |                | the vertex. If the value is negative, the text    |                        |                                  |
+        |                | will be placed inside the vertex. If the value is |                        |                                  |
+        |                | ``-1``, the vertex size will be automatically     |                        |                                  |
+        |                | increased to accommodate the text. The special    |                        |                                  |
+        |                | value ``"centered"`` positions the texts rotated  |                        |                                  |
+        |                | radially around the center of mass.               |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_offset    | Text position offset.                             | list of ``float``      | ``[0.0, 0.0]``                   |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_rotation  | Angle of rotation (in radians) for the text.      | ``float``              | ``0.0``                          |
+        |                | The center of rotation is the position of the     |                        |                                  |
+        |                | vertex.                                           |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_out_color | Color used to draw the text outline.              | ``str`` or list of     | ``[0,0,0,0]``                    |
+        |                |                                                   | ``floats``             |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_out_width | Width of the text outline.                        | ``float``              | ``1.``                           |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | font_family    | Font family used to draw the text.                | ``str``                | ``"serif"``                      |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | font_slant     | Font slant used to draw the text.                 | ``cairo.FONT_SLANT_*`` | :data:`cairo.FONT_SLANT_NORMAL`  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | font_weight    | Font weight used to draw the text.                | ``cairo.FONT_WEIGHT_*``| :data:`cairo.FONT_WEIGHT_NORMAL` |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | font_size      | Font size used to draw the text.                  | ``float`` or ``int``   | ``12``                           |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | surface        | The cairo surface used to draw the vertex. If     | :class:`cairo.Surface` | ``None``                         |
+        |                | the value passed is a string, it is interpreted   | or ``str``             |                                  |
+        |                | as an image file name to be loaded.               |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | pie_fractions  | Fractions of the pie sections for the vertices if | list of ``int`` or     | ``[0.75, 0.25]``                 |
+        |                | ``shape=="pie"``.                                 | ``float``              |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | pie_colors     | Colors used in the pie sections if                | list of strings or     | ``('b','g','r','c','m','y','k')``|
+        |                | ``shape=="pie"``.                                 | ``float``.             |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
 
 
     .. table:: **List of edge properties**
@@ -966,6 +979,11 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
         | text_parallel  | If ``True`` the text will be drawn parallel to    | ``bool``               | ``True``                         |
         |                | the edges.                                        |                        |                                  |
+        +----------------+---------------------------------------------------+------------------------+----------------------------------+
+        | text_out_color | Color used to draw the text outline.              | ``str`` or list of     | ``[0,0,0,0]``                    |
+        |                |                                                   | ``floats``             |                                  |
+        +--------------- +---------------------------------------------------+------------------------+----------------------------------+
+        | text_out_width | Width of the text outline.                        | ``float``              | ``1.``                           |
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
         | font_family    | Font family used to draw the text.                | ``str``                | ``"serif"``                      |
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
