@@ -68,8 +68,9 @@ Contents
 
 from __future__ import division, absolute_import, print_function
 
-from .. import Graph, GraphView, _check_prop_vector, group_vector_property, \
-     ungroup_vector_property, infect_vertex_property, _prop, _get_rng
+from .. import Graph, GraphView, _check_prop_vector, _check_prop_scalar, \
+    group_vector_property, ungroup_vector_property, infect_vertex_property, \
+    _prop, _get_rng
 from .. topology import max_cardinality_matching, max_independent_vertex_set, \
     label_components, pseudo_diameter, shortest_distance, make_maximal_planar, \
     is_planar
@@ -686,6 +687,8 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
     if pos is None:
         pos = random_layout(g, dim=2)
     _check_prop_vector(pos, name="pos", floating=True)
+    if groups is not None:
+        _check_prop_scalar(groups, name="groups", floating=False)
 
     g_ = g
     g = GraphView(g, directed=False)
