@@ -23,10 +23,6 @@ Some useful decorators
 
 from __future__ import division, absolute_import, print_function
 
-__author__ = "Tiago de Paula Peixoto <tiago@skewed.de>"
-__copyright__ = "Copyright 2006-2019 Tiago de Paula Peixoto"
-__license__ = "GPL version 3 or above"
-
 import inspect
 import functools
 import sys
