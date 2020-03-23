@@ -8,12 +8,17 @@ as we demonstrate in the following.
 .. note::
 
    Since ``graph-tool`` uses `cairo <https://cairographics.org>`_ for
-   drawing, it is necessary to use matplotlib's cairo backend, otherwise
-   integration is not possible. The cairo backend can be used by calling:
+   drawing, it is necessary to one of matplotlib's cairo-based backend,
+   otherwise integration is not possible. Currently, two backends can be
+   chosen: ``cairo`` or ``GTK3Cairo``. The latter should be chosen for
+   interactive GUI-based figures. The backend can be changed by calling
+   :func:`matplotlib.pyplot.switch_backend`:
 
    .. code::
 
-      switch_backend("cairo")
+      import matplotlib.pyplot as plt
+
+      plt.switch_backend("cairo")
 
 
 Drawing with matplotlib is done by calling
@@ -26,9 +31,12 @@ Drawing with matplotlib is done by calling
    
 .. testcode::
 
-   switch_backend("cairo")
+   import graph_tool.all as gt
+   import matplotlib.pyplot as plt
 
-   fig, ax = subplots(2, 2, figsize=(12, 11.5)) 
+   plt.switch_backend("cairo")
+
+   fig, ax = plt.subplots(2, 2, figsize=(12, 11.5)) 
 
    g = gt.collection.data["polbooks"]
 
@@ -57,7 +65,7 @@ Drawing with matplotlib is done by calling
    ax[1,1].set_xlabel("$x$ coordinate")
    ax[1,1].set_ylabel("$y$ coordinate")
 
-   subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.06)
+   plt.subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.06)
    fig.savefig("gt-mpl.pdf")
 
 

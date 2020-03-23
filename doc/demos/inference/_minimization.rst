@@ -309,6 +309,9 @@ recommended.
 
       print("Improvement:", S2 - S1)
 
+   One run of the above code yields a modest improvement, but depending
+   on the dataset the difference can be larger:
+
    .. testoutput:: celegans-mcmc-combine
 
       Improvement: -82.616161...
