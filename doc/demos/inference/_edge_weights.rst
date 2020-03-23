@@ -117,8 +117,14 @@ the weights, as follows:
    state = gt.minimize_nested_blockmodel_dl(g, state_args=dict(recs=[g.ep.weight],
                                                                rec_types=["discrete-binomial"]))
 
+   # improve solution with merge-split
+   state = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4, sampling=True)
+
+   for i in range(100):
+       ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
+
    state.draw(edge_color=g.ep.weight, ecmap=(matplotlib.cm.inferno, .6),
-              eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 1, 4, power=1),
+              eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 2, 8, power=1),
               edge_gradient=[], output="moreno-train-wsbm.pdf")
 
 .. testcleanup:: weighted-model
@@ -171,6 +177,13 @@ follows:
    state = gt.minimize_nested_blockmodel_dl(g, state_args=dict(recs=[g.ep.weight],
                                                                rec_types=["real-exponential"]))
 
+   # improve solution with merge-split
+   state = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4, sampling=True)
+
+   for i in range(100):
+       ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
+
+
    state.draw(edge_color=gt.prop_to_size(g.ep.weight, power=1, log=True), ecmap=(matplotlib.cm.inferno, .6),
               eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 1, 4, power=1, log=True),
               edge_gradient=[], output="foodweb-wsbm.pdf")
@@ -209,6 +222,12 @@ can fit this alternative model simply by using the transformed weights:
    
    state_ln = gt.minimize_nested_blockmodel_dl(g, state_args=dict(recs=[y],
                                                                   rec_types=["real-normal"]))
+
+   # improve solution with merge-split
+   state_ln = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4, sampling=True)
+
+   for i in range(100):
+       ret = state_ln.multiflip_mcmc_sweep(niter=10, beta=np.inf)
 
    state_ln.draw(edge_color=gt.prop_to_size(g.ep.weight, power=1, log=True), ecmap=(matplotlib.cm.inferno, .6),
                  eorder=g.ep.weight, edge_pen_width=gt.prop_to_size(g.ep.weight, 1, 4, power=1, log=True),
@@ -257,12 +276,12 @@ Therefore, we can compute the posterior odds ratio between both models as:
 .. testoutput:: food-web
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  -16.814693...
+   ln Λ:  16490.463643...
 
-A value of :math:`\Lambda \approx \mathrm{e}^{-17} \approx 10^{-7}` in
-favor the exponential model indicates that the log-normal model does not
-provide a better fit for this particular data. Based on this, we
-conclude that the exponential model should be preferred in this case.
+A value of :math:`\Lambda \approx \mathrm{e}^{16490} \approx 10^{7161}`
+in favor the log-normal model indicates that the exponential model does
+not provide a better fit for this particular data. Based on this, we
+conclude that the log-normal model should be preferred in this case.
    
    
 Posterior sampling
@@ -270,16 +289,12 @@ Posterior sampling
    
 The procedure to sample from the posterior distribution is identical to
 what is described in Sec. :ref:`sampling`, but with the appropriate
-initialization, i.e.
+initialization, e.g..
 
 .. testcode:: weighted-model
 
-    state = gt.BlockState(g, B=20, recs=[g.ep.weight], rec_types=["discrete-poisson"])
+   g = gt.collection.konect_data["foodweb-baywet"]
 
-or for the nested model
+   state = gt.NestedBlockState(g, state_args=dict(recs=[g.ep.weight], rec_types=["real-exponential"]))
 
-.. testcode:: weighted-model
-
-    state = gt.NestedBlockState(g, bs=[np.random.randint(0, 20, g.num_vertices())] + [zeros(1)] * 10,
-                                state_args=dict(recs=[g.ep.weight],
-                                                rec_types=["discrete-poisson"]))
+   gt.mcmc_equilibrate(state, force_niter=100, mcmc_args=dict(niter=10))

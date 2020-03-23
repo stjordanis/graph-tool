@@ -1093,8 +1093,8 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
         References
         ----------
         .. [peixoto-network-2019] Tiago P. Peixoto, "Network reconstruction and
-           community detection from dynamics", :arxiv:`1903.10833`
-
+           community detection from dynamics", Phys. Rev. Lett. 123 128301
+           (2019), :doi:`10.1103/PhysRevLett.123.128301`, :arxiv:`1903.10833`
         """
 
         if beta is None:
@@ -1295,7 +1295,8 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
         References
         ----------
         .. [peixoto-network-2019] Tiago P. Peixoto, "Network reconstruction and
-           community detection from dynamics", :arxiv:`1903.10833`
+           community detection from dynamics", Phys. Rev. Lett. 123 128301
+           (2019), :doi:`10.1103/PhysRevLett.123.128301`, :arxiv:`1903.10833`
 
         """
 

@@ -67,7 +67,8 @@ References
    (2015). :doi:`10.1093/comnet/cnu026`, :arxiv:`1404.0431`
 
 .. [peixoto-weighted-2017] Tiago P. Peixoto, "Nonparametric weighted
-   stochastic block models", :arxiv:`1708.01432`
+   stochastic block models", Phys. Rev. E 97, 012306 (2018),
+   :doi:`10.1103/PhysRevE.97.012306`, :arxiv:`1708.01432`
           
 .. [peixoto-efficient-2014] Tiago P. Peixoto, "Efficient Monte Carlo and
    greedy heuristic for the inference of stochastic block models", Phys.

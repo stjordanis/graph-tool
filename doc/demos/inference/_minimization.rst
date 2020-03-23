@@ -278,3 +278,37 @@ Any of the above methods should give similar results to the previous
 algorithms, while requiring less memory. In terms of quality of the
 results, it will vary depending on the data, thus experimentation is
 recommended.
+
+.. note::
+
+   Note that both approaches above can be combined, where the
+   agglomerative algorithm of
+   :func:`~graph_tool.inference.minimize.minimize_blockmodel_dl` or
+   :func:`~graph_tool.inference.minimize.minimize_nested_blockmodel_dl`
+   is used to find an initial solution, which is then improved via a
+   greedy merge-split MCMC, e.g.
+
+   .. testcode:: celegans-mcmc-combine
+
+      g = gt.collection.data["celegansneural"]
+
+      state = gt.minimize_nested_blockmodel_dl(g)
+
+      S1 = state.entropy()
+         
+      # we will pad the hierarchy with another four empty levels, to
+      # give it room to potentially increase
+         
+      state = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4,
+                         sampling = True)
+
+      for i in range(100):
+         ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
+
+      S2 = state.entropy()
+
+      print("Improvement:", S2 - S1)
+
+   .. testoutput:: celegans-mcmc-combine
+
+      Improvement: -82.616161...
