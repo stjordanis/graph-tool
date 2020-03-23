@@ -34,7 +34,7 @@ function template that implements the desired algorithm:
    :linenos:
 
 The second part is a compilation unit :download:`kcore.cc <kcore.cc>`
-that setups the Python-C++ interface:
+that sets up the Python-C++ interface:
 
 .. literalinclude:: kcore.cc
    :language: c++

@@ -27,6 +27,8 @@ Drawing with matplotlib is done by calling
 
 .. testsetup::
 
+   import matplotlib
+   backend = matplotlib.get_backend()
    gt.seed_rng(44)
    
 .. testcode::
@@ -68,11 +70,10 @@ Drawing with matplotlib is done by calling
    plt.subplots_adjust(left=0.08, right=0.99, top=0.99, bottom=0.06)
    fig.savefig("gt-mpl.pdf")
 
-
 .. testcleanup::
 
+   plt.switch_backend(backend)
    conv_png("gt-mpl.pdf")
-
 
 .. figure:: gt-mpl.png
    :width: 90%

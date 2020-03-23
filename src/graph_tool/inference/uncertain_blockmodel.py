@@ -1236,7 +1236,7 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
                  has_zero=False, **kwargs):
         r"""Base state for network reconstruction based on the Ising model, using the
         stochastic block model as a prior. This class is not supposed to be
-        instantiated directly. Instead one of it's specialized subclasses must
+        instantiated directly. Instead one of its specialized subclasses must
         be used, which have the same signature: :class:`IsingGlauberBlockState`,
         :class:`PseudoIsingBlockState`, :class:`CIsingGlauberBlockState`,
         :class:`PseudoCIsingBlockState`.

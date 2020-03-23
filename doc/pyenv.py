@@ -60,7 +60,7 @@ except RuntimeError:
 
 def conv_png(f):
     subprocess.check_output(['pdftocairo', "-png", "-singlefile", "-transp",
-                             "-r", "600", f])
+                             "-r", "300", f])
 
 prandom.seed(42)
 np.random.seed(42)
