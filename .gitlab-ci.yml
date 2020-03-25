@@ -84,3 +84,10 @@ build_eoan:
   artifacts:
     paths:
       - release/debian/build/*
+
+build_docker:
+  script:
+    - cd release/docker
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t graph-tool .
+  only:
+    - tags
