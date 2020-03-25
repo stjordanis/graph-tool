@@ -26,7 +26,7 @@ build_tarball:
     - ./configure
     - make dist-bzip2
     - make dist-xz
-    - bunzip2 *bz2
+    - bunzip2 -k *bz2
     - zstd *.tar
   only:
     - tags
