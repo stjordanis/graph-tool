@@ -20,6 +20,22 @@ job_clang_amd64:
   tags:
     - amd64
 
+build_tarball:
+  script:
+    - ./autogen.sh
+    - ./configure
+    - make dist-bzip2
+    - make dist-xz
+    - bunzip2 *bz2
+    - zstd *.tar
+  only:
+    - tags
+  artifacts:
+    paths:
+      - graph-tool*bz2
+      - graph-tool*xz
+      - graph-tool*zst
+
 build_sid:
   script:
     - BASE=debian:sid
