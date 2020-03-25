@@ -1,0 +1,16 @@
+Source: python3-graph-tool
+Section: python
+Priority: extra
+Maintainer: Tiago de Paula Peixoto <tiago@skewed.de>
+Vcs-Browser: https://git.skewed.de/count0/graph-tool
+Vcs-Git: https://git.skewed.de/count0/graph-tool.git
+Homepage: http://graph-tool.skewed.de
+Standards-Version: 3.8.1
+Build-Depends: debhelper (>= 7), autotools-dev, g++ (>= 4:4.5), libboost-graph-dev, libboost-iostreams-dev, libboost-python-dev, libboost-system-dev, libboost-thread-dev, libboost-regex-dev, libexpat1-dev, libcgal-dev, python3-dev, cdbs, python3-numpy-dev, python3-scipy, libcairomm-1.0-dev, python3-cairo-dev, libsparsehash-dev
+
+Package: python3-graph-tool
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-scipy
+Recommends: libgv-python, python-matplotlib, python-cairo, python-gi-cairo, python-gi, gir1.2-gtk-3.0
+Description: graph-tool is an efficient python module for manipulation and statistical analysis of graphs
+
