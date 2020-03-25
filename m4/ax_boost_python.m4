@@ -93,14 +93,15 @@ BOOST_PYTHON_MODULE(test) { throw "Boost::Python test."; }]], [])],
 ])
 if test "$ac_cv_boost_python" = "yes"; then
   AC_DEFINE(HAVE_BOOST_PYTHON,,[define if the Boost::Python library is available])
-  ax_python_lib=boost_python
+  PV=[`$PYTHON -c "import sys; print(''.join(list([str(x) for x in sys.version_info][:2])))"`]
+  ax_python_lib=boost_python${PV}
   AC_ARG_WITH([boost-python],AS_HELP_STRING([--with-boost-python],[specify yes/no or the boost python library or suffix to use]),
   [if test "x$with_boost_python" != "xno" -a "x$with_boost_python" != "xyes"; then
      ax_python_lib=$with_boost_python
      ax_boost_python_lib=boost_python-$with_boost_python
    fi])
   BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
-  for ax_lib in $ax_python_lib $ax_boost_python_lib `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` boost_python boost_python3; do
+  for ax_lib in $ax_python_lib $ax_boost_python_lib boost_python-py${PV} `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` boost_python3 boost_python; do
     AS_VAR_PUSHDEF([ax_Lib], [ax_cv_lib_$ax_lib''_BOOST_PYTHON_MODULE])dnl
     AC_CACHE_CHECK([whether $ax_lib is the correct library], [ax_Lib],
     [LIBS="-l$ax_lib $ax_boost_python_save_LIBS $PYTHON_LIBS"
