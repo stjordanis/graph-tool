@@ -14,7 +14,7 @@ RUN cp LICENSE debian/copyright
 ADD git2debchangelog.sh .
 RUN /bin/bash git2debchangelog.sh > debian/changelog
 RUN ./autogen.sh
-RUN dpkg-buildpackage -us -uc -j8
+RUN dpkg-buildpackage -us -uc -j2
 WORKDIR ..
 RUN mkdir build
 RUN mv python3-graph-tool*.deb build/

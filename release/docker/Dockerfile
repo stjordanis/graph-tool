@@ -29,7 +29,7 @@ WORKDIR ${MAKEPKG_ROOT}
 
 USER ${MAKEPKG_USER}
 ADD PKGBUILD PKGBUILD
-RUN makepkg PKGBUILD --needed GIT_REF=$GIT_REF CXXFLAGS="-mtune=generic -O3 -pipe -flto=8 -ffunction-sections -fdata-sections" LDFLAGS="-Wl,--gc-sections"
+RUN makepkg PKGBUILD --needed GIT_REF=$GIT_REF CXXFLAGS="-mtune=generic -O3 -pipe -flto=2 -ffunction-sections -fdata-sections" LDFLAGS="-Wl,--gc-sections"
 
 USER root
 RUN mv -v "${MAKEPKG_ROOT}/"python-graph-tool-*-x86_64.pkg.tar.xz /tmp/python-graph-tool.pkg.tar.xz
