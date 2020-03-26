@@ -543,7 +543,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         as the in the constructor.
         """
 
-
         copy_bg = kwargs.pop("copy_bg", True)
 
         if copy_bg:
@@ -840,7 +839,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
 
         Si = self.entropy(**dict(dict(partition_dl=False), **entropy_args))
 
-
         pos = {}
         nes = []
         for e in itertools.chain(missing, spurious):
@@ -872,7 +870,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                 else:
                     state = self.layer_states[l[0]]
                 e = state.g.add_edge(u, v)
-                if not l[1]:
+                if not l[1] and self.ec is not None:
                     self.ec[e] = l[0]
                 if state.is_weighted:
                     state.eweight[e] = 1
@@ -884,7 +882,10 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                 if not l[1]:
                     state = self.agg_state
                     es = state.g.edge(u, v, all_edges=True)
-                    es = [e for e in es if self.ec[e] == l[0]]
+                    if self.ec is not None:
+                        es = [e for e in es if self.ec[e] == l[0]]
+                    else:
+                        es = list(es)
                     if len(es) > 0:
                         e = es[0]
                     else:
@@ -927,12 +928,12 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                     if e is None:
                         e = state.g.add_edge(u, v)
                         state.eweight[e] = 0
-                        if not l[1]:
+                        if not l[1] and self.ec is not None:
                             self.ec[e] = l[0]
                     state.eweight[e] += 1
                 else:
                     e = state.g.add_edge(u, v)
-                    if not l[1]:
+                    if not l[1] and self.ec is not None:
                         self.ec[e] = l[0]
             self.add_vertex(pos.keys(), pos.values())
 
