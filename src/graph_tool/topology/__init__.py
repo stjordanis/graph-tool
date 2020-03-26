@@ -823,20 +823,8 @@ def max_cliques(g):
     --------
 
     >>> g = gt.collection.data["polblogs"]
-    >>> for i, c in enumerate(gt.max_cliques(g)):
-    ...     print(c)
-    ...     if i == 9:
-    ...         break
-    [   0 1434 1244]
-    [   0  643  433 1244]
-    [   0   20 1244]
-    [   0  640 1130  366  567]
-    [  0 640 322  67  54 154]
-    [  0 640  67 114  54 154]
-    [  0 640 322 240  84  54 154]
-    [  0 640 433 114  84  54 154]
-    [  0 640 641  20  54 154]
-    [  0 640 322  20  54 154]
+    >>> sum(1 for c in gt.max_cliques(g))
+    49618
 
     References
     ----------
