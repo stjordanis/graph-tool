@@ -41,7 +41,7 @@ build_sid:
     - BASE=debian:sid
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --cpu-shares=256 --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -54,7 +54,7 @@ build_bullseye:
     - BASE=debian:bullseye
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --cpu-shares=256 --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -67,7 +67,7 @@ build_buster:
     - BASE=debian:buster
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --cpu-shares=256 --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -80,7 +80,7 @@ build_bionic:
     - BASE=ubuntu:bionic
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --cpu-shares=256 --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -93,7 +93,7 @@ build_eoan:
     - BASE=ubuntu:eoan
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --cpu-shares=256 --build-arg BASE=debian:sid --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -104,6 +104,6 @@ build_eoan:
 build_docker:
   script:
     - cd release/docker
-    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t graph-tool .
+    - docker build --cpu-shares=256 --build-arg REF=`git log -n1 --pretty='%H'` -t graph-tool .
   only:
     - tags
