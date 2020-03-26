@@ -2182,7 +2182,7 @@ def all_predecessors(g, dist_map, pred_map, weights=None, epsilon=1e-8):
     return preds
 
 def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
-                       all_preds_map=None, epsilon=1e-8, **kwargs):
+                       all_preds_map=None, epsilon=1e-8, edges=False, **kwargs):
     """Return an iterator over all shortest paths from `source` to `target`.
 
     Parameters
@@ -2207,6 +2207,8 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
     epsilon : ``float`` (optional, default: ``1e-8``)
         Maximum relative difference between distances to be considered "equal",
         in case floating-point weights are used.
+    edges : ``bool`` (optional, default: ``False``)
+        If ``True``, the returned iterator is over edge descriptors.
     **kwargs : Keyword parameter list
         The remaining parameters will be passed to
         :func:`~graph_tool.topology.shortest_path`.
@@ -2215,7 +2217,8 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
     -------
     path_iterator : iterator over a sequence of integers
         Iterator over sequences of vertices from `source` to `target` in the
-        shortest path.
+        shortest path. If ``edges == True``, the iterator is over sequences of
+        edge descriptors (:class:`~graph_tool.Edge`).
 
     Notes
     -----
@@ -2254,7 +2257,8 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
         libgraph_tool_topology.get_all_shortest_paths(g._Graph__graph,
                                                       int(source),
                                                       int(target),
-                                                      _prop("v", g, all_preds_map))
+                                                      _prop("v", g, all_preds_map),
+                                                      edges)
     for p in path_iterator:
         yield p
 

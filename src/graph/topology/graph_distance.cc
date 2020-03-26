@@ -550,8 +550,9 @@ void do_get_all_preds(GraphInterface& gi, boost::any adist, boost::any apred,
 }
 
 
-template <class Pred, class Yield>
-void get_all_shortest_paths(size_t s, size_t t, Pred pred, Yield& yield)
+template <class Graph, class Pred, class Yield>
+void get_all_shortest_paths(GraphInterface& gi, Graph& g, size_t s, size_t t,
+                            Pred pred, bool edges, Yield& yield)
 {
     vector<size_t> path;
     vector<pair<size_t, size_t>> stack = {{t, 0}};
@@ -561,10 +562,30 @@ void get_all_shortest_paths(size_t s, size_t t, Pred pred, Yield& yield)
         std::tie(v, i) = stack.back();
         if (v == s)
         {
-            path.clear();
-            for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter)
-                path.push_back(iter->first);
-            yield(wrap_vector_owned<size_t>(path));
+            if (!edges)
+            {
+                path.clear();
+                for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter)
+                    path.push_back(iter->first);
+                yield(wrap_vector_owned<size_t>(path));
+            }
+            else
+            {
+                auto gp = retrieve_graph_view<Graph>(gi, g);
+                boost::python::list opath;
+                auto s = graph_traits<Graph>::null_vertex();
+                for (auto iter = stack.rbegin(); iter != stack.rend(); ++iter)
+                {
+                    auto t = iter->first;
+                    if (s != graph_traits<Graph>::null_vertex())
+                    {
+                        auto e = edge(s, t, g).first;
+                        opath.append(PythonEdge<Graph>(gp, e));
+                    }
+                    s = t;
+                }
+                yield(opath);
+            }
         }
         if (pred[v].size() > i)
         {
@@ -580,14 +601,14 @@ void get_all_shortest_paths(size_t s, size_t t, Pred pred, Yield& yield)
 };
 
 python::object do_get_all_shortest_paths(GraphInterface& gi, size_t s, size_t t,
-                                         boost::any apred)
+                                         boost::any apred, bool edges)
 {
 #ifdef HAVE_BOOST_COROUTINE
     auto dispatch = [&](auto& yield)
         {
             run_action<>()
-                (gi, [&](auto&, auto pred)
-                     {get_all_shortest_paths(s, t, pred, yield);},
+                (gi, [&](auto& g, auto pred)
+                     {get_all_shortest_paths(gi, g, s, t, pred, edges, yield);},
                  vertex_scalar_vector_properties())(apred);
         };
     return python::object(CoroGenerator(dispatch));
