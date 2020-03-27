@@ -204,7 +204,7 @@ class SIState(EpidemicStateBase):
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
-           Initial infected vertex. If not provided, and if the global state is
+           Initial infectious vertex. If not provided, and if the global state is
            also not provided via paramter ``s``, a random vertex will be chosen.
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
@@ -219,8 +219,8 @@ class SIState(EpidemicStateBase):
         -----
 
         This implements an SI epidemic process [pastor-satorras-epidemic-2015]_,
-        where nodes in the susceptible state (value 0) are infected by neighbours
-        in the infected state (value 1).
+        where nodes in the susceptible state (value 0) are infectious by neighbours
+        in the infectious state (value 1).
 
         If a node :math:`i` is updated at time :math:`t`, the transition
         probabilities from state :math:`s_i(t)` to state :math:`s_i(t+1)` are
@@ -263,7 +263,7 @@ class SIState(EpidemicStateBase):
            [...]
            >>> xlabel(r"Time")
            Text(...)
-           >>> ylabel(r"Infected nodes")
+           >>> ylabel(r"Infectious nodes")
            Text(...)
            >>> tight_layout()
            >>> savefig("SI.svg")
@@ -271,7 +271,7 @@ class SIState(EpidemicStateBase):
         .. figure:: SI.svg
            :align: center
 
-           Number of infected nodes vs. time for an SI dynamics.
+           Number of infectious nodes vs. time for an SI dynamics.
 
         References
         ----------
@@ -311,7 +311,7 @@ class SISState(DiscreteStateBase):
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
-           Initial infected vertex. If not provided, and if the global state is
+           Initial infectious vertex. If not provided, and if the global state is
            also not provided via paramter ``s``, a random vertex will be chosen.
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
@@ -327,7 +327,7 @@ class SISState(DiscreteStateBase):
 
         This implements an SIS epidemic process
         [pastor-satorras-epidemic-2015]_, where nodes in the susceptible state
-        (value 0) are infected by neighbours in the infected state (value 1),
+        (value 0) are infectious by neighbours in the infectious state (value 1),
         which can then eventually recover to a susceptible state.
 
         If a node :math:`i` is updated at time :math:`t`, the transition
@@ -372,7 +372,7 @@ class SISState(DiscreteStateBase):
            [...]
            >>> xlabel(r"Time")
            Text(...)
-           >>> ylabel(r"Infected nodes")
+           >>> ylabel(r"Infectious nodes")
            Text(...)
            >>> tight_layout()
            >>> savefig("SIS.svg")
@@ -380,7 +380,7 @@ class SISState(DiscreteStateBase):
         .. figure:: SIS.svg
            :align: center
 
-           Number of infected nodes vs. time for an SIS dynamics.
+           Number of infectious nodes vs. time for an SIS dynamics.
 
         References
         ----------
@@ -420,7 +420,7 @@ class SIRState(DiscreteStateBase):
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
-           Initial infected vertex. If not provided, and if the global state is
+           Initial infectious vertex. If not provided, and if the global state is
            also not provided via paramter ``s``, a random vertex will be chosen.
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
@@ -436,7 +436,7 @@ class SIRState(DiscreteStateBase):
 
         This implements an SIR epidemic process
         [pastor-satorras-epidemic-2015]_, where nodes in the susceptible state
-        (value 0) are infected by neighbours in the infected state (value 1),
+        (value 0) are infectious by neighbours in the infectious state (value 1),
         which can then eventually recover to a recovered state (value 2).
 
         If a node :math:`i` is updated at time :math:`t`, the transition
@@ -482,7 +482,7 @@ class SIRState(DiscreteStateBase):
            <...>
            >>> plot(S, label="Susceptible")
            [...]
-           >>> plot(X, label="Infected")
+           >>> plot(X, label="Infectious")
            [...]
            >>> plot(R, label="Recovered")
            [...]
@@ -498,7 +498,7 @@ class SIRState(DiscreteStateBase):
         .. figure:: SIR.svg
            :align: center
 
-           Number of susceptible, infected, and recovered nodes vs. time for an
+           Number of susceptible, infectious, and recovered nodes vs. time for an
            SIR dynamics.
 
         References
@@ -542,7 +542,7 @@ class SIRSState(DiscreteStateBase):
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
-           Initial infected vertex. If not provided, and if the global state is
+           Initial infectious vertex. If not provided, and if the global state is
            also not provided via paramter ``s``, a random vertex will be chosen.
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
@@ -558,7 +558,7 @@ class SIRSState(DiscreteStateBase):
 
         This implements an SIRS epidemic process
         [pastor-satorras-epidemic-2015]_, where nodes in the susceptible state
-        (value 0) are infected by neighbours in the infected state (value 1),
+        (value 0) are infectious by neighbours in the infectious state (value 1),
         which can then eventually recover to a recovered state (value 2), and
         finally back to the susceptible state.
 
@@ -609,7 +609,7 @@ class SIRSState(DiscreteStateBase):
            <...>
            >>> plot(S, label="Susceptible")
            [...]
-           >>> plot(X, label="Infected")
+           >>> plot(X, label="Infectious")
            [...]
            >>> plot(R, label="Recovered")
            [...]
@@ -625,7 +625,7 @@ class SIRSState(DiscreteStateBase):
         .. figure:: SIRS.svg
            :align: center
 
-           Number of susceptible, infected, and recovered nodes vs. time for an
+           Number of susceptible, infectious, and recovered nodes vs. time for an
            SIRS dynamics.
 
         References
