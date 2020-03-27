@@ -339,7 +339,11 @@ def betweenness(g, pivots=None, vprop=None, eprop=None, weight=None, norm=True):
     vpivots.a = pivots
     libgraph_tool_centrality.\
             get_betweenness(g._Graph__graph, vpivots, _prop("e", g, weight),
-                            _prop("e", g, eprop), _prop("v", g, vprop), norm)
+                            _prop("e", g, eprop), _prop("v", g, vprop))
+    if norm:
+        libgraph_tool_centrality.\
+            norm_betweenness(g._Graph__graph, vpivots, _prop("e", g, eprop),
+                             _prop("v", g, vprop))
     return vprop, eprop
 
 def closeness(g, weight=None, source=None, vprop=None, norm=True, harmonic=False):

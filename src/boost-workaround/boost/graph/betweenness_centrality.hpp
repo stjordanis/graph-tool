@@ -622,13 +622,14 @@ central_point_dominance(const Graph& g, CentralityMap centrality)
   typedef typename graph_traits<Graph>::vertex_iterator vertex_iterator;
   typedef typename property_traits<CentralityMap>::value_type centrality_type;
 
-  typename graph_traits<Graph>::vertices_size_type n = num_vertices(g);
+  typename graph_traits<Graph>::vertices_size_type n = 0;
 
   // Find max centrality
   centrality_type max_centrality(0);
   vertex_iterator v, v_end;
   for (tie(v, v_end) = vertices(g); v != v_end; ++v) {
     max_centrality = (max)(max_centrality, get(centrality, *v));
+    n++;
   }
 
   // Compute central point dominance

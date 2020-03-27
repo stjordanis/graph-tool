@@ -54,24 +54,19 @@ void normalize_betweenness(const Graph& g,
     typedef typename vprop_map_t<bool>::type::unchecked_t vprop_t;
     vprop_t is_pivot(get(vertex_index, g), num_vertices(g));
 
-    parallel_loop(pivots, [&](size_t, auto v){ is_pivot[v] = true;});
+    for (auto v : pivots)
+        is_pivot[v] = true;
 
-    parallel_vertex_loop
-        (g,
-         [&](auto v)
-         {
-             if (is_pivot[v])
-                 put(vertex_betweenness, v, pfactor * get(vertex_betweenness, v));
-             else
-                 put(vertex_betweenness, v, vfactor * get(vertex_betweenness, v));
-         });
+    for (auto v : vertices_range(g))
+    {
+        if (is_pivot[v])
+            put(vertex_betweenness, v, pfactor * get(vertex_betweenness, v));
+        else
+            put(vertex_betweenness, v, vfactor * get(vertex_betweenness, v));
+    }
 
-    parallel_edge_loop
-        (g,
-         [&](const auto& e)
-         {
-             put(edge_betweenness, e, efactor * get(edge_betweenness, e));
-         });
+    for (auto e : edges_range(g))
+        put(edge_betweenness, e, efactor * get(edge_betweenness, e));
 }
 
 struct get_betweenness
@@ -82,8 +77,7 @@ struct get_betweenness
                     std::vector<size_t>& pivots,
                     GraphInterface::vertex_index_map_t index_map,
                     EdgeBetweenness edge_betweenness,
-                    VertexBetweenness vertex_betweenness,
-                    bool normalize, size_t n) const
+                    VertexBetweenness vertex_betweenness) const
     {
         vector<vector<typename graph_traits<Graph>::edge_descriptor> >
             incoming_map(num_vertices(g));
@@ -98,8 +92,6 @@ struct get_betweenness
              make_iterator_property_map(dependency_map.begin(), index_map),
              make_iterator_property_map(path_count_map.begin(), index_map),
              index_map);
-        if (normalize)
-            normalize_betweenness(g, pivots, edge_betweenness, vertex_betweenness, n);
     }
 };
 
@@ -112,8 +104,8 @@ struct get_weighted_betweenness
                     VertexIndexMap vertex_index,
                     EdgeBetweenness edge_betweenness,
                     VertexBetweenness vertex_betweenness,
-                    boost::any weight_map, bool normalize,
-                    size_t n, size_t max_eindex) const
+                    boost::any weight_map,
+                    size_t max_eindex) const
     {
         vector<vector<typename graph_traits<Graph>::edge_descriptor> >
             incoming_map(num_vertices(g));
@@ -133,16 +125,13 @@ struct get_weighted_betweenness
              make_iterator_property_map(dependency_map.begin(), vertex_index),
              make_iterator_property_map(path_count_map.begin(), vertex_index),
              vertex_index, weight.get_unchecked(max_eindex+1));
-        if (normalize)
-            normalize_betweenness(g, pivots, edge_betweenness, vertex_betweenness, n);
     }
 };
 
 void betweenness(GraphInterface& g, std::vector<size_t>& pivots,
                  boost::any weight,
                  boost::any edge_betweenness,
-                 boost::any vertex_betweenness,
-                 bool normalize)
+                 boost::any vertex_betweenness)
 {
     if (!belongs<edge_floating_properties>()(edge_betweenness))
         throw ValueException("edge property must be of floating point value"
@@ -160,8 +149,8 @@ void betweenness(GraphInterface& g, std::vector<size_t>& pivots,
                             std::ref(pivots),
                             g.get_vertex_index(),
                             std::placeholders::_2,
-                            std::placeholders::_3, weight, normalize,
-                            g.get_num_vertices(), g.get_edge_index_range()),
+                            std::placeholders::_3, weight,
+                            g.get_edge_index_range()),
              edge_floating_properties(),
              vertex_floating_properties())
             (edge_betweenness, vertex_betweenness);
@@ -172,13 +161,36 @@ void betweenness(GraphInterface& g, std::vector<size_t>& pivots,
             (g, std::bind<void>(get_betweenness(), std::placeholders::_1,
                                 std::ref(pivots),
                                 g.get_vertex_index(), std::placeholders::_2,
-                                std::placeholders::_3, normalize,
-                                g.get_num_vertices()),
+                                std::placeholders::_3),
              edge_floating_properties(),
              vertex_floating_properties())
             (edge_betweenness, vertex_betweenness);
     }
 }
+
+void norm_betweenness(GraphInterface& g, std::vector<size_t>& pivots,
+                      boost::any edge_betweenness,
+                      boost::any vertex_betweenness)
+{
+    if (!belongs<edge_floating_properties>()(edge_betweenness))
+        throw ValueException("edge property must be of floating point value"
+                             " type");
+
+    if (!belongs<vertex_floating_properties>()(vertex_betweenness))
+        throw ValueException("vertex property must be of floating point value"
+                             " type");
+
+    size_t n = g.get_num_vertices();
+    run_action<>()
+        (g, [&](auto& g, auto ep, auto vp)
+            {
+                normalize_betweenness(g, pivots, ep, vp, n);
+            },
+         edge_floating_properties(),
+         vertex_floating_properties())
+        (edge_betweenness, vertex_betweenness);
+}
+
 
 struct get_central_point_dominance
 {
@@ -186,7 +198,7 @@ struct get_central_point_dominance
     void operator()(Graph& g, VertexBetweenness vertex_betweenness, double& c)
         const
     {
-        c = double(central_point_dominance(g, vertex_betweenness));
+        c = central_point_dominance(g, vertex_betweenness);
     }
 };
 
@@ -205,5 +217,6 @@ void export_betweenness()
 {
     using namespace boost::python;
     def("get_betweenness", &betweenness);
+    def("norm_betweenness", &norm_betweenness);
     def("get_central_point_dominance", &central_point);
 }
