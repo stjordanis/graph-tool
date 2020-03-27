@@ -64,6 +64,15 @@ public:
     std::shared_ptr<std::vector<size_t>> _active;
 };
 
+template <class Map>
+Map get_pmap(python::object o)
+{
+    o = o.attr("_get_any")();
+    boost::any& a = python::extract<boost::any&>(o);
+    Map m = boost::any_cast<typename Map::checked_t>(a).get_unchecked();
+    return m;
+}
+
 template <bool exposed, bool weighted, bool constant_beta>
 class SI_state: public discrete_state_base<>
 {
@@ -73,12 +82,13 @@ public:
 
     typedef typename eprop_map_t<double>::type::unchecked_t bmap_t;
     typedef std::conditional_t<weighted, bmap_t, double> beta_t;
+    typedef typename vprop_map_t<double>::type::unchecked_t rmap_t;
 
     template <class Graph, class RNG>
     SI_state(Graph& g, smap_t s, smap_t s_temp, python::dict params, RNG&)
         : discrete_state_base(s, s_temp),
-          _epsilon(python::extract<double>(params["epsilon"])),
-          _r(python::extract<double>(params["r"])),
+          _epsilon(get_pmap<rmap_t>(params["epsilon"])),
+          _r(get_pmap<rmap_t>(params["r"])),
           _m(num_vertices(g)),
           _m_temp(num_vertices(g))
     {
@@ -202,8 +212,9 @@ public:
 
         if (exposed && _s[v] == State::E)
         {
-            std::bernoulli_distribution einfect(_epsilon);
-            if (_epsilon > 0 && einfect(rng))
+            auto epsilon = _epsilon[v];
+            std::bernoulli_distribution einfect(epsilon);
+            if (epsilon > 0 && einfect(rng))
             {
                 infect<sync>(g, v, s_out);
                 return 1;
@@ -211,8 +222,9 @@ public:
             return 0;
         }
 
-        std::bernoulli_distribution spontaneous(_r);
-        if (_r > 0 && spontaneous(rng))
+        auto r = _r[v];
+        std::bernoulli_distribution spontaneous(r);
+        if (r > 0 && spontaneous(rng))
         {
             if constexpr (exposed)
                 expose(g, v, s_out);
@@ -255,8 +267,8 @@ public:
 
 protected:
     beta_t _beta;
-    double _epsilon;
-    double _r;
+    rmap_t _epsilon;
+    rmap_t _r;
 
     typedef std::conditional_t<weighted,
                                typename vprop_map_t<double>::type::unchecked_t,
@@ -272,6 +284,7 @@ public:
 
     typedef SI_state<exposed, weighted, constant_beta> base_t;
     typedef typename base_t::smap_t smap_t;
+    typedef typename base_t::rmap_t rmap_t;
     typedef typename base_t::State State;
     using base_t::_s;
     using base_t::_m;
@@ -280,7 +293,7 @@ public:
     template <class Graph, class RNG>
     SIS_state(Graph& g, smap_t s, smap_t s_temp, python::dict params, RNG& rng)
         : base_t(g, s, s_temp, params, rng),
-          _gamma(python::extract<double>(params["gamma"]))
+          _gamma(get_pmap<rmap_t>(params["gamma"]))
     {};
 
     template <bool sync, class Graph>
@@ -333,8 +346,9 @@ public:
     {
         if (_s[v] == State::I)
         {
-            std::bernoulli_distribution srecover(_gamma);
-            if (_gamma > 0 && srecover(rng))
+            auto gamma = _gamma[v];
+            std::bernoulli_distribution srecover(gamma);
+            if (gamma > 0 && srecover(rng))
             {
                 recover<sync>(g, v, s_out);
                 return 1;
@@ -351,7 +365,7 @@ public:
 
 
 protected:
-    double _gamma;
+    rmap_t _gamma;
 };
 
 template <bool exposed, bool weighted, bool constant_beta>
@@ -360,13 +374,14 @@ class SIRS_state: public SIS_state<exposed, true, weighted, constant_beta>
 public:
     typedef SIS_state<exposed, true, weighted, constant_beta> base_t;
     typedef typename base_t::smap_t smap_t;
+    typedef typename base_t::rmap_t rmap_t;
     typedef typename base_t::State State;
     using base_t::_s;
 
     template <class Graph, class RNG>
     SIRS_state(Graph& g, smap_t s, smap_t s_temp, python::dict params, RNG& rng)
         : base_t(g, s, s_temp, params, rng),
-          _mu(python::extract<double>(params["mu"]))
+          _mu(get_pmap<rmap_t>(params["mu"]))
     {};
 
 
@@ -375,8 +390,9 @@ public:
     {
         if (_s[v] == State::R)
         {
-            std::bernoulli_distribution srecover(_mu);
-            if (_mu > 0 && srecover(rng))
+            auto mu = _mu[v];
+            std::bernoulli_distribution srecover(mu);
+            if (mu > 0 && srecover(rng))
             {
                 s_out[v] = State::S;
                 return 1;
@@ -392,7 +408,7 @@ public:
     constexpr bool has_absorbing() { return false; }
 
 private:
-    double _mu;
+    rmap_t _mu;
 };
 
 

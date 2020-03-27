@@ -70,7 +70,7 @@ Contents
 from __future__ import division, absolute_import, print_function
 
 from .. import _degree, _prop, Graph, GraphView, _get_rng, PropertyMap, \
-    EdgePropertyMap, _check_prop_scalar
+    EdgePropertyMap, VertexPropertyMap, _check_prop_scalar
 from .. stats import label_self_loops
 import numpy
 import numpy.random
@@ -146,7 +146,7 @@ class DiscreteStateBase(object):
         return self._state.iterate_async(niter, _get_rng())
 
 class EpidemicStateBase(DiscreteStateBase):
-    def __init__(self, g, beta, constant_beta, make_state, v0=None, s=None):
+    def __init__(self, g, constant_beta, make_state, params, v0=None, s=None):
         r"""Base state for epidemic dynamics. This class it not meant to be
         instantiated directly."""
 
@@ -159,6 +159,7 @@ class EpidemicStateBase(DiscreteStateBase):
                 v0 = g.vertex(v0, use_index=False)
             self.s[v0] = 1
 
+        beta = params["beta"]
         weighted = isinstance(beta, EdgePropertyMap)
         if weighted:
             _check_prop_scalar(beta, "beta")
@@ -166,7 +167,18 @@ class EpidemicStateBase(DiscreteStateBase):
                 if constant_beta:
                     raise ValueError("if constant_beta == True, the type of beta must be double")
                 beta = beta.copy("double")
-        self.beta = beta
+        params["beta"] = beta
+
+        for p in ["r", "epsilon", "gamma", "mu"]:
+            if p not in params:
+                continue
+            if not isinstance(params[p], VertexPropertyMap):
+                params[p] = g.new_vp("double", val=params[p])
+            _check_prop_scalar(params[p], p)
+            if params[p].value_type() != "double":
+                params[p] = params[p].copy("double")
+        self.params = params
+
         self.make_state = lambda *args: make_state(*args, weighted, constant_beta)
 
 
@@ -183,12 +195,12 @@ class SIState(EpidemicStateBase):
            Transmission probability. If an :class:`~graph_tool.EdgePropertyMap`
            object is passed, it must contain the transmission probability for
            every edge.
-        r : ``float`` (optional, default: ``0.``)
+        r : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``0.``)
            Spontaneous infection probability.
         exposed : ``boolean`` (optional, default: ``False``)
            If ``True``, an SEI model is simulated, with an additional "exposed"
            state.
-        epsilon : ``float`` (optional, default: ``.1``)
+        epsilon : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
@@ -217,7 +229,7 @@ class SIState(EpidemicStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -226,7 +238,7 @@ class SIState(EpidemicStateBase):
 
         If the option ``exposed == True`` is given, then the states transit
         first from 0 to -1 (exposed) with probability given by 1. above, and
-        then finally from -1 to 1 with probability :math:`\epsilon`.
+        then finally from -1 to 1 with probability :math:`\epsilon_i`.
 
         Examples
         --------
@@ -270,11 +282,11 @@ class SIState(EpidemicStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, beta, constant_beta,
+        EpidemicStateBase.__init__(self, g, constant_beta,
                                    lib_dynamics.make_SEI_state if exposed else lib_dynamics.make_SI_state,
+                                   dict(beta=beta, r=r, epsilon=epsilon),
                                    v0, s)
-        DiscreteStateBase.__init__(self, g, self.make_state,
-                                   dict(beta=self.beta, r=r, epsilon=epsilon),
+        DiscreteStateBase.__init__(self, g, self.make_state, self.params,
                                    self.s)
 
 class SISState(DiscreteStateBase):
@@ -325,17 +337,17 @@ class SISState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
         2. If :math:`s_i(t) = 1`, we have :math:`s_i(t+1) = 0` with probability
-           :math:`\gamma`, or :math:`s_i(t+1) = 1` with probability
-           :math:`1-\gamma`.
+           :math:`\gamma_i`, or :math:`s_i(t+1) = 1` with probability
+           :math:`1-\gamma_i`.
 
         If the option ``exposed == True`` is given, then the states transit
         first from 0 to -1 (exposed) with probability given by 1. above, and
-        then finally from -1 to 1 with probability :math:`\epsilon`.
+        then finally from -1 to 1 with probability :math:`\epsilon_i`.
 
         Examples
         --------
@@ -379,12 +391,12 @@ class SISState(DiscreteStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, beta, constant_beta,
+        EpidemicStateBase.__init__(self, g, constant_beta,
                                    lib_dynamics.make_SEIS_state if exposed else lib_dynamics.make_SIS_state,
+                                   dict(beta=beta, gamma=gamma, r=r,
+                                        epsilon=epsilon),
                                    v0, s)
-        DiscreteStateBase.__init__(self, g, self.make_state,
-                                   dict(beta=self.beta, gamma=gamma, r=r,
-                                        epsilon=epsilon), self.s)
+        DiscreteStateBase.__init__(self, g, self.make_state, self.params, self.s)
 
 class SIRState(DiscreteStateBase):
     def __init__(self, g, beta=1., gamma=.1, r=0, exposed=False, epsilon=.1,
@@ -434,17 +446,17 @@ class SIRState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
         2. If :math:`s_i(t) = 1`, we have :math:`s_i(t+1) = 2` with probability
-           :math:`\gamma`, or :math:`s_i(t+1) = 1` with probability
-           :math:`1-\gamma`.
+           :math:`\gamma_i`, or :math:`s_i(t+1) = 1` with probability
+           :math:`1-\gamma_i`.
 
         If the option ``exposed == True`` is given, then the states transit
         first from 0 to -1 (exposed) with probability given by 1. above, and
-        then finally from -1 to 1 with probability :math:`\epsilon`.
+        then finally from -1 to 1 with probability :math:`\epsilon_i`.
 
         Examples
         --------
@@ -498,12 +510,13 @@ class SIRState(DiscreteStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, beta, constant_beta,
+        EpidemicStateBase.__init__(self, g, constant_beta,
                                    lib_dynamics.make_SEIR_state if exposed else lib_dynamics.make_SIR_state,
+                                   dict(beta=beta, gamma=gamma, r=r,
+                                        epsilon=epsilon),
                                    v0, s)
         DiscreteStateBase.__init__(self, g, self.make_state,
-                                   dict(beta=self.beta, gamma=gamma, r=r,
-                                        epsilon=epsilon), self.s)
+                                   self.params, self.s)
 
 class SIRSState(DiscreteStateBase):
     def __init__(self, g, beta=1, gamma=.1, mu=.1, r=0, exposed=False,
@@ -556,21 +569,21 @@ class SIRSState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
         2. If :math:`s_i(t) = 1`, we have :math:`s_i(t+1) = 2` with probability
-           :math:`\gamma`, or :math:`s_i(t+1) = 1` with probability
-           :math:`1-\gamma`.
+           :math:`\gamma_i`, or :math:`s_i(t+1) = 1` with probability
+           :math:`1-\gamma_i`.
 
         3. If :math:`s_i(t) = 2`, we have :math:`s_i(t+1) = 1` with probability
-           :math:`\mu`, or :math:`s_i(t+1) = 2` with probability
-           :math:`1-\mu`.
+           :math:`\mu_i`, or :math:`s_i(t+1) = 2` with probability
+           :math:`1-\mu_i`.
 
         If the option ``exposed == True`` is given, then the states transit
         first from 0 to -1 (exposed) with probability given by 1. above, and
-        then finally from -1 to 1 with probability :math:`\epsilon`.
+        then finally from -1 to 1 with probability :math:`\epsilon_i`.
 
         Examples
         --------
@@ -624,12 +637,13 @@ class SIRSState(DiscreteStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, beta, constant_beta,
+        EpidemicStateBase.__init__(self, g, constant_beta,
                                    lib_dynamics.make_SEIRS_state if exposed else lib_dynamics.make_SIRS_state,
+                                   dict(beta=beta, gamma=gamma, mu=mu, r=r,
+                                        epsilon=epsilon),
                                    v0, s)
         DiscreteStateBase.__init__(self, g, self.make_state,
-                                   dict(beta=self.beta, gamma=gamma, mu=mu, r=r,
-                                        epsilon=epsilon), self.s)
+                                   self.params, self.s)
 
 
 class VoterState(DiscreteStateBase):
