@@ -738,6 +738,7 @@ private:
     std::istream& _s;
 };
 
+bool hasattr(boost::python::object obj, std::string const& attrName);
 
 } //graph_tool namespace
 

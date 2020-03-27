@@ -805,6 +805,11 @@ void do_add_edge_list_hashed(GraphInterface& gi, python::object aedge_list,
 void do_add_edge_list_iter(GraphInterface& gi, python::object edge_list,
                            python::object eprops);
 
+bool hasattr(boost::python::object obj, std::string const& attrName)
+{
+    return PyObject_HasAttrString(obj.ptr(), attrName.c_str());
+}
+
 } // namespace graph_tool
 
 // register everything

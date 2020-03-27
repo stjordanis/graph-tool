@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "graph_blockmodel_dynamics.hh"
+#include "graph_python_interface.hh"
 
 namespace graph_tool
 {
@@ -696,8 +697,6 @@ double l1p2cosh(T x) // log(1 + exp(x) + exp(-x))
         return -x + log1p(exp(x + log1p(exp(x))));  // exp(-x) * (1 + exp(x)(1 + exp(x)))
 }
 
-
-bool hasattr(boost::python::object obj, std::string const& attrName);
 
 class IsingBaseState
 {

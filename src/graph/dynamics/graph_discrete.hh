@@ -21,6 +21,7 @@
 #include "graph.hh"
 #include "graph_filtering.hh"
 #include "graph_util.hh"
+#include "graph_python_interface.hh"
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -63,36 +64,74 @@ public:
     std::shared_ptr<std::vector<size_t>> _active;
 };
 
-template <bool exposed>
+template <bool exposed, bool weighted, bool constant_beta>
 class SI_state: public discrete_state_base<>
 {
 public:
 
-    enum State { S, I, R, E};
+    enum State { S, I, R, E };
+
+    typedef typename eprop_map_t<double>::type::unchecked_t bmap_t;
+    typedef std::conditional_t<weighted, bmap_t, double> beta_t;
 
     template <class Graph, class RNG>
     SI_state(Graph& g, smap_t s, smap_t s_temp, python::dict params, RNG&)
         : discrete_state_base(s, s_temp),
-          _beta(python::extract<double>(params["beta"])),
           _epsilon(python::extract<double>(params["epsilon"])),
           _r(python::extract<double>(params["r"])),
           _m(num_vertices(g)),
           _m_temp(num_vertices(g))
     {
-        size_t M = 0;
-        for (auto v : vertices_range(g))
+        python::object obeta = params["beta"];
+        if constexpr (weighted)
         {
-            size_t k = 0;
-            for (auto w : in_or_out_neighbors_range(v, g))
-            {
-                _m[v] += (_s[w] == State::I);
-                ++k;
-            }
-            _m_temp[v] = _m[v];
-            M = std::max(M, k);
+            obeta = obeta.attr("_get_any")();
+            boost::any& abeta = python::extract<boost::any&>(obeta);
+            _beta = boost::any_cast<typename beta_t::checked_t>(abeta).get_unchecked();
         }
-        for (size_t m = 0; m < M + 1; ++m)
-            _prob.push_back(1-std::pow(1-_beta, m));
+        else
+        {
+            _beta = python::extract<beta_t>(obeta);
+        }
+
+        if constexpr (!weighted)
+        {
+            size_t M = 0;
+            for (auto v : vertices_range(g))
+            {
+                size_t k = 0;
+                for (auto w : in_or_out_neighbors_range(v, g))
+                {
+                    _m[v] += (_s[w] == State::I);
+                    ++k;
+                }
+                _m_temp[v] = _m[v];
+                M = std::max(M, k);
+            }
+            for (size_t m = 0; m < M + 1; ++m)
+                _prob.push_back(1-std::pow(1-_beta, m));
+        }
+        else
+        {
+            if constexpr (constant_beta)
+            {
+                eprop_map_t<double>::type beta(get(edge_index_t(), g));
+                for (auto e : edges_range(g))
+                    beta[e] = std::log1p(-_beta[e]);
+                _beta = beta;
+            }
+
+            for (auto v : vertices_range(g))
+            {
+                for (auto e : in_or_out_edges_range(v, g))
+                {
+                    auto w = (source(e, g) != v) ? source(e, g) : target(e, g);
+                    if (_s[w] == State::I)
+                        _m[v] += get_p(e);
+                }
+                _m_temp[v] = _m[v];
+            }
+        }
     };
 
     template <class Graph>
@@ -101,23 +140,57 @@ public:
         s_out[v] = State::E;
     }
 
+    template <class Edge>
+    constexpr double get_p(Edge& e)
+    {
+        if constexpr (constant_beta)
+            return _beta[e];
+        else
+            return std::log1p(-_beta[e]);
+    }
+
     template <bool sync, class Graph>
     void infect(Graph& g, size_t v, smap_t& s_out)
     {
         s_out[v] = State::I;
-        if (sync)
+        if constexpr (!weighted)
         {
-            for (auto w : out_neighbors_range(v, g))
+            if constexpr (sync)
             {
-                auto& m = _m_temp[w];
-                #pragma omp atomic
-                m++;
+                for (auto w : out_neighbors_range(v, g))
+                {
+                    auto& m = _m_temp[w];
+                    #pragma omp atomic
+                    m++;
+                }
+            }
+            else
+            {
+                for (auto w : out_neighbors_range(v, g))
+                    _m[w]++;
             }
         }
         else
         {
-            for (auto w : out_neighbors_range(v, g))
-                _m[w]++;
+            if constexpr (sync)
+            {
+                for (auto e : out_edges_range(v, g))
+                {
+                    auto w = target(e, g);
+                    auto& m = _m_temp[w];
+                    auto p = get_p(e);
+                    #pragma omp atomic
+                    m += p;
+                }
+            }
+            else
+            {
+                for (auto e : out_edges_range(v, g))
+                {
+                    auto w = target(e, g);
+                    _m[w] += get_p(e);
+                }
+            }
         }
     }
 
@@ -150,8 +223,14 @@ public:
 
         auto m = _m[v];
 
-        std::bernoulli_distribution minfect(_prob[m]);
-        if (m > 0 && minfect(rng))
+        double prob = 0;
+        if constexpr (!weighted)
+            prob = _prob[m];
+        else
+            prob = 1 - std::exp(m);
+
+        std::bernoulli_distribution minfect(prob);
+        if (prob > 0 && minfect(rng))
         {
             if constexpr (exposed)
                 expose(g, v, s_out);
@@ -175,27 +254,32 @@ public:
     constexpr bool has_absorbing() { return true; }
 
 protected:
-    double _beta;
+    beta_t _beta;
     double _epsilon;
     double _r;
-    discrete_state_base<>::smap_t _m, _m_temp;
+
+    typedef std::conditional_t<weighted,
+                               typename vprop_map_t<double>::type::unchecked_t,
+                               discrete_state_base<>::smap_t> m_t;
+    m_t _m, _m_temp;
     std::vector<double> _prob;
 };
 
-template <bool exposed, bool recovered>
-class SIS_state: public SI_state<exposed>
+template <bool exposed, bool recovered, bool weighted, bool constant_beta>
+class SIS_state: public SI_state<exposed, weighted, constant_beta>
 {
 public:
 
-    typedef typename SI_state<exposed>::smap_t smap_t;
-    typedef typename SI_state<exposed>::State State;
-    using SI_state<exposed>::_s;
-    using SI_state<exposed>::_m;
-    using SI_state<exposed>::_m_temp;
+    typedef SI_state<exposed, weighted, constant_beta> base_t;
+    typedef typename base_t::smap_t smap_t;
+    typedef typename base_t::State State;
+    using base_t::_s;
+    using base_t::_m;
+    using base_t::_m_temp;
 
     template <class Graph, class RNG>
     SIS_state(Graph& g, smap_t s, smap_t s_temp, python::dict params, RNG& rng)
-        : SI_state<exposed>(g, s, s_temp, params, rng),
+        : base_t(g, s, s_temp, params, rng),
           _gamma(python::extract<double>(params["gamma"]))
     {};
 
@@ -203,19 +287,44 @@ public:
     void recover(Graph& g, size_t v, smap_t& s_out)
     {
         s_out[v] = recovered ? State::R : State::S;
-        if constexpr (sync)
+        if constexpr (!weighted)
         {
-            for (auto w : out_neighbors_range(v, g))
+            if constexpr (sync)
             {
-                auto& m = _m_temp[w];
-                #pragma omp atomic
-                m--;
+                for (auto w : out_neighbors_range(v, g))
+                {
+                    auto& m = _m_temp[w];
+                    #pragma omp atomic
+                    m--;
+                }
+            }
+            else
+            {
+                for (auto w : out_neighbors_range(v, g))
+                    _m[w]--;
             }
         }
         else
         {
-            for (auto w : out_neighbors_range(v, g))
-                _m[w]--;
+            if constexpr (sync)
+            {
+                for (auto e : out_edges_range(v, g))
+                {
+                    auto w = target(e, g);
+                    auto& m = _m_temp[w];
+                    auto p = base_t::get_p(e);
+                    #pragma omp atomic
+                    m -= p;
+                }
+            }
+            else
+            {
+                for (auto e : out_edges_range(v, g))
+                {
+                    auto w = target(e, g);
+                    _m[w] -= base_t::get_p(e);
+                }
+            }
         }
     }
 
@@ -232,7 +341,7 @@ public:
             }
             return 0;
         }
-        return SI_state<exposed>::template update_node<sync>(g, v, s_out, rng);
+        return base_t::template update_node<sync>(g, v, s_out, rng);
     }
 
     template <class Graph>
@@ -245,18 +354,18 @@ protected:
     double _gamma;
 };
 
-template <bool exposed>
-class SIRS_state: public SIS_state<exposed, true>
+template <bool exposed, bool weighted, bool constant_beta>
+class SIRS_state: public SIS_state<exposed, true, weighted, constant_beta>
 {
 public:
-
-    typedef typename SI_state<exposed>::smap_t smap_t;
-    typedef typename SI_state<exposed>::State State;
-    using SI_state<exposed>::_s;
+    typedef SIS_state<exposed, true, weighted, constant_beta> base_t;
+    typedef typename base_t::smap_t smap_t;
+    typedef typename base_t::State State;
+    using base_t::_s;
 
     template <class Graph, class RNG>
     SIRS_state(Graph& g, smap_t s, smap_t s_temp, python::dict params, RNG& rng)
-        : SIS_state<exposed,true>(g, s, s_temp, params, rng),
+        : base_t(g, s, s_temp, params, rng),
           _mu(python::extract<double>(params["mu"]))
     {};
 
@@ -274,7 +383,7 @@ public:
             }
             return 0;
         }
-        return SIS_state<exposed,true>::template update_node<sync>(g, v, s_out, rng);
+        return base_t::template update_node<sync>(g, v, s_out, rng);
     }
 
     template <class Graph>

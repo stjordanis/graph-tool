@@ -69,7 +69,8 @@ Contents
 
 from __future__ import division, absolute_import, print_function
 
-from .. import _degree, _prop, Graph, GraphView, _get_rng, PropertyMap
+from .. import _degree, _prop, Graph, GraphView, _get_rng, PropertyMap, \
+    EdgePropertyMap, _check_prop_scalar
 from .. stats import label_self_loops
 import numpy
 import numpy.random
@@ -145,7 +146,7 @@ class DiscreteStateBase(object):
         return self._state.iterate_async(niter, _get_rng())
 
 class EpidemicStateBase(DiscreteStateBase):
-    def __init__(self, g, v0=None, s=None):
+    def __init__(self, g, beta, constant_beta, make_state, v0=None, s=None):
         r"""Base state for epidemic dynamics. This class it not meant to be
         instantiated directly."""
 
@@ -158,16 +159,30 @@ class EpidemicStateBase(DiscreteStateBase):
                 v0 = g.vertex(v0, use_index=False)
             self.s[v0] = 1
 
+        weighted = isinstance(beta, EdgePropertyMap)
+        if weighted:
+            _check_prop_scalar(beta, "beta")
+            if beta.value_type() != "double":
+                if constant_beta:
+                    raise ValueError("if constant_beta == True, the type of beta must be double")
+                beta = beta.copy("double")
+        self.beta = beta
+        self.make_state = lambda *args: make_state(*args, weighted, constant_beta)
+
+
 class SIState(EpidemicStateBase):
-    def __init__(self, g, beta=1., r=0, exposed=False, epsilon=.1, v0=None, s=None):
+    def __init__(self, g, beta=1., r=0, exposed=False, epsilon=.1, v0=None,
+                 s=None, constant_beta=True):
         r"""SI compartmental epidemic model.
 
         Parameters
         ----------
         g : :class:`~graph_tool.Graph`
            Graph to be used for the dynamics
-        beta : ``float`` (optional, default: ``1.``)
-           Transmission probability.
+        beta : ``float`` or :class:`~graph_tool.EdgePropertyMap` (optional, default: ``1.``)
+           Transmission probability. If an :class:`~graph_tool.EdgePropertyMap`
+           object is passed, it must contain the transmission probability for
+           every edge.
         r : ``float`` (optional, default: ``0.``)
            Spontaneous infection probability.
         exposed : ``boolean`` (optional, default: ``False``)
@@ -182,6 +197,11 @@ class SIState(EpidemicStateBase):
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
            initialized to the susceptible state.
+        constant_beta : ``boolean`` (optional, default: ``True``)
+           If ``True``, and ``beta`` is an edge property map, it will be assumed
+           that the ``beta`` values do not change, such that the probability
+           values can be pre-computed for efficiency. If ``beta`` is a
+           ``float``, this option has no effect.
 
         Notes
         -----
@@ -197,7 +217,7 @@ class SIState(EpidemicStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta)^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -250,14 +270,16 @@ class SIState(EpidemicStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, v0, s)
-        DiscreteStateBase.__init__(self, g,
+        EpidemicStateBase.__init__(self, g, beta, constant_beta,
                                    lib_dynamics.make_SEI_state if exposed else lib_dynamics.make_SI_state,
-                                   dict(beta=beta, r=r, epsilon=epsilon), self.s)
+                                   v0, s)
+        DiscreteStateBase.__init__(self, g, self.make_state,
+                                   dict(beta=self.beta, r=r, epsilon=epsilon),
+                                   self.s)
 
 class SISState(DiscreteStateBase):
     def __init__(self, g, beta=1., gamma=.1, r=0, exposed=False, epsilon=.1,
-                 v0=None, s=None):
+                 v0=None, s=None, constant_beta=True):
         r"""SIS compartmental epidemic model.
 
         Parameters
@@ -282,6 +304,11 @@ class SISState(DiscreteStateBase):
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
            initialized to the susceptible state.
+        constant_beta : ``boolean`` (optional, default: ``True``)
+           If ``True``, and ``beta`` is an edge property map, it will be assumed
+           that the ``beta`` values do not change, such that the probability
+           values can be pre-computed for efficiency. If ``beta`` is a
+           ``float``, this option has no effect.
 
         Notes
         -----
@@ -298,7 +325,7 @@ class SISState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta)^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -352,14 +379,16 @@ class SISState(DiscreteStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, v0, s)
-        DiscreteStateBase.__init__(self, g,
+        EpidemicStateBase.__init__(self, g, beta, constant_beta,
                                    lib_dynamics.make_SEIS_state if exposed else lib_dynamics.make_SIS_state,
-                                   dict(beta=beta, gamma=gamma, r=r, epsilon=epsilon), self.s)
+                                   v0, s)
+        DiscreteStateBase.__init__(self, g, self.make_state,
+                                   dict(beta=self.beta, gamma=gamma, r=r,
+                                        epsilon=epsilon), self.s)
 
 class SIRState(DiscreteStateBase):
     def __init__(self, g, beta=1., gamma=.1, r=0, exposed=False, epsilon=.1,
-                 v0=None, s=None):
+                 v0=None, s=None, constant_beta=True):
         r"""SIR compartmental epidemic model.
 
         Parameters
@@ -384,6 +413,11 @@ class SIRState(DiscreteStateBase):
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
            initialized to the susceptible state.
+        constant_beta : ``boolean`` (optional, default: ``True``)
+           If ``True``, and ``beta`` is an edge property map, it will be assumed
+           that the ``beta`` values do not change, such that the probability
+           values can be pre-computed for efficiency. If ``beta`` is a
+           ``float``, this option has no effect.
 
         Notes
         -----
@@ -400,7 +434,7 @@ class SIRState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta)^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -464,13 +498,16 @@ class SIRState(DiscreteStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, v0, s)
-        DiscreteStateBase.__init__(self, g,
+        EpidemicStateBase.__init__(self, g, beta, constant_beta,
                                    lib_dynamics.make_SEIR_state if exposed else lib_dynamics.make_SIR_state,
-                                   dict(beta=beta, gamma=gamma, r=r, epsilon=epsilon), self.s)
+                                   v0, s)
+        DiscreteStateBase.__init__(self, g, self.make_state,
+                                   dict(beta=self.beta, gamma=gamma, r=r,
+                                        epsilon=epsilon), self.s)
 
 class SIRSState(DiscreteStateBase):
-    def __init__(self, g, beta=1, gamma=.1, mu=.1, r=0, exposed=False, epsilon=.1, v0=None, s=None):
+    def __init__(self, g, beta=1, gamma=.1, mu=.1, r=0, exposed=False,
+                 epsilon=.1, v0=None, s=None, constant_beta=True):
         r"""SIRS compartmental epidemic model.
 
         Parameters
@@ -497,6 +534,11 @@ class SIRSState(DiscreteStateBase):
         s : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
            Initial global state. If not provided, all vertices will be
            initialized to the susceptible state.
+        constant_beta : ``boolean`` (optional, default: ``True``)
+           If ``True``, and ``beta`` is an edge property map, it will be assumed
+           that the ``beta`` values do not change, such that the probability
+           values can be pre-computed for efficiency. If ``beta`` is a
+           ``float``, this option has no effect.
 
         Notes
         -----
@@ -514,7 +556,7 @@ class SIRSState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r)\left(1-\prod_j(1-\beta)^{A_{ij}\delta_{s_j(t),1}}\right) + r,
+               (1-r)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -582,10 +624,12 @@ class SIRSState(DiscreteStateBase):
            :doi:`10.1103/RevModPhys.87.925`, :arxiv:`1408.2701`
 
         """
-        EpidemicStateBase.__init__(self, g, v0, s)
-        DiscreteStateBase.__init__(self, g,
+        EpidemicStateBase.__init__(self, g, beta, constant_beta,
                                    lib_dynamics.make_SEIRS_state if exposed else lib_dynamics.make_SIRS_state,
-                                   dict(beta=beta, gamma=gamma, mu=mu, r=r, epsilon=epsilon), self.s)
+                                   v0, s)
+        DiscreteStateBase.__init__(self, g, self.make_state,
+                                   dict(beta=self.beta, gamma=gamma, mu=mu, r=r,
+                                        epsilon=epsilon), self.s)
 
 
 class VoterState(DiscreteStateBase):

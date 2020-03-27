@@ -60,14 +60,6 @@ python::object make_pseudo_ising_state(boost::python::object oblock_state,
     return state;
 }
 
-namespace graph_tool
-{
-bool hasattr(boost::python::object obj, std::string const& attrName)
-{
-    return PyObject_HasAttrString(obj.ptr(), attrName.c_str());
-}
-}
-
 void export_pseudo_ising_state()
 {
     using namespace boost::python;

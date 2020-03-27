@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "graph_blockmodel_dynamics.hh"
+#include "graph_python_interface.hh"
 
 namespace graph_tool
 {
@@ -233,8 +234,6 @@ double l2sinha(T x) // log((exp(x) - exp(-x))/x)
         return log(2);
     return x + log1p(-exp(-2*x)) - log(x);
 }
-
-bool hasattr(boost::python::object obj, std::string const& attrName);
 
 class CIsingBaseState
 {

@@ -120,7 +120,6 @@ struct add_ptr
     };
 };
 
-
 template <class State>
 void export_state()
 {
@@ -132,31 +131,57 @@ void export_state()
          });
 }
 
+template <template <bool...> class Base, bool... As>
+void export_SI_state()
+{
+    export_state<Base<As..., false, false>>();
+    export_state<Base<As..., true, false>>();
+    export_state<Base<As..., true, true>>();
+}
+
+template <template <bool...> class Base, bool... As>
+python::object make_SI_state(GraphInterface& gi, boost::any as,
+                             boost::any as_temp, python::dict params,
+                             rng_t& rng, bool weighted, bool constant_beta)
+{
+    if (weighted)
+    {
+        if (constant_beta)
+            return make_state<Base<As..., true, true>>(gi, as, as_temp, params, rng);
+        else
+            return make_state<Base<As..., true, false>>(gi, as, as_temp, params, rng);
+    }
+    else
+    {
+        return make_state<Base<As..., false, false>>(gi, as, as_temp, params, rng);
+    }
+}
+
 void export_discrete()
 {
-    export_state<SI_state<false>>();
-    def("make_SI_state", &make_state<SI_state<false>>);
+    export_SI_state<SI_state,false>();
+    def("make_SI_state", &make_SI_state<SI_state,false>);
 
-    export_state<SIS_state<false,false>>();
-    def("make_SIS_state", &make_state<SIS_state<false,false>>);
+    export_SI_state<SIS_state,false,false>();
+    def("make_SIS_state", &make_SI_state<SIS_state,false,false>);
 
-    export_state<SIS_state<false,true>>();
-    def("make_SIR_state", &make_state<SIS_state<false,true>>);
+    export_SI_state<SIS_state,false,true>();
+    def("make_SIR_state", &make_SI_state<SIS_state,false,true>);
 
-    export_state<SIRS_state<false>>();
-    def("make_SIRS_state", &make_state<SIRS_state<false>>);
+    export_SI_state<SIRS_state,false>();
+    def("make_SIRS_state", &make_SI_state<SIRS_state,false>);
 
-    export_state<SI_state<true>>();
-    def("make_SEI_state", &make_state<SI_state<true>>);
+    export_SI_state<SI_state,true>();
+    def("make_SEI_state", &make_SI_state<SI_state,true>);
 
-    export_state<SIS_state<true,false>>();
-    def("make_SEIS_state", &make_state<SIS_state<true,false>>);
+    export_SI_state<SIS_state,true,false>();
+    def("make_SEIS_state", &make_SI_state<SIS_state,true,false>);
 
-    export_state<SIS_state<true,true>>();
-    def("make_SEIR_state", &make_state<SIS_state<true,true>>);
+    export_SI_state<SIS_state,true,true>();
+    def("make_SEIR_state", &make_SI_state<SIS_state,true,true>);
 
-    export_state<SIRS_state<true>>();
-    def("make_SEIRS_state", &make_state<SIRS_state<true>>);
+    export_SI_state<SIRS_state,true>();
+    def("make_SEIRS_state", &make_SI_state<SIRS_state,true>);
 
     export_state<voter_state>();
     def("make_voter_state", &make_state<voter_state>);
