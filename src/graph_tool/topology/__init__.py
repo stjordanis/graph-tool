@@ -2147,7 +2147,7 @@ def shortest_path(g, source, target, weights=None, negative_weights=False,
 
 def all_predecessors(g, dist_map, pred_map, weights=None, epsilon=1e-8):
     """Return a property map with all possible predecessors in the search tree
-        determined by ``dist_map`` and ``pred_map``.
+    determined by ``dist_map`` and ``pred_map``.
 
     Parameters
     ----------
@@ -2156,7 +2156,7 @@ def all_predecessors(g, dist_map, pred_map, weights=None, epsilon=1e-8):
     dist_map : :class:`~graph_tool.VertexPropertyMap`
         Vertex property map with the distances from ``source`` to all other
         vertices.
-    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    pred_map : :class:`~graph_tool.VertexPropertyMap`
         Vertex property map with the predecessors in the search tree.
     weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
         The edge weights.
