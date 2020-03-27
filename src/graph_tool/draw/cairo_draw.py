@@ -737,7 +737,8 @@ def auto_colors(g, bg, pos, back):
 def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                nodesfirst=False, output_size=(600, 600), fit_view=True,
                adjust_aspect=True, ink_scale=1, inline=is_draw_inline,
-               inline_scale=2, mplfig=None, output=None, fmt="auto", **kwargs):
+               inline_scale=2, mplfig=None, output=None, fmt="auto",
+               bg_color=None, **kwargs):
     r"""Draw a graph to screen or to a file using :mod:`cairo`.
 
     Parameters
@@ -1070,11 +1071,10 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         bg = _convert(vertex_attrs.fill_color,
                       vprops.get("fill_color", _vdefaults["fill_color"]),
                       vcmap)
-        bg_color = kwargs.get("bg_color", [1., 1., 1., 1.])
         vprops["text_color"] = auto_colors(g, bg,
                                            vprops.get("text_position",
                                                       _vdefaults["text_position"]),
-                                           bg_color)
+                                           bg_color if bg_color is not None else [1., 1., 1., 1.])
 
     if mplfig is not None:
         ax = None
@@ -1175,6 +1175,11 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
 
         cr.scale(zoom, zoom)
         cr.translate(-x, -y)
+
+        if bg_color is not None:
+            cr.set_source_rgba(bg_color[0], bg_color[1],
+                               bg_color[2], bg_color[3])
+            cr.paint()
 
         cairo_draw(g, pos, cr, vprops, eprops, vorder, eorder,
                    nodesfirst, **kwargs)
