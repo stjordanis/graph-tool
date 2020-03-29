@@ -8,6 +8,8 @@ job_gcc_amd64:
     - cd doc; python3 /usr/bin/sphinx-build -b doctest . build *.rst
   tags:
     - amd64
+  except:
+    - tags
 
 job_clang_amd64:
   script:
@@ -19,6 +21,8 @@ job_clang_amd64:
     - cd doc; python3 /usr/bin/sphinx-build -b doctest . build *.rst
   tags:
     - amd64
+  except:
+    - tags
 
 build_tarball:
   script:
