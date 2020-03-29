@@ -38,7 +38,7 @@ RUN mv -v "${MAKEPKG_ROOT}/"python-graph-tool-*-x86_64.pkg.tar.xz /tmp/python-gr
 
 FROM archlinux/base:latest
 
-RUN echo "Server=https://archive.archlinux.org/repos/`date +%Y/%m/%d`/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
+RUN echo "Server=https://archive.archlinux.org/repos/`date -d 'yesterday 13:00' +%Y/%m/%d`/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
 
 COPY --from=builder /tmp/python-graph-tool.pkg.tar.xz /tmp/python-graph-tool.pkg.tar.xz
 

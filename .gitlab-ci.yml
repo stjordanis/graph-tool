@@ -108,6 +108,6 @@ build_eoan:
 build_docker:
   script:
     - cd release/docker
-    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t graph-tool .
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool .
   only:
     - tags
