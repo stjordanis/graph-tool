@@ -6,7 +6,7 @@ include /usr/share/cdbs/1/class/autotools.mk
 export SPARSEHASH_CFLAGS=-I/usr/include
 export SPARSEHASH_LIBS=-L/usr/lib
 
-export CXXFLAGS=-flto=2 -ffunction-sections -fdata-sections
-export LDFLAGS=-Wl,--gc-sections
+export CXXFLAGS=-flto=${NJOBS} -ffunction-sections -fdata-sections
+export LDFLAGS=-flto=${NJOBS}
 
-DEB_CONFIGURE_EXTRA_FLAGS += --enable-openmp --docdir=/usr/share/doc/python3-graph-tool PYTHON=python3  --with-sparsehash-prefix=google
+DEB_CONFIGURE_EXTRA_FLAGS += --enable-openmp --docdir=/usr/share/doc/python3-graph-tool PYTHON=python3 --with-sparsehash-prefix=google
