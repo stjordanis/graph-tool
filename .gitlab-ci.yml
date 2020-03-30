@@ -92,19 +92,6 @@ build_bionic:
     paths:
       - release/debian/build/*
 
-build_cosmic:
-  script:
-    - BASE=ubuntu:cosmic
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
-    - docker run -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
-
 build_disco:
   script:
     - BASE=ubuntu:disco
