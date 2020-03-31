@@ -514,6 +514,8 @@ def central_point_dominance(g, betweenness):
     Examples
     --------
 
+    .. doctest:: central_point_dominance
+
     >>> g = gt.collection.data["polblogs"]
     >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))
     >>> vp, ep = gt.betweenness(g)
