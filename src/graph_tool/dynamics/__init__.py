@@ -867,7 +867,7 @@ class BinaryThresholdState(DiscreteStateBase):
 
         .. doctest:: binary-threshold
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.BinaryThresholdState(g, r=0.25)
@@ -948,7 +948,7 @@ class IsingGlauberState(DiscreteStateBase):
 
         .. doctest:: glauber-ising
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.IsingGlauberState(g, beta=.05)
@@ -1034,7 +1034,7 @@ class CIsingGlauberState(DiscreteStateBase):
 
         .. doctest:: glauber-cising
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.CIsingGlauberState(g, beta=.2)
@@ -1118,7 +1118,7 @@ class IsingMetropolisState(DiscreteStateBase):
 
         .. doctest:: metropolis-ising
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.IsingMetropolisState(g, beta=.1)
@@ -1210,7 +1210,7 @@ class PottsGlauberState(DiscreteStateBase):
 
         .. doctest:: glauber-potts
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> f = np.eye(4) * 0.1
@@ -1308,7 +1308,7 @@ class PottsMetropolisState(DiscreteStateBase):
 
         .. doctest:: metropolis-potts
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> f = np.eye(4) * 0.1
@@ -1411,7 +1411,7 @@ class KirmanState(DiscreteStateBase):
 
         .. doctest:: kirman
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.KirmanState(g)
@@ -1503,7 +1503,7 @@ class AxelrodState(DiscreteStateBase):
 
         .. doctest:: axelrod
 
-           >>> g = gt.GraphView(gt.collection.data["polblogs"], directed=False)
+           >>> g = gt.GraphView(gt.collection.data["polblogs"].copy(), directed=False)
            >>> gt.remove_parallel_edges(g)
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.AxelrodState(g, f=10, q=30, r=0.005)
