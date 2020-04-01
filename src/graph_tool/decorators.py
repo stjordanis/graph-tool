@@ -52,7 +52,7 @@ else:
         also preserves the function's argument signature. This uses eval, and is
         thus a bit of a hack, but there no better way I know of to do this."""
         def decorate(f):
-            argspec = inspect.getargspec(func)
+            argspec = inspect.getfullargspec(func)
             ___wrap_defaults = defaults = argspec[-1]
             if defaults is not None:
                 def_string = ["___wrap_defaults[%d]" % d for
