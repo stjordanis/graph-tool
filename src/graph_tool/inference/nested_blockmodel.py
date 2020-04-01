@@ -999,7 +999,7 @@ class NestedBlockState(object):
 def hierarchy_minimize(state, B_min=None, B_max=None, b_min=None, b_max=None,
                        frozen_levels=None, bisection_args={},
                        epsilon=1e-8, verbose=False):
-    """Attempt to find a fit of the nested stochastic block model that minimizes the
+    r"""Attempt to find a fit of the nested stochastic block model that minimizes the
     description length.
 
     Parameters

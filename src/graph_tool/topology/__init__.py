@@ -849,7 +849,7 @@ def max_cliques(g):
         yield c
 
 def min_spanning_tree(g, weights=None, root=None, tree_map=None):
-    """
+    r"""
     Return the minimum spanning tree of a given graph.
 
     Parameters
@@ -1043,7 +1043,7 @@ def random_spanning_tree(g, weights=None, root=None, tree_map=None):
 
 
 def dominator_tree(g, root, dom_map=None):
-    """Return a vertex property map the dominator vertices for each vertex.
+    r"""Return a vertex property map the dominator vertices for each vertex.
 
     Parameters
     ----------
@@ -1777,7 +1777,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
                       negative_weights=False, max_dist=None, directed=None,
                       dense=False, dist_map=None, pred_map=False,
                       return_reached=False, dag=False):
-    """Calculate the distance from a source to a target vertex, or to of all
+    r"""Calculate the distance from a source to a target vertex, or to of all
     vertices from a given source, or the all pairs shortest paths, if the source
     is not specified.
 
@@ -2034,7 +2034,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
 
 def shortest_path(g, source, target, weights=None, negative_weights=False,
                   pred_map=None, dag=False):
-    """Return the shortest path from ``source`` to ``target``.
+    r"""Return the shortest path from ``source`` to ``target``.
 
     Parameters
     ----------
@@ -2552,7 +2552,7 @@ def all_circuits(g, unique=False):
 
 
 def pseudo_diameter(g, source=None, weights=None):
-    """
+    r"""
     Compute the pseudo-diameter of the graph.
 
     Parameters
@@ -3180,7 +3180,7 @@ def edge_reciprocity(g):
 
 
 def tsp_tour(g, src, weight=None):
-    """Return a traveling salesman tour of the graph, which is guaranteed to be
+    r"""Return a traveling salesman tour of the graph, which is guaranteed to be
     twice as long as the optimal tour in the worst case.
 
     Parameters

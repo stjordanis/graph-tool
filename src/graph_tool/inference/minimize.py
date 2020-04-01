@@ -119,7 +119,7 @@ def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
                            mcmc_args={}, anneal_args={},
                            mcmc_equilibrate_args={}, shrink_args={},
                            mcmc_multilevel_args={}, verbose=False):
-    """Fit the stochastic block model, by minimizing its description length using an
+    r"""Fit the stochastic block model, by minimizing its description length using an
     agglomerative heuristic.
 
     Parameters
@@ -286,7 +286,7 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
                                   mcmc_args={}, anneal_args={},
                                   mcmc_equilibrate_args={}, shrink_args={},
                                   mcmc_multilevel_args={}, verbose=False):
-    """Fit the nested stochastic block model, by minimizing its description length
+    r"""Fit the nested stochastic block model, by minimizing its description length
     using an agglomerative heuristic.
 
     Parameters
