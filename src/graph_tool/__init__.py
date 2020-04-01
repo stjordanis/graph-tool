@@ -129,7 +129,7 @@ import weakref
 import copy
 import textwrap
 import io
-import collections
+import collections.abc
 import itertools
 import csv
 
@@ -2356,7 +2356,7 @@ class Graph(object):
 
         """
         back = self.__graph.get_num_vertices(False) - 1
-        is_iter = isinstance(vertex, collections.Iterable)
+        is_iter = isinstance(vertex, collections.abc.Iterable)
         if is_iter:
             try:
                 vs = numpy.asarray(vertex, dtype="int64")
@@ -3496,7 +3496,7 @@ class GraphView(Graph):
         if efilt is not None:
             if not isinstance(efilt, PropertyMap):
                 emap = self.new_edge_property("bool")
-                if isinstance(efilt, collections.Iterable):
+                if isinstance(efilt, collections.abc.Iterable):
                     emap.fa = efilt
                 else:
                     for e in g.edges():
@@ -3516,7 +3516,7 @@ class GraphView(Graph):
         if vfilt is not None:
             if not isinstance(vfilt, PropertyMap):
                 vmap = self.new_vertex_property("bool")
-                if isinstance(vfilt, collections.Iterable):
+                if isinstance(vfilt, collections.abc.Iterable):
                     vmap.fa = vfilt
                 else:
                     for v in g.vertices():
