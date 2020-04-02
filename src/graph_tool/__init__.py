@@ -89,13 +89,6 @@ Contents
 --------
 """
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-else:
-    unicode = str
-
 __author__ = "Tiago de Paula Peixoto <tiago@skewed.de>"
 __copyright__ = "Copyright 2006-2020 Tiago de Paula Peixoto"
 __license__ = "GPL version 3 or above"
@@ -133,16 +126,6 @@ import collections.abc
 import itertools
 import csv
 
-if sys.version_info < (3,):
-    import StringIO
-    def _to_str(x):
-        if isinstance(x, unicode):
-            return x.encode("utf8")
-        return x
-else:
-    def _to_str(x):
-        return x
-
 from .decorators import _require, _attrs, _limit_args, _copy_func
 from inspect import ismethod
 
@@ -171,7 +154,7 @@ graph_tool = sys.modules[__name__]
 def _prop(t, g, prop):
     """Return either a property map, or an internal property map with a given
     name."""
-    if isinstance(prop, (str, unicode)):
+    if isinstance(prop, str):
         try:
             pmap = g.properties[(t, prop)]
         except KeyError:
@@ -224,7 +207,7 @@ def _type_alias(type_name):
     if type_name in alias:
         return alias[type_name]
     if type_name in value_types():
-        return _to_str(type_name)
+        return type_name
     ma = re.compile(r"vector<(.*)>").match(type_name)
     if ma:
         t = ma.group(1)
@@ -264,7 +247,7 @@ def _gt_type(obj):
         return "double"
     if issubclass(t, numpy.float128):
         return "long double"
-    if issubclass(t, (str, unicode)):
+    if issubclass(t, str):
         return "string"
     if issubclass(t, bool):
         return "bool"
@@ -283,7 +266,7 @@ def _converter(val_type):
         def convert(val):
             return val
     elif vtype is str:
-        return _c_str
+        return str
     else:
         def convert(val):
             return vtype(val)
@@ -315,41 +298,6 @@ try:
     libcore.mod_info("wrong")
 except BaseException as e:
     ArgumentError = type(e)
-
-# Python 2 vs 3 compatibility
-
-if sys.version_info < (3,):
-    def _c_str(s):
-        if isinstance(s, unicode):
-            return s.encode("utf-8")
-        return str(s)
-    def _str_decode(s):
-        return s
-else:
-    def _c_str(s):
-        return str(s)
-    def _str_decode(s):
-        if isinstance(s, bytes):
-            return s.decode("utf-8")
-        return s
-
-def get_bytes_io(buf=None):
-    """We want BytesIO for python 3, but StringIO for python 2."""
-    if sys.version_info < (3,):
-        return StringIO.StringIO(buf)
-    else:
-        return io.BytesIO(buf)
-
-def conv_pickle_state(state):
-    """State keys may be of type `bytes` if python 3 is being used, but state was
-    pickled with python 2."""
-
-    if sys.version_info >= (3,):
-        keys = [k for k in state.keys() if type(k) is bytes]
-        for k in keys:
-            state[k.decode("utf-8")] = state[k]
-            del state[k]
-
 
 ################################################################################
 # Property Maps
@@ -782,10 +730,9 @@ class PropertyMap(object):
         return state
 
     def __setstate__(self, state):
-        conv_pickle_state(state)
         g = state["g"]
-        key_type = _str_decode(state["key_type"])
-        value_type = _str_decode(state["value_type"])
+        key_type = state["key_type"]
+        value_type = state["value_type"]
         vals = state["vals"]
 
         if state["is_vindex"]:
@@ -1037,6 +984,7 @@ def group_vector_property(props, value_type=None, vprop=None, pos=None):
     >>> print(array([p[g.vertex(0)] for p in props]))
     [51 25  8]
     """
+
     g = props[0].get_graph()
     vtypes = set()
     keys = set()
@@ -1270,7 +1218,7 @@ def edge_endpoint_property(g, prop, endpoint, eprop=None):
         raise ValueError("'eprop' must be of the same value type as 'prop': " +
                          val_t)
     libcore.edge_endpoint(g._Graph__graph, _prop("v", g, prop),
-                          _prop("e", g, eprop), _to_str(endpoint))
+                          _prop("e", g, eprop), endpoint)
     return eprop
 
 @_limit_args({"direction": ["in", "out"], "op": ["sum", "prod", "min", "max"]})
@@ -1323,7 +1271,7 @@ def incident_edges_op(g, direction, op, eprop, vprop=None):
     if direction == "in":
         g = GraphView(g, reversed=True, skip_properties=True)
     libcore.out_edges_op(g._Graph__graph, _prop("e", g, eprop),
-                          _prop("v", g, vprop), _to_str(op))
+                          _prop("v", g, vprop), op)
     if vprop is not orig_vprop:
         g.copy_property(vprop, orig_vprop)
     return orig_vprop
@@ -1390,7 +1338,7 @@ class InternalPropertyDict(dict):
         self.__set_property(t, k, val)
 
     @_limit_args({"t": ["v", "e", "g"]})
-    @_require("key", str, unicode)
+    @_require("key", str)
     def __set_property(self, t, key, v):
         dict.__setitem__(self, (t, key), v)
 
@@ -1407,16 +1355,10 @@ class InternalPropertyDict(dict):
             self[key] = v = default
         return v
 
-    if sys.version_info < (3,):
-        def update(self, *args, **kwargs):
-            temp = dict(*args, **kwargs)
-            for k, v in temp.iteritems():
-                self[k] = v
-    else:
-        def update(self, *args, **kwargs):
-            temp = dict(*args, **kwargs)
-            for k, v in temp.items():
-                self[k] = v
+    def update(self, *args, **kwargs):
+        temp = dict(*args, **kwargs)
+        for k, v in temp.items():
+            self[k] = v
 
 
 class PropertyDict(object):
@@ -1475,16 +1417,10 @@ class PropertyDict(object):
     def setdefault(self, key, default=None):
         self.properties.setdefault((self.t, key), default)
 
-    if sys.version_info < (3,):
-        def update(self, *args, **kwargs):
-            temp = dict(*args, **kwargs)
-            for k, v in temp.iteritems():
-                self.properties[(self.t, k)] = v
-    else:
-        def update(self, *args, **kwargs):
-            temp = dict(*args, **kwargs)
-            for k, v in temp.items():
-                self.properties[(self.t, k)] = v
+    def update(self, *args, **kwargs):
+        temp = dict(*args, **kwargs)
+        for k, v in temp.items():
+            self.properties[(self.t, k)] = v
 
     def __delitem__(self, key):
         del self.properties[(self.t, key)]
@@ -1517,36 +1453,18 @@ class PropertyDict(object):
             if k[0] == self.t:
                 yield k[1], v
 
-    if sys.version_info < (3,):
-        def has_key(self, key):
-            return self.properties.has_key((self.t, key))
-
-        def iteritems(self):
-            for k, v in self.properties.iteritems():
-                if k[0] == self.t:
-                    yield k[1], v
-
     def itervalues(self):
         for k, v in self.properties.items():
             if k[0] == self.t:
                 yield v
 
-    if sys.version_info < (3,):
-        def keys(self):
-            return list(self.iterkeys())
-        def values(self):
-            return list(self.itervalues())
-        def __repr__(self):
-            temp = dict([(k[1], v) for k, v in self.properties.iteritems() if k[0] == self.t])
-            return repr(temp)
-    else:
-        def keys(self):
-            return self.iterkeys()
-        def values(self):
-            return self.itervalues()
-        def __repr__(self):
-            temp = dict([(k[1], v) for k, v in self.properties.items() if k[0] == self.t])
-            return repr(temp)
+    def keys(self):
+        return self.iterkeys()
+    def values(self):
+        return self.itervalues()
+    def __repr__(self):
+        temp = dict([(k[1], v) for k, v in self.properties.items() if k[0] == self.t])
+        return repr(temp)
 
     def __getattr__(self, attr):
         return self.__getitem__(attr)
@@ -2696,7 +2614,7 @@ class Graph(object):
         provided, the values will be initialized by ``vals``, which should be
         sequence or by ``val`` which should be a single value.
         """
-        prop = EdgePropertyMap(new_edge_property(_c_str(_type_alias(value_type)),
+        prop = EdgePropertyMap(new_edge_property(_type_alias(value_type),
                                                  self.__graph.get_edge_index(),
                                                  libcore.any()),
                                self)
@@ -2716,7 +2634,7 @@ class Graph(object):
     def new_graph_property(self, value_type, val=None):
         """Create a new graph property map of type ``value_type``, and return
         it. If ``val`` is not None, the property is initialized to its value."""
-        prop = GraphPropertyMap(new_graph_property(_c_str(_type_alias(value_type)),
+        prop = GraphPropertyMap(new_graph_property(_type_alias(value_type),
                                                    self.__graph.get_graph_index(),
                                                    libcore.any()),
                                 self)
@@ -2803,7 +2721,7 @@ class Graph(object):
         given by ``deg``, which can be any of ``"in"``, ``"out"``, or ``"total"``.
         If provided, ``weight`` should be an edge :class:`~graph_tool.EdgePropertyMap`
         containing the edge weights which should be summed."""
-        pmap = self.__graph.degree_map(_to_str(deg), _prop("e", self, weight))
+        pmap = self.__graph.degree_map(deg, _prop("e", self, weight))
         return VertexPropertyMap(pmap, self)
 
     # I/O operations
@@ -2839,14 +2757,14 @@ class Graph(object):
 
         """
 
-        if isinstance(file_name, (str, unicode)):
+        if isinstance(file_name, str):
             file_name = os.path.expanduser(file_name)
             f = open(file_name) # throw the appropriate exception, if not found
-        if fmt == 'auto' and isinstance(file_name, (str, unicode)):
+        if fmt == 'auto' and isinstance(file_name, str):
             fmt = self.__get_file_format(file_name)
         elif fmt == "auto":
             fmt = "gt"
-        if isinstance(file_name, (str, unicode)) and file_name.endswith(".xz"):
+        if isinstance(file_name, str) and file_name.endswith(".xz"):
             try:
                 file_name = lzma.open(file_name, mode="rb")
             except NameError:
@@ -2859,12 +2777,12 @@ class Graph(object):
             ignore_ep = []
         if ignore_gp is None:
             ignore_gp = []
-        if isinstance(file_name, (str, unicode)):
-            props = self.__graph.read_from_file(_c_str(file_name), None,
-                                                _c_str(fmt), ignore_vp,
+        if isinstance(file_name, str):
+            props = self.__graph.read_from_file(file_name, None,
+                                                fmt, ignore_vp,
                                                 ignore_ep, ignore_gp)
         else:
-            props = self.__graph.read_from_file("", file_name, _c_str(fmt),
+            props = self.__graph.read_from_file("", file_name, fmt,
                                                 ignore_vp, ignore_ep, ignore_gp)
         for name, prop in props[0].items():
             self.vertex_properties[name] = VertexPropertyMap(prop, self)
@@ -2917,31 +2835,31 @@ class Graph(object):
             u.graph_properties["_Graph__reversed"] = self.new_graph_property("bool")
             u.graph_properties["_Graph__reversed"] = True
 
-        if isinstance(file_name, (str, unicode)):
+        if isinstance(file_name, str):
             file_name = os.path.expanduser(file_name)
-        if fmt == 'auto' and isinstance(file_name, (str, unicode)):
+        if fmt == 'auto' and isinstance(file_name, str):
             fmt = self.__get_file_format(file_name)
         elif fmt == "auto":
             fmt = "gt"
         if fmt == "graphml":
             fmt = "xml"
 
-        if isinstance(file_name, (str, unicode)) and file_name.endswith(".xz"):
+        if isinstance(file_name, str) and file_name.endswith(".xz"):
             try:
                 file_name = lzma.open(file_name, mode="wb")
             except NameError:
                 raise NotImplementedError("lzma compression is only available in Python >= 3.3")
 
-        props = [(_c_str(name[1]), prop._PropertyMap__map) for name, prop in \
+        props = [(name[1], prop._PropertyMap__map) for name, prop in \
                  u.__properties.items()]
 
-        if isinstance(file_name, (str, unicode)):
+        if isinstance(file_name, str):
             f = open(file_name, "w") # throw the appropriate exception, if
                                      # unable to open
             f.close()
-            u.__graph.write_to_file(_c_str(file_name), None, _c_str(fmt), props)
+            u.__graph.write_to_file(file_name, None, fmt, props)
         else:
-            u.__graph.write_to_file("", file_name, _c_str(fmt), props)
+            u.__graph.write_to_file("", file_name, fmt, props)
 
 
     # Directedness
@@ -3269,28 +3187,17 @@ class Graph(object):
 
     def __getstate__(self):
         state = dict()
-        sio = get_bytes_io()
+        sio = io.BytesIO()
         self.save(sio, "gt")
         state["blob"] = sio.getvalue()
         return state
 
     def __setstate__(self, state):
-        conv_pickle_state(state)
         self.__init__()
         blob = state["blob"]
         if blob != "":
-            try:
-                try:
-                    sio = get_bytes_io(blob)
-                    self.load(sio, "gt")
-                except IOError:
-                    sio = get_bytes_io(blob)
-                    stream = gzip.GzipFile(fileobj=sio, mode="rb")
-                    self.load(stream, "gt")
-            except IOError:
-                sio = get_bytes_io(blob)
-                stream = gzip.GzipFile(fileobj=sio, mode="rb")
-                self.load(stream, "xml")
+            sio = io.BytesIO(blob)
+            self.load(sio, "gt")
 
     def __get_base(self):
         return self
@@ -3363,7 +3270,7 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
         an internal vertex property map with the vertex names.
 
     """
-    if isinstance(file_name, (str, unicode)):
+    if isinstance(file_name, str):
         if file_name.endswith(".xz"):
             try:
                 file_name = lzma.open(file_name, mode="rt")
@@ -3656,10 +3563,6 @@ def _v_ge(v1, v2):
     except TypeError:
         return False
 
-if sys.version_info < (3,):
-    def _v_long(self):
-        return long(int(self))
-
 for Vertex in libcore.get_vlist():
     Vertex.__doc__ = _vertex_doc
     Vertex.out_neighbors = _out_neighbors
@@ -3682,8 +3585,6 @@ for Vertex in libcore.get_vlist():
     Vertex.__gt__ = _v_gt
     Vertex.__le__ = _v_le
     Vertex.__ge__ = _v_ge
-    if sys.version_info < (3,):
-        Vertex.__long__ = _v_long
 
 _edge_doc = """Edge descriptor.
 

@@ -44,15 +44,12 @@ Contents
 
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_stats")
 
 from .. import _degree, _prop, _get_rng, GraphView, PropertyMap
 from numpy import *
 import numpy
-import sys
 
 __all__ = ["vertex_hist", "edge_hist", "vertex_average", "edge_average",
            "label_parallel_edges", "remove_parallel_edges",

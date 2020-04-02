@@ -264,11 +264,6 @@ Contents
 
 """
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 import os.path
 import textwrap
 from .. import load_graph

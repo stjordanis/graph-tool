@@ -71,8 +71,6 @@ Contents
 
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_topology")
 
@@ -81,7 +79,7 @@ from .. import _prop, Vector_int32_t, Vector_size_t, _check_prop_writable, \
      EdgePropertyMap, PropertyMap, GraphView, libcore, _get_rng, _degree, \
      perfect_prop_hash, _limit_args
 from .. stats import label_self_loops
-import random, sys, numpy, collections
+import random, numpy, collections
 
 __all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph",
            "max_cliques", "max_cardinality_matching",

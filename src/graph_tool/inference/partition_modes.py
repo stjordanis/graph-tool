@@ -18,11 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 from .. import _degree, _prop, Graph, GraphView, _get_rng, Vector_int32_t, \
     Vector_size_t
 from . blockmodel import DictState, get_entropy_args, _bm_test

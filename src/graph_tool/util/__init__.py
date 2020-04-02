@@ -37,8 +37,6 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_util")
 

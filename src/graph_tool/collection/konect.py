@@ -18,28 +18,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 import os.path
 import tempfile
-if sys.version_info < (3,):
-    from urllib2 import urlopen, URLError
-    import shutil
-    class TemporaryDirectory(object):
-        def __init__(self, suffix="", prefix="", dir=None):
-            self.name = tempfile.mkdtemp(suffix, prefix, dir)
-
-        def __enter__(self):
-            return self.name
-
-        def __exit__(self, exc, value, tb):
-            shutil.rmtree(self.name)
-else:
-    from urllib.request import urlopen, URLError
-    from tempfile import TemporaryDirectory
+from urllib.request import urlopen, URLError
+from tempfile import TemporaryDirectory
 import tarfile
 import warnings
 import numpy

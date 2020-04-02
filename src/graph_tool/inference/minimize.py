@@ -18,11 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 import numpy
 from . util import *
 from . mcmc import *

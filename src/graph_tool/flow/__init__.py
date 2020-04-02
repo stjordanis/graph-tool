@@ -77,8 +77,6 @@ The following network will be used as an example throughout the documentation.
 
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_flow")
 

@@ -67,8 +67,6 @@ Contents
 
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. import _degree, _prop, Graph, GraphView, _get_rng, PropertyMap, \
     EdgePropertyMap, VertexPropertyMap, _check_prop_scalar
 from .. stats import label_self_loops

@@ -41,8 +41,6 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_clustering as _gt")
 
@@ -54,7 +52,6 @@ from .. stats import vertex_hist
 from collections import defaultdict
 from numpy import *
 from numpy import random
-import sys
 
 __all__ = ["local_clustering", "global_clustering", "extended_clustering",
            "motifs", "motif_significance"]

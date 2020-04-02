@@ -66,8 +66,6 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. import Graph, GraphView, _check_prop_vector, _check_prop_scalar, \
     group_vector_property, ungroup_vector_property, infect_vertex_property, \
     _prop, _get_rng
@@ -78,7 +76,6 @@ from .. stats import label_parallel_edges
 from .. generation import predecessor_tree, condensation_graph
 import numpy.random
 from numpy import sqrt
-import sys
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_layout")

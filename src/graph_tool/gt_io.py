@@ -18,12 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-
 import pickle
 import base64
 import atexit
-import sys
 from io import BytesIO
 from . import libgraph_tool_core
 
@@ -72,8 +69,6 @@ def pickler(stream, obj):
 def unpickler(stream):
     data = stream.read()
     sstream = BytesIO(data)
-    if sys.version_info < (3,):
-        return pickle.load(sstream)
     return pickle.load(sstream, encoding="bytes")
 
 libgraph_tool_core.set_pickler(pickler)

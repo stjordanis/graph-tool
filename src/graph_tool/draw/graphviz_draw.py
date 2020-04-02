@@ -18,13 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-
 import sys
-if sys.version_info < (3,):
-    range = xrange
-else:
-    unicode = str
 import os
 import os.path
 import time
@@ -32,7 +26,7 @@ import warnings
 import ctypes
 import ctypes.util
 import tempfile
-from .. import PropertyMap, group_vector_property, ungroup_vector_property, _c_str
+from .. import PropertyMap, group_vector_property, ungroup_vector_property
 import numpy
 import numpy.random
 import copy
@@ -441,12 +435,12 @@ def graphviz_draw(g, pos=None, size=(15, 15), pin=False, layout=None,
             aset(n, "style", "filled")
             aset(n, "color", "#2e3436")
             # apply color
-            if isinstance(vcolor, (str, unicode)):
-                aset(n, "fillcolor", _c_str(vcolor))
+            if isinstance(vcolor, str):
+                aset(n, "fillcolor", vcolor)
             else:
                 color = vcolor[v]
-                if isinstance(color, (str, unicode)):
-                    aset(n, "fillcolor", _c_str(color))
+                if isinstance(color, str):
+                    aset(n, "fillcolor", color)
                 else:
                     color = tuple([int(c * 255.0) for c in vcmap(vnorm(color))])
                     aset(n, "fillcolor", "#%.2x%.2x%.2x%.2x" % color)
@@ -492,12 +486,12 @@ def graphviz_draw(g, pos=None, size=(15, 15), pin=False, layout=None,
                 aset(ge, "dir", "none")
 
             # apply color
-            if isinstance(ecolor, (str, unicode)):
-                aset(ge, "color", _c_str(ecolor))
+            if isinstance(ecolor, str):
+                aset(ge, "color", ecolor)
             else:
                 color = ecolor[e]
-                if isinstance(color, (str, unicode)):
-                    aset(ge, "color", _c_str(color))
+                if isinstance(color, str):
+                    aset(ge, "color", color)
                 else:
                     color = tuple([int(c * 255.0) for c in ecmap(enorm(color))])
                     aset(ge, "color", "#%.2x%.2x%.2x%.2x" % color)

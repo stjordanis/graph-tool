@@ -22,7 +22,6 @@
 Utility module which includes all the sub-modules in graph_tool
 """
 
-from __future__ import division, absolute_import, print_function
 import warnings
 
 from graph_tool import *

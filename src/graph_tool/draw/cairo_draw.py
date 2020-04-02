@@ -18,13 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-else:
-    unicode = str
-
 import os
 import warnings
 import numpy
@@ -237,7 +230,7 @@ def shape_from_prop(shape, enum):
             prop.fa %= rg[1] - rg[0] + 1
             prop.fa += rg[0]
         return prop
-    if isinstance(shape, (str, unicode)):
+    if isinstance(shape, str):
         return int(getattr(enum, shape))
     else:
         return shape
@@ -301,7 +294,7 @@ def surface_from_prop(surface):
                                  surface.value_type())
         return prop
 
-    if isinstance(surface, (str, unicode)):
+    if isinstance(surface, str):
         return gen_surface(surface)
     elif isinstance(surface, cairo.Surface) or surface is None:
         return surface
@@ -409,7 +402,7 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
             new_val = val
         elif isinstance(val, (tuple, np.ndarray)):
             new_val = list(val)
-        elif isinstance(val, (str, unicode)):
+        elif isinstance(val, str):
             new_val = list(color_converter.to_rgba(val))
         elif isinstance(val, PropertyMap):
             if val.value_type() in ["vector<double>", "vector<long double>"]:
@@ -708,7 +701,7 @@ def color_contrast(color):
 
 def auto_colors(g, bg, pos, back):
     if not isinstance(bg, PropertyMap):
-        if isinstance(bg, (str, unicode)):
+        if isinstance(bg, str):
             bg = color_converter.to_rgba(bg)
         bg = g.new_vertex_property("vector<double>", val=bg)
     if not isinstance(pos, PropertyMap):
@@ -1146,7 +1139,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
             x, y, zoom = x, y, 1
 
 
-        if isinstance(output, (str, unicode)):
+        if isinstance(output, str):
             out, auto_fmt = open_file(output, mode="wb")
         else:
             out = output

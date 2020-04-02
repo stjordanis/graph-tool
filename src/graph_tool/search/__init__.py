@@ -77,11 +77,6 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_search")
 

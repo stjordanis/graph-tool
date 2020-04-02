@@ -44,14 +44,11 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_centrality")
 
 from .. import _prop, ungroup_vector_property, Vector_size_t
 from .. topology import shortest_distance
-import sys
 import numpy
 import numpy.linalg
 
@@ -513,8 +510,6 @@ def central_point_dominance(g, betweenness):
 
     Examples
     --------
-
-    .. doctest:: central_point_dominance
 
     >>> g = gt.collection.data["polblogs"]
     >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))

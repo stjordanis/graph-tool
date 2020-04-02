@@ -153,11 +153,6 @@ Contents
 
 """
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 __all__ = ["minimize_blockmodel_dl",
            "minimize_nested_blockmodel_dl",
            "BlockState",

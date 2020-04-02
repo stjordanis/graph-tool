@@ -18,13 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, PropertyMap, \
-    conv_pickle_state
+from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, PropertyMap
 import random
 from numpy import *
 import numpy
@@ -405,7 +399,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         return state
 
     def __setstate__(self, state):
-        conv_pickle_state(state)
         self.__init__(**state)
 
     def __copy__(self):

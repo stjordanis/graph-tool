@@ -48,16 +48,11 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_generation")
 
 from .. import Graph, GraphView, _check_prop_scalar, _prop, _limit_args, \
-    _gt_type, _get_rng, _c_str, libcore, Vector_double
+    _gt_type, _get_rng, libcore, Vector_double
 from .. stats import label_parallel_edges, label_self_loops
 import inspect
 import types
@@ -805,7 +800,7 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
     if not fast:
         g.set_fast_edge_removal(True)
     pcount = libgraph_tool_generation.random_rewire(g._Graph__graph,
-                                                    _c_str(model),
+                                                    model,
                                                     n_iter, not edge_sweep,
                                                     self_loops, parallel_edges,
                                                     configuration, traditional,
@@ -1763,7 +1758,7 @@ def triangulation(points, type="simple", periodic=False):
     g = Graph(directed=False)
     pos = g.new_vertex_property("vector<double>")
     libgraph_tool_generation.triangulation(g._Graph__graph, points,
-                                           _prop("v", g, pos), _c_str(type),
+                                           _prop("v", g, pos), type,
                                            periodic)
     return g, pos
 

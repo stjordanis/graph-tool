@@ -18,12 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division, absolute_import, print_function
-import sys
-if sys.version_info < (3,):
-    range = xrange
-
-from .. import _degree, _prop, Graph, GraphView, conv_pickle_state
+from .. import _degree, _prop, Graph, GraphView
 from . blockmodel import *
 from . blockmodel import _bm_test
 from . overlap_blockmodel import *
@@ -213,10 +208,6 @@ class NestedBlockState(object):
         return state
 
     def __setstate__(self, state):
-        conv_pickle_state(state)
-        if "kwargs" in state: # backwards compatibility
-            state["state_args"] = state["kwargs"]
-            del  state["kwargs"]
         self.__init__(**state)
 
     def get_bs(self):

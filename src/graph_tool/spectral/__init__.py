@@ -39,8 +39,6 @@ Contents
 ++++++++
 """
 
-from __future__ import division, absolute_import, print_function
-
 from .. import _degree, _prop, Graph, GraphView, _limit_args, Vector_int64_t, \
     Vector_double
 from .. stats import label_self_loops
