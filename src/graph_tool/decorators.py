@@ -49,7 +49,7 @@ def _limit_args(allowed_vals):
     def decorate(func):
         @_wraps(func)
         def wrap(*args, **kwargs):
-            arg_names = inspect.getargspec(func)[0]
+            arg_names = inspect.getfullargspec(func)[0]
             arguments = list(zip(arg_names, args))
             arguments += [(k, kwargs[k]) for k in list(kwargs.keys())]
             for a in arguments:
