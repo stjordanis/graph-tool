@@ -45,6 +45,7 @@ class UncertainBaseState(object):
 
         self.g = g
 
+        state_args = dict(state_args)
         if bstate is None:
             if init_empty:
                 self.u = Graph(directed=g.is_directed())
@@ -90,9 +91,8 @@ class UncertainBaseState(object):
 
         if bstate is None:
             if nested:
-                state_args["state_args"] = state_args.get("state_args", {})
-                state_args["state_args"]["eweight"] = self.eweight
-                self.nbstate = NestedBlockState(self.u, state_args)
+                state_args["eweight"] = self.eweight
+                self.nbstate = NestedBlockState(self.u, state_args=state_args)
                 self.bstate = self.nbstate.levels[0]
             else:
                 self.nbstate = None

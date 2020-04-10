@@ -214,7 +214,7 @@ class NestedBlockState(object):
         """Get hierarchy levels as a list of :class:`numpy.ndarray` objects with the
         group memberships at each level.
         """
-        return [s.b.fa for s in self.levels]
+        return [s.b.fa.copy() for s in self.levels]
 
     def get_state(self):
         """Alias to :meth:`~NestedBlockState.get_bs`."""

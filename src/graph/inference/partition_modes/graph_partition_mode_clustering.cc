@@ -36,6 +36,8 @@ python::object make_mode_cluster_state(boost::python::object ostate)
     return state;
 }
 
+PartitionModeState::bv_t get_bv(python::object ob);
+
 void export_mode_cluster_state()
 {
     using namespace boost::python;
@@ -55,12 +57,38 @@ void export_mode_cluster_state()
                    no_init);
              c.def("move_vertex", move_vertex)
                  .def("virtual_move", virtual_move)
+                 .def("virtual_add_partition",
+                      +[](state_t& state, object ob, size_t r, bool relabel)
+                       {
+                           auto bv = get_bv(ob);
+                           return state.virtual_add_partition(bv, r, relabel);
+                       })
+                 .def("add_partition",
+                      +[](state_t& state, object ob, size_t r, bool relabel)
+                       {
+                           auto bv = get_bv(ob);
+                           state.add_partition(bv, r, relabel);
+                       })
                  .def("entropy", &state_t::entropy)
                  .def("posterior_entropy", &state_t::posterior_entropy)
-                 .def("posterior_dev", &state_t::posterior_dev)
-                 .def("posterior_cerror", &state_t::posterior_cerror)
+                 .def("posterior_lprob",
+                      +[](state_t& state, size_t r, object obv, bool MLE)
+                       {
+                           PartitionModeState::bv_t bv;
+                           for (int i = 0; i < python::len(obv); ++i)
+                           {
+                               PartitionModeState::b_t& b =
+                                   python::extract<PartitionModeState::b_t&>(obv[i]);
+                               bv.emplace_back(b);
+                           }
+                           return state.posterior_lprob(r, bv, MLE);
+                       })
                  .def("relabel_modes", &state_t::relabel_modes)
-                 .def("replace_partitions", &state_t::replace_partitions)
+                 .def("replace_partitions",
+                      +[](state_t& state, rng_t& rng)
+                       {
+                           return state.replace_partitions(rng);
+                       })
                  .def("get_mode",
                       +[](state_t& state, size_t r) -> PartitionModeState&
                        {
@@ -70,16 +98,20 @@ void export_mode_cluster_state()
                  .def("sample_partition",
                       +[](state_t& state, bool MLE, rng_t& rng)
                        {
-                           return wrap_vector_owned(state.sample_partition(MLE, rng));
+                           auto rb = state.sample_partition(MLE, rng);
+                           return python::make_tuple(rb.first,
+                                                     wrap_vector_owned(rb.second));
                        })
                  .def("sample_nested_partition",
-                      +[](state_t& state, bool MLE, rng_t& rng)
+                      +[](state_t& state, bool MLE, bool fix_empty, rng_t& rng)
                        {
                            python::list obv;
-                           auto bv = state.sample_nested_partition(MLE, rng);
-                           for (auto& b : bv)
+                           auto rbv = state.sample_nested_partition(MLE,
+                                                                    fix_empty,
+                                                                    rng);
+                           for (auto& b : rbv.second)
                                obv.append(wrap_vector_owned(b));
-                           return obv;
+                           return python::make_tuple(rbv.first, obv);
                        });
          });
 }

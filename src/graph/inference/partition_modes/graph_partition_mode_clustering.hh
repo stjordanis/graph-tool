@@ -32,7 +32,7 @@ namespace graph_tool
 using namespace boost;
 using namespace std;
 
-typedef multi_array_ref<int32_t,1> b_t;
+typedef std::vector<int32_t> b_t;
 typedef PartitionModeState::bv_t bv_t;
 
 #define BLOCK_STATE_params                                                     \
@@ -40,7 +40,7 @@ typedef PartitionModeState::bv_t bv_t;
     ((_abg, &, boost::any&, 0))                                                \
     ((obs,, boost::python::object, 0))                                         \
     ((relabel_init,, bool, 0))                                                 \
-    ((b,, b_t, 0))
+    ((b, &, b_t&, 0))
 
 GEN_STATE_BASE(ModeClusterStateBase, BLOCK_STATE_params)
 
@@ -335,17 +335,53 @@ public:
         return virtual_move(v, r, nr);
     }
 
-    void replace_partitions()
+    double virtual_add_partition(bv_t& x, size_t r, bool relabel = true)
     {
-        for (size_t j = 0; j < _M; ++j)
+        double dS = _modes[r].virtual_add_partition(x, relabel);
+        dS += _partition_stats.get_delta_partition_dl(0, null_group, r, _vweight);
+        return dS;
+    }
+
+    void add_partition(bv_t& x, size_t r, bool relabel = true)
+    {
+        auto pos = _modes[r].add_partition(x, relabel);
+        _pos.push_back(pos);
+        _b.push_back(r);
+        _bs.push_back(x);
+        _partition_stats.change_vertex(0, r, _vweight, 1);
+        _wr[r]++;
+
+        _modes.emplace_back();
+        _wr.push_back(0);
+        _empty_pos.push_back(0);
+        _candidate_pos.push_back(0);
+        _bclabel.push_back(0);
+        _pclabel.push_back(0);
+        _vs.push_back(_M);
+        _next_state.emplace_back();
+        _M++;
+    }
+
+    template <class RNG>
+    double replace_partitions(RNG& rng)
+    {
+        std::vector<size_t> pos(_M);
+        std::iota(pos.begin(), pos.end(), 0);
+        std::shuffle(pos.begin(), pos.end(), rng);
+
+        double dS = 0;
+        for (auto j : pos)
         {
             auto& mode = _modes[_b[j]];
             auto& b = _bs[j];
-            double dS = mode.virtual_remove_partition(b);
+            double ddS = mode.virtual_remove_partition(b);
             mode.remove_partition(_pos[j]);
-            dS += mode.virtual_add_partition(b);
-            _pos[j] = mode.add_partition(b, dS < 0);
+            ddS += mode.virtual_add_partition(b);
+            _pos[j] = mode.add_partition(b, ddS < 0);
+            if (ddS < 0)
+                dS += ddS;
         }
+        return dS;
     }
 
     double entropy()
@@ -362,43 +398,19 @@ public:
         double S = 0;
         for (size_t r = 0; r < _wr.size(); ++r)
         {
+            if (_wr[r] == 0)
+                continue;
             S += (_modes[r].posterior_entropy(MLE) * _wr[r]) / _M;
             S += -xlogx(_wr[r] / double(_M));
         }
         return S;
     }
 
-    double posterior_dev(bool MLE)
+    double posterior_lprob(size_t r, bv_t& b, bool MLE)
     {
-        if (_bs.size() == 0)
-            return 0;
-        double dev = 0;
-        std::vector<size_t> rs;
-        for (size_t r = 0; r < _wr.size(); ++r)
-        {
-            if (_wr[r] > 0)
-                rs.push_back(r);
-        }
-        for (auto r : rs)
-        {
-            for (auto s : rs)
-            {
-                if (s != r)
-                    relabel_mode(_modes[r], _modes[s]);
-                dev += (_modes[r].posterior_cross_dev(_modes[s], MLE) *
-                        _wr[s] * _wr[r]);
-            }
-        }
-        dev /= (_M * _M);
-        return dev;
-    }
-
-    double posterior_cerror(bool MLE)
-    {
-        double Be = 0;
-        for (size_t r = 0; r < _wr.size(); ++r)
-            Be += (_modes[r].posterior_cerror(MLE) * _wr[r]) / _M;
-        return Be;
+        double L = log(_wr[r]) - log(_M);
+        L += _modes[r].posterior_lprob(b, MLE);
+        return L;
     }
 
     void relabel_mode(PartitionModeState& x, PartitionModeState& base)
@@ -471,7 +483,7 @@ public:
             if (x._coupled_state != nullptr)
             {
                 auto& c = x._coupled_state->get_partition(x._coupled_pos[jb.first]);
-                x.relabel_nested(b, b_orig, c);
+                relabel_nested(b, b_orig, c);
             }
         }
         x.rebuild_nr();
@@ -521,7 +533,8 @@ public:
                     base.remove_partition(pos[r][jb.first]);
                 }
 
-                relabel_mode(mode, base);
+                if (!base._bs.empty())
+                    relabel_mode(mode, base);
 
                 for (auto& jb : mode._bs)
                 {
@@ -554,18 +567,19 @@ public:
     }
 
     template <class RNG>
-    PartitionModeState::b_t sample_partition(bool MLE, RNG& rng)
+    std::pair<size_t, PartitionModeState::b_t>
+    sample_partition(bool MLE, RNG& rng)
     {
         auto r = uniform_sample(_b, rng);
-        return _modes[r].sample_partition(MLE, rng);
+        return {r, _modes[r].sample_partition(MLE, rng)};
     }
 
     template <class RNG>
-    std::vector<PartitionModeState::b_t>
-    sample_nested_partition(bool MLE, RNG& rng)
+    std::pair<size_t, std::vector<PartitionModeState::b_t>>
+    sample_nested_partition(bool MLE, bool fix_empty, RNG& rng)
     {
         auto r = uniform_sample(_b, rng);
-        return _modes[r].sample_nested_partition(MLE, rng);
+        return {r, _modes[r].sample_nested_partition(MLE, fix_empty, rng)};
     }
 
 };

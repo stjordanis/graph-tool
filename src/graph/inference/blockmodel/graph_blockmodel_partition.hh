@@ -508,10 +508,8 @@ public:
         return S_a - S_b;
     }
 
-    template <class Graph, class VWeight, class EWeight, class Degs>
-    void change_vertex(size_t v, size_t r, bool deg_corr, Graph& g,
-                       VWeight& vweight, EWeight& eweight, Degs& degs,
-                       int diff)
+    template <class VWeight>
+    void change_vertex(size_t v, size_t r, VWeight& vweight, int diff)
     {
         int vw = vweight[v];
         int dv = vw * diff;
@@ -526,23 +524,25 @@ public:
         _N += dv;
 
         assert(_total[r] >= 0);
+    }
 
-        if (deg_corr)
-        {
-            degs_op(v, vweight, eweight, degs, g,
-                    [&](auto kin, auto kout, auto n)
-                    {
-                        int dk = diff * n;
-                        auto& h = _hist[r];
-                        auto deg = make_pair(kin, kout);
-                        auto iter = h.insert({deg, 0}).first;
-                        iter->second += dk;
-                        if (iter->second == 0)
-                            h.erase(iter);
-                        _em[r] += dk * deg.first;
-                        _ep[r] += dk * deg.second;
-                    });
-        }
+    template <class Graph, class VWeight, class EWeight, class Degs>
+    void change_vertex_degs(size_t v, size_t r, Graph& g, VWeight& vweight,
+                            EWeight& eweight, Degs& degs, int diff)
+    {
+        degs_op(v, vweight, eweight, degs, g,
+                [&](auto kin, auto kout, auto n)
+                {
+                    int dk = diff * n;
+                    auto& h = _hist[r];
+                    auto deg = make_pair(kin, kout);
+                    auto iter = h.insert({deg, 0}).first;
+                    iter->second += dk;
+                    if (iter->second == 0)
+                        h.erase(iter);
+                    _em[r] += dk * deg.first;
+                    _ep[r] += dk * deg.second;
+                });
     }
 
     template <class Graph, class VWeight, class EWeight, class Degs>
@@ -552,7 +552,9 @@ public:
         if (r == null_group || vweight[v] == 0)
             return;
         r = get_r(r);
-        change_vertex(v, r, deg_corr, g, vweight, eweight, degs, -1);
+        change_vertex(v, r, vweight, -1);
+        if (deg_corr)
+            change_vertex_degs(v, r, g, vweight, eweight, degs, -1);
     }
 
     template <class Graph, class VWeight, class EWeight, class Degs>
@@ -562,7 +564,9 @@ public:
         if (nr == null_group || vweight[v] == 0)
             return;
         nr = get_r(nr);
-        change_vertex(v, nr, deg_corr, g, vweight, eweight, degs, 1);
+        change_vertex(v, nr, vweight, 1);
+        if (deg_corr)
+            change_vertex_degs(v, nr, g, vweight, eweight, degs, 1);
     }
 
     void change_k(size_t v, size_t r, bool deg_corr, int vweight,

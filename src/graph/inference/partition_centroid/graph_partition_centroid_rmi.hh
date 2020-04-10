@@ -32,6 +32,56 @@ namespace graph_tool
 using namespace boost;
 using namespace std;
 
+template <class Vr, class Vs, class T>
+double log_omega(Vr&& nr, Vs&& ns, T&& get_n)
+{
+    double S = 0;
+
+    size_t N = 0;
+    size_t Bx = 0;
+    size_t By = 0;
+    for (auto& n : nr)
+    {
+        Bx += (get_n(n) > 0);
+        N += get_n(n);
+    }
+    for (auto& n : ns)
+        By += (get_n(n) > 0);
+
+    S += (Bx - 1) * (By - 1) * log(N + (Bx * By) / 2.);
+
+    double w = N / (N + (Bx * By) / 2.);
+
+    double y2 = 0, lny = 0;
+    double x2 = 0, lnx = 0;
+
+    for (auto& n : nr)
+    {
+        double x_r = (1-w)/Bx + (w * get_n(n))/N;
+        x2 += x_r * x_r;
+        lnx += log(x_r);
+    }
+
+    for (auto& n : ns)
+    {
+        double y_s = (1-w)/By + (w * get_n(n))/N;
+        y2 += y_s * y_s;
+        lny += log(y_s);
+    }
+
+    double mu = (Bx + 1) / (Bx * y2) - 1./Bx;
+    double nu = (By + 1) / (By * x2) - 1./By;
+
+    S += (Bx + nu - 2) * lny / 2;
+    S += (By + mu - 2) * lnx / 2;
+
+    S += lgamma(mu * Bx)/2 + lgamma(nu * By)/2;
+    S -= By * (lgamma(nu) + lgamma(Bx))/2. + Bx * (lgamma(mu) + lgamma(By))/2.;
+
+    return S;
+}
+
+
 typedef multi_array_ref<int32_t,2> bs_t;
 typedef multi_array_ref<int32_t,1> b_t;
 
@@ -41,20 +91,20 @@ typedef multi_array_ref<int32_t,1> b_t;
     ((bs,, bs_t, 0))                                                           \
     ((b,, b_t, 0))
 
-GEN_STATE_BASE(VICenterStateBase, BLOCK_STATE_params)
+GEN_STATE_BASE(RMICenterStateBase, BLOCK_STATE_params)
 
 template <class... Ts>
-class VICenterState
-    : public VICenterStateBase<Ts...>
+class RMICenterState
+    : public RMICenterStateBase<Ts...>
 {
 public:
-    GET_PARAMS_USING(VICenterStateBase<Ts...>, BLOCK_STATE_params)
+    GET_PARAMS_USING(RMICenterStateBase<Ts...>, BLOCK_STATE_params)
     GET_PARAMS_TYPEDEF(Ts, BLOCK_STATE_params)
 
     template <class... ATs,
               typename std::enable_if_t<sizeof...(ATs) == sizeof...(Ts)>* = nullptr>
-    VICenterState(ATs&&... args)
-        : VICenterStateBase<Ts...>(std::forward<ATs>(args)...),
+    RMICenterState(ATs&&... args)
+        : RMICenterStateBase<Ts...>(std::forward<ATs>(args)...),
         _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
         _mrs(_bs.shape()[0]),
         _nr(_bs.shape()[0]),
@@ -129,7 +179,8 @@ public:
         _wr[r]--;
         _wr[nr]++;
 
-        //#pragma omp parallel for schedule(runtime)
+        #pragma omp parallel for schedule(runtime)                             \
+            if (_mrs.size() > OPENMP_MIN_THRESH)
         for (size_t i = 0; i < _mrs.size(); ++i)
         {
             auto& mrsi = _mrs[i];
@@ -171,27 +222,11 @@ public:
         if (r == nr)
             return 0;
 
-        double Sb = 0;
-        double Sa = 0;
+        double Sb = entropy();
+        move_vertex(v, nr);
+        double Sa = entropy();
+        move_vertex(v, r);
 
-        Sb += (xlogx_fast(_wr[r]) + xlogx_fast(_wr[nr])) * _mrs.size();
-        Sa += (xlogx_fast(_wr[r]-1) + xlogx_fast(_wr[nr]+1)) * _mrs.size();
-
-        #pragma omp parallel for schedule(runtime) reduction(+:Sa, Sb) \
-            if (_mrs.size() > OPENMP_MIN_THRESH)
-        for (size_t i = 0; i < _mrs.size(); ++i)
-        {
-            auto& mrsi = _mrs[i];
-            size_t s = _bs[i][v];
-
-            size_t mrs = mrsi[{r,s}];
-            assert(mrs > 0);
-            auto iter = mrsi.find({nr, s});
-            size_t mnrs = (iter != mrsi.end()) ? iter->second : 0;
-
-            Sb += -2 * (xlogx_fast(mrs) + xlogx_fast(mnrs));
-            Sa += -2 * (xlogx_fast(mrs-1) + xlogx_fast(mnrs+1));
-        }
         return (Sa - Sb);
     }
 
@@ -254,19 +289,27 @@ public:
     double entropy()
     {
         double S = 0, S_n = 0;
-        for (auto nr : _wr)
-            S_n += xlogx_fast(nr);
+        gt_hash_map<int, int> wr;
+        for (auto r : _candidate_blocks)
+        {
+            if (_wr[r] == 0)
+                continue;
+            S_n -= lgamma_fast(_wr[r] + 1);
+            wr[r] = _wr[r];
+        }
+
+        S += (lgamma_fast(_N + 1) + S_n) * _mrs.size();
 
         #pragma omp parallel for schedule(runtime) reduction(+:S)
         for (size_t i = 0; i < _mrs.size(); ++i)
         {
             for (auto& c : _mrs[i])
-                S -= 2 * xlogx_fast(c.second);
+                S += lgamma_fast(c.second + 1);
             for (auto& rn : _nr[i])
-                S += xlogx_fast(rn.second);
-            S += S_n;
+                S -= lgamma_fast(rn.second + 1);
+            S -= log_omega(wr, _nr[i], [](auto& x) {return x.second;});
         }
-        return S;
+        return -S;
     }
 
     void init_mcmc(double, double)

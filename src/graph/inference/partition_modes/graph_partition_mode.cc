@@ -26,7 +26,7 @@
 using namespace boost;
 using namespace graph_tool;
 
-auto get_bv(python::object ob)
+PartitionModeState::bv_t get_bv(python::object ob)
 {
     PartitionModeState::bv_t bv;
     for (int i = 0; i < python::len(ob); ++i)
@@ -54,7 +54,36 @@ void export_partition_mode()
               {
                   state.remove_partition(i);
               })
-        .def("replace_partitions", &PartitionModeState::replace_partitions)
+        .def("virtual_add_partition",
+             +[](PartitionModeState& state, object ob, bool relabel)
+              {
+                  auto bv = get_bv(ob);
+                  return state.virtual_add_partition(bv, relabel);
+              })
+        .def("virtual_remove_partition",
+             +[](PartitionModeState& state, object ob)
+              {
+                  auto bv = get_bv(ob);
+                  return state.virtual_remove_partition(bv);
+              })
+        .def("replace_partitions",
+             +[](PartitionModeState& state, rng_t& rng)
+              {
+                  return state.replace_partitions(rng);
+              })
+        .def("relabel_partition",
+             +[](PartitionModeState& state, python::object obv)
+              {
+                  PartitionModeState::bv_t bv;
+                  for (int i = 0; i < python::len(obv); ++i)
+                  {
+                      PartitionModeState::b_t& b =
+                          python::extract<PartitionModeState::b_t&>(obv[i]);
+                      bv.emplace_back(b);
+                  }
+                  state.relabel_partition(bv, 0);
+              })
+        .def("align_mode", &PartitionModeState::align_mode)
         .def("get_B", &PartitionModeState::get_B)
         .def("get_marginal",
              +[](PartitionModeState& state,
@@ -108,10 +137,11 @@ void export_partition_mode()
                   return wrap_vector_owned(state.sample_partition(MLE, rng));
               })
         .def("sample_nested_partition",
-             +[](PartitionModeState& state, bool MLE, rng_t& rng)
+             +[](PartitionModeState& state, bool MLE, bool fix_empty,
+                 rng_t& rng)
               {
                   python::list obv;
-                  auto bv = state.sample_nested_partition(MLE, rng);
+                  auto bv = state.sample_nested_partition(MLE, fix_empty, rng);
                   for (auto& b : bv)
                       obv.append(wrap_vector_owned(b));
                   return obv;
@@ -153,14 +183,19 @@ void export_partition_mode()
               })
         .def("relabel", &PartitionModeState::relabel)
         .def("entropy", &PartitionModeState::entropy)
-        .def("posterior_cerror", &PartitionModeState::posterior_cerror)
-        .def("posterior_dev", &PartitionModeState::posterior_dev)
+        .def("posterior_cdev", &PartitionModeState::posterior_cdev)
         .def("posterior_entropy", &PartitionModeState::posterior_entropy)
         .def("posterior_lprob",
-             +[](PartitionModeState& state, object ob, bool MLE)
+             +[](PartitionModeState& state, object obv, bool MLE)
               {
-                  auto b = get_array<int32_t, 1>(ob);
-                  return state.posterior_lprob(b, MLE);
+                  PartitionModeState::bv_t bv;
+                  for (int i = 0; i < python::len(obv); ++i)
+                  {
+                      PartitionModeState::b_t& b =
+                          python::extract<PartitionModeState::b_t&>(obv[i]);
+                      bv.emplace_back(b);
+                  }
+                  return state.posterior_lprob(bv, MLE);
               })
         .def("get_ptr",
              +[](PartitionModeState& state)
@@ -180,18 +215,52 @@ void export_partition_mode()
         +[](object ox, rng_t& rng)
          {
              auto x = get_array<int32_t, 1>(ox);
-             idx_map<int32_t, int32_t> rmap;
-             for (auto r : x)
-                 rmap[r] = r;
-             std::vector<int32_t> rset;
-             for (auto& r : rmap)
-                 rset.push_back(r.first);
-             std::shuffle(rset.begin(), rset.end(), rng);
-             size_t pos = 0;
-             for (auto& r : rmap)
-                 r.second = rset[pos++];
-             for (auto& r : x)
-                 r = rmap[r];
+             partition_shuffle_labels(x, rng);
+         });
+
+    def("nested_partition_shuffle_labels",
+        +[](object ox, rng_t& rng)
+         {
+             std::vector<std::vector<int32_t>> x;
+             for (int l = 0; l < python::len(ox); ++l)
+             {
+                 auto a = get_array<int32_t, 1>(ox[l]);
+                 x.emplace_back(a.begin(), a.end());
+             }
+
+             nested_partition_shuffle_labels(x, rng);
+
+             python::list onx;
+             for (auto& xl : x)
+                 onx.append(wrap_vector_owned(xl));
+
+             return onx;
+         });
+
+    def("partition_order_labels",
+        +[](object ox)
+         {
+             auto x = get_array<int32_t, 1>(ox);
+             partition_order_labels(x);
+         });
+
+    def("nested_partition_order_labels",
+        +[](object ox)
+         {
+             std::vector<std::vector<int32_t>> x;
+             for (int l = 0; l < python::len(ox); ++l)
+             {
+                 auto a = get_array<int32_t, 1>(ox[l]);
+                 x.emplace_back(a.begin(), a.end());
+             }
+
+             nested_partition_order_labels(x);
+
+             python::list onx;
+             for (auto& xl : x)
+                 onx.append(wrap_vector_owned(xl));
+
+             return onx;
          });
 
     def("align_partition_labels",
@@ -200,6 +269,101 @@ void export_partition_mode()
              auto x = get_array<int32_t, 1>(ox);
              auto y = get_array<int32_t, 1>(oy);
              partition_align_labels(x, y);
+         });
+
+    def("align_nested_partition_labels",
+        +[](object ox, object oy)
+         {
+             std::vector<std::vector<int32_t>> x, y;
+             for (int l = 0; l < python::len(ox); ++l)
+             {
+                 auto a = get_array<int32_t, 1>(ox[l]);
+                 x.emplace_back(a.begin(), a.end());
+             }
+
+             for (int l = 0; l < python::len(oy); ++l)
+             {
+                 auto a = get_array<int32_t, 1>(oy[l]);
+                 y.emplace_back(a.begin(), a.end());
+             }
+
+             nested_partition_align_labels(x, y);
+
+             python::list onx;
+             for (auto& xl : x)
+                 onx.append(wrap_vector_owned(xl));
+
+             return onx;
+         });
+
+    def("partition_overlap_center",
+        +[](object obs, object oc)
+         {
+             auto c = get_array<int32_t, 1>(oc);
+             auto bs = get_array<int32_t, 2>(obs);
+
+             return partition_overlap_center(c, bs);
+         });
+
+    def("nested_partition_overlap_center",
+        +[](object obs, object oc)
+         {
+             std::vector<std::vector<int32_t>> c;
+             for (int l = 0; l < python::len(oc); ++l)
+             {
+                 auto a = get_array<int32_t, 1>(oc[l]);
+                 c.emplace_back(a.begin(), a.end());
+             }
+
+             std::vector<std::vector<std::vector<int32_t>>> bs;
+
+             for (int m = 0; m < python::len(obs); ++m)
+             {
+                 bs.emplace_back();
+                 auto& x = bs.back();
+                 for (int l = 0; l < python::len(obs[m]); ++l)
+                 {
+                     auto a = get_array<int32_t, 1>(obs[m][l]);
+                     x.emplace_back(a.begin(), a.end());
+                 }
+             }
+
+             double r = nested_partition_overlap_center(c, bs);
+
+             python::list onx;
+             for (auto& xl : c)
+                 onx.append(wrap_vector_owned(xl));
+
+             python::list onbs;
+             for (auto& bv : bs)
+             {
+                 python::list nx;
+                 for (auto& xl : bv)
+                     nx.append(wrap_vector_owned(xl));
+                 onbs.append(nx);
+             }
+
+             return python::make_tuple(onx, onbs, r);
+         });
+
+    def("nested_partition_clear_null",
+        +[](object ox)
+         {
+             python::list onx;
+             for (int l = 0; l < python::len(ox); ++l)
+             {
+                 auto a = get_array<int32_t, 1>(ox[l]);
+                 std::vector<int32_t> x(a.begin(), a.end());
+                 while (!x.empty() && x.back() == -1)
+                     x.pop_back();
+                 for (auto& r : x)
+                 {
+                     if (r == -1)
+                         r = 0;
+                 }
+                 onx.append(wrap_vector_owned(x));
+             }
+             return onx;
          });
 
     def("get_contingency_graph",

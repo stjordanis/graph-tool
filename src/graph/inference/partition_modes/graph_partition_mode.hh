@@ -32,7 +32,7 @@ namespace graph_tool
 {
 
 template <bool log_sum, class Graph, class PMap, class VMap, class EMap, class VX, class VY>
-void get_contingency_graph(Graph& g, PMap partition, VMap label, EMap mrs,
+void get_contingency_graph(Graph& g, PMap&& partition, VMap&& label, EMap&& mrs,
                            VX& x, VY& y)
 {
     typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
@@ -167,8 +167,8 @@ size_t partition_overlap(BV& x, BV& y)
         return m;
 }
 
-template <class BV>
-void partition_align_labels(BV& x, BV& y)
+template <class BX, class BY>
+void partition_align_labels(BX&& x, BY&& y)
 {
         adj_list<> g;
         typename vprop_map_t<int32_t>::type label(get(vertex_index_t(), g));
@@ -181,7 +181,6 @@ void partition_align_labels(BV& x, BV& y)
         typename vprop_map_t<vertex_t>::type match(get(vertex_index_t(), g));
 
         auto u = undirected_adaptor<adj_list<>>(g);
-        //maximum_weighted_matching(u, mrs, match);
         maximum_bipartite_weighted_matching(u, partition, mrs, match);
 
         idx_set<int> used;
@@ -216,12 +215,261 @@ void partition_align_labels(BV& x, BV& y)
 
         for (auto& r : x)
         {
+            if (r == -1)
+                continue;
             auto w = match[vertices[r]];
             if (w == graph_traits<adj_list<>>::null_vertex())
                 r = umatch[r];
             else
                 r = label[w];
         }
+}
+
+template <class BT>
+void relabel_nested(BT& b, BT& b_orig, BT& c)
+{
+    BT temp = c;
+    std::fill(c.begin(), c.end(), -1);
+    idx_map<int, int> rmap;
+    for (size_t j = 0; j < b_orig.size(); ++j)
+    {
+        if (b_orig[j] == -1)
+            continue;
+        rmap[b_orig[j]] = b[j];
+    }
+    for (auto rs : rmap)
+    {
+        if (size_t(rs.second) >= c.size())
+            c.resize(rs.second + 1, -1);
+        c[rs.second] = temp[rs.first];
+    }
+    while (!c.empty() && c.back() == -1)
+        c.pop_back();
+}
+
+template <class BT>
+void relabel_nested(BT& b, BT& b_orig, std::reference_wrapper<BT>& c)
+{
+    relabel_nested(b, b_orig, c.get());
+}
+
+template <class BX, class BY>
+void nested_partition_align_labels(BX&& xv, BY&& yv)
+{
+    int L = std::min(xv.size(), yv.size());
+    for (int l = 0; l < L; ++l)
+    {
+        auto& x = xv[l];
+        auto& y = yv[l];
+
+        size_t N = std::max(x.size(), y.size());
+        x.resize(N, -1);
+        y.resize(N, -1);
+
+        std::vector<int32_t> x_old(x.begin(), x.end());
+        partition_align_labels(x, y);
+
+        if (size_t(l + 1) == xv.size())
+            continue;
+
+        relabel_nested(x, x_old, xv[l + 1]);
+    }
+}
+
+template <class BT, class RNG>
+void partition_shuffle_labels(BT& x, RNG& rng)
+{
+     idx_map<int32_t, int32_t> rmap;
+     for (auto r : x)
+     {
+         if (r == -1)
+             continue;
+         rmap[r] = r;
+     }
+     std::vector<int32_t> rset;
+     for (auto& r : rmap)
+         rset.push_back(r.first);
+     std::shuffle(rset.begin(), rset.end(), rng);
+     size_t pos = 0;
+     for (auto& r : rmap)
+         r.second = rset[pos++];
+     for (auto& r : x)
+     {
+         if (r == -1)
+             continue;
+         r = rmap[r];
+     }
+}
+
+template <class BT, class RNG>
+void nested_partition_shuffle_labels(BT& xv, RNG& rng)
+{
+    for (size_t l = 0; l < xv.size(); ++l)
+    {
+        auto& x = xv[l];
+        std::vector<int32_t> x_old = x;
+        partition_shuffle_labels(x, rng);
+        if (l < xv.size() - 1)
+            relabel_nested(x, x_old, xv[l+1]);
+    }
+}
+
+template <class BT>
+void partition_order_labels(BT& x)
+{
+    idx_map<int32_t, int32_t> nr;
+    for (auto r : x)
+    {
+        if (r == -1)
+            continue;
+        nr[r]++;
+    }
+    std::vector<int32_t> rs;
+    for (auto& rnr : nr)
+        rs.emplace_back(rnr.first);
+    std::sort(rs.begin(), rs.end(),
+              [&](auto a, auto b) { return nr[a] > nr[b]; });
+    idx_map<int32_t, int32_t> rmap;
+    for (size_t i = 0; i < rs.size(); ++i)
+        rmap[rs[i]] = i;
+    for (auto& r : x)
+    {
+        if (r == -1)
+            continue;
+        r = rmap[r];
+    }
+}
+
+template <class BT>
+void nested_partition_order_labels(BT& xv)
+{
+    for (size_t l = 0; l < xv.size(); ++l)
+    {
+        auto& x = xv[l];
+        std::vector<int32_t> x_old = x;
+        partition_order_labels(x);
+        if (l < xv.size() - 1)
+            relabel_nested(x, x_old, xv[l+1]);
+    }
+
+    for (auto& x : xv)
+    {
+        while (!x.empty() && x.back() == -1)
+            x.pop_back();
+    }
+}
+
+template <class BT, class BS>
+double partition_overlap_center(BT& c, BS& bs)
+{
+    idx_map<int32_t, int32_t> nr;
+
+    typename std::remove_reference_t<decltype(bs)>::index_range idx;
+
+    double p = 0;
+    size_t delta = 1;
+    while (delta > 0)
+    {
+        #pragma omp parallel for schedule(runtime)
+        for (size_t m = 0; m < bs.shape()[0]; ++m)
+            partition_align_labels(bs[boost::indices[m][idx]], c);
+
+        delta = 0;
+        p = 0;
+        nr.clear();
+
+        #pragma omp parallel for schedule(runtime) firstprivate(nr)     \
+            reduction(+:delta,p)
+        for (size_t i = 0; i < c.size(); ++i)
+        {
+            for (size_t m = 0; m < bs.shape()[0]; ++m)
+                nr[bs[m][i]]++;
+            auto iter = std::max_element(nr.begin(), nr.end(),
+                                         [&](auto& a, auto& b)
+                                         { return a.second < b.second; });
+            if (c[i] != iter->first)
+                delta++;
+            c[i] = iter->first;
+            p += iter->second / double(bs.shape()[0]);
+            nr.clear();
+        }
+    }
+    p /= c.size();
+    return 1 - p;
+}
+
+template <class BT, class BS>
+double nested_partition_overlap_center(BT& c, BS& bs)
+{
+    idx_map<int32_t, int32_t> nr;
+
+    double p = 0;
+    size_t N = 0;
+    size_t delta = 1;
+    while (delta > 0)
+    {
+        #pragma omp parallel for schedule(runtime)
+        for (size_t m = 0; m < bs.size(); ++m)
+            nested_partition_align_labels(bs[m], c);
+
+        delta = 0;
+        p = 0;
+        N = 0;
+        for (size_t l = 0; l < c.size(); ++l)
+        {
+            auto& cl = c[l];
+            nr.clear();
+
+            size_t Nl = 0;
+            double pl = 0;
+            #pragma omp parallel for schedule(runtime) firstprivate(nr)        \
+                reduction(+:delta, pl, Nl) if (cl.size() > OPENMP_MIN_THRESH)
+            for (size_t i = 0; i < cl.size(); ++i)
+            {
+                size_t M = 0;
+                for (size_t m = 0; m < bs.size(); ++m)
+                {
+                    auto& bml = bs[m][l];
+                    if (i >= bml.size())
+                        continue;
+                    auto r = bml[i];
+                    if (r == -1)
+                        continue;
+                    nr[r]++;
+                    M++;
+                }
+
+                if (!nr.empty())
+                {
+                    auto iter = std::max_element(nr.begin(), nr.end(),
+                                                 [&](auto& a, auto& b)
+                                                 { return a.second < b.second; });
+                    if (cl[i] != iter->first)
+                        delta++;
+                    cl[i] = iter->first;
+                    pl += iter->second / double(M);
+                    Nl++;
+                }
+                else
+                {
+                    delta += (cl[i] != -1);
+                    cl[i] = -1;
+                }
+                nr.clear();
+            }
+            p += (Nl - 1) * (pl / Nl);
+            N += Nl;
+        }
+    }
+
+    for (size_t l = 0; l < c.size(); ++l)
+    {
+        auto& cl = c[l];
+        while (!cl.empty() && cl.back() == -1)
+            cl.pop_back();
+    }
+
+    return 1 - p / (N - c.size());
 }
 
 class PartitionModeState
@@ -238,7 +486,14 @@ public:
         size_t n = std::max(_nr.size(), b.size());
         b.resize(n, -1);
         _nr.resize(n);
-        _count.resize(n);
+        while (!b.empty() && b.back() == -1 && _nr.back().empty())
+        {
+            b.pop_back();
+            _nr.pop_back();
+        }
+        auto iter = std::max_element(b.begin(), b.end());
+        if (*iter >= int(_count.size()))
+            _count.resize(*iter + 1);
     }
 
     size_t add_partition(bv_t& bv, bool relabel)
@@ -279,10 +534,11 @@ public:
     size_t add_partition(bv_t& bv, size_t pos, bool relabel)
     {
         auto& b = bv[pos].get();
-        check_size(b);
 
         if (relabel && pos == 0)
             relabel_partition(bv, 0);
+
+        check_size(b);
 
         for (size_t i = 0; i < b.size(); ++i)
         {
@@ -343,11 +599,16 @@ public:
             _coupled_state->remove_partition(_coupled_pos[j]);
     }
 
-    void replace_partitions()
+    template <class RNG>
+    double replace_partitions(RNG& rng)
     {
         std::vector<size_t> pos;
         for (auto ib : _bs)
             pos.push_back(ib.first);
+
+        std::shuffle(pos.begin(), pos.end(), rng);
+
+        double ddS = 0;
         for (auto j : pos)
         {
             auto bv = get_nested_partition(j);
@@ -355,7 +616,10 @@ public:
             remove_partition(j);
             dS += virtual_add_partition(bv);
             add_partition(bv, dS < 0);
+            if (dS < 0)
+                ddS += dS;
         }
+        return ddS;
     }
 
     bool has_partition(size_t j, b_t& b)
@@ -478,7 +742,6 @@ public:
         typename vprop_map_t<vertex_t>::type match(get(vertex_index_t(), g));
 
         auto u = undirected_adaptor<adj_list<>>(g);
-        //maximum_weighted_matching(u, mrs, match);
         maximum_bipartite_weighted_matching(u, partition, mrs, match);
 
         idx_map<int32_t, size_t> b_vertices;
@@ -524,23 +787,82 @@ public:
         }
     }
 
-    void relabel_nested(b_t& b, b_t& b_orig, b_t& c)
+    void align_mode(PartitionModeState& mode)
     {
-        b_t temp = c;
-        std::fill(c.begin(), c.end(), -1);
-        idx_map<int, int> rmap;
-        for (size_t j = 0; j < b_orig.size(); ++j)
+        adj_list<> g;
+        typename vprop_map_t<int32_t>::type label(get(vertex_index_t(), g));
+        typename vprop_map_t<bool>::type partition(get(vertex_index_t(), g));
+        typename eprop_map_t<double>::type mrs(get(edge_index_t(), g));
+
+        get_contingency_graph<true>(g, partition, label, mrs, _nr, mode._nr);
+
+        typedef typename graph_traits<adj_list<>>::vertex_descriptor vertex_t;
+        typename vprop_map_t<vertex_t>::type match(get(vertex_index_t(), g));
+
+        auto u = undirected_adaptor<adj_list<>>(g);
+        maximum_bipartite_weighted_matching(u, partition, mrs, match);
+
+        idx_map<int32_t, size_t> vertices;
+        for (auto v : vertices_range(g))
         {
-            if (b_orig[j] == -1)
+            if (partition[v] == 1)
+                break;
+            vertices[label[v]] = v;
+        }
+
+        auto ipos = _free_idxs.begin();
+        idx_map<int32_t, size_t> rpos;
+        for (size_t r = 0; r < _count.size(); ++r)
+        {
+            if (_count[r] == 0)
                 continue;
-            rmap[b_orig[j]] = b[j];
+            auto v = match[vertices[r]];
+            if (v != graph_traits<adj_list<>>::null_vertex())
+            {
+                rpos[r] = label[v];
+            }
+            else
+            {
+                auto iter = rpos.find(r);
+                if (iter == rpos.end())
+                {
+                    if (ipos == _free_idxs.end())
+                        ipos = _free_idxs.insert(++_rmax).first;
+                    rpos[r] = *(ipos++);
+                }
+                else
+                {
+                    rpos[r] = iter->second;
+                }
+            }
         }
-        for (auto rs : rmap)
+
+        std::vector<size_t> js;
+        for (auto& bi : _bs)
+            js.push_back(bi.first);
+        for (auto j : js)
         {
-            if (size_t(rs.second) >= c.size())
-                c.resize(rs.second + 1, -1);
-            c[rs.second] = temp[rs.first];
+            auto bv = get_nested_partition(j);
+            remove_partition(j);
+
+            auto& b = bv[0].get();
+            b_t b_orig = b;
+            for (size_t i = 0; i < b.size(); ++i)
+            {
+                auto r = b[i];
+                if (r == -1)
+                    continue;
+                b[i] = rpos[r];
+            }
+
+            if (_coupled_state != nullptr)
+                relabel_nested(b, b_orig, bv[1]);
+
+            add_partition(bv, false);
         }
+
+        if (_coupled_state != nullptr && mode._coupled_state != nullptr)
+            _coupled_state->align_mode(*mode._coupled_state);
     }
 
     b_t& get_partition(size_t i)
@@ -663,6 +985,8 @@ public:
                 Si -= xlogx(MLE ? rn.second : rn.second + 1);
                 n += rn.second;
             }
+            if (n == 0)
+                continue;
             auto B = MLE ? 0 : _B;
             Si /= (n + B);
             Si += log(n + B);
@@ -673,81 +997,7 @@ public:
         return S;
     }
 
-    double posterior_dev(bool MLE)
-    {
-        if (_bs.size() == 0)
-            return 0;
-        double ce = 0;
-        size_t N = 0;
-        for (auto& x : _nr)
-        {
-            if (_nr.empty())
-                continue;
-            size_t n = 0;
-            for (auto& rn : x)
-                n += rn.second;
-            if (n == 0)
-                continue;
-            for (auto& rn : x)
-            {
-                double p;
-                if (MLE)
-                    p = rn.second / double(n);
-                else
-                    p = (rn.second + 1) / double(n + _B);
-                ce += p * p;
-            }
-            N++;
-        }
-        return 1. - ce / N;
-    }
-
-    double posterior_cross_dev(PartitionModeState& m,
-                               bool MLE)
-    {
-        if (_bs.size() == 0)
-            return 0;
-        double ce = 0;
-        size_t N = 0;
-        for (size_t i = 0; i < _nr.size(); ++i)
-        {
-            auto& x1 = _nr[i];
-            auto& x2 = m._nr[i];
-            if (x1.empty() || x2.empty())
-                continue;
-            size_t n1 = 0, n2 = 0;
-            for (auto& rn : x1)
-                n1 += rn.second;
-            for (auto& rn : x2)
-                n2 += rn.second;
-            if (n1 == 0 || n2 == 0)
-                continue;
-            for (auto& rn : x1)
-            {
-                double p1, p2;
-                size_t c1 = rn.second;
-                size_t c2 = 0;
-                auto iter = x2.find(rn.first);
-                if (iter != x2.end())
-                    c2 = iter->second;
-                if (MLE)
-                {
-                    p1 = c1 / double(n1);
-                    p2 = c2 / double(n2);
-                }
-                else
-                {
-                    p1 = (c1 + 1) / double(n1 + _B);
-                    p2 = (c2 + 1) / double(n2 + m._B);
-                }
-                ce += p1 * p2;
-            }
-            N++;
-        }
-        return 1. - ce / N;
-    }
-
-    double posterior_cerror(bool MLE)
+    double posterior_cdev(bool MLE)
     {
         if (_bs.size() == 0)
             return 0;
@@ -775,17 +1025,28 @@ public:
         return 1. - ce / N;
     }
 
-    template <class BV>
-    double posterior_lprob(BV&& b, bool MLE)
+    double posterior_lprob(bv_t& b, bool MLE)
+    {
+        return posterior_lprob(b, 0, MLE);
+    }
+
+    double posterior_lprob(bv_t& bv, size_t pos, bool MLE)
     {
         if (_bs.size() == 0)
             return 0;
+
+        b_t& b = bv[pos];
         double L = 0;
         for (size_t i = 0; i < _nr.size(); ++i)
         {
-            auto& x  = _nr[i];
+            auto& x = _nr[i];
             if (x.empty())
-                continue;
+            {
+                if (b[i] == -1)
+                    continue;
+                L = -numeric_limits<double>::infinity();
+                break;
+            }
             size_t n = 0;
             for (auto& rn : x)
                 n += rn.second;
@@ -794,10 +1055,29 @@ public:
             if (iter != x.end())
                 nr = iter->second;
             if (MLE)
+            {
+                if (nr == 0)
+                {
+                    L = -numeric_limits<double>::infinity();
+                    break;
+                }
                 L += log(nr) - log(n);
+            }
             else
+            {
+                if (nr == 0 && (size_t(b[i]) >= _count.size() ||
+                                _count[b[i]] == 0))
+                {
+                    L = -numeric_limits<double>::infinity();
+                    break;
+                }
                 L += log1p(nr) - log(n + _B);
+            }
         }
+        if (std::isinf(L))
+            return L;
+        if (_coupled_state != nullptr)
+            L += _coupled_state->posterior_lprob(bv, pos+1, MLE);
         return L;
     }
 
@@ -958,7 +1238,10 @@ public:
         for (auto& nrv : _nr)
         {
             if (nrv.empty())
+            {
+                b.push_back(-1);
                 continue;
+            }
             auto rs = rs_base;
             auto probs = probs_base;
             for (auto rn : nrv)
@@ -973,13 +1256,21 @@ public:
     }
 
     template <class RNG>
-    std::vector<b_t> sample_nested_partition(bool MLE, RNG& rng)
+    std::vector<b_t> sample_nested_partition(bool MLE, bool fix_empty, RNG& rng)
     {
         std::vector<b_t> bv;
-        bv.push_back(sample_partition(MLE, rng));
+        bv.emplace_back(sample_partition(MLE, rng));
+        if (fix_empty)
+        {
+            for (auto& r : bv.back())
+            {
+                if (r == -1)
+                    r = 0;
+            }
+        }
         if (_coupled_state != nullptr)
         {
-            auto nbv = _coupled_state->sample_nested_partition(MLE, rng);
+            auto nbv = _coupled_state->sample_nested_partition(MLE, fix_empty, rng);
             bv.insert(bv.end(), nbv.begin(), nbv.end());
         }
         return bv;

@@ -97,7 +97,7 @@ void get_xedges_prob(State& state, python::object edges, python::object probs,
 }
 
 template <class State, class Graph, class EProp>
-void set_state(State& state, Graph& u, EProp w)
+void set_state(State& state, Graph& g, EProp w)
 {
     std::vector<std::pair<size_t, size_t>> us;
     for (auto v : vertices_range(state._u))
@@ -123,10 +123,10 @@ void set_state(State& state, Graph& u, EProp w)
             state.remove_edge(v, v);
     }
 
-    for (auto e : edges_range(u))
+    for (auto e : edges_range(g))
     {
         for (size_t i = 0; i < size_t(w[e]); ++i)
-            state.add_edge(source(e, u), target(e, u));
+            state.add_edge(source(e, g), target(e, g));
     }
 }
 

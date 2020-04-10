@@ -68,6 +68,30 @@ Sampling and minimization
    ~graph_tool.inference.bisection.bisection_minimize
    ~graph_tool.inference.nested_blockmodel.hierarchy_minimize
 
+Comparing and manipulating partitions
+=====================================
+
+.. autosummary::
+   :nosignatures:
+
+   ~graph_tool.inference.partition_modes.PartitionModeState
+   ~graph_tool.inference.partition_modes.ModeClusterState
+   ~graph_tool.inference.partition_centroid.PartitionCentroidState
+   ~graph_tool.inference.partition_modes.partition_overlap
+   ~graph_tool.inference.partition_modes.nested_partition_overlap
+   ~graph_tool.inference.partition_centroid.variation_information
+   ~graph_tool.inference.partition_centroid.mutual_information
+   ~graph_tool.inference.partition_centroid.reduced_mutual_information
+   ~graph_tool.inference.partition_modes.contingency_graph
+   ~graph_tool.inference.partition_modes.shuffle_partition_labels
+   ~graph_tool.inference.partition_modes.order_partition_labels
+   ~graph_tool.inference.partition_modes.order_nested_partition_labels
+   ~graph_tool.inference.partition_modes.align_partition_labels
+   ~graph_tool.inference.partition_modes.align_nested_partition_labels
+   ~graph_tool.inference.partition_modes.partition_overlap_center
+   ~graph_tool.inference.partition_modes.nested_partition_overlap_center
+   ~graph_tool.inference.partition_modes.nested_partition_clear_null
+
 Auxiliary functions
 ===================
 
@@ -159,7 +183,7 @@ __all__ = ["minimize_blockmodel_dl",
            "OverlapBlockState",
            "LayeredBlockState",
            "NestedBlockState",
-           "VICenterState",
+           "PartitionCentroidState",
            "PartitionModeState",
            "ModeClusterState",
            "LatentMultigraphBlockState",
@@ -199,10 +223,20 @@ __all__ = ["minimize_blockmodel_dl",
            "modularity",
            "latent_multigraph",
            "partition_overlap",
+           "nested_partition_overlap",
            "contingency_graph",
            "align_partition_labels",
+           "align_nested_partition_labels",
+           "shuffle_nested_partition_labels",
            "shuffle_partition_labels",
-           "overlap_center"]
+           "order_partition_labels",
+           "order_nested_partition_labels",
+           "partition_overlap_center",
+           "nested_partition_overlap_center",
+           "nested_partition_clear_null",
+           "variation_information",
+           "mutual_information",
+           "reduced_mutual_information"]
 
 from . blockmodel import *
 from . overlap_blockmodel import *
