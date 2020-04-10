@@ -8,11 +8,11 @@ as we demonstrate in the following.
 .. note::
 
    Since ``graph-tool`` uses `cairo <https://cairographics.org>`_ for
-   drawing, it is necessary to one of matplotlib's cairo-based backend,
-   otherwise integration is not possible. Currently, two backends can be
-   chosen: ``cairo`` or ``GTK3Cairo``. The latter should be chosen for
-   interactive GUI-based figures. The backend can be changed by calling
-   :func:`matplotlib.pyplot.switch_backend`:
+   drawing, it is necessary to use one of matplotlib's cairo-based
+   backends, otherwise integration is not possible. Currently, two
+   backends can be chosen: ``cairo`` or ``GTK3Cairo``. The latter should
+   be chosen for interactive GUI-based figures. The backend can be
+   changed by calling :func:`matplotlib.pyplot.switch_backend`:
 
    .. code::
 

@@ -217,7 +217,7 @@ class SIState(EpidemicStateBase):
         -----
 
         This implements an SI epidemic process [pastor-satorras-epidemic-2015]_,
-        where nodes in the susceptible state (value 0) are infectious by neighbours
+        where nodes in the susceptible state (value 0) are infected by neighbours
         in the infectious state (value 1).
 
         If a node :math:`i` is updated at time :math:`t`, the transition
@@ -325,7 +325,7 @@ class SISState(DiscreteStateBase):
 
         This implements an SIS epidemic process
         [pastor-satorras-epidemic-2015]_, where nodes in the susceptible state
-        (value 0) are infectious by neighbours in the infectious state (value 1),
+        (value 0) are infected by neighbours in the infectious state (value 1),
         which can then eventually recover to a susceptible state.
 
         If a node :math:`i` is updated at time :math:`t`, the transition
@@ -434,7 +434,7 @@ class SIRState(DiscreteStateBase):
 
         This implements an SIR epidemic process
         [pastor-satorras-epidemic-2015]_, where nodes in the susceptible state
-        (value 0) are infectious by neighbours in the infectious state (value 1),
+        (value 0) are infected by neighbours in the infectious state (value 1),
         which can then eventually recover to a recovered state (value 2).
 
         If a node :math:`i` is updated at time :math:`t`, the transition
@@ -556,7 +556,7 @@ class SIRSState(DiscreteStateBase):
 
         This implements an SIRS epidemic process
         [pastor-satorras-epidemic-2015]_, where nodes in the susceptible state
-        (value 0) are infectious by neighbours in the infectious state (value 1),
+        (value 0) are infected by neighbours in the infectious state (value 1),
         which can then eventually recover to a recovered state (value 2), and
         finally back to the susceptible state.
 

@@ -523,7 +523,7 @@ class MeasuredBlockState(UncertainBaseState):
         positive measurements for each edge.
     n_default : ``int`` (optional, default: ``1``)
         Total number of measurements for each non-edge.
-    x_default : ``int`` (optional, default: ``1``)
+    x_default : ``int`` (optional, default: ``0``)
         Total number of positive measurements for each non-edge.
     fn_params : ``dict`` (optional, default: ``dict(alpha=1, beta=1)``)
         Beta distribution hyperparameters for the probability of missing
