@@ -28,11 +28,11 @@ namespace graph_tool
 using namespace boost;
 
 template <class Graph, class Partition, class Weight, class Mate>
-void maximum_bipartite_weighted_perfect_matching(Graph& g, Partition partition,
-                                                 Weight weight, Mate mate)
+void maximum_bipartite_weighted_perfect_matching(Graph& g, Partition&& partition,
+                                                 Weight&& weight, Mate&& mate)
 {
     typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
-    typedef typename property_traits<Weight>::value_type weight_t;
+    typedef typename property_traits<std::remove_reference_t<Weight>>::value_type weight_t;
     adj_list<> G;
     G.set_keep_epos(true);
 
@@ -258,11 +258,11 @@ void maximum_bipartite_weighted_perfect_matching(Graph& g, Partition partition,
 
 template <class Graph, class Partition, class Weight, class Mate>
 void maximum_bipartite_weighted_imperfect_matching(Graph& g,
-                                                   Partition partition,
-                                                   Weight weight, Mate mate)
+                                                   Partition&& partition,
+                                                   Weight&& weight, Mate&& mate)
 {
     typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
-    typedef typename property_traits<Weight>::value_type oweight_t;
+    typedef typename property_traits<std::remove_reference_t<Weight>>::value_type oweight_t;
     typedef typename std::conditional<std::is_integral_v<oweight_t>,
                                       std::make_signed_t<std::conditional_t
                                                          <std::is_integral_v<oweight_t>,
@@ -272,7 +272,7 @@ void maximum_bipartite_weighted_imperfect_matching(Graph& g,
     adj_list<> u_base;
     undirected_adaptor<adj_list<>> u(u_base);
 
-    typedef typename property_traits<Partition>::value_type pval_t;
+    typedef typename property_traits<std::remove_reference_t<Partition>>::value_type pval_t;
     typename vprop_map_t<pval_t>::type u_partition;
     typename eprop_map_t<weight_t>::type u_weight;
     typename vprop_map_t<vertex_t>::type u_mate;
@@ -346,7 +346,9 @@ void maximum_bipartite_weighted_imperfect_matching(Graph& g,
         u_weight[e.first] = -4 * ((max_weight + 1) * T.size());
     }
 
-    maximum_bipartite_weighted_perfect_matching(u, u_partition, u_weight, u_mate);
+    maximum_bipartite_weighted_perfect_matching(u, u_partition.get_unchecked(),
+                                                u_weight.get_unchecked(),
+                                                u_mate.get_unchecked(num_vertices(u)));
 
     for (auto v : vertices_range(g))
     {
@@ -362,16 +364,16 @@ void maximum_bipartite_weighted_imperfect_matching(Graph& g,
 
 template <class Graph, class Partition, class Weight, class Mate>
 void maximum_bipartite_weighted_matching(Graph& g,
-                                         Partition partition,
-                                         Weight weight, Mate mate)
+                                         Partition&& partition,
+                                         Weight&& weight, Mate&& mate)
 {
     typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
-    typedef typename property_traits<Weight>::value_type weight_t;
+    typedef typename property_traits<std::remove_reference_t<Weight>>::value_type weight_t;
 
     adj_list<> u_base;
     undirected_adaptor<adj_list<>> u(u_base);
 
-    typedef typename property_traits<Partition>::value_type pval_t;
+    typedef typename property_traits<std::remove_reference_t<Partition>>::value_type pval_t;
     typename vprop_map_t<pval_t>::type u_partition;
     typename eprop_map_t<weight_t>::type u_weight;
     typename vprop_map_t<vertex_t>::type u_mate;
@@ -421,7 +423,10 @@ void maximum_bipartite_weighted_matching(Graph& g,
         u_weight[e.first] = 0;
     }
 
-    maximum_bipartite_weighted_imperfect_matching(u, u_partition, u_weight, u_mate);
+    maximum_bipartite_weighted_imperfect_matching(u,
+                                                  u_partition.get_unchecked(),
+                                                  u_weight.get_unchecked(),
+                                                  u_mate.get_unchecked(num_vertices(u)));
 
     for (auto v : vertices_range(g))
     {
