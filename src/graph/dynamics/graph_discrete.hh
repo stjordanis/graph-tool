@@ -129,17 +129,17 @@ public:
                 for (auto e : edges_range(g))
                     beta[e] = std::log1p(-_beta[e]);
                 _beta = beta;
-            }
 
-            for (auto v : vertices_range(g))
-            {
-                for (auto e : in_or_out_edges_range(v, g))
+                for (auto v : vertices_range(g))
                 {
-                    auto w = (source(e, g) != v) ? source(e, g) : target(e, g);
-                    if (_s[w] == State::I)
-                        _m[v] += get_p(e);
+                    for (auto e : in_or_out_edges_range(v, g))
+                    {
+                        auto w = (source(e, g) != v) ? source(e, g) : target(e, g);
+                        if (_s[w] == State::I)
+                            _m[v] += get_p(e);
+                    }
+                    _m_temp[v] = _m[v];
                 }
-                _m_temp[v] = _m[v];
             }
         }
     };
@@ -182,6 +182,9 @@ public:
         }
         else
         {
+            if constexpr (!constant_beta)
+                return;
+
             if constexpr (sync)
             {
                 for (auto e : out_edges_range(v, g))
@@ -233,13 +236,26 @@ public:
             return 1;
         }
 
-        auto m = _m[v];
-
         double prob = 0;
-        if constexpr (!weighted)
-            prob = _prob[m];
+
+        if constexpr (!weighted || constant_beta)
+        {
+            auto m = _m[v];
+            if constexpr (!weighted)
+                prob = _prob[m];
+            else
+                prob = 1 - std::exp(m);
+        }
         else
-            prob = 1 - std::exp(m);
+        {
+            for (auto e : in_or_out_edges_range(v, g))
+            {
+                auto w = source(e, g);
+                if (_s[w] == State::I)
+                    prob += std::log1p(-_beta[e]);
+            }
+            prob = 1 - std::exp(prob);
+        }
 
         std::bernoulli_distribution minfect(prob);
         if (prob > 0 && minfect(rng))

@@ -162,8 +162,8 @@ class EpidemicStateBase(DiscreteStateBase):
         if weighted:
             _check_prop_scalar(beta, "beta")
             if beta.value_type() != "double":
-                if constant_beta:
-                    raise ValueError("if constant_beta == True, the type of beta must be double")
+                if not constant_beta:
+                    raise ValueError("if constant_beta == False, the type of beta must be double")
                 beta = beta.copy("double")
         params["beta"] = beta
 
