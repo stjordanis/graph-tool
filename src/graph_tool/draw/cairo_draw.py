@@ -1136,7 +1136,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                 x, y, zoom = fit_to_view_ink(g, pos, output_size, vprops,
                                              eprops, adjust_aspect, pad=pad)
         else:
-            x, y, zoom = x, y, 1
+            x, y, zoom = 0, 0, 1
 
 
         if isinstance(output, str):
