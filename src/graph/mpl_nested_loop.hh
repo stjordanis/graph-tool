@@ -59,11 +59,9 @@ namespace mpl
 // run-time bridge than the simpler mpl::for_each().
 
 
-struct stop_iteration: public std::exception {};
-
 // this is a functor wrapper that will perform an any_cast<> in each in an array
 // of arguments according to the called types. If the cast is successful, the
-// function will be called with those types, and stop_iteration will be thrown.
+// function will be called with those types, and true will be returned.
 template <class Action, std::size_t N>
 struct all_any_cast
 {
@@ -72,45 +70,45 @@ struct all_any_cast
 
     template <class... Ts>
     [[gnu::always_inline]]
-    void operator()(Ts*... vs) const
+    bool operator()(Ts*... vs) const
     {
-        dispatch(std::make_index_sequence<sizeof...(Ts)>(), vs...);
+        return dispatch(std::make_index_sequence<sizeof...(Ts)>(), vs...);
     }
 
-    struct fail_cast {};
-
     template <class T>
-    T& try_any_cast(boost::any& a) const
+    T* try_any_cast(boost::any& a) const
     {
-        try
+        T * t = any_cast<T>(&a);
+        if (t)
         {
-            return any_cast<T&>(a);
+            return t;
         }
-        catch (bad_any_cast&)
+
+        std::reference_wrapper<T> * tr = any_cast<std::reference_wrapper<T>>(&a);
+        if (tr)
         {
-            try
-            {
-                return any_cast<std::reference_wrapper<T>>(a);
-            }
-            catch (bad_any_cast&)
-            {
-                throw fail_cast();
-            }
+            return &(tr->get());
         }
+
+        return nullptr;
     }
 
     template <std::size_t... Idx, class... Ts>
     [[gnu::always_inline]]
-    void dispatch(std::index_sequence<Idx...>, Ts*...) const
+    bool dispatch(std::index_sequence<Idx...>, Ts*...) const
     {
-        try
+        static_assert(sizeof...(Idx) == N,
+                      "all_any_cast: wrong number of arguments");
+
+        std::tuple<std::add_pointer_t<Ts>...> args;
+        if (((std::get<Idx>(args) = try_any_cast<Ts>(*_args[Idx])) && ...))
         {
-            static_assert(sizeof...(Idx) == N,
-                          "all_any_cast: wrong number of arguments");
-            _a(try_any_cast<Ts>(*_args[Idx])...);
-            throw stop_iteration();
+            // successful set of casts. Dereference and call action.
+            std::apply([this](auto*... arg){ _a(*arg...); }, args);
+            return true;
         }
-        catch (fail_cast) {}
+
+        return false;
     }
 
     Action _a;
@@ -124,10 +122,10 @@ struct for_each_variadic;
 template <class F, class... Ts>
 struct for_each_variadic<F,std::tuple<Ts...>>
 {
-    void operator()(F f)
+    bool operator()(F f)
     {
-        auto call = [&](auto&& arg){f(std::forward<decltype(arg)>(arg)); return 0;};
-        (void) std::initializer_list<int> {call(typename std::add_pointer<Ts>::type())...};
+        auto call = [&](auto&& arg) -> bool {return f(std::forward<decltype(arg)>(arg));};
+        return (call(typename std::add_pointer<Ts>::type()) || ...);
     }
 };
 
@@ -160,9 +158,9 @@ struct inner_loop<Action, std::tuple<Ts...>>
 
     template <class T>
     [[gnu::always_inline]]
-    void operator()(T*) const
-    { _a(typename std::add_pointer<Ts>::type()...,
-         typename std::add_pointer<T>::type()); }  // innermost loop
+    bool operator()(T*) const
+    { return _a(typename std::add_pointer<Ts>::type()...,
+                typename std::add_pointer<T>::type()); }  // innermost loop
     Action _a;
 };
 
@@ -173,11 +171,11 @@ struct inner_loop<Action, std::tuple<Ts...>, TR1, TRS...>
 
     template <class T>
     [[gnu::always_inline]]
-    void operator()(T*) const
+    bool operator()(T*) const
     {
         typedef inner_loop<Action, std::tuple<Ts..., T>, TRS...> inner_loop_t;
         typedef typename to_tuple<TR1>::type tr_tuple;
-        for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(_a));
+        return for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(_a));
     }
     Action _a;
 };
@@ -189,30 +187,22 @@ bool nested_for_each(Action a, Args&&... args)
 {
     std::array<any*, sizeof...(args)> as{{&args...}};
     auto b = all_any_cast<Action, sizeof...(args)>(a, as);
-    try
-    {
-        typedef decltype(b) action_t;
-        typedef typename to_tuple<TR1>::type tr_tuple;
-        typedef inner_loop<action_t, std::tuple<>, TRS...> inner_loop_t;
-        for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(b));
-        return false;
-    }
-    catch (stop_iteration&)
-    {
-        return true;
-    }
+    typedef decltype(b) action_t;
+    typedef typename to_tuple<TR1>::type tr_tuple;
+    typedef inner_loop<action_t, std::tuple<>, TRS...> inner_loop_t;
+    return for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(b));
 }
 
 template <class TR1, class... TRS, class Action>
 void nested_for_each(Action a)
 {
-    try
-    {
-        typedef typename to_tuple<TR1>::type tr_tuple;
-        typedef inner_loop<Action, std::tuple<>, TRS...> inner_loop_t;
-        for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(a));
-    }
-    catch (stop_iteration&) {}
+    typedef typename to_tuple<TR1>::type tr_tuple;
+
+    // wrap action into a bool-returning function
+    auto ab = [=](auto*... args) -> bool { a(args...); return true; };
+
+    typedef inner_loop<decltype(ab), std::tuple<>, TRS...> inner_loop_t;
+    for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(ab));
 }
 
 
