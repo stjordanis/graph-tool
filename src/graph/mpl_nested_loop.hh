@@ -199,7 +199,7 @@ void nested_for_each(Action a)
     typedef typename to_tuple<TR1>::type tr_tuple;
 
     // wrap action into a bool-returning function
-    auto ab = [=](auto*... args) -> bool { a(args...); return true; };
+    auto ab = [=](auto*... args) -> bool { a(args...); return false; };
 
     typedef inner_loop<decltype(ab), std::tuple<>, TRS...> inner_loop_t;
     for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(ab));
