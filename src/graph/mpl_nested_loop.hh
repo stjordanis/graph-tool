@@ -62,6 +62,7 @@ namespace mpl
 // this is a functor wrapper that will perform an any_cast<> in each in an array
 // of arguments according to the called types. If the cast is successful, the
 // function will be called with those types, and true will be returned.
+
 template <class Action, std::size_t N>
 struct all_any_cast
 {
@@ -78,17 +79,13 @@ struct all_any_cast
     template <class T>
     T* try_any_cast(boost::any& a) const
     {
-        T * t = any_cast<T>(&a);
-        if (t)
-        {
+        T* t = any_cast<T>(&a);
+        if (t != nullptr)
             return t;
-        }
 
-        std::reference_wrapper<T> * tr = any_cast<std::reference_wrapper<T>>(&a);
-        if (tr)
-        {
+        std::reference_wrapper<T>* tr = any_cast<std::reference_wrapper<T>>(&a);
+        if (tr != nullptr)
             return &(tr->get());
-        }
 
         return nullptr;
     }
