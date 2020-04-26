@@ -109,6 +109,21 @@ class UncertainBaseState(object):
 
         init_q_cache()
 
+    def __getstate__(self):
+        self.u.ep.w = self.eweight
+        u = self.u.copy()
+        eweight = u.ep.w
+        del u.ep["w"]
+        del self.u.ep["w"]
+        return dict(g=self.g, nested=self.nbstate is not None,
+                    bstate=(self.nbstate.copy(g=u, state_args=dict(eweight=eweight))
+                            if self.nbstate is not None else
+                            self.bstate.copy(g=u, eweight=eweight)),
+                    self_loops=self.self_loops)
+
+    def __setstate__(self, state):
+        self.__init__(**state)
+
     def get_block_state(self):
         """Return the underlying block state, which can be either
         :class:`~graph_tool.inference.blockmodel.BlockState` or
@@ -149,6 +164,11 @@ class UncertainBaseState(object):
         dentropy_args = dict(self.bstate._entropy_args, **entropy_args)
         entropy_args = get_uentropy_args(dentropy_args)
         return self._state.add_edge_dS(int(u), int(v), entropy_args)
+
+    def set_state(self, g, w):
+        if w.value_type() != "int32_t":
+            w = w.copy("int32_t")
+        self._state.set_state(g._Graph__graph, w._get_any())
 
     def _algo_sweep(self, algo, r=.5, **kwargs):
         kwargs = kwargs.copy()
@@ -403,13 +423,9 @@ class UncertainBlockState(UncertainBaseState):
         self._state = libinference.make_uncertain_state(self.bstate._state,
                                                         self)
     def __getstate__(self):
-        return dict(g=self.g, q=self._q, q_default=self._q_default,
-                    aE=self.aE, nested=self.nbstate is not None,
-                    bstate=(self.nbstate.copy() if self.nbstate is not None else
-                            self.bstate.copy()), self_loops=self.self_loops)
-
-    def __setstate__(self, state):
-        self.__init__(**state)
+        state = super(UncertainBlockState, self).__getstate__()
+        return dict(state,  q=self._q, q_default=self._q_default,
+                    aE=self.aE)
 
     def copy(self, **kwargs):
         """Return a copy of the state."""
@@ -482,9 +498,8 @@ class LatentMultigraphBlockState(UncertainBaseState):
         self._state = libinference.make_uncertain_state(self.bstate._state,
                                                         self)
     def __getstate__(self):
-        return dict(g=self.g, aE=self.aE, nested=self.nbstate is not None,
-                    bstate=(self.nbstate.copy() if self.nbstate is not None else
-                            self.bstate.copy()), self_loops=self.self_loops)
+        state = super(LatentMultigraphBlockState, self).__getstate__()
+        return dict(state, aE=self.aE)
 
     def __setstate__(self, state):
         self.__init__(**state)
@@ -584,16 +599,11 @@ class MeasuredBlockState(UncertainBaseState):
                                                        self)
 
     def __getstate__(self):
-        return dict(g=self.g, n=self.n, x=self.x, n_default=self.n_default,
+        state = super(MeasuredBlockState, self).__getstate__()
+        return dict(state, n=self.n, x=self.x, n_default=self.n_default,
                     x_default=self.x_default,
                     fn_params=dict(alpha=self.alpha, beta=self.beta),
-                    fp_params=dict(mu=self.mu, nu=self.nu), aE=self.aE,
-                    nested=self.nbstate is not None,
-                    bstate=(self.nbstate if self.nbstate is not None
-                            else self.bstate), self_loops=self.self_loops)
-
-    def __setstate__(self, state):
-        self.__init__(**state)
+                    fp_params=dict(mu=self.mu, nu=self.nu), aE=self.aE)
 
     def copy(self, **kwargs):
         """Return a copy of the state."""
@@ -739,16 +749,11 @@ class MixedMeasuredBlockState(UncertainBaseState):
         self.sync_q()
 
     def __getstate__(self):
-        return dict(g=self.g, n=self.n, x=self.x, n_default=self.n_default,
+        state = super(MixedMeasuredBlockState, self).__getstate__()
+        return dict(state, n=self.n, x=self.x, n_default=self.n_default,
                     x_default=self.x_default,
                     fn_params=dict(alpha=self.alpha, beta=self.beta),
-                    fp_params=dict(mu=self.mu, nu=self.nu), aE=self.aE,
-                    nested=self.nbstate is not None,
-                    bstate=(self.nbstate if self.nbstate is not None
-                            else self.bstate), self_loops=self.self_loops)
-
-    def __setstate__(self, state):
-        self.__init__(**state)
+                    fp_params=dict(mu=self.mu, nu=self.nu), aE=self.aE)
 
     def copy(self, **kwargs):
         """Return a copy of the state."""
@@ -869,14 +874,9 @@ class DynamicsBlockStateBase(UncertainBaseState):
         self._state.set_params(self.params)
 
     def __getstate__(self):
-        return dict(g=self.g, s=self.s, t=self.t, x=self.x, aE=self.aE,
-                    nested=self.nbstate is not None,
-                    bstate=(self.nbstate.copy() if self.nbstate is not None else
-                            self.bstate.copy()), self_loops=self.self_loops,
+        state = super(DynamicsBlockState, self).__getstate__()
+        return dict(state, s=self.s, t=self.t, x=self.x, aE=self.aE,
                     **self.params)
-
-    def __setstate__(self, state):
-        self.__init__(**state)
 
     def copy(self, **kwargs):
         """Return a copy of the state."""

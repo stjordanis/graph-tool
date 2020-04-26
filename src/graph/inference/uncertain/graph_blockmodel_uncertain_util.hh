@@ -96,6 +96,40 @@ void get_xedges_prob(State& state, python::object edges, python::object probs,
                                   (es.shape()[1] > 2) ? es[i][2] : 0);
 }
 
+template <class State, class Graph, class EProp>
+void set_state(State& state, Graph& u, EProp w)
+{
+    std::vector<std::pair<size_t, size_t>> us;
+    for (auto v : vertices_range(state._u))
+    {
+        us.clear();
+        for (auto e : out_edges_range(v, state._u))
+        {
+            auto w = target(e, state._u);
+            if (w == v)
+                continue;
+            us.emplace_back(w, state._eweight[e]);
+        }
+        for (auto& uw : us)
+        {
+            for (size_t i = 0; i < uw.second; ++i)
+                state.remove_edge(v, uw.first);
+        }
+        auto& e = state.template get_u_edge<false>(v, v);
+        if (e == state._null_edge)
+            continue;
+        size_t x = state._eweight[e];
+        for (size_t i = 0; i < x; ++i)
+            state.remove_edge(v, v);
+    }
+
+    for (auto e : edges_range(u))
+    {
+        for (size_t i = 0; i < size_t(w[e]); ++i)
+            state.add_edge(source(e, u), target(e, u));
+    }
+}
+
 
 } // graph_tool namespace
 
