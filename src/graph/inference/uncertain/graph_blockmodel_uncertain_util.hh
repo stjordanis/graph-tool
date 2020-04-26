@@ -31,7 +31,7 @@ T logsum(T a, T b)
 }
 
 template <class State, class... X>
-double get_edge_prob(State& state, size_t u, size_t v, uentropy_args_t ea,
+double get_edge_prob(State& state, size_t u, size_t v, const uentropy_args_t& ea,
                      double epsilon, X... x)
 {
     auto e = state.get_u_edge(u, v);
@@ -77,7 +77,7 @@ double get_edge_prob(State& state, size_t u, size_t v, uentropy_args_t ea,
 
 template <class State>
 void get_edges_prob(State& state, python::object edges, python::object probs,
-                    uentropy_args_t ea, double epsilon)
+                    const uentropy_args_t& ea, double epsilon)
 {
     multi_array_ref<uint64_t,2> es = get_array<uint64_t,2>(edges);
     multi_array_ref<double,1> eprobs = get_array<double,1>(probs);
@@ -87,7 +87,7 @@ void get_edges_prob(State& state, python::object edges, python::object probs,
 
 template <class State>
 void get_xedges_prob(State& state, python::object edges, python::object probs,
-                    uentropy_args_t ea, double epsilon)
+                    const uentropy_args_t& ea, double epsilon)
 {
     multi_array_ref<double,2> es = get_array<double,2>(edges);
     multi_array_ref<double,1> eprobs = get_array<double,1>(probs);

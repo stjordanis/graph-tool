@@ -79,6 +79,18 @@ void export_measured_state()
                             no_init);
                       c.def("remove_edge", &state_t::remove_edge)
                           .def("add_edge", &state_t::add_edge)
+                          .def("set_state",
+                               +[](state_t& state, GraphInterface& gi,
+                                   boost::any aw)
+                                {
+                                    typedef eprop_map_t<int32_t>::type emap_t;
+                                    auto w = any_cast<emap_t>(aw).get_unchecked();
+                                    gt_dispatch<>()
+                                        ([&](auto& g)
+                                         { set_state(state, g, w); },
+                                         all_graph_views())
+                                        (gi.get_graph_view());
+                                })
                           .def("remove_edge_dS", &state_t::remove_edge_dS)
                           .def("add_edge_dS", &state_t::add_edge_dS)
                           .def("entropy", &state_t::entropy)
@@ -89,14 +101,14 @@ void export_measured_state()
                           .def("get_M", &state_t::get_M)
                           .def("get_edge_prob",
                                +[](state_t& state, size_t u, size_t v,
-                                   uentropy_args_t ea, double epsilon)
+                                   const uentropy_args_t& ea, double epsilon)
                                 {
                                     return get_edge_prob(state, u, v, ea,
                                                          epsilon);
                                 })
                           .def("get_edges_prob",
                                +[](state_t& state, python::object edges,
-                                   python::object probs, uentropy_args_t ea,
+                                   python::object probs, const uentropy_args_t& ea,
                                    double epsilon)
                                 {
                                     get_edges_prob(state, edges, probs, ea,

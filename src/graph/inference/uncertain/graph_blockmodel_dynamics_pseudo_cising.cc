@@ -87,14 +87,14 @@ void export_pseudo_cising_state()
                           .def("get_node_prob", &state_t::get_node_prob)
                           .def("get_edge_prob",
                                +[](state_t& state, size_t u, size_t v, double x,
-                                   uentropy_args_t ea, double epsilon)
+                                   const uentropy_args_t& ea, double epsilon)
                                 {
                                     return get_edge_prob(state, u, v, ea,
                                                          epsilon, x);
                                 })
                           .def("get_edges_prob",
                                +[](state_t& state, python::object edges,
-                                   python::object probs, uentropy_args_t ea,
+                                   python::object probs, const uentropy_args_t& ea,
                                    double epsilon)
                                 {
                                     get_xedges_prob(state, edges, probs, ea,

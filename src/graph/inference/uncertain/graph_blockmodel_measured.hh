@@ -209,7 +209,7 @@ struct Measured
             return -(Sf - Si);
         }
 
-        double remove_edge_dS(size_t u, size_t v, uentropy_args_t ea)
+        double remove_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
             double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
@@ -235,7 +235,7 @@ struct Measured
             return dS;
         }
 
-        double add_edge_dS(size_t u, size_t v, uentropy_args_t ea)
+        double add_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
             double dS = _block_state.template modify_edge_dS<true>(u, v, e,

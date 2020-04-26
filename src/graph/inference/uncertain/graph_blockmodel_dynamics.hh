@@ -166,7 +166,7 @@ struct Dynamics
             return -S;
         }
 
-        double remove_edge_dS(size_t u, size_t v, uentropy_args_t ea)
+        double remove_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
             auto x = _xc[e];
@@ -193,7 +193,7 @@ struct Dynamics
             return dS;
         }
 
-        double add_edge_dS(size_t u, size_t v, double x, uentropy_args_t ea)
+        double add_edge_dS(size_t u, size_t v, double x, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
             double dS = _block_state.template modify_edge_dS<true>(u, v, e,
@@ -216,7 +216,7 @@ struct Dynamics
             return dS;
         }
 
-        double update_edge_dS(size_t u, size_t v, double dx, uentropy_args_t ea)
+        double update_edge_dS(size_t u, size_t v, double dx, const uentropy_args_t& ea)
         {
             double dS = 0;
             if (ea.latent_edges)

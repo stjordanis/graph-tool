@@ -120,14 +120,14 @@ void export_uncertain_state()
                           .def("set_S_const", &state_t::set_S_const)
                           .def("get_edge_prob",
                                +[](state_t& state, size_t u, size_t v,
-                                   uentropy_args_t ea, double epsilon)
+                                   const uentropy_args_t& ea, double epsilon)
                                 {
                                     return get_edge_prob(state, u, v, ea,
                                                          epsilon);
                                 })
                           .def("get_edges_prob",
                                +[](state_t& state, python::object edges,
-                                   python::object probs, uentropy_args_t ea,
+                                   python::object probs, const uentropy_args_t& ea,
                                    double epsilon)
                                 {
                                     get_edges_prob(state, edges, probs, ea,
