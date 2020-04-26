@@ -81,30 +81,92 @@ void collect_marginal_count_dispatch(GraphInterface& gi, GraphInterface& ui,
                                                ui.get_graph_view());
 }
 
-void marginal_count_entropy(GraphInterface& gi, boost::any aexc, boost::any aeh)
+double marginal_count_entropy(GraphInterface& gi, boost::any aexc, boost::any aeh)
 {
     typedef eprop_map_t<double>::type ehmap_t;
     auto eh = any_cast<ehmap_t>(aeh);
 
+    double S_tot = 0;
     gt_dispatch<>()
         ([&](auto& g, auto exc)
          {
-             for (auto e : edges_range(g))
-             {
-                 auto& S = eh[e];
-                 S = 0;
-                 size_t N = 0;
-                 for (auto n : exc[e])
-                 {
-                     S -= xlogx_fast(n);
-                     N += n;
-                 }
-                 if (N == 0)
-                     continue;
-                 S /= N;
-                 S += safelog_fast(N);
-             }
+             parallel_edge_loop
+                 (g,
+                  [&](auto& e)
+                  {
+                      auto& S = eh[e];
+                      S = 0;
+                      size_t N = 0;
+                      for (auto n : exc[e])
+                      {
+                          S -= xlogx_fast(n);
+                          N += n;
+                      }
+                      if (N == 0)
+                          return;
+                      S /= N;
+                      S += safelog_fast(N);
+
+                      #pragma omp atomic
+                      S_tot += S;
+                  });
          },
         all_graph_views(), edge_scalar_vector_properties())
         (gi.get_graph_view(), aexc);
+    return S_tot;
+}
+
+double marginal_multigraph_sample(GraphInterface& gi, boost::any axs, boost::any axc,
+                                boost::any ax, rng_t& rng)
+{
+    double L = 0;
+    gt_dispatch<>()
+        ([&](auto& g, auto& xs, auto& xc, auto& x)
+         {
+             for (auto e : edges_range(g))
+             {
+                 typedef std::remove_reference_t<decltype(xs[e][0])> val_t;
+                 std::vector<double> probs(xc[e].begin(), xc[e].end());
+                 Sampler<val_t> sample(xs[e], probs);
+                 x[e] = sample.sample(rng);
+
+                 size_t Z = 0;
+                 size_t p = 0;
+                 for (size_t i = 0; i < xs[e].size(); ++i)
+                 {
+                     auto m = xs[e][i];
+                     if (m == x[e])
+                         p = xc[e][i];
+                     Z += xc[e][i];
+                 }
+                 L += std::log(p) - std::log(Z);
+             }
+         },
+         all_graph_views(), edge_scalar_vector_properties(),
+         edge_scalar_vector_properties(), writable_edge_scalar_properties())
+        (gi.get_graph_view(), axs, axc, ax);
+    return L;
+}
+
+double marginal_graph_sample(GraphInterface& gi, boost::any ap,
+                           boost::any ax, rng_t& rng)
+{
+    double L = 0;
+    gt_dispatch<>()
+        ([&](auto& g, auto& p, auto& x)
+         {
+             for (auto e : edges_range(g))
+             {
+                 std::bernoulli_distribution sample(p[e]);
+                 x[e] = sample(rng);
+                 if (x[e] == 1)
+                     L += std::log(p[e]);
+                 else
+                     L += std::log1p(-p[e]);
+             }
+         },
+         all_graph_views(), edge_scalar_properties(),
+         writable_edge_scalar_properties())
+        (gi.get_graph_view(), ap, ax);
+    return L;
 }

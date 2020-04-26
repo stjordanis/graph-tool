@@ -1518,3 +1518,21 @@ def marginal_multigraph_entropy(g, ecount):
                                         _prop("e", g, ecount),
                                         _prop("e", g, eh))
     return eh
+
+def marginal_multigraph_sample(g, ew, ecount):
+
+    w = g.new_ep("int")
+    L = libinference.marginal_multigraph_sample(g._Graph__graph,
+                                                _prop("e", g, ew),
+                                                _prop("e", g, ecount),
+                                                _prop("e", g, w),
+                                                _get_rng())
+    return w, L
+
+def marginal_graph_sample(g, ep):
+    w = g.new_ep("int")
+    L = libinference.marginal_graph_sample(g._Graph__graph,
+                                           _prop("e", g, ep),
+                                           _prop("e", g, w),
+                                           _get_rng())
+    return w, L
