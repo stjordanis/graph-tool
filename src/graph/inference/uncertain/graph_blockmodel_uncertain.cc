@@ -72,8 +72,14 @@ double marginal_count_entropy(GraphInterface& gi, boost::any aexc, boost::any ae
 double marginal_multigraph_sample(GraphInterface& gi, boost::any axs,
                                   boost::any axc, boost::any ax, rng_t& rng);
 
+double marginal_multigraph_lprob(GraphInterface& gi, boost::any axs,
+                                 boost::any axc, boost::any ax);
+
 double marginal_graph_sample(GraphInterface& gi, boost::any ap,
                              boost::any ax, rng_t& rng);
+
+double marginal_graph_lprob(GraphInterface& gi, boost::any ap,
+                            boost::any ax);
 
 void export_uncertain_state()
 {
@@ -142,5 +148,7 @@ void export_uncertain_state()
     def("collect_marginal_count", &collect_marginal_count_dispatch);
     def("marginal_count_entropy", &marginal_count_entropy);
     def("marginal_multigraph_sample", &marginal_multigraph_sample);
+    def("marginal_multigraph_lprob", &marginal_multigraph_lprob);
     def("marginal_graph_sample", &marginal_graph_sample);
+    def("marginal_graph_lprob", &marginal_graph_lprob);
 }
