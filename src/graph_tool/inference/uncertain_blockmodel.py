@@ -58,11 +58,19 @@ class UncertainBaseState(object):
                 self.u = g.copy()
                 self.eweight = self.u.new_ep("int", val=1)
         else:
-            self.u = bstate.g
+            self.u = bstate.g.copy()
             if nested:
                 self.eweight = bstate.levels[0].eweight
             else:
                 self.eweight = bstate.eweight
+            self.eweight = self.u.own_property(self.eweight.copy())
+            if nested:
+                bstate = bstate.copy(g=self.u,
+                                     state_args=dict(bstate.state_args,
+                                                     eweight=self.eweight))
+            else:
+                bstate = bstate.copy(g=self.u, eweight=self.eweight)
+
         self.u.set_fast_edge_removal()
 
         self.self_loops = self_loops
@@ -84,9 +92,7 @@ class UncertainBaseState(object):
             if nested:
                 state_args["state_args"] = state_args.get("state_args", {})
                 state_args["state_args"]["eweight"] = self.eweight
-                state_args["sampling"] = True
-                self.nbstate = NestedBlockState(self.u, **dict(state_args,
-                                                               sampling=True))
+                self.nbstate = NestedBlockState(self.u, state_args)
                 self.bstate = self.nbstate.levels[0]
             else:
                 self.nbstate = None
@@ -110,15 +116,8 @@ class UncertainBaseState(object):
         init_q_cache()
 
     def __getstate__(self):
-        self.u.ep.w = self.eweight
-        u = self.u.copy()
-        eweight = u.ep.w
-        del u.ep["w"]
-        del self.u.ep["w"]
         return dict(g=self.g, nested=self.nbstate is not None,
-                    bstate=(self.nbstate.copy(g=u, state_args=dict(eweight=eweight))
-                            if self.nbstate is not None else
-                            self.bstate.copy(g=u, eweight=eweight)),
+                    bstate=(self.nbstate if self.nbstate is not None else self.bstate),
                     self_loops=self.self_loops)
 
     def __setstate__(self, state):
