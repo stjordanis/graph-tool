@@ -446,7 +446,7 @@ class BlockState(object):
                 if numpy.any(idx):
                     self.epsilon[i] = abs(self.rec[i].a[idx]).min() / 10
 
-        self.bfield = g.new_vp("vector<double>") if bfield is None else bfield
+        self.bfield = g.new_vp("vector<double>") if bfield is None else self.g.own_property(bfield)
         if self.bfield.value_type() != "vector<double>":
             raise ValueError("'bfield' property map must be of type 'vector<double>'")
         if Bfield is None:
