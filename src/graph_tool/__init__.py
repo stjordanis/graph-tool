@@ -2673,13 +2673,14 @@ class Graph(object):
         if full:
             if g is sf:
                 g = GraphView(g, skip_properties=True, skip_efilt=True,
-                              skip_vfilt=True, directed=True)
+                              skip_vfilt=True)
                 sf = g
             else:
                 g = GraphView(g, skip_properties=True, skip_efilt=True,
-                              skip_vfilt=True, directed=True)
+                              skip_vfilt=True)
                 sf = GraphView(sf, skip_properties=True, skip_efilt=True,
-                               skip_vfilt=True, directed=True)
+                               skip_vfilt=True)
+
         if src.key_type() == "v":
             if g.num_vertices() > sf.num_vertices():
                 raise ValueError("graphs with incompatible sizes (%d, %d)" %
