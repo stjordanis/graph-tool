@@ -21,7 +21,6 @@
 import sys
 import os
 import os.path
-import time
 import warnings
 import ctypes
 import ctypes.util

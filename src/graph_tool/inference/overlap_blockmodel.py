@@ -18,12 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, PropertyMap
+from .. import _prop, Graph, libcore, _get_rng, PropertyMap
 
 import random
 from numpy import *
 import numpy
-from collections import defaultdict
 
 from .. import group_vector_property, ungroup_vector_property
 

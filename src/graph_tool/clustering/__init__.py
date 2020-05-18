@@ -44,14 +44,13 @@ Contents
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_clustering as _gt")
 
-from .. import _degree, _prop, Graph, GraphView, VertexPropertyMap, _get_rng
+from .. import _prop, Graph, GraphView, VertexPropertyMap, _get_rng
 from .. topology import isomorphism
 from .. generation import random_rewire
 from .. stats import vertex_hist
 
 from collections import defaultdict
 from numpy import *
-from numpy import random
 
 __all__ = ["local_clustering", "global_clustering", "extended_clustering",
            "motifs", "motif_significance"]

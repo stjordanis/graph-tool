@@ -100,7 +100,6 @@ __URL__ = "http://graph-tool.skewed.de"
 import numpy
 import numpy.ma
 import scipy
-import scipy.stats
 
 
 from .dl_import import *
@@ -126,8 +125,7 @@ import collections.abc
 import itertools
 import csv
 
-from .decorators import _require, _attrs, _limit_args, _copy_func
-from inspect import ismethod
+from .decorators import _require, _limit_args, _copy_func
 
 __all__ = ["Graph", "GraphView", "Vertex", "Edge", "VertexBase", "EdgeBase",
            "Vector_bool", "Vector_int16_t", "Vector_int32_t", "Vector_int64_t",

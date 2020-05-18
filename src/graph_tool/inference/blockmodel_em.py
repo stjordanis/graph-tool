@@ -18,16 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, PropertyMap, \
-    Vector_size_t, Vector_double, group_vector_property
-from .. generation import condensation_graph
-from .. stats import label_self_loops
-from .. spectral import adjacency
+from .. import _prop, _get_rng, group_vector_property
 import random
 from numpy import *
-import numpy
-import copy
-import collections
 
 from . blockmodel import *
 from . util import *

@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView
+from .. import _prop, Graph, GraphView
 from . blockmodel import *
 from . blockmodel import _bm_test
 from . overlap_blockmodel import *
