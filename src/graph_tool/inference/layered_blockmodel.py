@@ -18,23 +18,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, PropertyMap
-import random
+from .. import _prop, Graph, GraphView, libcore, _get_rng
 from numpy import *
 import numpy
-from collections import defaultdict
-from scipy.special import gammaln
 import copy
 import warnings
 
-from .. import group_vector_property, ungroup_vector_property, Vector_size_t, \
-    perfect_prop_hash
+from .. import group_vector_property, ungroup_vector_property, perfect_prop_hash
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
 
 from .. generation import graph_union
-from .. stats import vertex_hist
 
 from . blockmodel import *
 from . blockmodel import _bm_test

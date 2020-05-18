@@ -70,9 +70,7 @@ from .. import Graph, GraphView, _check_prop_vector, _check_prop_scalar, \
     group_vector_property, ungroup_vector_property, infect_vertex_property, \
     _prop, _get_rng
 from .. topology import max_cardinality_matching, max_independent_vertex_set, \
-    label_components, pseudo_diameter, shortest_distance, make_maximal_planar, \
-    is_planar
-from .. stats import label_parallel_edges
+    label_components, shortest_distance, make_maximal_planar, is_planar
 from .. generation import predecessor_tree, condensation_graph
 import numpy.random
 from numpy import sqrt

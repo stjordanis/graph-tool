@@ -52,8 +52,7 @@ from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_generation")
 
 from .. import Graph, GraphView, _check_prop_scalar, _prop, _limit_args, \
-    _gt_type, _get_rng, libcore, Vector_double
-from .. stats import label_parallel_edges, label_self_loops
+    _gt_type, _get_rng, Vector_double
 import inspect
 import types
 import numpy

@@ -20,11 +20,10 @@
 
 import numpy
 
-from .. import GraphView, PropertyMap, VertexPropertyMap, \
-    ungroup_vector_property, group_vector_property, infect_vertex_property, \
-    edge_endpoint_property, _prop
+from .. import GraphView, PropertyMap, ungroup_vector_property, \
+    group_vector_property, infect_vertex_property, edge_endpoint_property, _prop
 from .cairo_draw import *
-from .cairo_draw import _vdefaults, _edefaults
+from .cairo_draw import _edefaults
 from .. draw import sfdp_layout, random_layout, _avg_edge_distance, \
     coarse_graphs
 

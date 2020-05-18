@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, \
-    PropertyMap, edge_endpoint_property
+from .. import _prop, Graph, GraphView, _get_rng, PropertyMap, \
+    edge_endpoint_property
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")

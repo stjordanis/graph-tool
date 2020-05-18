@@ -89,7 +89,7 @@ except ImportError:
     warnings.warn(msg, RuntimeWarning)
 
 from .. draw import sfdp_layout, random_layout, _avg_edge_distance, \
-    coarse_graphs, radial_tree_layout, prop_to_size
+    radial_tree_layout, prop_to_size
 
 from .. generation import graph_union
 from .. topology import shortest_path

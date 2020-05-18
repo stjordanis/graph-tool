@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView, _get_rng, Vector_size_t
+from .. import Graph, _get_rng, Vector_size_t
 from . blockmodel import DictState, get_entropy_args, _bm_test
 
 from .. dl_import import dl_import

@@ -18,12 +18,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _degree, _prop, Graph, GraphView, libcore, _get_rng, \
-    PropertyMap, VertexPropertyMap, Vector_size_t, Vector_double, \
-    group_vector_property, perfect_prop_hash
+from .. import _prop, Graph, libcore, _get_rng, PropertyMap, \
+    VertexPropertyMap, Vector_size_t, Vector_double, group_vector_property, \
+    perfect_prop_hash
 from .. generation import condensation_graph, random_rewire, generate_sbm, \
     solve_sbm_fugacities, generate_maxent_sbm
-from .. stats import label_self_loops, remove_parallel_edges, remove_self_loops
+from .. stats import remove_parallel_edges, remove_self_loops
 from .. spectral import adjacency
 import random
 from numpy import *

@@ -81,7 +81,6 @@ from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_search")
 
 from .. import _prop, _python_type, _get_null_vertex
-import weakref
 import numpy
 
 __all__ = ["bfs_search", "bfs_iterator", "BFSVisitor", "dfs_search",
