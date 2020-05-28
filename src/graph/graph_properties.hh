@@ -575,6 +575,7 @@ public:
 
     ConstantPropertyMap(const value_type& c): c(c) {}
     ConstantPropertyMap(): c() {}
+    ConstantPropertyMap(const ConstantPropertyMap& o): c(o.c) {}
 
     const value_type& operator[](const key_type&) const { return c; }
 

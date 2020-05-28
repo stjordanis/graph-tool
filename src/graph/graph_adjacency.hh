@@ -246,7 +246,7 @@ public:
         public edge_iter_facade<base_edge_iterator<Dereference>>
     {
         base_edge_iterator() {}
-        [[gnu::always_inline]] [[gnu::flatten]]
+        [[gnu::always_inline]]
         base_edge_iterator(vertex_t v, typename edge_list_t::const_iterator&& iter)
             : _v(v), _iter(std::forward<typename edge_list_t::const_iterator>(iter))
         {}
@@ -346,7 +346,7 @@ public:
                                                       reversed>>
     {
         all_edge_iterator_base() {}
-        [[gnu::always_inline]] [[gnu::flatten]]
+        [[gnu::always_inline]]
         all_edge_iterator_base(vertex_t v,
                                typename edge_list_t::const_iterator&& iter,
                                const typename edge_list_t::const_iterator& pos)
@@ -373,7 +373,7 @@ public:
     {
     public:
         edge_iterator() {}
-        [[gnu::always_inline]] [[gnu::flatten]]
+        [[gnu::always_inline]]
         explicit edge_iterator(const typename vertex_list_t::const_iterator& vi_begin,
                                const typename vertex_list_t::const_iterator& vi_end,
                                const typename vertex_list_t::const_iterator& vi,

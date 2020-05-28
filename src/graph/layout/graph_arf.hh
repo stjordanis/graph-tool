@@ -67,9 +67,7 @@ struct get_arf_layout
                              diff += dx*dx;
                              delta_pos[j] += dx;
                          }
-                         diff = sqrt(diff);
-                         if (diff < 1e-6)
-                             diff = 1e-6;
+                         diff = std::max(sqrt(diff), 1e-6);
                          pos_t m = r/diff;
                          for (size_t j = 0; j < dim; ++j)
                          {
@@ -91,12 +89,12 @@ struct get_arf_layout
                          }
                      }
 
-                     auto dt_ = dt; // workaround clang
                      for (size_t j = 0; j < dim; ++j)
                      {
-                         #pragma omp atomic
-                         pos[v][j] += dt_ * delta_pos[j];
                          delta += abs(delta_pos[j]);
+                         auto dt_j = dt * delta_pos[j];
+                         #pragma omp atomic
+                         pos[v][j] += dt_j;
                      }
 
                  });

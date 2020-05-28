@@ -64,7 +64,7 @@ auto mcmc_sweep(MCMCState state, RNG& rng)
     auto beta = state.get_beta();
 
     typedef std::remove_const_t<decltype(state._null_move)> move_t;
-     constexpr bool single_step =
+    constexpr bool single_step =
         std::is_same_v<decltype(state.move_proposal(vlist.front(), rng)),
                        move_t>;
 
