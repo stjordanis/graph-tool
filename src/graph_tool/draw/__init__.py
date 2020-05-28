@@ -82,7 +82,7 @@ dl_import("from . import libgraph_tool_layout")
 __all__ = ["graph_draw", "graphviz_draw", "fruchterman_reingold_layout",
            "arf_layout", "sfdp_layout", "planar_layout", "random_layout",
            "radial_tree_layout", "cairo_draw", "prop_to_size",
-           "get_hierarchy_control_points", "default_cm"]
+           "get_hierarchy_control_points", "default_cm", "default_clrs"]
 
 
 def random_layout(g, shape=None, pos=None, dim=2):
@@ -871,7 +871,8 @@ def prop_to_size(prop, mi=0, ma=5, log=False, power=0.5):
     return prop
 
 try:
-    from . cairo_draw import graph_draw, cairo_draw, get_hierarchy_control_points, default_cm
+    from . cairo_draw import graph_draw, cairo_draw, \
+        get_hierarchy_control_points, default_cm, default_clrs
 except ImportError:
     pass
 

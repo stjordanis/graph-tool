@@ -150,7 +150,7 @@ typedef boost::mpl::map47<
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_POSITION>, double>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_ROTATION>, double>,
-    boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OFFSET>, vector<double> >,
+    boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OFFSET>, vector<double>>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OUT_WIDTH>, double>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_TEXT_OUT_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_FONT_FAMILY>, string>,
@@ -158,8 +158,8 @@ typedef boost::mpl::map47<
     boost::mpl::pair<boost::mpl::int_<VERTEX_FONT_WEIGHT>, int32_t>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_FONT_SIZE>, double>,
     boost::mpl::pair<boost::mpl::int_<VERTEX_SURFACE>, boost::python::object>,
-    boost::mpl::pair<boost::mpl::int_<VERTEX_PIE_FRACTIONS>, vector<double> >,
-    boost::mpl::pair<boost::mpl::int_<VERTEX_PIE_COLORS>, vector<color_t> >,
+    boost::mpl::pair<boost::mpl::int_<VERTEX_PIE_FRACTIONS>, vector<double>>,
+    boost::mpl::pair<boost::mpl::int_<VERTEX_PIE_COLORS>, vector<color_t>>,
     boost::mpl::pair<boost::mpl::int_<EDGE_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_PENWIDTH>, double>,
     boost::mpl::pair<boost::mpl::int_<EDGE_START_MARKER>, edge_marker_t>,
@@ -167,9 +167,9 @@ typedef boost::mpl::map47<
     boost::mpl::pair<boost::mpl::int_<EDGE_END_MARKER>, edge_marker_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_MARKER_SIZE>, double>,
     boost::mpl::pair<boost::mpl::int_<EDGE_MID_MARKER_POSITION>, double>,
-    boost::mpl::pair<boost::mpl::int_<EDGE_CONTROL_POINTS>, vector<double> >,
-    boost::mpl::pair<boost::mpl::int_<EDGE_DASH_STYLE>, vector<double> >,
-    boost::mpl::pair<boost::mpl::int_<EDGE_GRADIENT>, vector<double> >,
+    boost::mpl::pair<boost::mpl::int_<EDGE_CONTROL_POINTS>, vector<double>>,
+    boost::mpl::pair<boost::mpl::int_<EDGE_DASH_STYLE>, vector<double>>,
+    boost::mpl::pair<boost::mpl::int_<EDGE_GRADIENT>, vector<double>>,
     boost::mpl::pair<boost::mpl::int_<EDGE_TEXT>, string>,
     boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_COLOR>, color_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_TEXT_DISTANCE>, double>,
@@ -181,7 +181,7 @@ typedef boost::mpl::map47<
     boost::mpl::pair<boost::mpl::int_<EDGE_FONT_WEIGHT>, int32_t>,
     boost::mpl::pair<boost::mpl::int_<EDGE_FONT_SIZE>, double>,
     boost::mpl::pair<boost::mpl::int_<EDGE_SLOPPY>, uint8_t>,
-    boost::mpl::pair<boost::mpl::int_<EDGE_SEAMLESS>, uint8_t> >
+    boost::mpl::pair<boost::mpl::int_<EDGE_SEAMLESS>, uint8_t>>
         attr_types;
 
 namespace std
@@ -325,7 +325,7 @@ struct Converter
     struct specific_convert<string, T2,
                             typename std::enable_if
                             <boost::mpl::not_<
-                                 std::is_same<T2,boost::python::object> >::type::value>::type>
+                                 std::is_same<T2,boost::python::object>>::type::value>::type>
     {
         string operator()(const T2& v) const
         {
@@ -339,7 +339,7 @@ struct Converter
 
     // vectors
     template <class T1, class T2>
-    struct specific_convert<vector<T1>, vector<T2> >
+    struct specific_convert<vector<T1>, vector<T2>>
     {
         vector<T1> operator()(const vector<T2>& v) const
         {
@@ -353,7 +353,7 @@ struct Converter
 
     // color_t
     template <class T2>
-    struct specific_convert<color_t, vector<T2> >
+    struct specific_convert<color_t, vector<T2>>
     {
         specific_convert<double, T2> c;
         color_t operator()(const vector<T2>& cv) const
@@ -368,7 +368,7 @@ struct Converter
 
     // vector<color_t>
     template <class T2>
-    struct specific_convert<vector<color_t>, vector<T2> >
+    struct specific_convert<vector<color_t>, vector<T2>>
     {
         specific_convert<double, T2> c;
         vector<color_t> operator()(const vector<T2>& cv) const
@@ -392,9 +392,9 @@ struct Converter
     struct specific_convert<vertex_shape_t, T2,
                             typename std::enable_if
                             <boost::mpl::and_<typename boost::mpl::not_<
-                                                  std::is_same<T2,string> >::type,
+                                                  std::is_same<T2,string>>::type,
                                               typename boost::mpl::not_<
-                                                  std::is_same<T2,boost::python::object> >::type>::type::value>::type>
+                                                  std::is_same<T2,boost::python::object>>::type>::type::value>::type>
     {
         specific_convert<int, T2> c;
         vertex_shape_t operator()(const T2& v) const
@@ -408,9 +408,9 @@ struct Converter
     struct specific_convert<edge_marker_t, T2,
                             typename std::enable_if
                             <boost::mpl::and_<typename boost::mpl::not_<
-                                                  std::is_same<T2,string> >::type,
+                                                  std::is_same<T2,string>>::type,
                                               typename boost::mpl::not_<
-                                                  std::is_same<T2,boost::python::object> >::type>::type::value>::type>
+                                                  std::is_same<T2,boost::python::object>>::type>::type::value>::type>
     {
         specific_convert<int, T2> c;
         edge_marker_t operator()(const T2& v) const
@@ -878,8 +878,8 @@ public:
             {
                 if (!outline)
                 {
-                    vector<double> f = _attrs.template get<vector<double> >(VERTEX_PIE_FRACTIONS);
-                    vector<color_t> fcolors = _attrs.template get<vector<color_t> >(VERTEX_PIE_COLORS);
+                    vector<double> f = _attrs.template get<vector<double>>(VERTEX_PIE_FRACTIONS);
+                    vector<color_t> fcolors = _attrs.template get<vector<color_t>>(VERTEX_PIE_COLORS);
                     draw_pie(size / 2 + pw / 2, f, fcolors, cr);
                 }
                 else
@@ -984,7 +984,7 @@ public:
                 cr.set_font_size(get_user_dist(cr, _attrs.template get<double>(VERTEX_FONT_SIZE)));
                 text_pos = _attrs.template get<double>(VERTEX_TEXT_POSITION);
                 text_rotation = _attrs.template get<double>(VERTEX_TEXT_ROTATION);
-                text_offset = _attrs.template get<vector<double> >(VERTEX_TEXT_OFFSET);
+                text_offset = _attrs.template get<vector<double>>(VERTEX_TEXT_OFFSET);
                 text_offset.resize(2, 0.0);
 
                 cr.rotate(text_rotation);
@@ -1067,14 +1067,33 @@ public:
         pos_t pos_begin, pos_end;
 
         vector<double> controls =
-            _attrs.template get<vector<double> >(EDGE_CONTROL_POINTS);
+            _attrs.template get<vector<double>>(EDGE_CONTROL_POINTS);
         vector<double> gradient =
-            _attrs.template get<vector<double> >(EDGE_GRADIENT);
+            _attrs.template get<vector<double>>(EDGE_GRADIENT);
         if (gradient.size() == 1)
         {
             auto e_color = _attrs.template get<color_t>(EDGE_COLOR);
             auto s_color = _s._attrs.template get<color_t>(VERTEX_FILL_COLOR);
             auto t_color = _t._attrs.template get<color_t>(VERTEX_FILL_COLOR);
+            auto get_pie_color =
+                [&](auto& v, auto& color)
+                {
+                    if (v._attrs.template get<vertex_shape_t>(VERTEX_SHAPE) == SHAPE_PIE)
+                    {
+                        vector<double> f = v._attrs.template get<vector<double>>(VERTEX_PIE_FRACTIONS);
+                        vector<color_t> fcolors = v._attrs.template get<vector<color_t>>(VERTEX_PIE_COLORS);
+                        assert(f.size() == fcolors.size());
+                        if (!f.empty())
+                        {
+                            auto iter = std::max_element(f.begin(), f.end());
+                            size_t j = (iter - f.begin()) % fcolors.size();
+                            color = fcolors[j];
+                        }
+                    }
+                };
+            get_pie_color(_s, s_color);
+            get_pie_color(_t, t_color);
+
             gradient.resize(10);
             gradient[0] = 0;
             gradient[1] = get<0>(s_color);
@@ -1482,7 +1501,7 @@ public:
                         vector<double>& controls, Cairo::Context& cr)
     {
         cr.move_to(pos_begin_c.first, pos_begin_c.second);
-        vector<double> dashes = _attrs.template get<vector<double> >(EDGE_DASH_STYLE);
+        vector<double> dashes = _attrs.template get<vector<double>>(EDGE_DASH_STYLE);
 
         if (dashes.size() > 2)
         {
@@ -1635,7 +1654,7 @@ void draw_edges(Graph& g, pair<EdgeIterator, EdgeIterator> e_range,
         VertexShape<vertex_t> ss(spos, AttrDict<vertex_t>(s, vattrs, vdefaults));
         VertexShape<vertex_t> ts(tpos, AttrDict<vertex_t>(t, vattrs, vdefaults));
 
-        EdgeShape<edge_t,VertexShape<vertex_t> > es(ss, ts,
+        EdgeShape<edge_t,VertexShape<vertex_t>> es(ss, ts,
                                                     AttrDict<edge_t>(*e, eattrs,
                                                                      edefaults));
         es.draw(cr, res);
@@ -2015,7 +2034,7 @@ struct do_put_parallel_splines
             }
             else if (get(l, *e) == 1)
             {
-                vector<pair<edge_t, bool> > pes;
+                vector<pair<edge_t, bool>> pes;
                 vertex_t s = source(*e, g);
                 typename graph_traits<Graph>::out_edge_iterator eo, eo_end;
                 for (tie(eo, eo_end) = out_edges(s, g); eo != eo_end; ++eo)
@@ -2115,7 +2134,7 @@ struct color_vector_from_list
     {
         converter::registry::push_back
             (&convertible, &construct,
-             boost::python::type_id<vector<color_t> >());
+             boost::python::type_id<vector<color_t>>());
     }
 
     static void* convertible(PyObject* obj_ptr)
