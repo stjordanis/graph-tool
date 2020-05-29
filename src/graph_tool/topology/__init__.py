@@ -595,15 +595,11 @@ def isomorphism(g1, g2, vertex_inv1=None, vertex_inv2=None, isomap=False):
     if vertex_inv1 is None:
         vertex_inv1 = g1.degree_property_map("total").copy("int64_t")
     else:
-        vertex_inv1 = vertex_inv1.copy("int64_t")
-        d = g1.degree_property_map("total")
-        vertex_inv1.fa += (vertex_inv1.fa.max() + 1) * d.a
+        vertex_inv1 = perfect_prop_hash([vertex_inv1])[0].copy("int64_t")
     if vertex_inv2 is None:
         vertex_inv2 = g2.degree_property_map("total").copy("int64_t")
     else:
-        vertex_inv2 = vertex_inv2.copy("int64_t")
-        d = g2.degree_property_map("total")
-        vertex_inv2.fa += (vertex_inv2.fa.max() + 1) * d.a
+        vertex_inv2 = perfect_prop_hash([vertex_inv2])[0].copy("int64_t")
 
     inv_max = max(vertex_inv1.fa.max(),vertex_inv2.fa.max()) + 1
 
