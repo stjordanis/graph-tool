@@ -1084,6 +1084,9 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
 
         adjust_default_sizes(g, (r - l, t - b), vprops, eprops)
 
+        if ink_scale != 1:
+            scale_ink(ink_scale, vprops, eprops)
+
         artist = GraphArtist(g, pos, vprops, eprops, ax, vorder=vorder,
                              eorder=eorder, nodesfirst=nodesfirst, **kwargs)
 
@@ -1113,6 +1116,8 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         output = io.BytesIO()
 
     if output is None:
+        if ink_scale != 1:
+            scale_ink(ink_scale, vprops, eprops)
         return interactive_window(g, pos, vprops, eprops, vorder, eorder,
                                   nodesfirst, geometry=output_size,
                                   fit_view=fit_view, **kwargs)
@@ -1241,13 +1246,10 @@ def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
         eprops["font_size"] =  size * .6
 
 
-def scale_ink(scale, vprops, eprops, copy=False):
+def scale_ink(scale, vprops, eprops, copy=True):
     vink_props = ["size", "pen_width", "font_size", "text_out_width"]
     eink_props = ["marker_size", "pen_width", "font_size", "text_distance",
                   "text_out_width"]
-    if copy:
-        vprops = dict(vprops)
-        eprops = dict(eprops)
     for p in vink_props:
         if p not in vprops:
             vprops[p] = _vdefaults[p]
@@ -1256,7 +1258,7 @@ def scale_ink(scale, vprops, eprops, copy=False):
                 vprops[p] = vprops[p].copy()
             vprops[p].fa *= scale
         else:
-            vprops[p] = vprops[p] * scale
+            vprops[p] *= scale
     for p in eink_props:
         if p not in eprops:
             eprops[p] = _edefaults[p]
@@ -1265,9 +1267,7 @@ def scale_ink(scale, vprops, eprops, copy=False):
                 eprops[p] = eprops[p].copy()
             eprops[p].fa *= scale
         else:
-            eprops[p] = eprops[p] * scale
-    if copy:
-        return vprops, eprops
+            eprops[p] *= scale
 
 def get_bb(g, pos):
     pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
@@ -1528,8 +1528,7 @@ class GraphArtist(matplotlib.artist.Artist):
             ctx.clip()
             ctx.set_matrix(m_s)
 
-            vprops, eprops = scale_ink(np.mean([m[0,0], m[1,1]]), vprops, eprops,
-                                       copy=True)
+            scale_ink(np.mean([m[0,0], m[1,1]]), vprops, eprops)
 
             x = np.ones(3)
             for v in self.g.vertices():
