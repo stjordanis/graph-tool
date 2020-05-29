@@ -85,6 +85,7 @@ void export_partition_mode()
               })
         .def("align_mode", &PartitionModeState::align_mode)
         .def("get_B", &PartitionModeState::get_B)
+        .def("get_M", &PartitionModeState::get_M)
         .def("get_marginal",
              +[](PartitionModeState& state,
                  GraphInterface& gi, boost::any obm)

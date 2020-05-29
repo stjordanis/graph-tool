@@ -117,14 +117,13 @@ epidemic process.
    # intervals of 10 sweeps: 
  
    gm = None
-   bm = None
+   bs = []
    betas = []
  
    def collect_marginals(s): 
-      global gm, bm 
+      global gm, bs
       gm = s.collect_marginal(gm) 
-      b = gt.perfect_prop_hash([s.bstate.b])[0] 
-      bm = s.bstate.collect_vertex_marginals(bm, b=b)
+      bs.append(s.bstate.b.a.copy())
       betas.append(s.params["global_beta"])
  
    gt.mcmc_equilibrate(rstate, force_niter=10000, mcmc_args=dict(niter=10, xstep=0), 
@@ -132,9 +131,13 @@ epidemic process.
 
    print("Posterior similarity: ", gt.similarity(g, gm, g.new_ep("double", 1), gm.ep.eprob))
    print("Inferred infection probability: %g ± %g" % (mean(betas), std(betas)))
+
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, converge=True)
+   pv = pmode.get_marginal(gm)
    
    gt.graph_draw(gm, gm.own_property(g.vp.pos), vertex_shape="pie", vertex_color="black",
-                 vertex_pie_fractions=gm.own_property(bm), vertex_pen_width=1,
+                 vertex_pie_fractions=pv, vertex_pen_width=1,
                  edge_pen_width=gt.prop_to_size(gm.ep.eprob, 0, 5),
                  eorder=gm.ep.eprob, output="dolphins-posterior.svg")
 

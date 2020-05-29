@@ -48,6 +48,11 @@ class PartitionModeState(object):
         :meth:`~graph_tool.inference.partition_modes.PartitionModeState.replace_partitions`
         needs to be called repeatedly).
 
+    References
+    ----------
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
+
     """
     def __init__(self, bs, relabel=True, nested=False, converge=False, **kwargs):
         self.bs = {}
@@ -144,7 +149,7 @@ class PartitionModeState(object):
     def align_mode(self, mode):
         r"""Relabel entire ensemble to align with another ensemble given by ``mode``,
         which should be an instance of
-        :class:`~graph_tool.inference.PartitionModeState`."""
+        :class:`~graph_tool.inference.partition_modes.PartitionModeState`."""
         self._base.align_mode(mode._base)
 
     def get_partition(self, i):
@@ -197,7 +202,7 @@ class PartitionModeState(object):
         return self._base.posterior_lprob(b, MLE)
 
     def get_coupled_state(self):
-        r"""Return the instance of :class:`~graph_tool.inference.PartitionModeState`
+        r"""Return the instance of :class:`~graph_tool.inference.partition_modes.PartitionModeState`
         representing the model at the upper hierarchical level.
         """
         base = self._base.get_coupled_state()
@@ -231,6 +236,10 @@ class PartitionModeState(object):
         r"""Return the total number of labels used."""
         return self._base.get_B()
 
+    def get_M(self):
+        r"""Return the number of partitions"""
+        return self._base.get_M()
+
     def sample_partition(self, MLE=True):
         r"""Sampled a partition from the inferred model, using maximum likelihood
         estimates for the marginal node probabilities if ```MLE=True```,
@@ -262,6 +271,12 @@ class ModeClusterState(object):
         instantiation, otherwise they will be incorporated as they are.
     nested : ``bool`` (optional, default: ``False``)
         If ``True``, the partitions will be assumed to be hierarchical.
+
+    References
+    ----------
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
+
     """
     def __init__(self, bs, b=None, B=1, nested=False, relabel=True):
 
@@ -328,14 +343,19 @@ class ModeClusterState(object):
 
     def get_mode(self, r):
         r"""Return the mode in cluster ``r`` as an instance of
-        :class:`~graph_tool.inference.PartitionModeState`. """
+        :class:`~graph_tool.inference.partition_modes.PartitionModeState`. """
         base = self._state.get_mode(r);
         return PartitionModeState(None, base=base, nested=self.nested)
 
-    def get_modes(self):
+    def get_modes(self, sort=True):
         r"""Return the list of nonempty modes, as instances of
-        :class:`~graph_tool.inference.PartitionModeState`. """
-        return [self.get_mode(r) for r in np.unique(self.b)]
+        :class:`~graph_tool.inference.partition_modes.PartitionModeState`. If `sorted == True`,
+        the modes are retured in decreasing order with respect to their size.
+        """
+        modes = [self.get_mode(r) for r in np.unique(self.b)]
+        if sort:
+            modes = list(sorted(modes, key=lambda m: -m.get_M()))
+        return modes
 
     def get_wr(self):
         r"""Return cluster sizes. """
@@ -581,7 +601,8 @@ def partition_overlap(x, y, norm=True):
 
     References
     ----------
-
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
     .. [kuhn_hungarian_1955] H. W. Kuhn, "The Hungarian method for the
        assignment problem," Naval Research Logistics Quarterly 2, 83–97 (1955)
        :doi:`10.1002/nav.3800020109`
@@ -660,7 +681,8 @@ def nested_partition_overlap(x, y, norm=True):
 
     References
     ----------
-
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
     .. [kuhn_hungarian_1955] H. W. Kuhn, "The Hungarian method for the
        assignment problem," Naval Research Logistics Quarterly 2, 83–97 (1955)
        :doi:`10.1002/nav.3800020109`
@@ -875,6 +897,12 @@ def align_partition_labels(x, y):
     [3 0 0 1 1 1 0 2 0]
     >>> gt.align_partition_labels(y, x)
     array([0, 2, 2, 1, 1, 1, 2, 3, 2], dtype=int32)
+
+    References
+    ----------
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
+
     """
 
     x = np.asarray(x, dtype="int32").copy()
@@ -987,6 +1015,12 @@ def partition_overlap_center(bs, init=None, relabel_bs=False):
     [1 1 2 0 3 0 3 0 0 0 0] 0.07454545...
     >>> gt.align_partition_labels(c, x)
     array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 0], dtype=int32)
+
+    References
+    ----------
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
+
     """
 
     if relabel_bs:
@@ -1072,6 +1106,12 @@ def nested_partition_overlap_center(bs, init=None, return_bs=False):
     [array([1, 1, 2, 0, 3, 0, 3, 0, 0, 0, 0], dtype=int32), array([0, 1, 0, 1, 1], dtype=int32)] 0.084492...
     >>> gt.align_nested_partition_labels(c, x)
     [array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 0], dtype=int32), array([ 0,  1,  0, -1, -1,  1], dtype=int32)]
+
+    References
+    ----------
+    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", :arxiv:`2005.13977`
+
     """
 
     bs = [[np.asarray(bs[m][l], dtype="int32") for l in range(len(bs[m]))] for m in range(len(bs))]

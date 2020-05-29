@@ -31,11 +31,11 @@ from scipy.special import gammaln
 
 class PartitionCentroidState(object):
     r"""Obtain the center of a set of partitions, according to the variation of
-    information metric or reduced mutual information..
+    information metric or reduced mutual information.
 
     Parameters
     ----------
-    bs : iterable of iterable of `int`s
+    bs : iterable of iterable of ``int``
         List of partitions.
     b : ``list`` or :class:`numpy.ndarray` (optional, default: ``None``)
         Initial partition. If not supplied, a partition into a single group will
@@ -43,7 +43,6 @@ class PartitionCentroidState(object):
     RMI : ``bool`` (optional, default: ``False``)
          If ``True``, the reduced mutual information will be used, otherwise the
          variation of information metric will be used instead.
-
     """
 
     def __init__(self, bs, b=None, RMI=False):
@@ -254,7 +253,6 @@ def variation_information(x, y, norm=False):
 
     References
     ----------
-
     .. [meila_comparing_2003] Marina Meilă, "Comparing Clusterings by the
        Variation of Information," in Learning Theory and Kernel Machines,
        Lecture Notes in Computer Science No. 2777, edited by Bernhard Schölkopf
@@ -402,7 +400,6 @@ def reduced_mutual_information(x, y, norm=False):
 
     References
     ----------
-
     .. [newman_improved_2020] M. E. J. Newman, G. T. Cantwell and J.-G. Young,
        "Improved mutual information measure for classification and community
        detection", Phys. Rev. E, 101, 042304 (2020),

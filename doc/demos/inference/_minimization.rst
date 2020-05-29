@@ -34,7 +34,7 @@ which yields
 
    <Graph object, undirected, with 115 vertices and 613 edges, 4 internal vertex properties, 2 internal graph properties, at 0x...>
 
-we then fit the degree-corrected model by calling
+We then fit the degree-corrected model by calling:
 
 .. testcode:: football
 

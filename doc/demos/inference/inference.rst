@@ -78,6 +78,9 @@ References
 .. [peixoto-merge-split-2020] Tiago P. Peixoto, "Merge-split Markov
    chain Monte Carlo for community detection", :arxiv:`2003.07070`
 
+.. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
+   dissensus between network partitions", :arxiv:`2005.13977`
+
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8
    041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`

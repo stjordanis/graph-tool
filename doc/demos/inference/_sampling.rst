@@ -81,37 +81,41 @@ Note that the value of ``wait`` above was made purposefully low so that
 the output would not be overly long. The most appropriate value requires
 experimentation, but a typically good value is ``wait=1000``.
 
-The function :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` accepts a
-``callback`` argument that takes an optional function to be invoked
+The function :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` accepts
+a ``callback`` argument that takes an optional function to be invoked
 after each call to
-:meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`. This function
-should accept a single parameter which will contain the actual
-:class:`~graph_tool.inference.blockmodel.BlockState` instance. We will use this in
-the example below to collect the posterior vertex marginals (via
-:class:`~graph_tool.inference.blockmodel.BlockState.collect_vertex_marginals`),
-i.e. the posterior probability that a node belongs to a given group:
+:meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`. This
+function should accept a single parameter which will contain the actual
+:class:`~graph_tool.inference.blockmodel.BlockState` instance. We will
+use this in the example below to collect the posterior vertex marginals
+(via :class:`~graph_tool.inference.partition_modes.PartitionModeState`,
+which disambiguates group labels [peixoto-revealing-2020]_), i.e. the
+posterior probability that a node belongs to a given group:
 
 .. testcode:: model-averaging
 
    # We will first equilibrate the Markov chain
    gt.mcmc_equilibrate(state, wait=1000, mcmc_args=dict(niter=10))
 
-   pv = None 
+   bs = [] # collect some partitions
 
-   def collect_marginals(s):
-      global pv
-      b = gt.perfect_prop_hash([s.b])[0]
-      pv = s.collect_vertex_marginals(pv, b=b)
+   def collect_partitions(s):
+      global bs
+      bs.append(s.b.a.copy())
 
-   # Now we collect the marginals for exactly 100,000 sweeps, at
-   # intervals of 10 sweeps:
+   # Now we collect partitions for exactly 100,000 sweeps, at intervals
+   # of 10 sweeps:
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
-                       callback=collect_marginals)
+                       callback=collect_partitions)
 
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, converge=True)
+   pv = pmode.get_marginal(g)
+                       
    # Now the node marginals are stored in property map pv. We can
    # visualize them as pie charts on the nodes:
    state.draw(pos=g.vp.pos, vertex_shape="pie", vertex_pie_fractions=pv,
-              edge_gradient=None, output="lesmis-sbm-marginals.svg")
+              output="lesmis-sbm-marginals.svg")
 
 .. figure:: lesmis-sbm-marginals.*
    :align: center
@@ -135,8 +139,8 @@ itself, as follows.
        B = s.get_nonempty_B()
        h[B] += 1
 
-   # Now we collect the marginals for exactly 100,000 sweeps, at
-   # intervals of 10 sweeps:
+   # Now we collect partitions for exactly 100,000 sweeps, at intervals
+   # of 10 sweeps:
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
                        callback=collect_num_groups)
 
@@ -194,7 +198,6 @@ network as above.
    Change in description length: -73.716766...
    Number of accepted vertex moves: 366160
 
-
 .. warning::
 
    When using
@@ -212,28 +215,34 @@ Similarly to the the non-nested case, we can use
 :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` to do most of the boring
 work, and we can now obtain vertex marginals on all hierarchical levels:
 
-
 .. testcode:: nested-model-averaging
 
    # We will first equilibrate the Markov chain
    gt.mcmc_equilibrate(state, wait=1000, mcmc_args=dict(niter=10))
 
-   pv = [None] * len(state.get_levels())
+   # collect nested partitions
+   bs = []
 
-   def collect_marginals(s):
-      global pv
-      bs = [gt.perfect_prop_hash([s.b])[0] for s in state.get_levels()]
-      pv = [s.collect_vertex_marginals(pv[l], b=bs[l]) for l, s in enumerate(s.get_levels())]
+   def collect_partitions(s):
+      global bs
+      bs.append(s.get_bs())
 
    # Now we collect the marginals for exactly 100,000 sweeps
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
-                       callback=collect_marginals)
+                       callback=collect_partitions)
 
-   # Now the node marginals for all levels are stored in property map
-   # list pv. We can visualize the first level as pie charts on the nodes:
-   state_0 = state.get_levels()[0]
-   state_0.draw(pos=g.vp.pos, vertex_shape="pie", vertex_pie_fractions=pv[0],
-                edge_gradient=None, output="lesmis-nested-sbm-marginals.svg")
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, nested=True, converge=True)
+   pv = pmode.get_marginal(g)
+
+   # Get consensus estimate
+   bs = pmode.get_max_nested()
+
+   state = state.copy(bs=bs)
+
+   # We can visualize the marginals as pie charts on the nodes:
+   state.draw(vertex_shape="pie", vertex_pie_fractions=pv,
+              output="lesmis-nested-sbm-marginals.svg")
 
 .. figure:: lesmis-nested-sbm-marginals.*
    :align: center
@@ -315,4 +324,80 @@ distribution.
 .. image:: lesmis-partition-sample-8.svg
    :width: 200px
 .. image:: lesmis-partition-sample-9.svg
+   :width: 200px
+
+Characterizing the posterior distribution
++++++++++++++++++++++++++++++++++++++++++
+
+The posterior distribution of partitions can have an elaborate
+structure, containing multiple possible explanations for the data. In
+order to summarize it, we can infer the modes of the distribution using
+:class:`~graph_tool.inference.partition_modes.ModeClusterState`, as
+described in [peixoto-revealing-2020]_. This amounts to identifying
+clusters of partitions that are very similar to each other, but
+sufficiently different from those that belong to other
+clusters. Collective, such "modes" represent the different stories that
+the data is telling us through the model. Here is an example using again
+the Les Misérables network:
+
+.. testcode:: partition-modes
+
+   g = gt.collection.data["lesmis"]
+
+   state = gt.NestedBlockState(g)
+
+   # Equilibration
+   gt.mcmc_equilibrate(state, force_niter=1000, mcmc_args=dict(niter=10))
+
+   bs = []
+   
+   def collect_partitions(s):
+      global bs
+      bs.append(s.get_bs())
+
+   # We will collect only partitions 1000 partitions. For more accurate
+   # results, this number should be increased.
+   gt.mcmc_equilibrate(state, force_niter=1000, mcmc_args=dict(niter=10),
+                       callback=collect_partitions)
+
+   # Infer partition modes
+   pmode = gt.ModeClusterState(bs, nested=True)
+
+   # Minimize the mode state itself
+   gt.mcmc_equilibrate(pmode, wait=1, mcmc_args=dict(niter=1, beta=np.inf))
+
+   # Get inferred modes
+   modes = pmode.get_modes()
+
+   for i, mode in enumerate(modes):
+       b = mode.get_max_nested()    # mode's maximum
+       pv = mode.get_marginal(g)    # mode's marginal distribution
+
+       print(f"Mode {i} with size {mode.get_M()/len(bs)}")
+       state = state.copy(bs=b)
+       state.draw(vertex_shape="pie", vertex_pie_fractions=pv,
+                  output="lesmis-partition-mode-%i.svg" % i)
+
+Running the above code gives us the relative size of each mode,
+corresponding to their collective posterior probability.
+
+.. testoutput:: partition-modes
+
+    Mode 0 with size 0.389389...
+    Mode 1 with size 0.352352...
+    Mode 2 with size 0.129129...
+    Mode 3 with size 0.117117...
+    Mode 4 with size 0.012012...
+                  
+Below are the marginal node distributions representing the partitions that belong to each inferred mode:
+       
+.. image:: lesmis-partition-mode-0.svg
+   :width: 200px
+.. image:: lesmis-partition-mode-1.svg
+   :width: 200px
+.. image:: lesmis-partition-mode-2.svg
+   :width: 200px
+.. image:: lesmis-partition-mode-3.svg
+   :width: 200px
+.. image:: lesmis-partition-mode-4.svg
    :width: 200px

@@ -1213,6 +1213,11 @@ public:
         return _B;
     }
 
+    size_t get_M()
+    {
+        return _bs.size();
+    }
+
     std::shared_ptr<PartitionModeState> get_coupled_state()
     {
         return _coupled_state;

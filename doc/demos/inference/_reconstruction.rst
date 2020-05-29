@@ -164,15 +164,14 @@ simple example, using
    # intervals of 10 sweeps:
 
    u = None              # marginal posterior edge probabilities
-   pv = None             # marginal posterior group membership probabilities
+   bs = []               # partitions
    cs = []               # average local clustering coefficient
 
    def collect_marginals(s):
-      global pv, u, cs
+      global u, bs, cs
       u = s.collect_marginal(u)
       bstate = s.get_block_state()
-      b = gt.perfect_prop_hash([bstate.levels[0].b])[0] 
-      pv = bstate.levels[0].collect_vertex_marginals(pv, b=b)
+      bs.append(bstate.levels[0].b.a.copy())
       cs.append(gt.local_clustering(s.get_graph()).fa.mean())
 
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
@@ -223,7 +222,10 @@ reconstructed network:
    bstate = state.get_block_state()
    bstate = bstate.levels[0].copy(g=u)
 
-   pv = u.own_property(pv)
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, converge=True)
+   pv = pmode.get_marginal(u)
+   
    edash = u.new_ep("vector<double>")
    edash[u.edge(15, 73)] = [.1, .1, 0]
    bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
@@ -293,7 +295,7 @@ with uniform error rates, as we see with the same example:
    # intervals of 10 sweeps:
 
    u = None              # marginal posterior edge probabilities
-   pv = None             # marginal posterior group membership probabilities
+   bs = []               # partitions
    cs = []               # average local clustering coefficient
 
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
@@ -412,15 +414,14 @@ inference:
    # intervals of 10 sweeps:
 
    u = None              # marginal posterior edge probabilities
-   pv = None             # marginal posterior group membership probabilities
+   bs = []               # partitions
    cs = []               # average local clustering coefficient
    
    def collect_marginals(s):
-      global pv, u, cs
+      global bs, u, cs
       u = s.collect_marginal(u)
       bstate = s.get_block_state()
-      b = gt.perfect_prop_hash([bstate.levels[0].b])[0] 
-      pv = bstate.levels[0].collect_vertex_marginals(pv, b=b)
+      bs.append(bstate.levels[0].b.a.copy())
       cs.append(gt.local_clustering(s.get_graph()).fa.mean())
 
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
@@ -465,7 +466,11 @@ the same measurement probability. The reconstructed network is visualized below.
 
    bstate = state.get_block_state()
    bstate = bstate.levels[0].copy(g=u)
-   pv = u.own_property(pv)
+
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, converge=True)
+   pv = pmode.get_marginal(u)
+
    bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
                edge_color=ecolor, edge_dash_style=edash, edge_gradient=None,
                output="lesmis-uncertain-reconstruction-marginals.svg")
@@ -516,14 +521,13 @@ latent multiedges of a network of political books:
    # intervals of 10 sweeps:
 
    u = None              # marginal posterior multigraph
-   pv = None             # marginal posterior group membership probabilities
+   bs = []               # partitions
    
    def collect_marginals(s):
-      global pv, u
+      global bs, u
       u = s.collect_marginal_multigraph(u)
       bstate = state.get_block_state()
-      b = gt.perfect_prop_hash([bstate.levels[0].b])[0] 
-      pv = bstate.levels[0].collect_vertex_marginals(pv, b=b)
+      bs.append(bstate.levels[0].b.a.copy())
 
    gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
                        callback=collect_marginals)
@@ -538,7 +542,11 @@ latent multiedges of a network of political books:
    
    bstate = state.get_block_state()
    bstate = bstate.levels[0].copy(g=u)
-   pv = u.own_property(pv)
+
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, converge=True)
+   pv = pmode.get_marginal(u)
+
    bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
                edge_pen_width=gt.prop_to_size(ew, .1, 8, power=1), edge_gradient=None,
                output="polbooks-erased-poisson.svg")
