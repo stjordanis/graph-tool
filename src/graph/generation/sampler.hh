@@ -149,9 +149,11 @@ auto uniform_sample_iter(Container& v, RNG& rng)
 }
 
 template <class Iter, class RNG>
-auto&& uniform_sample(Iter&& begin, const Iter& end, RNG& rng)
+typename std::iterator_traits<Iter>::reference
+uniform_sample(const Iter& begin, const Iter& end, RNG& rng)
 {
-    return *uniform_sample_iter(begin, end, rng);
+    auto iter = uniform_sample_iter(begin, end, rng);
+    return *iter;
 }
 
 template <class Container, class RNG>
