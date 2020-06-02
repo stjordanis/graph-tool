@@ -183,6 +183,7 @@ __all__ = ["minimize_blockmodel_dl",
            "OverlapBlockState",
            "LayeredBlockState",
            "NestedBlockState",
+           "PPBlockState",
            "PartitionCentroidState",
            "PartitionModeState",
            "ModeClusterState",
@@ -252,3 +253,4 @@ from . modularity import *
 from . latent_multigraph import *
 from . partition_centroid import *
 from . partition_modes import *
+from . planted_partition import *

@@ -38,6 +38,9 @@ libgraph_tool_inference_la_SOURCES = \
     partition_modes/graph_partition_mode_clustering.cc \
     partition_modes/graph_partition_mode_clustering_mcmc.cc \
     partition_modes/graph_partition_mode_clustering_multiflip_mcmc.cc \
+    planted_partition/graph_planted_partition.cc \
+    planted_partition/graph_planted_partition_mcmc.cc \
+    planted_partition/graph_planted_partition_multiflip_mcmc.cc \
     overlap/graph_blockmodel_overlap.cc \
     overlap/graph_blockmodel_overlap_exhaustive.cc \
     overlap/graph_blockmodel_overlap_gibbs.cc \
@@ -110,6 +113,7 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     partition_centroid/graph_partition_centroid_rmi.hh \
     partition_modes/graph_partition_mode.hh \
     partition_modes/graph_partition_mode_clustering.hh \
+    planted_partition/graph_planted_partition.hh \
     overlap/graph_blockmodel_overlap.hh \
     overlap/graph_blockmodel_overlap_mcmc_bundled.hh \
     overlap/graph_blockmodel_overlap_util.hh \

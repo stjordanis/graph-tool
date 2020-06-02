@@ -77,6 +77,7 @@ graph_tool_inference_PYTHON = \
     inference/modularity.py \
     inference/partition_centroid.py \
     inference/partition_modes.py \
+    inference/planted_partition.py \
     inference/latent_multigraph.py \
     inference/util.py
 graph_tool_inferencedir = $(MOD_DIR)/inference
