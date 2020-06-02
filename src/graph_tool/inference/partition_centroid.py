@@ -19,7 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from .. import Graph, _get_rng, Vector_size_t
-from . blockmodel import DictState, get_entropy_args, _bm_test
+from . blockmodel import DictState, _bm_test
 from . partition_modes import contingency_graph
 
 from .. dl_import import dl_import
@@ -62,13 +62,6 @@ class PartitionCentroidState(object):
         else:
             self._state = libinference.make_vi_center_state(self)
 
-        self._entropy_args = dict(adjacency=True, deg_entropy=True, dl=True,
-                                  partition_dl=True, degree_dl=True,
-                                  degree_dl_kind="distributed", edges_dl=True,
-                                  dense=False, multigraph=True, exact=True,
-                                  recs=True, recs_dl=True, beta_dl=1.,
-                                  Bfield=True)
-
     def __copy__(self):
         return self.copy()
 
@@ -109,15 +102,14 @@ class PartitionCentroidState(object):
     def entropy(self):
         return self._state.entropy()
 
-    def mcmc_sweep(self, beta=1.,d=.01, niter=1, entropy_args={},
-                   allow_vacate=True, sequential=True, deterministic=False,
-                   verbose=False, **kwargs):
+    def mcmc_sweep(self, beta=1.,d=.01, niter=1, allow_vacate=True,
+                   sequential=True, deterministic=False, verbose=False,
+                   **kwargs):
         r"""Perform sweeps of a Metropolis-Hastings rejection sampling MCMC to sample
         network partitions. See
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
         parameter documentation. """
         mcmc_state = DictState(locals())
-        mcmc_state.entropy_args = get_entropy_args(self._entropy_args)
         mcmc_state.vlist = Vector_size_t()
         mcmc_state.vlist.resize(len(self.b))
         mcmc_state.vlist.a = np.arange(len(self.b))
@@ -139,10 +131,9 @@ class PartitionCentroidState(object):
                                            _get_rng())
 
         if _bm_test() and test:
-            Sf = self.entropy(**entropy_args)
+            Sf = self.entropy()
             assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
+                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si)
 
         if len(kwargs) > 0:
             raise ValueError("unrecognized keyword arguments: " +
@@ -150,10 +141,9 @@ class PartitionCentroidState(object):
         return dS, nattempts, nmoves
 
 
-    def multiflip_mcmc_sweep(self, beta=1., psingle=100, psplit=1,
-                             pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
-                             niter=1, entropy_args={}, accept_stats=None,
-                             verbose=False, **kwargs):
+    def multiflip_mcmc_sweep(self, beta=1., psingle=100, psplit=1, pmerge=1,
+                             pmergesplit=1, d=0.01, gibbs_sweeps=10, niter=1,
+                             accept_stats=None, verbose=False, **kwargs):
         r"""Perform sweeps of a merge-split Metropolis-Hastings rejection sampling MCMC
         to sample network partitions. See
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
@@ -163,14 +153,13 @@ class PartitionCentroidState(object):
         nacceptance = Vector_size_t(4)
         force_move = kwargs.pop("force_move", False)
         mcmc_state = DictState(locals())
-        mcmc_state.entropy_args = get_entropy_args(self._entropy_args)
         mcmc_state.state = self._state
         mcmc_state.c = 0
         mcmc_state.E = 0
 
         test = kwargs.pop("test", True)
         if _bm_test() and test:
-            Si = self.entropy(**entropy_args)
+            Si = self.entropy()
 
         if self.RMI:
             dS, nattempts, nmoves = \
@@ -184,8 +173,7 @@ class PartitionCentroidState(object):
         if _bm_test() and test:
             Sf = self.entropy()
             assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
+                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si)
 
         if len(kwargs) > 0:
             raise ValueError("unrecognized keyword arguments: " +

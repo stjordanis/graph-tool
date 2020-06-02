@@ -149,6 +149,8 @@ public:
 
     bool _egroups_update = true;
 
+    typedef char _entropy_args_t;
+
     PartitionModeState& get_mode(size_t r)
     {
         return _modes[r];
@@ -547,7 +549,8 @@ public:
         }
     }
 
-    void init_mcmc(double, double)
+    template <class MCMCState>
+    void init_mcmc(MCMCState&)
     {
     }
 

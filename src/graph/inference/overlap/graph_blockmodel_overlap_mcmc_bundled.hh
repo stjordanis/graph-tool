@@ -40,7 +40,7 @@ using namespace std;
     ((beta,, double, 0))                                                       \
     ((c,, double, 0))                                                          \
     ((d,, double, 0))                                                          \
-    ((entropy_args,, entropy_args_t, 0))                                       \
+    ((oentropy_args,, python::object, 0))                                      \
     ((allow_vacate,, bool, 0))                                                 \
     ((sequential,, bool, 0))                                                   \
     ((deterministic,, bool, 0))                                                \
@@ -69,12 +69,10 @@ struct MCMC
         BundledMCMCOverlapBlockState(ATs&&... as)
            : BundledMCMCOverlapBlockStateBase<Ts...>(as...),
              _g(_state._g),
-             _parallel(false)
+             _parallel(false),
+             _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
         {
-            _state.init_mcmc(_c,
-                             (_entropy_args.partition_dl ||
-                              _entropy_args.degree_dl ||
-                              _entropy_args.edges_dl));
+            _state.init_mcmc(*this);
 
             for (auto v : _vlist)
             {
@@ -105,6 +103,7 @@ struct MCMC
         std::vector<std::vector<size_t>> _half_edges;
         std::vector<std::vector<size_t>> _bundles;
         bool _parallel;
+        typename State::_entropy_args_t& _entropy_args;
         size_t _null_move = null_group;
 
         size_t node_state(size_t i)

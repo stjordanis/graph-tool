@@ -39,7 +39,7 @@ typedef typename vprop_map_t<int32_t>::type vmap_t;
     ((state, &, State&, 0))                                                    \
     ((S, , double, 0))                                                         \
     ((vlist,&, std::vector<size_t>&, 0))                                       \
-    ((entropy_args,, entropy_args_t, 0))                                       \
+    ((oentropy_args,, python::object, 0))                                      \
     ((b_min,, vmap_t, 0))                                                      \
     ((max_iter,, size_t, 0))
 
@@ -64,15 +64,17 @@ struct Exhaustive
                                             sizeof...(Ts)>* = nullptr>
         ExhaustiveBlockState(ATs&&... as)
           : ExhaustiveBlockStateBase<Ts...>(as...),
-            _g(_state._g), _S_min(_S)
+            _g(_state._g), _S_min(_S),
+            _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
         {
-            _state.init_mcmc(numeric_limits<double>::infinity(),
-                             (_entropy_args.partition_dl ||
-                              _entropy_args.degree_dl ||
-                              _entropy_args.edges_dl));
+            _state.init_mcmc(*this);
         }
+
         typename State::g_t& _g;
         double _S_min;
+        typename State::_entropy_args_t& _entropy_args;
+
+        double _c = numeric_limits<double>::infinity();
 
         size_t get_B()
         {

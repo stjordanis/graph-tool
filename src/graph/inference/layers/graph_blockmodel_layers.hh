@@ -241,6 +241,7 @@ struct Layers
         size_t _actual_B = 0;
         size_t _N = 0;
         bool _is_partition_stats_enabled = false;
+        typedef entropy_args_t _entropy_args_t;
         LayeredBlockStateVirtualBase* _lcoupled_state = nullptr;
         typename vc_t::checked_t _vc_c;
         typename vmap_t::checked_t _vmap_c;
@@ -821,11 +822,15 @@ struct Layers
             _is_partition_stats_enabled = false;
         }
 
-        void init_mcmc(double c, double dl)
+        template <class MCMCState>
+        void init_mcmc(MCMCState& state)
         {
-            BaseState::init_mcmc(c, dl);
-            for (auto& state : _layers)
-                state.init_mcmc(numeric_limits<double>::infinity(), dl);
+            BaseState::init_mcmc(state);
+            double c = state._c;
+            state._c = numeric_limits<double>::infinity();
+            for (auto& lstate : _layers)
+                lstate.init_mcmc(state);
+            state._c = c;
         }
 
         LayerState& get_layer(size_t l)

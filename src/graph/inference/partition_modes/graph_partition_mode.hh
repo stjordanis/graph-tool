@@ -1292,6 +1292,7 @@ public:
     std::vector<size_t> _free_pos;
     size_t _max_pos = 0;
 
+    typedef char _entropy_args_t;
     std::shared_ptr<PartitionModeState> _coupled_state;
     idx_map<size_t, size_t> _coupled_pos;
 

@@ -1194,8 +1194,14 @@ public:
         return _pclabel;
     }
 
-    void init_mcmc(double c, double dl)
+    template <class MCMCState>
+    void init_mcmc(MCMCState& state)
     {
+        auto c = state._c;
+        auto& entropy_args = state._entropy_args;
+        bool dl = (entropy_args.partition_dl ||
+                   entropy_args.degree_dl ||
+                   entropy_args.edges_dl);
         if (!std::isinf(c))
         {
             if (_egroups.empty())
@@ -1316,6 +1322,7 @@ public:
     UnityPropertyMap<int,GraphInterface::edge_t> _eweight;
     UnityPropertyMap<int,GraphInterface::vertex_t> _vweight;
 
+    typedef entropy_args_t _entropy_args_t;
     BlockStateVirtualBase* _coupled_state;
     entropy_args_t _coupled_entropy_args;
 

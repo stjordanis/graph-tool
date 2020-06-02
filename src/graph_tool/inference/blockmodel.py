@@ -1440,7 +1440,7 @@ class BlockState(object):
             hasattr(self, "degs") and
             not isinstance(self.degs, libinference.simple_degs_t)):
             entropy_args["multigraph"] = False
-        mcmc_state.entropy_args = get_entropy_args(entropy_args)
+        mcmc_state.oentropy_args = get_entropy_args(entropy_args)
         mcmc_state.vlist = Vector_size_t()
         if vertices is None:
             vertices = self.g.vertex_index.copy().fa
@@ -1560,7 +1560,7 @@ class BlockState(object):
             hasattr(self, "degs") and
             not isinstance(self.degs, libinference.simple_degs_t)):
             entropy_args["multigraph"] = False
-        mcmc_state.entropy_args = get_entropy_args(entropy_args)
+        mcmc_state.oentropy_args = get_entropy_args(entropy_args)
         mcmc_state.state = self._state
 
         dispatch = kwargs.pop("dispatch", True)
@@ -1659,7 +1659,7 @@ class BlockState(object):
 
         gibbs_state = DictState(locals())
         entropy_args = dict(self._entropy_args, **entropy_args)
-        gibbs_state.entropy_args = get_entropy_args(entropy_args)
+        gibbs_state.oentropy_args = get_entropy_args(entropy_args)
         gibbs_state.vlist = Vector_size_t()
         if vertices is None:
             vertices = self.g.get_vertices()
@@ -1933,7 +1933,7 @@ class BlockState(object):
 
         exhaustive_state = DictState(dict(max_iter=max_iter if max_iter is not None else 0))
         entropy_args = dict(self._entropy_args, **entropy_args)
-        exhaustive_state.entropy_args = get_entropy_args(entropy_args)
+        exhaustive_state.oentropy_args = get_entropy_args(entropy_args)
         exhaustive_state.vlist = Vector_size_t()
         if vertices is None:
             vertices = self.g.vertex_index.copy().fa
@@ -1975,8 +1975,8 @@ class BlockState(object):
         if not self.is_weighted:
             raise ValueError("state must be weighted to perform merges")
 
-        if (merge_state.entropy_args.multigraph and
-            not merge_state.entropy_args.dense):
+        if (merge_state.oentropy_args.multigraph and
+            not merge_state.oentropy_args.dense):
             raise ValueError("can only merge multigraphs if dense == True")
 
         return libinference.merge_sweep(merge_state, self._state,
@@ -2031,6 +2031,7 @@ class BlockState(object):
         merge_state.state = self._state
         entropy_args = dict(self._entropy_args, **entropy_args)
         merge_state.entropy_args = get_entropy_args(entropy_args)
+        merge_state.oentropy_args = merge_state.entropy_args
 
         if _bm_test():
             assert self._check_clabel(), "invalid clabel before sweep"

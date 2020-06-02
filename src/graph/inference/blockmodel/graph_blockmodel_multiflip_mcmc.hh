@@ -47,7 +47,7 @@ using namespace std;
     ((nproposal, &, vector<size_t>&, 0))                                       \
     ((nacceptance, &, vector<size_t>&, 0))                                     \
     ((gibbs_sweeps,, size_t, 0))                                               \
-    ((entropy_args,, entropy_args_t, 0))                                       \
+    ((oentropy_args,, python::object, 0))                                      \
     ((verbose,, int, 0))                                                       \
     ((force_move,, bool, 0))                                                   \
     ((niter,, size_t, 0))
@@ -82,12 +82,10 @@ struct MCMC
             _bnext(get(vertex_index_t(), _state._g),
                    num_vertices(_state._g)),
             _btemp(get(vertex_index_t(), _state._g),
-                   num_vertices(_state._g))
+                   num_vertices(_state._g)),
+            _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
         {
-            _state.init_mcmc(_c,
-                             (_entropy_args.partition_dl ||
-                              _entropy_args.degree_dl ||
-                              _entropy_args.edges_dl));
+            _state.init_mcmc(*this);
             for (auto v : vertices_range(_state._g))
             {
                 if (_state.node_weight(v) == 0)
@@ -165,6 +163,7 @@ struct MCMC
 
         typename vprop_map_t<int>::type::unchecked_t _bnext;
         typename vprop_map_t<int>::type::unchecked_t _btemp;
+        typename State::_entropy_args_t& _entropy_args;
 
         constexpr static size_t _null_move = 1;
 

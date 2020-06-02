@@ -2442,8 +2442,15 @@ public:
         return _partition_stats[r];
     }
 
-    void init_mcmc(double c, double dl)
+    template <class MCMCState>
+    void init_mcmc(MCMCState& state)
     {
+        auto c = state._c;
+        auto& entropy_args = state._entropy_args;
+        bool dl = (entropy_args.partition_dl ||
+                   entropy_args.degree_dl ||
+                   entropy_args.edges_dl);
+
         if (!std::isinf(c))
         {
             _egroups.clear();
@@ -2653,6 +2660,7 @@ public:
     std::vector<std::tuple<size_t, size_t, int>>
         _pp_entries;
 
+    typedef entropy_args_t _entropy_args_t;
     BlockStateVirtualBase* _coupled_state = nullptr;
     entropy_args_t _coupled_entropy_args;
 

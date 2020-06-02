@@ -110,6 +110,8 @@ public:
     std::vector<size_t> _bclabel;
     std::vector<size_t> _pclabel;
 
+    typedef char _entropy_args_t;
+
     constexpr static BlockStateVirtualBase* _coupled_state = nullptr;
 
     typedef int m_entries_t;
@@ -269,7 +271,8 @@ public:
         return S;
     }
 
-    void init_mcmc(double, double)
+    template <class MCMCState>
+    void init_mcmc(MCMCState&)
     {
     }
 

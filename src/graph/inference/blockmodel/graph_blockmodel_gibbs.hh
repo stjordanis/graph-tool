@@ -38,7 +38,7 @@ using namespace std;
     ((E,, size_t, 0))                                                          \
     ((vlist,&, std::vector<size_t>&, 0))                                       \
     ((beta,, double, 0))                                                       \
-    ((entropy_args,, entropy_args_t, 0))                                       \
+    ((oentropy_args,, python::object, 0))                                      \
     ((allow_new_group,, bool, 0))                                              \
     ((sequential,, bool, 0))                                                   \
     ((deterministic,, bool, 0))                                                \
@@ -66,14 +66,15 @@ struct Gibbs
         GibbsBlockState(ATs&&... as)
            : GibbsBlockStateBase<Ts...>(as...),
             _m_entries(num_vertices(_state._bg))
-        {
-            _state.init_mcmc(numeric_limits<double>::infinity(),
-                             (_entropy_args.partition_dl ||
-                              _entropy_args.degree_dl ||
-                              _entropy_args.edges_dl));
+,
+            _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))        {
+            _state.init_mcmc(*this);
         }
 
         typename state_t::m_entries_t _m_entries;
+        typename State::_entropy_args_t& _entropy_args;
+
+        double _c = numeric_limits<double>::infinity();
 
         std::vector<size_t> _candidate_blocks;
 
