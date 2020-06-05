@@ -1411,13 +1411,6 @@ public:
             }
         }
 
-        auto& f = _bfield[v];
-        if (!f.empty())
-        {
-            dS_dl -= (nr < f.size()) ? f[nr] : f.back();
-            dS_dl += (r < f.size()) ? f[r] : f.back();
-        }
-
         if (!_Bfield.empty() && ea.Bfield)
         {
             int dB = 0;
@@ -1669,6 +1662,15 @@ public:
             return 0;
 
         double dS = 0;
+
+        auto& f = _bfield[v];
+        if (!f.empty())
+        {
+            if (nr != null_group)
+                dS -= (nr < f.size()) ? f[nr] : f.back();
+            if (r != null_group)
+                dS += (r < f.size()) ? f[r] : f.back();
+        }
 
         if (ea.partition_dl)
         {
