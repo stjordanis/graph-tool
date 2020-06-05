@@ -26,7 +26,7 @@ RUN head debian/changelog
 
 RUN ./autogen.sh
 
-ARG NJOBS=2
+ARG NJOBS=4
 
 RUN NJOBS=$NJOBS dpkg-buildpackage -us -uc -j$NJOBS
 WORKDIR ..
