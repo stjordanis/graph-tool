@@ -303,7 +303,7 @@ public:
 };
 
 template <class Graph>
-class PythonEdge : public EdgeBase
+class PythonEdge final : public EdgeBase
 {
 public:
     typedef typename boost::graph_traits<Graph>::edge_descriptor edge_descriptor;
