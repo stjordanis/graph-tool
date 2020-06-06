@@ -573,20 +573,20 @@ public:
     typedef Key key_type;
     typedef boost::readable_property_map_tag category;
 
-    ConstantPropertyMap(const value_type& c): c(c) {}
-    ConstantPropertyMap(): c() {}
-    ConstantPropertyMap(const ConstantPropertyMap& o): c(o.c) {}
+    ConstantPropertyMap(const value_type& c): _c(c) {}
+    ConstantPropertyMap(): _c() {}
+    ConstantPropertyMap(const ConstantPropertyMap& o): _c(o._c) {}
 
-    const value_type& operator[](const key_type&) const { return c; }
+    const value_type& operator[](const key_type&) const { return _c; }
 
     ConstantPropertyMap& operator=(const ConstantPropertyMap& other)
     {
-        c = other.c;
+        _c = other._c;
         return *this;
     }
 
 private:
-    value_type c;
+    value_type _c;
 };
 
 template <class Value, class Key>
