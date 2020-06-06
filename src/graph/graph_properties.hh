@@ -562,7 +562,7 @@ private:
     value_type _default;
 };
 
-// the following is a property map which always returns a constant value
+// the following is a property map which always returns the same value
 template <class Value, class Key>
 class ConstantPropertyMap
     : public boost::put_get_helper<Value, ConstantPropertyMap<Value,Key>>
@@ -573,19 +573,20 @@ public:
     typedef Key key_type;
     typedef boost::readable_property_map_tag category;
 
-    ConstantPropertyMap(const value_type& c): c(c) {}
-    ConstantPropertyMap(): c() {}
-    ConstantPropertyMap(const ConstantPropertyMap& o): c(o.c) {}
+    ConstantPropertyMap(const value_type& c): _c(c) {}
+    ConstantPropertyMap(): _c() {}
+    ConstantPropertyMap(const ConstantPropertyMap& o): _c(o._c) {}
 
-    const value_type& operator[](const key_type&) const { return c; }
+    const value_type& operator[](const key_type&) const { return _c; }
 
     ConstantPropertyMap& operator=(const ConstantPropertyMap& other)
     {
-        const_cast<value_type&>(c) = other.c;
+        _c = other._c;
         return *this;
     }
 
-    const value_type c;
+private:
+    value_type _c;
 };
 
 template <class Value, class Key>
