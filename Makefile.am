@@ -5,7 +5,8 @@ SUBDIRS = src
 graphtooldocdir = ${PACKAGE_DOC_DIR}
 nobase_dist_graphtooldoc_DATA = \
 	README.md \
-	LICENSE \
+	COPYING \
+	COPYING.LESSER \
 	AUTHORS \
 	INSTALL \
 	src/boost-workaround/LICENSE_1_0.txt \
