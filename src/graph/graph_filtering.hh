@@ -524,17 +524,15 @@ retrieve_graph_view(GraphInterface& gi, Graph& init)
     auto& graph_views = gi.get_graph_views();
     if (index >= graph_views.size())
         graph_views.resize(index + 1);
-    boost::any& gview = graph_views[index];
-    std::shared_ptr<g_t>* gptr = boost::any_cast<std::shared_ptr<g_t>>(&gview);
-    if (gptr == 0)
+    std::shared_ptr<void>& gview = graph_views[index];
+    if (!gview)
     {
         std::shared_ptr<g_t> new_g =
             get_graph_ptr<g_t>(gi, init,
                                std::is_same<g_t, GraphInterface::multigraph_t>());
         gview = new_g;
-        return new_g;
     }
-    return *gptr;
+    return std::static_pointer_cast<g_t>(gview);
 }
 
 } //graph_tool namespace
