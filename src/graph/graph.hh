@@ -150,7 +150,7 @@ public:
 
     // Gets the encapsulated graph view. See graph_filtering.cc for details
     boost::any get_graph_view() const;
-    std::vector<boost::any>& get_graph_views() {return _graph_views;}
+    std::vector<std::shared_ptr<void>>& get_graph_views() {return _graph_views;}
 
 private:
 
@@ -168,7 +168,7 @@ private:
     edge_index_map_t _edge_index;
 
     // this will hold an instance of the graph views at run time
-    std::vector<boost::any> _graph_views;
+    std::vector<std::shared_ptr<void>> _graph_views;
 
     // reverse and directed states
     bool _reversed;
