@@ -5,7 +5,7 @@ job_gcc_amd64:
     - CCACHE_BASEDIR=$PWD make $MAKEOPTS
     - make install
     - export PYTHONPATH=$PWD/install/site-packages
-    - cd doc; (pids=(); for f in `ls *rst`; do python3 /usr/bin/sphinx-build -b doctest . build $f & pids+=($!); done; for p in "${pids[@]}"; do wait $p; done)
+    - cd doc; (mkdir builds envs; pids=(); for f in `ls *rst`; do python3 /usr/bin/sphinx-build -E -d envs/$f -b doctest . builds/$f $f & pids+=($!); done; for p in "${pids[@]}"; do wait "$p"; done);
   tags:
     - amd64
   except:
@@ -18,7 +18,7 @@ job_clang_amd64:
     - CCACHE_BASEDIR=$PWD make $MAKEOPTS
     - make install
     - export PYTHONPATH=$PWD/install/site-packages
-    - cd doc; (pids=(); for f in `ls *rst`; do python3 /usr/bin/sphinx-build -b doctest . build $f & pids+=($!); done; for p in "${pids[@]}"; do wait $p; done)
+    - cd doc; (mkdir builds envs; pids=(); for f in `ls *rst`; do python3 /usr/bin/sphinx-build -E -d envs/$f -b doctest . builds/$f $f & pids+=($!); done; for p in "${pids[@]}"; do wait "$p"; done);
   tags:
     - amd64
   except:
