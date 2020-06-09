@@ -872,14 +872,15 @@ def prop_to_size(prop, mi=0, ma=5, log=False, power=0.5):
 
 try:
     from . cairo_draw import graph_draw, cairo_draw, \
-        get_hierarchy_control_points, default_cm, default_clrs
+        get_hierarchy_control_points, default_cm, default_clrs, draw_hierarchy
+    __all__ += ["draw_hierarchy"]
 except ImportError:
     pass
 
 try:
     from . cairo_draw import GraphWidget, GraphWindow, \
-        interactive_window, draw_hierarchy
-    __all__ += ["interactive_window", "GraphWidget", "GraphWindow", "draw_hierarchy"]
+        interactive_window
+    __all__ += ["interactive_window", "GraphWidget", "GraphWindow"]
 except ImportError:
     pass
 
