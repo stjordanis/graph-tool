@@ -1,7 +1,7 @@
 job_gcc_amd64:
   script:
     - ./autogen.sh
-    - ./configure CXX="ccache g++" PYTHON=python3 --prefix=$PWD/install --with-python-module-path=$PWD/install/site-packages CXXFLAGS="-O3 -flto=12" LDFLAGS="-flto=12"
+    - ./configure CXX="ccache g++" PYTHON=python3 --prefix=$PWD/install --with-python-module-path=$PWD/install/site-packages CXXFLAGS="-O3 -flto=auto" LDFLAGS="-flto=auto"
     - CCACHE_BASEDIR=$PWD make $MAKEOPTS
     - make install
     - export PYTHONPATH=$PWD/install/site-packages
@@ -14,7 +14,7 @@ job_gcc_amd64:
 job_clang_amd64:
   script:
     - ./autogen.sh
-    - ./configure CXX="ccache clang++" PYTHON=python3 --prefix=$PWD/install --with-python-module-path=$PWD/install/site-packages CXXFLAGS="-O3 -flto" LDFLAGS="-flto"
+    - ./configure CXX="ccache clang++" PYTHON=python3 --prefix=$PWD/install --with-python-module-path=$PWD/install/site-packages CXXFLAGS="-O3 -flto=thin" LDFLAGS=""
     - CCACHE_BASEDIR=$PWD make $MAKEOPTS
     - make install
     - export PYTHONPATH=$PWD/install/site-packages
