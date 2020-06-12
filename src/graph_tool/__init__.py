@@ -2369,7 +2369,22 @@ class Graph(object):
         maps that will be filled with the remaining values at each row, if there
         are more than two.
 
+        Examples
+        --------
+        >>> edge_list = [(0, 1, .3, 10), (2, 3, .1, 0), (2, 0, .4, 42)]
+        >>> g = gt.Graph()
+        >>> eweight = g.new_ep("double")
+        >>> elayer = g.new_ep("int")
+        >>> g.add_edge_list(edge_list, eprops=[eweight, elayer])
+        >>> print(eweight.fa)
+        [0.3 0.1 0.4]
+        >>> g.get_edges()
+        array([[0, 1],
+               [2, 3],
+               [2, 0]])
+
         """
+
         if eprops is None:
             eprops = ()
         else:
