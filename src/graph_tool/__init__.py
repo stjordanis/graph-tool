@@ -568,10 +568,12 @@ class PropertyMap(object):
                   is identical to the :attr:`~PropertyMap.a` attribute.""")
 
     def get_2d_array(self, pos):
-        r"""Return a two-dimensional array with a copy of the entries of the
-        vector-valued property map. The parameter ``pos`` must be a sequence of
-        integers which specifies the indexes of the property values which will
-        be used. """
+        r"""Return a two-dimensional array of shape ``(M,N)``, where ``N`` is the number
+        of vertices or edges, and ``M`` is the size of each property vector,
+        with contains a copy of all entries of the vector-valued property map.
+        The parameter ``pos`` must be a sequence of integers which specifies the
+        indexes of the property values which will be copied.
+        """
 
         if self.key_type() == "g":
             raise ValueError("Cannot create multidimensional array for graph property maps.")
@@ -606,10 +608,13 @@ class PropertyMap(object):
         return a
 
     def set_2d_array(self, a, pos=None):
-        r"""Set the entries of the vector-valued property map from a
-        two-dimensional array ``a``. If given, the parameter ``pos`` must be a
-        sequence of integers which specifies the indexes of the property values
-        which will be set."""
+        r"""Set the entries of the vector-valued property map from a two-dimensional
+        array ``a`` of shape ``(M,N)``, where ``N`` is the number of vertices or
+        edges, and ``M`` is the size of each property vector. If given, the
+        parameter ``pos`` must be a sequence of integers which specifies the
+        indexes of the property values which will be set (i.e. rows if the ``a``
+        matrix).
+        """
 
         if self.key_type() == "g":
             raise ValueError("Cannot set multidimensional array for graph property maps.")
