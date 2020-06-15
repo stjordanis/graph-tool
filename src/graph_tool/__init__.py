@@ -2671,9 +2671,9 @@ class Graph(object):
         then a new property map of the same type (or with the type given by the
         optional ``value_type`` parameter) is created, and returned. The
         optional parameter ``g`` specifies the source graph to copy properties
-        from (defaults to self). If ``full == False``, in the case of filtered
-        graphs only the unmasked values are copied (with the remaining ones
-        taking the type-dependent default value).
+        from (defaults to the graph than owns `src`). If ``full == False``, then
+        in the case of filtered graphs only the unmasked values are copied (with
+        the remaining ones taking the type-dependent default value).
         """
         if tgt is None:
             tgt = self.new_property(src.key_type(),
@@ -2687,7 +2687,7 @@ class Graph(object):
             raise ValueError("source and target properties must have the same key type")
 
         if g is None:
-            g = self
+            g = src.get_graph()
         sf = self
 
         if full:
