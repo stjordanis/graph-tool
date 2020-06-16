@@ -17,6 +17,7 @@ reader is referred to [peixoto-bayesian-2019]_.
 .. include:: _model_class_selection.rst
 .. include:: _edge_weights.rst
 .. include:: _layers.rst
+.. include:: _assortative.rst
 .. include:: _reconstruction.rst
 .. include:: _prediction.rst
 

@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef GRAPH_PARTITION_CENTROID_HH
-#define GRAPH_PARTITION_CENTROID_HH
+#ifndef GRAPH_PLANTED_PARTITION_HH
+#define GRAPH_PLANTED_PARTITION_HH
 
 #include "config.h"
 
@@ -499,4 +499,4 @@ public:
 
 } // graph_tool namespace
 
-#endif //GRAPH_PARTITION_CENTROID_HH
+#endif //GRAPH_PLANTED_PARTITION_HH

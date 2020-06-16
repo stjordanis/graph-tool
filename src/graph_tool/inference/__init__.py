@@ -52,6 +52,8 @@ State classes
    ~graph_tool.inference.overlap_blockmodel.OverlapBlockState
    ~graph_tool.inference.layered_blockmodel.LayeredBlockState
    ~graph_tool.inference.nested_blockmodel.NestedBlockState
+   ~graph_tool.inference.planted_partition.PPBlockState
+   ~graph_tool.inference.modularity.ModularityState
    ~graph_tool.inference.mcmc.TemperingState
 
 Sampling and minimization

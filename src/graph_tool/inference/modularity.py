@@ -101,13 +101,24 @@ def get_modularity_entropy_args(kargs, ignore=None):
 class ModularityState(object):
     r"""Obtain the partition of a network according to the Newman's modularity.
 
+    .. warning::
+
+       Do not use this approach in the analysis of networks without
+       understanding the consequences. This algorithm is included only for
+       comparison purposes. In general, the inference-based approaches based on
+       :class:`~graph_tool.inference.blockmodel.BlockState`,
+       :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`, and
+       :class:`~graph_tool.inference.planted_partition.PPBlockState` should be
+       universally preferred.
+
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be partitioned.
-    b : :class:`numpy.PropertyMap` (optional, default: ``None``)
+    b : :class:`~graph_tool.PropertyMap` (optional, default: ``None``)
         Initial partition. If not supplied, a partition into a single group will
         be used.
+
     """
 
     def __init__(self, g, b=None):
@@ -168,6 +179,22 @@ class ModularityState(object):
         return numpy.exp(-(w*log(w)).sum())
 
     def entropy(self, gamma=1., **kwargs):
+        r"""Return the unnormalized negative generalized modularity.
+
+        Notes
+        -----
+
+        The unnormalized negative generalized modularity is defined as
+
+        .. math::
+
+           -\sum_{ij}\left(A_{ij}-\gamma \frac{k_ik_j}{2E}\right)
+
+        Where :math:`A_{ij}` is the adjacency matrix, :math:`k_i` is the degree
+        of node :math:`i`, and :math:`E` is the total number of edges.
+
+        """
+
         entropy_args = dict(self._entropy_args, **locals())
         eargs = get_modularity_entropy_args(entropy_args,
                                             ignore=["self", "kwargs"])
@@ -196,6 +223,22 @@ class ModularityState(object):
 
 
     def modularity(self, gamma=1):
+        r"""Return the generalized modularity.
+
+        Notes
+        -----
+
+        The generalized modularity is defined as
+
+        .. math::
+
+           \frac{1}{2E}\sum_{ij}\left(A_{ij}-\gamma \frac{k_ik_j}{2E}\right)
+
+        Where :math:`A_{ij}` is the adjacency matrix, :math:`k_i` is the degree
+        of node :math:`i`, and :math:`E` is the total number of edges.
+
+        """
+
         Q = self.entropy(gamma=gamma)
         return -Q / (2 * self.g.num_edges())
 
@@ -252,7 +295,7 @@ class ModularityState(object):
         return dS, nattempts, nmoves
 
 
-    def multiflip_mcmc_sweep(self, beta=1., c=0.5, psingle=100, psplit=1,
+    def multiflip_mcmc_sweep(self, beta=1., c=0.5, psingle=None, psplit=1,
                              pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
                              niter=1, entropy_args={}, accept_stats=None,
                              verbose=False, **kwargs):
@@ -260,6 +303,8 @@ class ModularityState(object):
         to sample network partitions. See
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
         parameter documentation."""
+        if psingle is None:
+            psingle = self.g.num_vertices()
         gibbs_sweeps = max(gibbs_sweeps, 1)
         nproposal = Vector_size_t(4)
         nacceptance = Vector_size_t(4)

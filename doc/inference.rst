@@ -72,6 +72,10 @@
     :no-undoc-members:
     :show-inheritance:
 
+.. automodule:: graph_tool.inference.planted_partition
+    :no-undoc-members:
+    :show-inheritance:
+
 .. automodule:: graph_tool.inference.blockmodel_em
     :no-undoc-members:
     :show-inheritance:

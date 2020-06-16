@@ -52,19 +52,16 @@ def get_pp_entropy_args(kargs, ignore=None):
     return ea
 
 class PPBlockState(object):
-    r"""Obtain the center of a set of partitions, according to the variation of
-    information metric or reduced mutual information.
+    r"""Obtain the partition of a network according to the Bayesian planted partition
+    model.
 
     Parameters
     ----------
-    bs : iterable of iterable of ``int``
-        List of partitions.
-    b : ``list`` or :class:`numpy.ndarray` (optional, default: ``None``)
+    g : :class:`~graph_tool.Graph`
+        Graph to be modelled.
+    b : :class:`~graph_tool.PropertyMap` (optional, default: ``None``)
         Initial partition. If not supplied, a partition into a single group will
         be used.
-    RMI : ``bool`` (optional, default: ``False``)
-         If ``True``, the reduced mutual information will be used, otherwise the
-         variation of information metric will be used instead.
     """
 
     def __init__(self, g, b=None):
@@ -130,6 +127,90 @@ class PPBlockState(object):
         return numpy.exp(-(w*log(w)).sum())
 
     def entropy(self, uniform=False, degree_dl_kind="distributed", **kwargs):
+        r"""Return the model entropy (negative log-likelihood).
+
+        Parameters
+        ----------
+        uniform : ``bool`` (optional, default: ``False``)
+            If ``True``, the uniform planted partition model is used, otherwise
+            a non-uniform version is used.
+        degree_dl_kind : ``str`` (optional, default: ``"distributed"``)
+            This specifies the prior used for the degree sequence. It must be
+            one of: ``"uniform"`` or ``"distributed"`` (default).
+
+        Notes
+        -----
+
+        The "entropy" of the state is the negative log-likelihood of the
+        microcanonical SBM, that includes the generated graph
+        :math:`\boldsymbol{A}` and the model parameters :math:`e_{\text{in}}`,
+        :math:`e_{\text{out}}`, :math:`\boldsymbol{k}` and
+        :math:`\boldsymbol{b}`,
+
+        .. math::
+
+           \Sigma &= - \ln P(\boldsymbol{A},e_{\text{in}},e_{\text{out}},\boldsymbol{k},\boldsymbol{b}) \\
+                  &= - \ln P(\boldsymbol{A}|e_{\text{in}},e_{\text{out}},\boldsymbol{k},\boldsymbol{b}) - \ln P(e_{\text{in}},e_{\text{out}},\boldsymbol{k},\boldsymbol{b}).
+
+        This value is also called the `description length
+        <https://en.wikipedia.org/wiki/Minimum_description_length>`_ of the data,
+        and it corresponds to the amount of information required to describe it
+        (in `nats <https://en.wikipedia.org/wiki/Nat_(unit)>`_).
+
+        For the uniform version of the model, the likelihood is
+
+        .. math::
+
+            P(\boldsymbol{A}|\boldsymbol{k},\boldsymbol{b}) = \frac{e_{\text{in}}!e_{\text{out}}!}
+            {\left(\frac{B}{2}\right)^{e_{\text{in}}}{B\choose 2}^{e_{\text{out}}}(E+1)^{1-\delta_{B,1}}\prod_re_r!}\times
+            \frac{\prod_ik_i!}{\prod_{i<j}A_{ij}!\prod_i A_{ii}!!}.
+
+        where :math:`e_{\text{in}}` and :math:`e_{\text{out}}` are the number of
+        edges inside and outside communities, respectively, and :math:`e_r` is
+        the sum of degrees in group :math:`r`.
+
+        For the non-uniform model we have instead:
+
+        .. math::
+
+            P(\boldsymbol{A}|\boldsymbol{k},\boldsymbol{b}) = \frac{e_{\text{out}}!\prod_re_{rr}!!}
+            {{B\choose 2}^{e_{\text{out}}}(E+1)^{1-\delta_{B,1}}\prod_re_r!}\times{B + e_{\text{in}} - 1 \choose e_{\text{in}}}^{-1}\times
+            \frac{\prod_ik_i!}{\prod_{i<j}A_{ij}!\prod_i A_{ii}!!}.
+
+
+        Here there are two options for the prior on the degrees:
+
+        1. ``degree_dl_kind == "uniform"``
+
+            .. math::
+
+                P(\boldsymbol{k}|\boldsymbol{e},\boldsymbol{b}) = \prod_r\left(\!\!{n_r\choose e_r}\!\!\right)^{-1}.
+
+            This corresponds to a noninformative prior, where the degrees are
+            sampled from a uniform distribution.
+
+        2. ``degree_dl_kind == "distributed"`` (default)
+
+            .. math::
+
+                P(\boldsymbol{k}|\boldsymbol{e},\boldsymbol{b}) = \prod_r\frac{\prod_k\eta_k^r!}{n_r!} \prod_r q(e_r, n_r)^{-1}
+
+            with :math:`\eta_k^r` being the number of nodes with degree
+            :math:`k` in group :math:`r`, and :math:`q(n,m)` being the number of
+            `partitions
+            <https://en.wikipedia.org/wiki/Partition_(number_theory)>`_ of
+            integer :math:`n` into at most :math:`m` parts.
+
+            This corresponds to a prior for the degree sequence conditioned on
+            the degree frequencies, which are themselves sampled from a uniform
+            hyperprior. This option should be preferred in most cases.
+
+
+        For the partition prior :math:`P(\boldsymbol{b})` please refer to
+        :func:`~graph_tool.inference.blockmodel.model_entropy`.
+
+        """
+
         entropy_args = dict(self._entropy_args, **locals())
         eargs = get_pp_entropy_args(entropy_args, ignore=["self", "kwargs"])
 
@@ -208,7 +289,7 @@ class PPBlockState(object):
         return dS, nattempts, nmoves
 
 
-    def multiflip_mcmc_sweep(self, beta=1., c=0.5, psingle=100, psplit=1,
+    def multiflip_mcmc_sweep(self, beta=1., c=0.5, psingle=None, psplit=1,
                              pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
                              niter=1, entropy_args={}, accept_stats=None,
                              verbose=False, **kwargs):
@@ -216,6 +297,8 @@ class PPBlockState(object):
         to sample network partitions. See
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
         parameter documentation."""
+        if psingle is None:
+            psingle = self.g.num_vertices()
         gibbs_sweeps = max(gibbs_sweeps, 1)
         nproposal = Vector_size_t(4)
         nacceptance = Vector_size_t(4)
