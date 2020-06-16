@@ -137,6 +137,9 @@ extern void export_mode_cluster_multiflip_mcmc();
 extern void export_pp_state();
 extern void export_pp_mcmc();
 extern void export_pp_multiflip_mcmc();
+extern void export_modularity_state();
+extern void export_modularity_mcmc();
+extern void export_modularity_multiflip_mcmc();
 
 BOOST_PYTHON_MODULE(libgraph_tool_inference)
 {
@@ -210,6 +213,9 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     export_pp_state();
     export_pp_mcmc();
     export_pp_multiflip_mcmc();
+    export_modularity_state();
+    export_modularity_mcmc();
+    export_modularity_multiflip_mcmc();
 
     def("vector_map", vector_map<int32_t>);
     def("vector_map64", vector_map<int64_t>);

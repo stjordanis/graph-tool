@@ -28,6 +28,9 @@ libgraph_tool_inference_la_SOURCES = \
     blockmodel/graph_blockmodel_multicanonical.cc \
     blockmodel/graph_blockmodel_multicanonical_multiflip.cc \
     blockmodel/graph_blockmodel_multiflip_mcmc.cc \
+    modularity/graph_modularity.cc \
+    modularity/graph_modularity_mcmc.cc \
+    modularity/graph_modularity_multiflip_mcmc.cc \
     partition_centroid/graph_partition_centroid.cc \
     partition_centroid/graph_partition_centroid_mcmc.cc \
     partition_centroid/graph_partition_centroid_multiflip_mcmc.cc \
@@ -109,6 +112,7 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     blockmodel/graph_blockmodel_partition.hh \
     blockmodel/graph_blockmodel_util.hh \
     blockmodel/graph_blockmodel_weights.hh \
+    modularity/graph_modularity.hh \
     partition_centroid/graph_partition_centroid.hh \
     partition_centroid/graph_partition_centroid_rmi.hh \
     partition_modes/graph_partition_mode.hh \
