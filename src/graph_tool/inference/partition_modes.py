@@ -459,6 +459,7 @@ class ModeClusterState(object):
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
         parameter documentation. """
 
+        oentropy_args = "."
         mcmc_state = DictState(locals())
         mcmc_state.vlist = Vector_size_t()
         mcmc_state.vlist.resize(len(self.b))
@@ -501,6 +502,7 @@ class ModeClusterState(object):
         nproposal = Vector_size_t(4)
         nacceptance = Vector_size_t(4)
         force_move = kwargs.pop("force_move", False)
+        oentropy_args = "."
         mcmc_state = DictState(locals())
         mcmc_state.state = self._state
         mcmc_state.c = 0

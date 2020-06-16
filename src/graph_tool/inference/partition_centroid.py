@@ -109,6 +109,7 @@ class PartitionCentroidState(object):
         network partitions. See
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
         parameter documentation. """
+        oentropy_args = "."
         mcmc_state = DictState(locals())
         mcmc_state.vlist = Vector_size_t()
         mcmc_state.vlist.resize(len(self.b))
@@ -141,17 +142,20 @@ class PartitionCentroidState(object):
         return dS, nattempts, nmoves
 
 
-    def multiflip_mcmc_sweep(self, beta=1., psingle=100, psplit=1, pmerge=1,
+    def multiflip_mcmc_sweep(self, beta=1., psingle=None, psplit=1, pmerge=1,
                              pmergesplit=1, d=0.01, gibbs_sweeps=10, niter=1,
                              accept_stats=None, verbose=False, **kwargs):
         r"""Perform sweeps of a merge-split Metropolis-Hastings rejection sampling MCMC
         to sample network partitions. See
         :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
         parameter documentation."""
+        if psingle is None:
+            psingle = len(self.b)
         gibbs_sweeps = max(gibbs_sweeps, 1)
         nproposal = Vector_size_t(4)
         nacceptance = Vector_size_t(4)
         force_move = kwargs.pop("force_move", False)
+        oentropy_args = "."
         mcmc_state = DictState(locals())
         mcmc_state.state = self._state
         mcmc_state.c = 0
