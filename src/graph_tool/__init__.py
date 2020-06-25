@@ -856,6 +856,8 @@ class VertexPropertyMap(PropertyMap):
         return PropertyArray(a, self)
 
     def __eq__(self, other):
+        if not isinstance(other, VertexPropertyMap):
+            return False
         g = self.get_graph()
         if g.base is not other.get_graph().base:
             return False
@@ -898,6 +900,8 @@ class EdgePropertyMap(PropertyMap):
         return PropertyArray(a, self)
 
     def __eq__(self, other):
+        if not isinstance(other, EdgePropertyMap):
+            return False
         g = self.get_graph()
         if g.base is not other.get_graph().base:
             return False
