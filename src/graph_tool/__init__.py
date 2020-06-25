@@ -3288,8 +3288,8 @@ def load_graph(file_name, fmt="auto", ignore_vp=None, ignore_ep=None,
 
 def load_graph_from_csv(file_name, directed=False, eprop_types=None,
                         eprop_names=None, string_vals=True, hashed=False,
-                        skip_first=False, ecols=(0,1),
-                        csv_options={"delimiter": ",","quotechar": '"'}):
+                        skip_first=False, strip_whitespace=True, ecols=(0,1),
+                        csv_options={"delimiter": ",", "quotechar": '"'}):
     """Load a graph from a :mod:`csv` file containing a list of edges and edge
     properties.
 
@@ -3303,8 +3303,10 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
         List of edge property types to be read from remaining columns (if this
         is ``None``, all properties will be of type ``string``.
     eprop_names : list of ``str`` (optional, default: ``None``)
-        List of edge property names to be used for the remaining columns (if this
-        is ``None``, the properties will be called "c1, c2, ...").
+        List of edge property names to be used for the remaining columns (if
+        this is ``None``, and ``skip_first`` is ``True`` their values will be
+        obtained from the first line, otherwise they will be called ``c1, c2,
+        ...``).
     string_vals : ``bool`` (optional, default: ``True``)
         If ``True``, the vertex values are assumed to be arbitrary strings,
         otherwise they will be assumed to correspond to integers.
@@ -3317,6 +3319,9 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
         ``hashed = True``.
     skip_first : ``bool`` (optional, default: ``False``)
         If ``True`` the first line of the file will be skipped.
+    strip_whitespace : ``bool`` (optional, default: ``True``)
+        If ``True`` whitespace will be striped from the start and end of values,
+        before processing them.
     ecols : pair of ``int`` (optional, default: ``(0,1)``)
         Line columns used as source and target for the edges.
     csv_options : ``dict`` (optional, default: ``{"delimiter": ",", "quotechar": '"'}``)
@@ -3343,10 +3348,21 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
         else:
             file_name = open(file_name, "r")
     _csv_options = {"delimiter": ",", "quotechar": '"'}
-    _csv_options.update(csv_options)
+    if  "dialect" in csv_options:
+        _csv_options = csv_options
+    else:
+        _csv_options.update(csv_options)
     r = csv.reader(file_name, **_csv_options)
+
+    if strip_whitespace:
+        def strip(r):
+            for row in r:
+                yield (x.strip() for x in row)
+        r = strip(r)
+
     if skip_first:
-        next(r)
+        first_line = list(next(r))
+
     if ecols != (0, 1):
         def reorder(rows):
             for row in rows:
@@ -3357,15 +3373,18 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
                 del row[max(ecols)-1]
                 yield [s, t] + row
         r = reorder(r)
+
     if not string_vals:
         def conv(rows):
             for row in rows:
+                row = list(row)
                 row = list(row)
                 row[0] = int(row[0])
                 row[1] = int(row[1])
                 yield row
         r = conv(r)
-    line = next(r)
+
+    line = list(next(r))
     g = Graph(directed=directed)
 
     if eprop_types is None:
@@ -3378,8 +3397,13 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
                            hashed=hashed or string_vals,
                            eprops=eprops)
 
+    if eprop_names is None and skip_first and len(first_line) == len(line):
+        eprop_names = list(first_line)
+        del eprop_names[min(ecols)]
+        del eprop_names[max(ecols)-1]
+
     for i, p in enumerate(eprops):
-        if eprop_names:
+        if eprop_names is not None:
             ename = eprop_names[i]
         else:
             ename = "c%d" % i
