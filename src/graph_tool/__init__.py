@@ -3433,7 +3433,7 @@ class GraphView(Graph):
     The argument ``g`` must be an instance of a :class:`~graph_tool.Graph`
     class. If specified, ``vfilt`` and ``efilt`` select which vertices and edges
     are filtered, respectively. These parameters can either be a boolean-valued
-    :class:`~graph_tool.PropertyMap` or a :class:`~numpy.ndarray`, which specify
+    :class:`~graph_tool.PropertyMap` or :class:`~numpy.ndarray`, which specify
     which vertices/edges are selected, or an unary function that returns
     ``True`` if a given vertex/edge is to be selected, or ``False`` otherwise.
 
