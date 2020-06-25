@@ -34,7 +34,8 @@ using namespace boost;
 
 // get Newman's modularity of a given community partition
 template <class Graph, class WeightMap, class CommunityMap>
-double get_modularity(const Graph& g, WeightMap weights, CommunityMap b)
+double get_modularity(const Graph& g, double gamma, WeightMap weights,
+                      CommunityMap b)
 {
     size_t B = 0;
     for (auto v : vertices_range(g))
@@ -64,7 +65,7 @@ double get_modularity(const Graph& g, WeightMap weights, CommunityMap b)
 
     double Q = 0;
     for (size_t r = 0; r < B; ++r)
-        Q += err[r] - (er[r] * er[r]) / W;
+        Q += err[r] - gamma * (er[r] / W) * er[r];
     Q /= W;
     return Q;
 };

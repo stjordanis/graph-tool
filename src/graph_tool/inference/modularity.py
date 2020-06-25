@@ -27,9 +27,9 @@ import numpy as np
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
 
-def modularity(g, b, weight=None):
+def modularity(g, b, gamma=1., weight=None):
     r"""
-    Calculate Newman's modularity of a network partition.
+    Calculate Newman's (generalized) modularity of a network partition.
 
     Parameters
     ----------
@@ -37,6 +37,8 @@ def modularity(g, b, weight=None):
         Graph to be used.
     b : :class:`~graph_tool.VertexPropertyMap`
         Vertex property map with the community partition.
+    gamma : ``float`` (optional, default: ``1.``)
+        Resolution parameter.
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
         Edge property map with the optional edge weights.
 
@@ -79,7 +81,7 @@ def modularity(g, b, weight=None):
     if b.value_type() not in ["bool", "int16_t", "int32_t", "int64_t",
                               "unsigned long"]:
         b = perfect_prop_hash([b])[0]
-    Q = libinference.modularity(g._Graph__graph,
+    Q = libinference.modularity(g._Graph__graph, gamma,
                                 _prop("e", g, weight),
                                 _prop("v", g, b))
     return Q

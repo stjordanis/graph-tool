@@ -24,7 +24,8 @@ using namespace std;
 using namespace boost;
 using namespace graph_tool;
 
-double modularity(GraphInterface& gi, boost::any weight, boost::any property)
+double modularity(GraphInterface& gi, double gamma, boost::any weight,
+                  boost::any property)
 {
     double Q = 0;
 
@@ -36,7 +37,7 @@ double modularity(GraphInterface& gi, boost::any weight, boost::any property)
         weight = weight_map_t();
 
     run_action<>()
-        (gi, [&](auto& g, auto& w, auto& b){ Q = get_modularity(g, w, b);},
+        (gi, [&](auto& g, auto& w, auto& b){ Q = get_modularity(g, gamma, w, b);},
          edge_props_t(), vertex_scalar_properties())
         (weight, property);
 
