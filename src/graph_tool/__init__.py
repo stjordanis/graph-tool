@@ -855,6 +855,14 @@ class VertexPropertyMap(PropertyMap):
             return None
         return PropertyArray(a, self)
 
+    def __eq__(self, other):
+        g = self.get_graph()
+        if g.base is not other.get_graph().base:
+            return False
+        return libcore.compare_vertex_properties(g._Graph__graph,
+                                                 self._get_any(),
+                                                 other._get_any())
+
 class EdgePropertyMap(PropertyMap):
     """This class provides a mapping from edges to arbitrary properties.
 
@@ -888,6 +896,14 @@ class EdgePropertyMap(PropertyMap):
         if a is None:
             return None
         return PropertyArray(a, self)
+
+    def __eq__(self, other):
+        g = self.get_graph()
+        if g.base is not other.get_graph().base:
+            return False
+        return libcore.compare_edge_properties(g._Graph__graph,
+                                               self._get_any(),
+                                               other._get_any())
 
 class GraphPropertyMap(PropertyMap):
     """This class provides a mapping from graphs to arbitrary properties.

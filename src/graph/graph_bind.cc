@@ -440,6 +440,13 @@ void copy_external_edge_property(const GraphInterface& src,
                                  boost::any prop_src,
                                  boost::any prop_tgt);
 
+bool compare_vertex_properties(const GraphInterface& gi,
+                               boost::any prop1,
+                               boost::any prop2);
+bool compare_edge_properties(const GraphInterface& gi,
+                             boost::any prop1,
+                             boost::any prop2);
+
 void export_python_interface();
 
 void export_openmp();
@@ -569,6 +576,8 @@ BOOST_PYTHON_MODULE(libgraph_tool_core)
     def("set_vertex_property", &set_vertex_property);
     def("set_edge_property", &set_edge_property);
     def("copy_external_edge_property", &copy_external_edge_property);
+    def("compare_vertex_properties", &compare_vertex_properties);
+    def("compare_edge_properties", &compare_edge_properties);
 
     class_<LibInfo>("mod_info")
         .add_property("name", &LibInfo::GetName)

@@ -39,3 +39,33 @@ void GraphInterface::copy_vertex_property(const GraphInterface& src,
          all_graph_views(), all_graph_views(), writable_vertex_properties())
         (this->get_graph_view(), src.get_graph_view(), prop_tgt);
 }
+
+bool compare_vertex_properties(const GraphInterface& gi,
+                               boost::any prop1,
+                               boost::any prop2)
+{
+    bool ret = false;
+    gt_dispatch<>()
+        ([&](auto& g, auto p1, auto p2)
+         {
+             ret = compare_props<vertex_selector>(g, p1, p2);
+         },
+         all_graph_views(), vertex_properties(), vertex_properties())
+        (gi.get_graph_view(), prop1, prop2);
+    return ret;
+}
+
+bool compare_edge_properties(const GraphInterface& gi,
+                             boost::any prop1,
+                             boost::any prop2)
+{
+    bool ret = false;
+    gt_dispatch<>()
+        ([&](auto& g, auto p1, auto p2)
+         {
+             ret = compare_props<edge_selector>(g, p1, p2);
+         },
+         all_graph_views(), edge_properties(), edge_properties())
+        (gi.get_graph_view(), prop1, prop2);
+    return ret;
+}

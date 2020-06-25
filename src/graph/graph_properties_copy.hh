@@ -21,6 +21,7 @@
 #include "graph.hh"
 #include "graph_filtering.hh"
 #include "graph_properties.hh"
+#include "graph_util.hh"
 
 #include <boost/mpl/contains.hpp>
 #include <boost/python/extract.hpp>
@@ -77,6 +78,48 @@ struct copy_property
     }
 
 };
+
+template <class IteratorSel, class Graph, class Prop1, class Prop2>
+bool compare_props(Graph& g, Prop1 p1, Prop2 p2)
+{
+    typedef typename boost::property_traits<Prop1>::value_type t1;
+    typedef typename boost::property_traits<Prop2>::value_type t2;
+    typename IteratorSel::template apply<Graph>::type vi, vi_end;
+    std::tie(vi, vi_end) = IteratorSel::range(g);
+    try
+    {
+        for (; vi != vi_end; ++vi)
+        {
+            auto v = *vi;
+            if constexpr (std::is_same_v<t1, t2>)
+            {
+                if (p1[v] != p2[v])
+                    return false;
+            }
+            else if constexpr (std::is_same_v<t1, boost::python::object>)
+            {
+                if (p1[v] != boost::python::object(p2[v]))
+                    return false;
+            }
+            else if constexpr (std::is_same_v<t2, boost::python::object>)
+            {
+                if (p2[v] != boost::python::object(p1[v]))
+                    return false;
+            }
+            else
+            {
+                if (boost::lexical_cast<t1>(p2[v]) != p1[v])
+                    return false;
+            }
+        }
+    }
+    catch (boost::bad_lexical_cast&)
+    {
+        return false;
+    }
+    return true;
+};
+
 
 struct edge_selector
 {
