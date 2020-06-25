@@ -414,6 +414,31 @@ class PropertyMap(object):
                 pmap[v] = copy.deepcopy(self[v], memo)
             return pmap
 
+    def coerce_type(self, full=True):
+        """Return a copy of the property map with the most appropriate type, i.e. the
+        simplest type necessary to accomodate all the values exactly. If ``full
+        == False``, in the case of filtered graphs only the unmasked values are
+        copied (with the remaining ones taking the type-dependent default
+        value).
+        """
+        types = ["bool", "int16_t", "int32_t", "int64_t", "double",
+                 "long double", "vector<bool>", "vector<int16_t>",
+                 "vector<int32_t>", "vector<int64_t>", "vector<double>",
+                 "vector<long double>", "string", "vector<string>"]
+        for t in types:
+            try:
+                p = self.copy(value_type=t, full=full)
+                if t == "bool":
+                    a = p.a if full else p.fa
+                    if p.a.max() > 1:
+                        continue
+                if p.copy(value_type=self.value_type(), full=full) == self:
+                    break
+            except (TypeError, ValueError, OverflowError):
+                pass
+        return p
+
+
     def get_graph(self):
         """Get the graph class to which the map refers."""
         g = self.__g()
