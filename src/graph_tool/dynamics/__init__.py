@@ -227,7 +227,7 @@ class SIState(EpidemicStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
+               (1-r_i)\left[1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right] + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -296,16 +296,16 @@ class SISState(DiscreteStateBase):
         ----------
         g : :class:`~graph_tool.Graph`
            Graph to be used for the dynamics
-        beta : ``float`` (optional, default: ``1.``)
+        beta : ``float`` or :class:`~graph_tool.EdgePropertyMap` (optional, default: ``1.``)
            Transmission probability.
-        gamma : ``float`` (optional, default: ``.1``)
+        gamma : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            Recovery probability.
-        r : ``float`` (optional, default: ``0.``)
+        r : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``0.``)
            Spontaneous infection probability.
         exposed : ``boolean`` (optional, default: ``False``)
            If ``True``, an SEIS model is simulated, with an additional "exposed"
            state.
-        epsilon : ``float`` (optional, default: ``.1``)
+        epsilon : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
@@ -335,7 +335,7 @@ class SISState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
+               (1-r_i)\left[1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right] + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -405,16 +405,16 @@ class SIRState(DiscreteStateBase):
         ----------
         g : :class:`~graph_tool.Graph`
            Graph to be used for the dynamics
-        beta : ``float`` (optional, default: ``1.``)
+        beta : ``float`` or :class:`~graph_tool.EdgePropertyMap` (optional, default: ``1.``)
            Transmission probability.
-        gamma : ``float`` (optional, default: ``.1``)
+        gamma : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            Recovery probability.
-        r : ``float`` (optional, default: ``0.``)
+        r : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``0.``)
            Spontaneous infection probability.
         exposed : ``boolean`` (optional, default: ``False``)
            If ``True``, an SEIR model is simulated, with an additional "exposed"
            state.
-        epsilon : ``float`` (optional, default: ``.1``)
+        epsilon : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
@@ -444,7 +444,7 @@ class SIRState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
+               (1-r_i)\left[1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right] + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
@@ -525,18 +525,18 @@ class SIRSState(DiscreteStateBase):
         ----------
         g : :class:`~graph_tool.Graph`
            Graph to be used for the dynamics
-        beta : ``float`` (optional, default: ``1.``)
+        beta : ``float`` or :class:`~graph_tool.EdgePropertyMap` (optional, default: ``1.``)
            Transmission probability.
-        gamma : ``float`` (optional, default: ``.1``)
+        gamma : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            I to R recovery probability.
-        mu : ``float`` (optional, default: ``.1``)
+        mu : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            R to S recovery probability.
-        r : ``float`` (optional, default: ``0.``)
+        r : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``0.``)
            Spontaneous infection probability.
         exposed : ``boolean`` (optional, default: ``False``)
            If ``True``, an SEIRS model is simulated, with an additional "exposed"
            state.
-        epsilon : ``float`` (optional, default: ``.1``)
+        epsilon : ``float`` or :class:`~graph_tool.VertexPropertyMap` (optional, default: ``.1``)
            Susceptible to exposed transition probability. This only has an
            effect if ``exposed=True``.
         v0 : ``int`` or :class:`~graph_tool.Vertex` (optional, default: ``None``)
@@ -567,7 +567,7 @@ class SIRSState(DiscreteStateBase):
         1. If :math:`s_i(t) = 0`, we have :math:`s_i(t+1) = 1` with probability
             .. math::
 
-               (1-r_i)\left(1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right) + r_i,
+               (1-r_i)\left[1-\prod_j(1-\beta_{ij})^{A_{ij}\delta_{s_j(t),1}}\right] + r_i,
 
            otherwise :math:`s_i(t+1) = 0`.
 
