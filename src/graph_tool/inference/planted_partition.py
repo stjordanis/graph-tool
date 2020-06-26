@@ -62,6 +62,12 @@ class PPBlockState(object):
     b : :class:`~graph_tool.PropertyMap` (optional, default: ``None``)
         Initial partition. If not supplied, a partition into a single group will
         be used.
+
+    References
+    ----------
+    .. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
+       inference of assortative community structures", :arxiv:`2006.14493`
+
     """
 
     def __init__(self, g, b=None):
@@ -111,6 +117,14 @@ class PPBlockState(object):
     def __repr__(self):
         return "<PPBlockState object with %d blocks, for graph %s, at 0x%x>" % \
             (self.get_B(), str(self.g), id(self))
+
+    def get_blocks(self):
+        r"""Returns the property map which contains the block labels for each vertex."""
+        return self.b
+
+    def get_state(self):
+        """Alias to :meth:`~PPBlockState.get_blocks`."""
+        return self.get_blocks()
 
     def get_B(self):
         r"Returns the total number of blocks."
@@ -209,6 +223,10 @@ class PPBlockState(object):
         For the partition prior :math:`P(\boldsymbol{b})` please refer to
         :func:`~graph_tool.inference.blockmodel.model_entropy`.
 
+        References
+        ----------
+        .. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
+           inference of assortative community structures", :arxiv:`2006.14493`
         """
 
         entropy_args = dict(self._entropy_args, **locals())

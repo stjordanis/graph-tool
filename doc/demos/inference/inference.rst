@@ -82,6 +82,9 @@ References
 .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
    dissensus between network partitions", :arxiv:`2005.13977`
 
+.. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
+   inference of assortative community structures", :arxiv:`2006.14493`
+
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8
    041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
