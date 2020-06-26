@@ -161,16 +161,18 @@ figure.
 
 .. note::
 
-   With the SBM no constraints are imposed on what `kind` of modular
+   With the SBM, no constraints are imposed on what `kind` of modular
    structure is allowed, as the matrix of edge counts :math:`e` is
    unconstrained. Hence, we can detect the putatively typical pattern of
-   `"community structure"
+   assortative `"community structure"
    <https://en.wikipedia.org/wiki/Community_structure>`_, i.e. when
    nodes are connected mostly to other nodes of the same group, if it
    happens to be the most likely network description, but we can also
    detect a large multiplicity of other patterns, such as `bipartiteness
    <https://en.wikipedia.org/wiki/Bipartite_graph>`_, core-periphery,
-   and many others, all under the same inference framework.
+   and many others, all under the same inference framework. If you are
+   interested in searching exclusively for assortative structures, see
+   Sec. :ref:`planted_partition`.
 
 
 Although quite general, the traditional model assumes that the edges are
