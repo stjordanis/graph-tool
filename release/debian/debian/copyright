@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: graph-tool
+Upstream-Contact: Tiago de Paula Peixoto <tiago@skewed.de>
+Source: https://graph-tool.skewed.de
+
+Files: *
+Copyright: 2006-2020 Tiago de Paula Peixoto
+License: LGPL-3+

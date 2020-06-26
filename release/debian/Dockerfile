@@ -15,7 +15,6 @@ ARG REF
 
 RUN git reset --hard $REF
 ADD debian debian
-RUN cp LICENSE debian/copyright
 ADD git2debchangelog.sh .
 RUN /bin/bash git2debchangelog.sh > debian/changelog
 
