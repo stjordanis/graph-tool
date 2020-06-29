@@ -117,6 +117,10 @@ try:
     import lzma
 except ImportError:
     pass
+try:
+    import zstandard
+except ImportError:
+    pass
 import weakref
 import copy
 import textwrap
@@ -124,6 +128,7 @@ import io
 import collections.abc
 import itertools
 import csv
+import contextlib
 
 from .decorators import _require, _limit_args, _copy_func
 
@@ -2793,7 +2798,8 @@ class Graph(object):
     def __get_file_format(self, file_name):
         fmt = None
         for f in ["gt", "graphml", "xml", "dot", "gml"]:
-            names = ["." + f, ".%s.gz" % f, ".%s.bz2" % f, ".%s.xz" % f]
+            names = ["." + f, ".%s.gz" % f, ".%s.bz2" % f, ".%s.xz" % f,
+                     ".%s.zst" % f]
             for name in names:
                 if file_name.endswith(name):
                     fmt = f
@@ -2823,16 +2829,29 @@ class Graph(object):
 
         if isinstance(file_name, str):
             file_name = os.path.expanduser(file_name)
-            f = open(file_name) # throw the appropriate exception, if not found
+            with open(file_name) as f: # throw the appropriate exception
+                pass
         if fmt == 'auto' and isinstance(file_name, str):
             fmt = self.__get_file_format(file_name)
         elif fmt == "auto":
             fmt = "gt"
-        if isinstance(file_name, str) and file_name.endswith(".xz"):
-            try:
-                file_name = lzma.open(file_name, mode="rb")
-            except NameError:
-                raise NotImplementedError("lzma compression is only available in Python >= 3.3")
+        fctx = contextlib.suppress()
+        if isinstance(file_name, str):
+            if file_name.endswith(".xz"):
+                try:
+                    fctx = file_name = lzma.open(file_name, mode="rb")
+                except NameError:
+                    raise NotImplementedError("lzma compression is only available in Python >= 3.3")
+            elif file_name.endswith(".zst"):
+                try:
+                    cctx = zstandard.ZstdDecompressor()
+                except NameError:
+                    raise NotImplementedError("zstandard module not installed")
+                fctx = contextlib.ExitStack()
+                f = open(file_name, mode="rb")
+                fctx.enter_context(f)
+                file_name = cctx.stream_reader(f)
+                fctx.enter_context(file_name)
         if fmt == "graphml":
             fmt = "xml"
         if ignore_vp is None:
@@ -2846,8 +2865,10 @@ class Graph(object):
                                                 fmt, ignore_vp,
                                                 ignore_ep, ignore_gp)
         else:
-            props = self.__graph.read_from_file("", file_name, fmt,
-                                                ignore_vp, ignore_ep, ignore_gp)
+            with fctx:
+                props = self.__graph.read_from_file("", file_name, fmt,
+                                                    ignore_vp, ignore_ep,
+                                                    ignore_gp)
         for name, prop in props[0].items():
             self.vertex_properties[name] = VertexPropertyMap(prop, self)
         for name, prop in props[1].items():
@@ -2908,22 +2929,34 @@ class Graph(object):
         if fmt == "graphml":
             fmt = "xml"
 
-        if isinstance(file_name, str) and file_name.endswith(".xz"):
-            try:
-                file_name = lzma.open(file_name, mode="wb")
-            except NameError:
-                raise NotImplementedError("lzma compression is only available in Python >= 3.3")
+        fctx = contextlib.suppress()
+        if isinstance(file_name, str):
+            if file_name.endswith(".xz"):
+                try:
+                    fctx = file_name = lzma.open(file_name, mode="wb")
+                except NameError:
+                    raise NotImplementedError("lzma compression is only available in Python >= 3.3")
+            elif file_name.endswith(".zst"):
+                try:
+                    cctx = zstandard.ZstdCompressor(level=19)
+                except NameError:
+                    raise NotImplementedError("zstandard module not installed")
+                fctx = contextlib.ExitStack()
+                f = open(file_name, mode="wb")
+                fctx.enter_context(f)
+                file_name = cctx.stream_writer(f)
+                fctx.enter_context(file_name)
 
         props = [(name[1], prop._PropertyMap__map) for name, prop in \
                  u.__properties.items()]
 
         if isinstance(file_name, str):
-            f = open(file_name, "w") # throw the appropriate exception, if
-                                     # unable to open
-            f.close()
+            with open(file_name, "w"): # throw the appropriate exception, if
+                pass                   # unable to open
             u.__graph.write_to_file(file_name, None, fmt, props)
         else:
-            u.__graph.write_to_file("", file_name, fmt, props)
+            with fctx:
+                u.__graph.write_to_file("", file_name, fmt, props)
 
 
     # Directedness

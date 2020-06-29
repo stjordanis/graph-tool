@@ -115,14 +115,9 @@ public:
     std::streamsize write(const char* s, std::streamsize n)
     {
         string buf(s, s+n);
-#if (PY_MAJOR_VERSION >= 3)
-        // in python 3 we need to construct a 'bytes' instance
         PyObject* bytes = PyBytes_FromStringAndSize(s, n);
         boost::python::handle<> x(bytes);
         boost::python::object pbuf(x);
-#else
-        boost::python::str pbuf(buf);
-#endif
         _file.attr("write")(pbuf);
         return n;
     }
