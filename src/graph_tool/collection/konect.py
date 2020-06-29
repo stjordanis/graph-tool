@@ -61,7 +61,7 @@ def load_koblenz_dir(dirname):
                     count = 0
                     for line in open(os.path.join(root, f)):
                         vals = line.split()
-                        if len(vals) == 1 and vals[0] == "%":
+                        if len(vals) == 0 or (len(vals) == 1 and vals[0] == "%"):
                             continue
                         if vals[0] == "%":
                             g.gp.meta_desc = g.new_graph_property("string", line)
