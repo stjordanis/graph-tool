@@ -2562,7 +2562,7 @@ class Graph(object):
         w = max([len(x[0]) for x in list(self.__properties.keys())]) + 4
         w = w if w > 14 else 14
 
-        for k, v in sorted(self.graph_properties.items(), key=lambda k: k[0]):
+        for k, v in self.graph_properties.items():
             pref="%%-%ds (graph)   (type: %%s, val: " % w %  (k, v.value_type())
             val = str(v[self])
             if len(val) > 1000:
