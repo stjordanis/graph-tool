@@ -1480,11 +1480,11 @@ class PropertyDict(object):
 
     def clear(self):
         keys = []
-        for k in self.properties.items():
+        for k in self.properties.keys():
             if k[0] == self.t:
-                keys.append(k[1])
+                keys.append(k)
         for k in keys:
-            del self.properties[(self.t, k)]
+            del self.properties[k]
 
     def __len__(self):
         count = 0
@@ -1513,8 +1513,10 @@ class PropertyDict(object):
 
     def keys(self):
         return self.iterkeys()
+
     def values(self):
         return self.itervalues()
+
     def __repr__(self):
         temp = dict([(k[1], v) for k, v in self.properties.items() if k[0] == self.t])
         return repr(temp)
