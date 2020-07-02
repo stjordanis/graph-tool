@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import os.path
 import tempfile
 from urllib.request import urlopen, URLError
@@ -28,31 +29,54 @@ import numpy
 
 from .. import Graph
 
+def loadtxt_buf(f, buf_size=100000, **kwargs):
+    rows = [None]
+    while len(rows) > 0:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            rows = numpy.loadtxt(f, max_rows=buf_size, **kwargs)
+        if len(rows) > 0:
+            yield rows
+
 def load_koblenz_dir(dirname):
     g = Graph()
-    g.gp.meta = g.new_graph_property("string")
-    g.gp.readme = g.new_graph_property("string")
+    g.gp.meta = g.new_gp("string")
+    g.gp.readme = g.new_gp("string")
     for root, dirs, files in os.walk(dirname):
         for f in files:
             if f.startswith("README"):
-                g.gp.readme = open(os.path.join(root, f)).read()
+                with open(os.path.join(root, f)) as fo:
+                    g.gp.readme = fo.read()
             if f.startswith("meta."):
-                g.gp.meta = open(os.path.join(root, f)).read()
+                with open(os.path.join(root, f)) as fo:
+                    g.gp.meta = fo.read()
             if f.startswith("out."):
-                edges = numpy.loadtxt(os.path.join(root, f), comments="%")
-                line = next(open(os.path.join(root, f)))
-                if "asym" not in line:
-                    g.set_directed(False)
-                edges[:,:2] -= 1  # we need zero-based indexing
-                if "bip" in line: # bipartite graphs have non-unique indexing
-                    edges[:,1] += edges[:,0].max() + 1
-                g.add_edge_list(edges[:,:2])
-                if edges.shape[1] > 2:
-                    g.ep.weight = g.new_edge_property("double")
-                    g.ep.weight.a = edges[:,2]
-                if edges.shape[1] > 3:
-                    g.ep.time = g.new_edge_property("int")
-                    g.ep.time.a = edges[:,3]
+                chunk_size = 100000
+                bip = False
+                with open(os.path.join(root, f), "r") as fo:
+                    line = next(fo)
+                    if "asym" not in line:
+                        g.set_directed(False)
+                    if "bip" in line: # bipartite graphs have non-unique indexing
+                        bip = True
+                if bip:
+                    N1 = 0
+                    with open(os.path.join(root, f), "r") as fo:
+                        for edges in loadtxt_buf(fo, comments="%"):
+                            N1 = max(edges[:,0].max(), N1)
+                with open(os.path.join(root, f), "r") as fo:
+                    eprops = []
+                    for edges in loadtxt_buf(fo, comments="%"):
+                        edges[:,:2] -= 1  # we need zero-based indexing
+                        if bip:
+                            edges[:,1] += N1
+                        if edges.shape[1] > 2 and len(eprops) < 1:
+                            g.ep.weight = g.new_ep("double")
+                            eprops.append(g.ep.weight)
+                        if edges.shape[1] > 3 and len(eprops) < 2:
+                            g.ep.time = g.new_ep("int64_t")
+                            eprops.append(g.ep.time)
+                        g.add_edge_list(edges, eprops=eprops)
         for f in files:
             if f.startswith("ent."):
                 try:
@@ -64,7 +88,7 @@ def load_koblenz_dir(dirname):
                         if len(vals) == 0 or (len(vals) == 1 and vals[0] == "%"):
                             continue
                         if vals[0] == "%":
-                            g.gp.meta_desc = g.new_graph_property("string", line)
+                            g.gp.meta_desc = g.new_gp("string", line)
                             continue
                         v = g.vertex(count)
                         meta[v] = line.strip()
