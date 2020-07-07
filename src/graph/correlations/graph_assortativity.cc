@@ -94,12 +94,16 @@ assortativity_coefficient(GraphInterface& gi, GraphInterface::deg_t deg,
         weight = weight_map_t();
 
     double a = 0, a_err = 0;
-    run_action<>()(gi,std::bind(get_assortativity_coefficient(),
-                                std::placeholders::_1, std::placeholders::_2,
-                                std::placeholders::_3,
-                                std::ref(a), std::ref(a_err)),
-                   all_selectors(), weight_props_t())
-        (degree_selector(deg), weight);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_assortativity_coefficient()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), a, a_err);
+         },
+         all_selectors(), weight_props_t())(degree_selector(deg), weight);
     return make_pair(a, a_err);
 }
 
@@ -118,12 +122,16 @@ scalar_assortativity_coefficient(GraphInterface& gi, GraphInterface::deg_t deg,
         weight = weight_map_t();
 
     double a = 0, a_err = 0;
-    run_action<>()(gi, std::bind(get_scalar_assortativity_coefficient(),
-                                 std::placeholders::_1, std::placeholders::_2,
-                                 std::placeholders::_3,
-                                 std::ref(a), std::ref(a_err)),
-                   scalar_selectors(), weight_props_t())
-        (degree_selector(deg), weight);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_scalar_assortativity_coefficient()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), a, a_err);
+         },
+         scalar_selectors(), weight_props_t())(degree_selector(deg), weight);
     return make_pair(a, a_err);
 }
 

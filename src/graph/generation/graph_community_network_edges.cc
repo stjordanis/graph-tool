@@ -21,7 +21,6 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
-#include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
@@ -75,10 +74,16 @@ void community_network_edges(GraphInterface& gi, GraphInterface& cgi,
         eweight = no_eweight_map_t();
 
     run_action<>()
-        (gi, std::bind(get_community_network_edges_dispatch(self_loops, parallel_edges),
-                       std::placeholders::_1, std::ref(cgi.get_graph()), cgi.get_edge_index(),
-                       std::placeholders::_2, condensed_community_property,
-                       std::placeholders::_3, edge_count),
-         writable_vertex_properties(), eweight_properties())
-        (community_property, eweight);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_community_network_edges_dispatch(self_loops,
+                                                         parallel_edges)(
+                 std::forward<decltype(graph)>(graph), cgi.get_graph(),
+                 cgi.get_edge_index(), std::forward<decltype(a2)>(a2),
+                 condensed_community_property, std::forward<decltype(a3)>(a3),
+                 edge_count);
+         },
+         writable_vertex_properties(),
+         eweight_properties())(community_property, eweight);
 }

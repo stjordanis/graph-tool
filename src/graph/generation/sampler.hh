@@ -19,7 +19,6 @@
 #define SAMPLER_HH
 
 #include "random.hh"
-#include <functional>
 #include <boost/mpl/if.hpp>
 
 namespace graph_tool

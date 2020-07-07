@@ -38,8 +38,15 @@ void arf_layout(GraphInterface& g, boost::any pos, boost::any weight, double d,
     if(weight.empty())
         weight = weight_map_t();
     run_action<graph_tool::detail::never_directed>()
-        (g, std::bind(get_arf_layout(), std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3, a, d, dt, epsilon, max_iter, dim),
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_arf_layout()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), a, d, dt, epsilon, max_iter,
+                  dim);
+         },
          vertex_floating_vector_properties(), edge_props_t())(pos, weight);
 }
 

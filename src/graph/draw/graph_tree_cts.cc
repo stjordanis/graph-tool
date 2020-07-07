@@ -245,10 +245,16 @@ void get_cts(GraphInterface& gi, GraphInterface& tgi, boost::any otpos,
     beprop_t beta = boost::any_cast<beprop_t>(obeta);
 
     gt_dispatch<>()
-        (std::bind(do_get_cts(), std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, beta, cts, is_tree, max_depth),
-         graph_tool::all_graph_views(),
-         graph_tool::always_directed(),
-         vertex_scalar_vector_properties())
-        (gi.get_graph_view(), tgi.get_graph_view(), otpos);
+        (
+            [&](auto&& graph, auto&& a2, auto&& a3)
+            {
+                return do_get_cts()
+                    (std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2),
+                     std::forward<decltype(a3)>(a3), beta, cts, is_tree,
+                     max_depth);
+            },
+            graph_tool::all_graph_views(), graph_tool::always_directed(),
+            vertex_scalar_vector_properties())(gi.get_graph_view(),
+                                               tgi.get_graph_view(), otpos);
 }

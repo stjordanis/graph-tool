@@ -1852,9 +1852,13 @@ boost::python::object cairo_draw(GraphInterface& gi,
             populate_defaults(ovdefaults, vdefaults);
 
             run_action<>()
-                (gi, std::bind(populate_edge_attrs(), std::placeholders::_1,
-                               oeattrs, std::ref(eattrs), oedefaults,
-                               std::ref(edefaults)))();
+                (gi,
+                 [&](auto&& graph)
+                 {
+                     return populate_edge_attrs()
+                         (std::forward<decltype(graph)>(graph), oeattrs, eattrs,
+                          oedefaults, edefaults);
+                 })();
 
             typedef boost::mpl::push_back<vertex_scalar_properties, no_order>::type
                vorder_t;
@@ -1877,31 +1881,45 @@ boost::python::object cairo_draw(GraphInterface& gi,
 
             if (nodesfirst)
                 run_action<>()
-                    (gi, std::bind(do_cairo_draw_vertices(), std::placeholders::_1,
-                                   std::placeholders::_2, std::placeholders::_3,
-                                   std::ref(vattrs), std::ref(eattrs), std::ref(vdefaults),
-                                   std::ref(edefaults), mtime, dt, std::ref(count),
-                                   std::ref(cr), std::ref(yield)),
+                    (gi,
+                     [&](auto&& graph, auto&& a2, auto&& a3)
+                     {
+                         return do_cairo_draw_vertices()
+                             (std::forward<decltype(graph)>(graph),
+                              std::forward<decltype(a2)>(a2),
+                              std::forward<decltype(a3)>(a3), vattrs, eattrs,
+                              vdefaults, edefaults, mtime, dt, count, cr,
+                              yield);
+                     },
                      vertex_scalar_vector_properties(),
                      vorder_t())(pos, vorder);
 
             run_action<>()
-                (gi, std::bind(do_cairo_draw_edges(), std::placeholders::_1,
-                               std::placeholders::_2, std::placeholders::_3,
-                               std::ref(vattrs), std::ref(eattrs),
-                               std::ref(vdefaults), std::ref(edefaults), res,
-                               mtime, dt, std::ref(count), std::ref(cr), std::ref(yield)),
-                 vertex_scalar_vector_properties(),
-                 eorder_t())(pos, eorder);
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return do_cairo_draw_edges()
+                         (std::forward<decltype(graph)>(graph),
+                          std::forward<decltype(a2)>(a2),
+                          std::forward<decltype(a3)>(a3), vattrs, eattrs,
+                          vdefaults, edefaults, res, mtime, dt, count, cr,
+                          yield);
+                 },
+                 vertex_scalar_vector_properties(), eorder_t())(pos, eorder);
 
             if (!nodesfirst)
             {
                 run_action<>()
-                    (gi, std::bind(do_cairo_draw_vertices(), std::placeholders::_1,
-                                   std::placeholders::_2, std::placeholders::_3,
-                                   std::ref(vattrs), std::ref(eattrs), std::ref(vdefaults),
-                                   std::ref(edefaults), mtime, dt, std::ref(count),
-                                   std::ref(cr), std::ref(yield)),
+                    (gi,
+                     [&](auto&& graph, auto&& a2, auto&& a3)
+                     {
+                         return do_cairo_draw_vertices()
+                             (std::forward<decltype(graph)>(graph),
+                              std::forward<decltype(a2)>(a2),
+                              std::forward<decltype(a3)>(a3), vattrs, eattrs,
+                              vdefaults, edefaults, mtime, dt, count, cr,
+                              yield);
+                     },
                      vertex_scalar_vector_properties(),
                      vorder_t())(pos, vorder);
             }
@@ -1935,8 +1953,13 @@ void apply_transforms(GraphInterface& gi, boost::any pos, double xx, double yx,
 {
     Cairo::Matrix m(xx, yx, xy, yy, x0, y0);
     run_action<>()
-        (gi, std::bind(do_apply_transforms(), std::placeholders::_1,
-                       std::placeholders::_2, std::ref(m)),
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_apply_transforms()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), m);
+         },
          vertex_scalar_vector_properties())(pos);
 }
 
@@ -2082,8 +2105,13 @@ void put_parallel_splines(GraphInterface& gi, boost::any opos,
         angle(loop_angle, vertex_scalar_properties());
 
     run_action<>()
-        (gi, std::bind(do_put_parallel_splines(), std::placeholders::_1, pos, l,
-                       std::placeholders::_2, angle, parallel_distance),
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_put_parallel_splines()
+                 (std::forward<decltype(graph)>(graph), pos, l,
+                  std::forward<decltype(a2)>(a2), angle, parallel_distance);
+         },
          edge_scalar_vector_properties())(splines);
 }
 

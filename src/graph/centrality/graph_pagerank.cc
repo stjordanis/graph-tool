@@ -18,7 +18,6 @@
 #include "graph_filtering.hh"
 
 #include <boost/python.hpp>
-#include <boost/bind.hpp>
 
 #include "graph.hh"
 #include "graph_selectors.hh"
@@ -56,12 +55,17 @@ size_t pagerank(GraphInterface& g, boost::any rank, boost::any pers,
 
     size_t iter;
     run_action<>()
-        (g, std::bind(get_pagerank(),
-                      std::placeholders::_1, g.get_vertex_index(), std::placeholders::_2,
-                      std::placeholders::_3, std::placeholders::_4, d,
-                      epsilon, max_iter, std::ref(iter)),
-         vertex_floating_properties(),
-         pers_props_t(), weight_props_t())(rank, pers, weight);
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+         {
+             return get_pagerank()
+                 (std::forward<decltype(graph)>(graph), g.get_vertex_index(),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3),
+                  std::forward<decltype(a4)>(a4), d, epsilon, max_iter, iter);
+         },
+         vertex_floating_properties(), pers_props_t(),
+         weight_props_t())(rank, pers, weight);
     return iter;
 }
 

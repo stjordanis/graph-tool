@@ -21,8 +21,6 @@
 #include <boost/python.hpp>
 #include <boost/python/type_id.hpp>
 
-#include <functional>
-
 namespace std
 {
     template<>
@@ -184,10 +182,10 @@ public:
         boost::python::object in_deg;
         if (!belongs<edge_scalar_properties>()(pmap))
             throw ValueException("edge weight property must be of scalar type");
-        gt_dispatch<>()(std::bind(get_degree<in_degreeS>(),
-                                  std::ref(g), _v,
-                                  std::placeholders::_1,
-                                  std::ref(in_deg)),
+        gt_dispatch<>()([&g, &in_deg, this](auto const & v)
+                        {
+                            return get_degree<in_degreeS>()(g, _v, v, in_deg);
+                        },
                         edge_scalar_properties())(pmap);
         return in_deg;
     }
@@ -211,10 +209,10 @@ public:
         boost::python::object out_deg;
         if (!belongs<edge_scalar_properties>()(pmap))
             throw ValueException("edge weight property must be of scalar type");
-        gt_dispatch<>()(std::bind(get_degree<out_degreeS>(),
-                                  std::ref(g), _v,
-                                  std::placeholders::_1,
-                                  std::ref(out_deg)),
+        gt_dispatch<>()([&g, &out_deg, this](auto const & v)
+                        {
+                            return get_degree<out_degreeS>()(g, _v, v, out_deg);
+                        },
                         edge_scalar_properties())(pmap);
         return out_deg;
     }
@@ -679,10 +677,12 @@ boost::python::object new_property(const std::string& type, IndexMap index_map,
 {
     boost::python::object prop;
     bool found = false;
-    boost::mpl::for_each<value_types>(std::bind(new_property_map(),
-                                                std::placeholders::_1, index_map,
-                                                std::ref(type), pmap, std::ref(prop),
-                                                std::ref(found)));
+    boost::mpl::for_each<value_types>(
+        [&](auto t)
+        {
+            return new_property_map()(t, index_map, type, pmap, prop, found);
+        });
+
     if (!found)
         throw ValueException("Invalid property type: " + type);
     return prop;

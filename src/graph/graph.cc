@@ -96,7 +96,13 @@ struct clear_vertices
 
 void GraphInterface::clear()
 {
-    run_action<>()(*this, std::bind(clear_vertices(), std::placeholders::_1))();
+    run_action<>()
+        (*this,
+         [&](auto&& graph)
+         {
+             return clear_vertices()
+                 (std::forward<decltype(graph)>(graph));
+         })();
 }
 
 struct do_clear_edges
@@ -111,5 +117,11 @@ struct do_clear_edges
 
 void GraphInterface::clear_edges()
 {
-    run_action<>()(*this, std::bind(do_clear_edges(), std::placeholders::_1))();
+    run_action<>()
+        (*this,
+         [&](auto&& graph)
+         {
+             return do_clear_edges()
+                 (std::forward<decltype(graph)>(graph));
+         })();
 }

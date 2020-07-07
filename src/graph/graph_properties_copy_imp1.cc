@@ -33,12 +33,16 @@ void GraphInterface::copy_edge_property(const GraphInterface& src,
                                         boost::any prop_tgt)
 {
     gt_dispatch<>()
-        (std::bind(copy_property<edge_selector,edge_properties>(),
-                   std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, prop_src),
-         all_graph_views(), all_graph_views(),
-         writable_edge_properties())
-        (this->get_graph_view(), src.get_graph_view(), prop_tgt);
+        (
+            [&](auto&& graph, auto&& a2, auto&& a3)
+            {
+                return copy_property<edge_selector, edge_properties>()(
+                    std::forward<decltype(graph)>(graph),
+                    std::forward<decltype(a2)>(a2),
+                    std::forward<decltype(a3)>(a3), prop_src);
+            },
+            all_graph_views(), all_graph_views(), writable_edge_properties())(
+            this->get_graph_view(), src.get_graph_view(), prop_tgt);
 }
 
 void copy_external_edge_property(const GraphInterface& src,
@@ -47,10 +51,14 @@ void copy_external_edge_property(const GraphInterface& src,
                                  boost::any prop_tgt)
 {
     gt_dispatch<>()
-        (std::bind(copy_external_edge_property_dispatch<edge_properties>(),
-                   std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, prop_src),
-         all_graph_views(), all_graph_views(),
-         writable_edge_properties())
-        (tgt.get_graph_view(), src.get_graph_view(), prop_tgt);
+        (
+            [&](auto&& graph, auto&& a2, auto&& a3)
+            {
+                return copy_external_edge_property_dispatch<edge_properties>()(
+                    std::forward<decltype(graph)>(graph),
+                    std::forward<decltype(a2)>(a2),
+                    std::forward<decltype(a3)>(a3), prop_src);
+            },
+            all_graph_views(), all_graph_views(), writable_edge_properties())(
+            tgt.get_graph_view(), src.get_graph_view(), prop_tgt);
 }

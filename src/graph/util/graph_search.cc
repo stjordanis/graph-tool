@@ -33,10 +33,15 @@ find_vertex_range(GraphInterface& gi, GraphInterface::deg_t deg,
                   python::tuple range)
 {
     python::list ret;
-    run_action<>()(gi, std::bind(find_vertices(), std::placeholders::_1, std::ref(gi),
-                                 std::placeholders::_2, std::ref(range),
-                                 std::ref(ret)),
-                   all_selectors())(degree_selector(deg));
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return find_vertices()
+                 (std::forward<decltype(graph)>(graph), gi,
+                  std::forward<decltype(a2)>(a2), range, ret);
+         },
+         all_selectors())(degree_selector(deg));
     return ret;
 }
 
@@ -52,9 +57,15 @@ find_edge_range(GraphInterface& gi, boost::any eprop, python::tuple range)
 
     GraphInterface::edge_index_map_t eindex =
         any_cast<GraphInterface::edge_index_map_t>(gi.get_edge_index());
-    run_action<>()(gi, std::bind(find_edges(), std::placeholders::_1, std::ref(gi), eindex,
-                                 std::placeholders::_2, std::ref(range), std::ref(ret)),
-                   all_edge_props())(eprop);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return find_edges()
+                 (std::forward<decltype(graph)>(graph), gi, eindex,
+                  std::forward<decltype(a2)>(a2), range, ret);
+         },
+         all_edge_props())(eprop);
     return ret;
 }
 

@@ -105,8 +105,14 @@ void random_matching(GraphInterface& gi, boost::any weight, boost::any match,
         weight = weight_map_t();
 
     run_action<>()
-        (gi, std::bind(do_random_matching(), std::placeholders::_1, gi.get_vertex_index(),
-                       std::placeholders::_2, std::placeholders::_3, minimize, std::ref(rng)),
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_random_matching()
+                 (std::forward<decltype(graph)>(graph), gi.get_vertex_index(),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), minimize, rng);
+         },
          edge_props_t(), writable_vertex_scalar_properties())(weight, match);
 }
 

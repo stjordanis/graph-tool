@@ -374,10 +374,10 @@ void write_property(Graph& g, std::string& name, boost::any& prop, std::ostream&
     write(s, pt);
     write(s, name);
     bool found = false;
-    mpl::for_each<val_types>(std::bind(write_property_dispatch<RangeTraits>(),
-                                       std::placeholders::_1, std::ref(g),
-                                       std::ref(prop), std::ref(found),
-                                       std::ref(s)));
+    mpl::for_each<val_types>([&](auto t)
+                             {
+                                 write_property_dispatch<RangeTraits>()(t, g, prop, found, s);
+                             });
     if (!found)
         throw GraphException("Error writing graph: unknown property map type (this is a bug)");
 }
@@ -427,10 +427,12 @@ read_property(Graph& g, const std::unordered_set<std::string>& ignore,
     bool skip = ignore.find(name) != ignore.end();
     uint8_t val = 0;
     read<BE>(s, val);
-    mpl::for_each<val_types>(std::bind(read_property_dispatch<BE, RangeTraits>(),
-                                       std::placeholders::_1, std::ref(g),
-                                       std::ref(prop), val, skip, std::ref(found),
-                                       std::ref(s)));
+    mpl::for_each<val_types>(
+        [&](auto t)
+        {
+            read_property_dispatch<BE, RangeTraits>()(t, g, prop, val, skip, found, s);
+        });
+
     if (!found)
         throw IOException("Error reading graph: invalid property value type index "
                           + boost::lexical_cast<std::string>(val));

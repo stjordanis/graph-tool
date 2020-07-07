@@ -65,9 +65,13 @@ void get_motifs(GraphInterface& g, size_t k, boost::python::list subgraph_list,
     {
         GraphInterface& sub =
             boost::python::extract<GraphInterface&>(subgraph_list[i]);
-        run_action<>()(sub, std::bind(append_to_list(),
-                                      std::placeholders::_1,
-                                      std::ref(list)))();
+        run_action<>()
+            (sub,
+             [&](auto&& graph)
+             {
+                 return append_to_list()
+                     (std::forward<decltype(graph)>(graph), list);
+             })();
     }
 
     std::vector<size_t> phist;
@@ -91,11 +95,15 @@ void get_motifs(GraphInterface& g, size_t k, boost::python::list subgraph_list,
     std::vector<std::vector<vmap_t> > vmaps;
 
     run_action<>()
-        (g, std::bind(get_all_motifs(collect_vmaps, plist[0], comp_iso,
-                                     fill_list, rng),
-                      std::placeholders::_1, k, std::ref(list), std::ref(phist),
-                      std::ref(vmaps), std::placeholders::_2),
-         boost::mpl::vector<sample_all,sample_some>())(sampler);
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return get_all_motifs(collect_vmaps, plist[0], comp_iso, fill_list,
+                                   rng)(std::forward<decltype(graph)>(graph), k,
+                                        list, phist, vmaps,
+                                        std::forward<decltype(a2)>(a2));
+         },
+         boost::mpl::vector<sample_all, sample_some>())(sampler);
 
     for (size_t i = 0; i < phist.size(); ++i)
         hist.append(phist[i]);
@@ -125,8 +133,12 @@ void get_motifs(GraphInterface& g, size_t k, boost::python::list subgraph_list,
                  boost::mpl::bool_<false>, boost::mpl::bool_<true>,
                  boost::mpl::bool_<true> >::type gviews;
             run_action<gviews>()
-                (sub, std::bind(retrieve_from_list(), std::placeholders::_1,
-                                std::ref(list), std::ref(done)))();
+                (sub,
+                 [&](auto&& graph)
+                 {
+                     return retrieve_from_list()
+                         (std::forward<decltype(graph)>(graph), list, done);
+                 })();
             if (!done)
                 subgraph_list.append(sub);
         }

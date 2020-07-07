@@ -144,27 +144,31 @@ void betweenness(GraphInterface& g, std::vector<size_t>& pivots,
     if (!weight.empty())
     {
         run_action<>()
-            (g, std::bind<>(get_weighted_betweenness(),
-                            std::placeholders::_1,
-                            std::ref(pivots),
-                            g.get_vertex_index(),
-                            std::placeholders::_2,
-                            std::placeholders::_3, weight,
-                            g.get_edge_index_range()),
-             edge_floating_properties(),
-             vertex_floating_properties())
-            (edge_betweenness, vertex_betweenness);
+            (g,
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return get_weighted_betweenness()
+                     (std::forward<decltype(graph)>(graph), pivots,
+                      g.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      std::forward<decltype(a3)>(a3), weight,
+                      g.get_edge_index_range());
+             },
+             edge_floating_properties(), vertex_floating_properties())(
+                edge_betweenness, vertex_betweenness);
     }
     else
     {
         run_action<>()
-            (g, std::bind<void>(get_betweenness(), std::placeholders::_1,
-                                std::ref(pivots),
-                                g.get_vertex_index(), std::placeholders::_2,
-                                std::placeholders::_3),
-             edge_floating_properties(),
-             vertex_floating_properties())
-            (edge_betweenness, vertex_betweenness);
+            (g,
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return get_betweenness()
+                     (std::forward<decltype(graph)>(graph), pivots,
+                      g.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      std::forward<decltype(a3)>(a3));
+             },
+             edge_floating_properties(), vertex_floating_properties())(
+                edge_betweenness, vertex_betweenness);
     }
 }
 
@@ -207,9 +211,14 @@ double central_point(GraphInterface& g,
 {
     double c = 0.0;
     run_action<graph_tool::detail::never_reversed>()
-        (g, std::bind<>(get_central_point_dominance(), std::placeholders::_1,
-                        std::placeholders::_2, std::ref(c)),
-         vertex_scalar_properties()) (vertex_betweenness);
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return get_central_point_dominance()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), c);
+         },
+         vertex_scalar_properties())(vertex_betweenness);
     return c;
 }
 

@@ -514,30 +514,34 @@ void GraphInterface::write_to_file(string file, boost::python::object pfile,
             {
                 // vertex indexes must be between the [0, HardNumVertices(g)] range
                 vector_property_map<size_t> index_map(_vertex_index);
-                run_action<>()(*this, std::bind(generate_index(),
-                                                std::placeholders::_1,
-                                                index_map))();
-                run_action<>()(*this, std::bind(do_write_to_binary_file(),
-                                                std::ref(stream),
-                                                std::placeholders::_1,
-                                                index_map,
-                                                get_num_vertices(),
-                                                directed,
-                                                std::ref(agprops),
-                                                std::ref(avprops),
-                                                std::ref(aeprops)))();
+                run_action<>()
+                    (*this,
+                     [&](auto&& graph)
+                     {
+                         return generate_index()
+                             (std::forward<decltype(graph)>(graph), index_map);
+                     })();
+                run_action<>()
+                    (*this,
+                     [&](auto&& graph)
+                     {
+                         return do_write_to_binary_file()
+                             (stream, std::forward<decltype(graph)>(graph),
+                              index_map, get_num_vertices(), directed, agprops,
+                              avprops, aeprops);
+                     })();
             }
             else
             {
-                run_action<>()(*this, std::bind(do_write_to_binary_file(),
-                                                std::ref(stream),
-                                                std::placeholders::_1,
-                                                _vertex_index,
-                                                get_num_vertices(),
-                                                directed,
-                                                std::ref(agprops),
-                                                std::ref(avprops),
-                                                std::ref(aeprops)))();
+                run_action<>()
+                    (*this,
+                     [&](auto&& graph)
+                     {
+                         return do_write_to_binary_file()
+                             (stream, std::forward<decltype(graph)>(graph),
+                              _vertex_index, get_num_vertices(), directed,
+                              agprops, avprops, aeprops);
+                     })();
             }
 
             _directed = directed;
@@ -559,16 +563,24 @@ void GraphInterface::write_to_file(string file, boost::python::object pfile,
             {
                 // vertex indexes must be between the [0, HardNumVertices(g)] range
                 vector_property_map<size_t> index_map(_vertex_index);
-                run_action<>()(*this, boost::bind<void>(generate_index(),
-                                                        _1, index_map))();
+                run_action<>()
+                    (*this,
+                     [&](auto&& graph)
+                     {
+                         return generate_index()
+                             (std::forward<decltype(graph)>(graph), index_map);
+                     })();
                 if (format == "dot")
                     graphviz_insert_index(dp, index_map);
 
                 run_action<>()
-                    (*this, boost::bind<void>(do_write_to_file(),
-                                              boost::ref(stream), _1,
-                                              index_map, boost::ref(dp),
-                                              format))();
+                    (*this,
+                     [&](auto&& graph)
+                     {
+                         return do_write_to_file()
+                             (stream, std::forward<decltype(graph)>(graph),
+                              index_map, dp, format);
+                     })();
             }
             else
             {
@@ -576,10 +588,13 @@ void GraphInterface::write_to_file(string file, boost::python::object pfile,
                     graphviz_insert_index(dp, _vertex_index);
 
                 run_action<>()
-                    (*this, boost::bind<void>(do_write_to_file(),
-                                              boost::ref(stream), _1,
-                                              _vertex_index,  boost::ref(dp),
-                                              format))();
+                    (*this,
+                     [&](auto&& graph)
+                     {
+                         return do_write_to_file()
+                             (stream, std::forward<decltype(graph)>(graph),
+                              _vertex_index, dp, format);
+                     })();
             }
         }
         stream.reset();

@@ -49,10 +49,13 @@ struct get_vertex_iterator
 python::object get_vertices(GraphInterface& gi)
 {
     python::object iter;
-    run_action<>()(gi, std::bind(get_vertex_iterator(),
-                                 std::placeholders::_1,
-                                 std::ref(gi),
-                                 std::ref(iter)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return get_vertex_iterator()
+                 (std::forward<decltype(graph)>(graph), gi, iter);
+         })();
     return iter;
 }
 
@@ -95,13 +98,21 @@ python::object get_vertex(GraphInterface& gi, size_t i, bool use_index)
 {
     python::object v;
     if (!use_index)
-        run_action<>()(gi,
-                       std::bind(get_vertex_hard(), std::placeholders::_1,
-                                 std::ref(gi), i, std::ref(v)))();
+        run_action<>()
+            (gi,
+             [&](auto&& graph)
+             {
+                 return get_vertex_hard()
+                     (std::forward<decltype(graph)>(graph), gi, i, v);
+             })();
     else
-        run_action<>()(gi,
-                       std::bind(get_vertex_soft(), std::placeholders::_1,
-                                 std::ref(gi), i, std::ref(v)))();
+        run_action<>()
+            (gi,
+             [&](auto&& graph)
+             {
+                 return get_vertex_soft()
+                     (std::forward<decltype(graph)>(graph), gi, i, v);
+             })();
     return v;
 }
 
@@ -121,8 +132,13 @@ struct get_edge_iterator
 python::object get_edges(GraphInterface& gi)
 {
     python::object iter;
-    run_action<>()(gi, std::bind(get_edge_iterator(), std::placeholders::_1,
-                                 std::ref(gi), std::ref(iter)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return get_edge_iterator()
+                 (std::forward<decltype(graph)>(graph), gi, iter);
+         })();
     return iter;
 }
 
@@ -150,8 +166,13 @@ struct add_new_vertex
 python::object add_vertex(GraphInterface& gi, size_t n)
 {
     python::object v;
-    run_action<>()(gi, std::bind(add_new_vertex(), std::placeholders::_1,
-                                 std::ref(gi), n, std::ref(v)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return add_new_vertex()
+                 (std::forward<decltype(graph)>(graph), gi, n, v);
+         })();
     return v;
 }
 
@@ -196,7 +217,13 @@ struct do_clear_vertex
 
 void clear_vertex(GraphInterface& gi, size_t v)
 {
-    run_action<>()(gi, std::bind(do_clear_vertex(), std::placeholders::_1, v))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return do_clear_vertex()
+                 (std::forward<decltype(graph)>(graph), v);
+         })();
 }
 
 struct add_new_edge
@@ -214,8 +241,13 @@ struct add_new_edge
 python::object add_edge(GraphInterface& gi, size_t s, size_t t)
 {
     python::object new_e;
-    run_action<>()(gi, std::bind(add_new_edge(), std::placeholders::_1, std::ref(gi),
-                                 s, t, std::ref(new_e)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return add_new_edge()
+                 (std::forward<decltype(graph)>(graph), gi, s, t, new_e);
+         })();
     return new_e;
 }
 
@@ -269,9 +301,14 @@ struct get_edge_dispatch
 python::object get_edge(GraphInterface& gi, size_t s, size_t t, bool all_edges)
 {
     python::list es;
-    run_action<>()(gi, std::bind(get_edge_dispatch(), std::placeholders::_1,
-                                 std::ref(gi), s, t, all_edges,
-                                 std::ref(es)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return get_edge_dispatch()
+                 (std::forward<decltype(graph)>(graph), gi, s, t, all_edges,
+                  es);
+         })();
     return es;
 }
 
@@ -311,20 +348,35 @@ python::object GraphInterface::degree_map(string deg, boost::any weight) const
         weight = detail::no_weightS();
 
     if (deg == "in")
-        run_action<>()(const_cast<GraphInterface&>(*this),
-                       std::bind(get_degree_map(), std::placeholders::_1,
-                                 std::ref(deg_map), in_degreeS(), std::placeholders::_2), weight_t())
-            (weight);
+        run_action<>()
+            (const_cast<GraphInterface&>(*this),
+             [&](auto&& graph, auto&& a2)
+             {
+                 return get_degree_map()
+                     (std::forward<decltype(graph)>(graph), deg_map,
+                      in_degreeS(), std::forward<decltype(a2)>(a2));
+             },
+             weight_t())(weight);
     else if (deg == "out")
-        run_action<>()(const_cast<GraphInterface&>(*this),
-                       std::bind(get_degree_map(), std::placeholders::_1,
-                                 std::ref(deg_map), out_degreeS(), std::placeholders::_2), weight_t())
-            (weight);
+        run_action<>()
+            (const_cast<GraphInterface&>(*this),
+             [&](auto&& graph, auto&& a2)
+             {
+                 return get_degree_map()
+                     (std::forward<decltype(graph)>(graph), deg_map,
+                      out_degreeS(), std::forward<decltype(a2)>(a2));
+             },
+             weight_t())(weight);
     else if (deg == "total")
-        run_action<>()(const_cast<GraphInterface&>(*this),
-                       std::bind(get_degree_map(), std::placeholders::_1,
-                                 std::ref(deg_map), total_degreeS(), std::placeholders::_2), weight_t())
-            (weight);
+        run_action<>()
+            (const_cast<GraphInterface&>(*this),
+             [&](auto&& graph, auto&& a2)
+             {
+                 return get_degree_map()
+                     (std::forward<decltype(graph)>(graph), deg_map,
+                      total_degreeS(), std::forward<decltype(a2)>(a2));
+             },
+             weight_t())(weight);
     return deg_map;
 }
 
@@ -692,9 +744,12 @@ struct export_python_interface
             .def("__str__", &PythonEdge<Graph>::get_string)
             .def("__hash__", &PythonEdge<Graph>::get_hash);
 
-        boost::mpl::for_each<GraphViews>(std::bind(export_python_interface(),
-                                                   gp, std::placeholders::_1,
-                                                   std::ref(eclass)));
+        boost::mpl::for_each<GraphViews>(
+            [&](auto&& graph)
+            {
+                return export_python_interface()
+                    (gp, std::forward<decltype(graph)>(graph), eclass);
+            });
 
         eclasses.append(eclass);
 

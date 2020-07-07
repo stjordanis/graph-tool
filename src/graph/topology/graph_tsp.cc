@@ -50,8 +50,13 @@ vector<int32_t> get_tsp(GraphInterface& gi, size_t src, boost::any weight_map)
         weight_maps;
 
     run_action<graph_tool::detail::never_directed>()
-        (gi, std::bind(get_tsp_approx(), std::placeholders::_1, src,
-                       std::placeholders::_2, std::ref(tour)),
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return get_tsp_approx()
+                 (std::forward<decltype(graph)>(graph), src,
+                  std::forward<decltype(a2)>(a2), tour);
+         },
          weight_maps())(weight_map);
 
     return tour;

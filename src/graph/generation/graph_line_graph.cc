@@ -92,9 +92,14 @@ void line_graph(GraphInterface& gi, GraphInterface& lgi,
                                       boost::mpl::false_>::type
         vertex_properties;
 
-    run_action<>()(gi, std::bind(get_line_graph(), std::placeholders::_1,
-                                 gi.get_vertex_index(),
-                                 std::ref(lgi.get_graph()), lgi.get_edge_index(),
-                                 std::placeholders::_2),
-                   vertex_properties())(edge_index);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return get_line_graph()
+                 (std::forward<decltype(graph)>(graph), gi.get_vertex_index(),
+                  lgi.get_graph(), lgi.get_edge_index(),
+                  std::forward<decltype(a2)>(a2));
+         },
+         vertex_properties())(edge_index);
 }

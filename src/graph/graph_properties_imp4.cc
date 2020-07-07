@@ -69,8 +69,13 @@ void perfect_ehash(GraphInterface& gi, boost::any prop, boost::any hprop,
                    boost::any& dict)
 {
     run_action<graph_tool::detail::always_directed>()
-        (gi, std::bind<void>(do_perfect_ehash(), std::placeholders::_1,
-         std::placeholders::_2, std::placeholders::_3, std::ref(dict)),
-         edge_properties(), writable_edge_scalar_properties())
-        (prop, hprop);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_perfect_ehash()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), dict);
+         },
+         edge_properties(), writable_edge_scalar_properties())(prop, hprop);
 }

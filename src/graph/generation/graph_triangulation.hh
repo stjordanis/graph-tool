@@ -24,7 +24,6 @@
 #define GRAPH_TRIANGULATION_HH
 
 #include <tuple>
-#include <functional>
 
 #include "graph_util.hh"
 #include "hash_map_wrap.hh"

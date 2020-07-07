@@ -20,7 +20,6 @@
 
 #include "graph_union.hh"
 
-#include <boost/bind.hpp>
 
 #include <boost/python/extract.hpp>
 
@@ -39,10 +38,14 @@ void vertex_property_union(GraphInterface& ugi, GraphInterface& gi,
     eprop_t eprop = any_cast<eprop_t>(p_eprop);
 
     gt_dispatch<>()
-        (std::bind(graph_tool::property_union(), std::placeholders::_1,
-                   std::placeholders::_2, vprop, eprop, std::placeholders::_3,
-                   prop),
-         always_directed(), always_directed(),
-         writable_vertex_properties())
-        (ugi.get_graph_view(), gi.get_graph_view(), uprop);
+        (
+            [&](auto&& graph, auto&& a2, auto&& a3)
+            {
+                return graph_tool::property_union()
+                    (std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2), vprop, eprop,
+                     std::forward<decltype(a3)>(a3), prop);
+            },
+            always_directed(), always_directed(), writable_vertex_properties())(
+            ugi.get_graph_view(), gi.get_graph_view(), uprop);
 }

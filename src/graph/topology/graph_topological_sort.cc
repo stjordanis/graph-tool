@@ -40,8 +40,12 @@ bool topological_sort(GraphInterface& gi, vector<int32_t>& sort)
     try
     {
         run_action<>()
-            (gi, std::bind(get_topological_sort(), std::placeholders::_1,
-                           std::ref(sort)))();
+            (gi,
+             [&](auto&& graph)
+             {
+                 return get_topological_sort()
+                     (std::forward<decltype(graph)>(graph), sort);
+             })();
         return true;
     }
     catch (not_a_dag& e)

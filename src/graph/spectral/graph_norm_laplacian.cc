@@ -60,10 +60,13 @@ void norm_laplacian(GraphInterface& g, boost::any index, boost::any weight,
     multi_array_ref<int32_t,1> i = get_array<int32_t,1>(oi);
     multi_array_ref<int32_t,1> j = get_array<int32_t,1>(oj);
     run_action<>()
-        (g, std::bind(get_norm_laplacian(),
-                      std::placeholders::_1,  std::placeholders::_2,  std::placeholders::_3,
-                      deg, std::ref(data), std::ref(i), std::ref(j)),
-         vertex_scalar_properties(),
-         weight_props_t())(index, weight);
-
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_norm_laplacian()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), deg, data, i, j);
+         },
+         vertex_scalar_properties(), weight_props_t())(index, weight);
 }

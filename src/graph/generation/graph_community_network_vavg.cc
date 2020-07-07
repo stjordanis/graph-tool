@@ -21,7 +21,6 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
-#include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
@@ -97,33 +96,45 @@ void community_network_vavg(GraphInterface& gi, GraphInterface& cgi,
         {
             // compute weighted values to temp
             run_action<>()
-                (gi, std::bind(get_weighted_vertex_property_dispatch(),
-                               std::placeholders::_1, std::placeholders::_2,
-                               std::placeholders::_3, temp),
-                 vweight_properties(), vprops_t())
-                (vweight, vprop);
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return get_weighted_vertex_property_dispatch()
+                         (std::forward<decltype(graph)>(graph),
+                          std::forward<decltype(a2)>(a2),
+                          std::forward<decltype(a3)>(a3), temp);
+                 },
+                 vweight_properties(), vprops_t())(vweight, vprop);
 
             // sum weighted values
             run_action<>()
-                (gi, std::bind(get_vertex_sum_dispatch(),
-                               std::placeholders::_1, std::ref(cgi.get_graph()),
-                               std::placeholders::_2,
-                               condensed_community_property,
-                               std::placeholders::_3, cvprop),
-                 writable_vertex_properties(), vprops_t())
-                (community_property, temp);
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return get_vertex_sum_dispatch()
+                         (std::forward<decltype(graph)>(graph), cgi.get_graph(),
+                          std::forward<decltype(a2)>(a2),
+                          condensed_community_property,
+                          std::forward<decltype(a3)>(a3), cvprop);
+                 },
+                 writable_vertex_properties(),
+                 vprops_t())(community_property, temp);
         }
         else
         {
             // sum unweighted values
             run_action<>()
-                (gi, std::bind(get_vertex_sum_dispatch(),
-                               std::placeholders::_1, std::ref(cgi.get_graph()),
-                               std::placeholders::_2,
-                               condensed_community_property,
-                               std::placeholders::_3, cvprop),
-                 writable_vertex_properties(), vprops_t())
-                (community_property, vprop);
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return get_vertex_sum_dispatch()
+                         (std::forward<decltype(graph)>(graph), cgi.get_graph(),
+                          std::forward<decltype(a2)>(a2),
+                          condensed_community_property,
+                          std::forward<decltype(a3)>(a3), cvprop);
+                 },
+                 writable_vertex_properties(),
+                 vprops_t())(community_property, vprop);
         }
     }
 }

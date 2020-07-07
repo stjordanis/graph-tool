@@ -39,11 +39,13 @@ struct add_edge_list
     void operator()(Graph& g, python::object aedge_list,
                     python::object& eprops, bool& found) const
     {
-        boost::mpl::for_each<ValueList>(std::bind(dispatch(), std::ref(g),
-                                                  std::ref(aedge_list),
-                                                  std::ref(eprops),
-                                                  std::ref(found),
-                                                  std::placeholders::_1));
+        boost::mpl::for_each<ValueList>(
+            [&](auto&& graph)
+            {
+                return dispatch()
+                    (g, aedge_list, eprops, found,
+                     std::forward<decltype(graph)>(graph));
+            });
     }
 
     struct dispatch
@@ -103,9 +105,14 @@ void do_add_edge_list(GraphInterface& gi, python::object aedge_list,
                         int8_t, int16_t, int32_t, int64_t, uint64_t, double,
                         long double> vals_t;
     bool found = false;
-    run_action<>()(gi, std::bind(add_edge_list<vals_t>(), std::placeholders::_1,
-                                 aedge_list, std::ref(eprops),
-                                 std::ref(found)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return add_edge_list<vals_t>()(
+                 std::forward<decltype(graph)>(graph), aedge_list, eprops,
+                 found);
+         })();
     if (!found)
         throw GraphException("Invalid type for edge list; must be two-dimensional with a scalar type");
 }
@@ -357,9 +364,13 @@ void do_add_edge_list_hashed(GraphInterface& gi, python::object aedge_list,
                         long double> vals_t;
     bool found = false;
     run_action<graph_tool::all_graph_views, boost::mpl::true_>()
-        (gi, std::bind(add_edge_list_hash<vals_t>(), std::placeholders::_1,
-                       aedge_list, std::placeholders::_2, std::ref(found),
-                       is_str, std::ref(eprops)),
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return add_edge_list_hash<vals_t>()(
+                 std::forward<decltype(graph)>(graph), aedge_list,
+                 std::forward<decltype(a2)>(a2), found, is_str, eprops);
+         },
          writable_vertex_properties())(vertex_map);
 }
 
@@ -426,8 +437,12 @@ void do_add_edge_list_iter(GraphInterface& gi, python::object edge_list,
                            python::object eprops)
 {
     run_action<>()
-        (gi, std::bind(add_edge_list_iter(), std::placeholders::_1,
-                       std::ref(edge_list), std::ref(eprops)))();
+        (gi,
+         [&](auto&& graph)
+         {
+             return add_edge_list_iter()
+                 (std::forward<decltype(graph)>(graph), edge_list, eprops);
+         })();
 }
 
 

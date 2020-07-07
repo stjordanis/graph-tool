@@ -24,7 +24,6 @@
 #include <numeric>
 #include <iostream>
 #include <tuple>
-#include <functional>
 #include <boost/iterator.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/range/irange.hpp>

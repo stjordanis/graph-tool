@@ -64,16 +64,20 @@ void sfdp_layout(GraphInterface& g, boost::any pos, boost::any vweight,
 
     run_action<graph_tool::detail::never_directed>()
         (g,
-         std::bind(get_sfdp_layout(C, K, p, theta, gamma, mu, mu_p, init_step,
-                                   step_schedule, max_level, epsilon,
-                                   max_iter, adaptive),
-                   std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, std::placeholders::_4,
-                   pin_map.get_unchecked(num_vertices(g.get_graph())),
-                   groups.get_unchecked(num_vertices(g.get_graph())), verbose,
-                   std::ref(rng)),
-         vertex_floating_vector_properties(), vertex_props_t(), edge_props_t())
-        (pos, vweight, eweight);
+         [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+         {
+             return get_sfdp_layout(C, K, p, theta, gamma, mu, mu_p, init_step,
+                                    step_schedule, max_level, epsilon, max_iter,
+                                    adaptive)(
+                 std::forward<decltype(graph)>(graph),
+                 std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
+                 std::forward<decltype(a4)>(a4),
+                 pin_map.get_unchecked(num_vertices(g.get_graph())),
+                 groups.get_unchecked(num_vertices(g.get_graph())), verbose,
+                 rng);
+         },
+         vertex_floating_vector_properties(), vertex_props_t(),
+         edge_props_t())(pos, vweight, eweight);
 }
 
 struct do_propagate_pos
@@ -121,12 +125,18 @@ void propagate_pos(GraphInterface& gi, GraphInterface& cgi, boost::any vmap,
         vmaps_t;
 
     gt_dispatch<>()
-        (std::bind(do_propagate_pos(),
-                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                       cvmap, std::placeholders::_4, cpos, delta, std::ref(rng)),
-         all_graph_views(), all_graph_views(),
-         vmaps_t(), vertex_floating_vector_properties())
-        (gi.get_graph_view(), cgi.get_graph_view(), vmap, pos);
+        (
+            [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+            {
+                return do_propagate_pos()
+                    (std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2),
+                     std::forward<decltype(a3)>(a3), cvmap,
+                     std::forward<decltype(a4)>(a4), cpos, delta, rng);
+            },
+            all_graph_views(), all_graph_views(), vmaps_t(),
+            vertex_floating_vector_properties())(
+            gi.get_graph_view(), cgi.get_graph_view(), vmap, pos);
 }
 
 struct do_propagate_pos_mivs
@@ -181,11 +191,16 @@ void propagate_pos_mivs(GraphInterface& gi, boost::any mivs, boost::any pos,
                         double delta, rng_t& rng)
 {
     run_action<>()
-        (gi, std::bind(do_propagate_pos_mivs(),
-                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                       delta, std::ref(rng)),
-         vertex_scalar_properties(), vertex_floating_vector_properties())
-        (mivs, pos);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_propagate_pos_mivs()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), delta, rng);
+         },
+         vertex_scalar_properties(),
+         vertex_floating_vector_properties())(mivs, pos);
 }
 
 
@@ -219,9 +234,14 @@ double avg_dist(GraphInterface& gi, boost::any pos)
 {
     double d;
     run_action<>()
-        (gi, std::bind(do_avg_dist(), std::placeholders::_1,
-                       std::placeholders::_2, std::ref(d)),
-         vertex_scalar_vector_properties()) (pos);
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_avg_dist()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), d);
+         },
+         vertex_scalar_vector_properties())(pos);
     return d;
 }
 
@@ -244,8 +264,14 @@ struct do_sanitize_pos
 void sanitize_pos(GraphInterface& gi, boost::any pos)
 {
     run_action<>()
-        (gi, std::bind(do_sanitize_pos(), std::placeholders::_1, std::placeholders::_2),
-         vertex_scalar_vector_properties()) (pos);
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_sanitize_pos()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2));
+         },
+         vertex_scalar_vector_properties())(pos);
 }
 
 #include <boost/python.hpp>

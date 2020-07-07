@@ -457,33 +457,49 @@ void get_dists(GraphInterface& gi, size_t source, boost::python::object tgt,
     if (weight.empty())
     {
         run_action<>()
-            (gi, std::bind(do_bfs_search(), std::placeholders::_1, source, tgt, gi.get_vertex_index(),
-                           std::placeholders::_2, pmap.get_unchecked(num_vertices(gi.get_graph())),
-                           max_dist, std::ref(reached)),
-             writable_vertex_scalar_properties())
-            (dist_map);
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_bfs_search()
+                     (std::forward<decltype(graph)>(graph), source, tgt,
+                      gi.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      pmap.get_unchecked(num_vertices(gi.get_graph())),
+                      max_dist, reached);
+             },
+             writable_vertex_scalar_properties())(dist_map);
     }
     else
     {
         if (bf)
         {
             run_action<>()
-                (gi, std::bind(do_bf_search(), std::placeholders::_1, source,
-                               std::placeholders::_2, pmap.get_unchecked(num_vertices(gi.get_graph())),
-                               std::placeholders::_3),
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return do_bf_search()
+                         (std::forward<decltype(graph)>(graph), source,
+                          std::forward<decltype(a2)>(a2),
+                          pmap.get_unchecked(num_vertices(gi.get_graph())),
+                          std::forward<decltype(a3)>(a3));
+                 },
                  writable_vertex_scalar_properties(),
-                 edge_scalar_properties())
-                (dist_map, weight);
+                 edge_scalar_properties())(dist_map, weight);
         }
         else
         {
             run_action<>()
-                (gi, std::bind(do_djk_search(), std::placeholders::_1, source, tgt, gi.get_vertex_index(),
-                               std::placeholders::_2, pmap.get_unchecked(num_vertices(gi.get_graph())),
-                               std::placeholders::_3, max_dist, std::ref(reached), dag),
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return do_djk_search()
+                         (std::forward<decltype(graph)>(graph), source, tgt,
+                          gi.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                          pmap.get_unchecked(num_vertices(gi.get_graph())),
+                          std::forward<decltype(a3)>(a3), max_dist, reached,
+                          dag);
+                 },
                  writable_vertex_scalar_properties(),
-                 edge_scalar_properties())
-                (dist_map, weight);
+                 edge_scalar_properties())(dist_map, weight);
         }
     }
 }

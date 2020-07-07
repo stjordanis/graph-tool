@@ -93,12 +93,17 @@ void a_star_search(GraphInterface& g, size_t source, boost::any dist_map,
     typedef typename property_map_type::
         apply<int64_t, GraphInterface::vertex_index_map_t>::type pred_t;
     pred_t pred = any_cast<pred_t>(pred_map);
-    run_action<graph_tool::all_graph_views,mpl::true_>()
-        (g, std::bind(do_astar_search(),  std::placeholders::_1, source,
-                      std::placeholders::_2, pred, weight,
-                      AStarVisitorWrapper(g, vis), make_pair(AStarCmp(cmp),
-                                                             AStarCmb(cmb)),
-                      make_pair(zero, inf), h, std::ref(g)),
+    run_action<graph_tool::all_graph_views, mpl::true_>()
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_astar_search()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2), pred, weight,
+                  AStarVisitorWrapper(g, vis),
+                  make_pair(AStarCmp(cmp), AStarCmb(cmb)), make_pair(zero, inf),
+                  h, g);
+         },
          writable_vertex_properties())(dist_map);
 }
 
@@ -139,12 +144,17 @@ boost::python::object astar_search_generator(GraphInterface& g,
     auto dispatch = [&](auto& yield)
         {
             AStarGeneratorVisitor vis(g, yield);
-            run_action<graph_tool::all_graph_views,mpl::true_>()
-               (g, std::bind(do_astar_search(),  std::placeholders::_1, source,
-                             std::placeholders::_2, dummy_property_map(), weight,
-                             vis, make_pair(AStarCmp(cmp), AStarCmb(cmb)),
-                             make_pair(zero, inf), h, std::ref(g)),
-                writable_vertex_properties())(dist_map);
+            run_action<graph_tool::all_graph_views, mpl::true_>()
+                (g,
+                 [&](auto&& graph, auto&& a2)
+                 {
+                     return do_astar_search()
+                         (std::forward<decltype(graph)>(graph), source,
+                          std::forward<decltype(a2)>(a2), dummy_property_map(),
+                          weight, vis, make_pair(AStarCmp(cmp), AStarCmb(cmb)),
+                          make_pair(zero, inf), h, g);
+                 },
+                 writable_vertex_properties())(dist_map);
         };
     return boost::python::object(CoroGenerator(dispatch));
 #else
@@ -164,12 +174,18 @@ boost::python::object astar_search_generator_fast(GraphInterface& g,
     auto dispatch = [&](auto& yield)
         {
             AStarGeneratorVisitor vis(g, yield);
-            run_action<graph_tool::all_graph_views,mpl::true_>()
-               (g, std::bind(do_astar_search_fast(),  std::placeholders::_1, source,
-                             std::placeholders::_2, std::placeholders::_3,
-                             vis, make_pair(zero, inf), h, std::ref(g)),
-                writable_vertex_scalar_properties(),
-                edge_scalar_properties())(dist_map, weight);
+            run_action<graph_tool::all_graph_views, mpl::true_>()
+                (g,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return do_astar_search_fast()
+                         (std::forward<decltype(graph)>(graph), source,
+                          std::forward<decltype(a2)>(a2),
+                          std::forward<decltype(a3)>(a3), vis,
+                          make_pair(zero, inf), h, g);
+                 },
+                 writable_vertex_scalar_properties(),
+                 edge_scalar_properties())(dist_map, weight);
         };
     return boost::python::object(CoroGenerator(dispatch));
 #else
@@ -205,11 +221,16 @@ boost::python::object astar_search_array(GraphInterface& g,
 {
     std::vector<std::array<size_t, 2>> edges;
     AStarArrayVisitor vis(edges);
-    run_action<graph_tool::all_graph_views,mpl::true_>()
-        (g, std::bind(do_astar_search(),  std::placeholders::_1, source,
-                      std::placeholders::_2, dummy_property_map(), weight,
-                      vis, make_pair(AStarCmp(cmp), AStarCmb(cmb)),
-                      make_pair(zero, inf), h, std::ref(g)),
+    run_action<graph_tool::all_graph_views, mpl::true_>()
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_astar_search()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2), dummy_property_map(), weight,
+                  vis, make_pair(AStarCmp(cmp), AStarCmb(cmb)),
+                  make_pair(zero, inf), h, g);
+         },
          writable_vertex_properties())(dist_map);
     return wrap_vector_owned<size_t,2>(edges);
 }
@@ -224,10 +245,16 @@ boost::python::object astar_search_array_fast(GraphInterface& g,
 {
     std::vector<std::array<size_t, 2>> edges;
     AStarArrayVisitor vis(edges);
-    run_action<graph_tool::all_graph_views,mpl::true_>()
-        (g, std::bind(do_astar_search_fast(),  std::placeholders::_1, source,
-                      std::placeholders::_2, std::placeholders::_3,
-                      vis, make_pair(zero, inf), h, std::ref(g)),
+    run_action<graph_tool::all_graph_views, mpl::true_>()
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_astar_search_fast()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), vis, make_pair(zero, inf), h,
+                  g);
+         },
          writable_vertex_scalar_properties(),
          edge_scalar_properties())(dist_map, weight);
     return wrap_vector_owned<size_t,2>(edges);

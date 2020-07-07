@@ -42,11 +42,15 @@ long double eigenvector(GraphInterface& g, boost::any w, boost::any c,
 
     long double eig = 0;
     run_action<>()
-        (g, std::bind(get_eigenvector(), std::placeholders::_1, g.get_vertex_index(),
-                      std::placeholders::_2, std::placeholders::_3, epsilon, max_iter,
-                      std::ref(eig)),
-         weight_props_t(),
-         vertex_floating_properties())(w, c);
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_eigenvector()
+                 (std::forward<decltype(graph)>(graph), g.get_vertex_index(),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), epsilon, max_iter, eig);
+         },
+         weight_props_t(), vertex_floating_properties())(w, c);
     return eig;
 }
 

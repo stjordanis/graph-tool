@@ -36,11 +36,16 @@ void trust_transitivity(GraphInterface& g, int64_t source, int64_t target,
     if (!belongs<vertex_floating_vector_properties>()(t))
         throw ValueException("vertex property must be of floating point valued vector type");
 
-    run_action<>()(g,
-                   bind<void>(get_trust_transitivity(), _1, g.get_vertex_index(),
-                              source, target, _2, _3),
-                   edge_floating_properties(),
-                   vertex_floating_vector_properties())(c,t);
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_trust_transitivity()
+                 (std::forward<decltype(graph)>(graph), g.get_vertex_index(),
+                  source, target, std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3));
+         },
+         edge_floating_properties(), vertex_floating_vector_properties())(c, t);
 }
 
 void export_trust_transitivity()
