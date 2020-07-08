@@ -37,11 +37,15 @@ size_t eigentrust(GraphInterface& g, boost::any c, boost::any t,
 
     size_t iter = 0;
     run_action<>()
-        (g, bind(get_eigentrust(),
-                 _1, g.get_vertex_index(), g.get_edge_index(), _2,
-                 _3, epslon, max_iter, ref(iter)),
-         writable_edge_scalar_properties(),
-         vertex_floating_properties())(c,t);
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_eigentrust()
+                 (std::forward<decltype(graph)>(graph), g.get_vertex_index(),
+                  g.get_edge_index(), std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), epslon, max_iter, iter);
+         },
+         writable_edge_scalar_properties(), vertex_floating_properties())(c, t);
     return iter;
 }
 

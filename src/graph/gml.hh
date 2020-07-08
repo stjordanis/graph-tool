@@ -35,7 +35,6 @@
 
 #include <boost/property_map/dynamic_property_map.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/bind/bind.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/properties.hpp>
 
@@ -301,14 +300,23 @@ struct gml : spirit::qi::grammar<Iterator, void(), Skipper>
             ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
             ("\\\'", '\'')("\\\"", '\"');
         key_identifier %= spirit::lexeme[((+((spirit::qi::alnum | "_") | "-")) >> *spirit::qi::alnum)];
-        key = key_identifier
-            [boost::bind(&gml_state<Graph>::push_key, &_state, ::_1)];
+        auto key_action = [this](auto && attr)
+                          {
+                              _state.push_key(std::forward<decltype(attr)>(attr));
+                          };
+        key = key_identifier[key_action];
+
         value_identifier %= (spirit::lexeme[spirit::qi::double_] | unesc_str);
-        value %= value_identifier
-            [boost::bind(&gml_state<Graph>::push_value, &_state, ::_1)];
+        auto value_action = [this](auto && attr)
+                            {
+                                _state.push_value(std::forward<decltype(attr)>(attr));
+                            };
+        value %= value_identifier[value_action];
+
         list_identifier = *(key >> (value | "[" >> list >> "]"));
-        list = list_identifier
-            [boost::bind(&gml_state<Graph>::finish_list, &_state)];
+        auto list_action = [this] { _state.finish_list(); };
+        list = list_identifier[list_action];
+
         start = list;
     }
 
@@ -397,8 +405,7 @@ std::string print_val(dynamic_property_map& pmap, const Descriptor& v)
 {
     std::string val;
     boost::any oval = pmap.get(v);
-    mpl::for_each<ValueTypes>(bind<void>(get_str(), boost::ref(oval),
-                                         boost::ref(val), _1));
+    mpl::for_each<ValueTypes>([&oval, &val](auto t){ get_str()(oval, val, t); });
     return val;
 }
 

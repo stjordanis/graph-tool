@@ -35,9 +35,13 @@ struct prop_vector
     boost::any operator()(const vector<boost::any>& props, size_t size) const
     {
         boost::any prop_vec;
-        boost::mpl::for_each<PropertySequence>
-            (std::bind(get_prop_vector(), std::placeholders::_1, std::ref(props),
-                       std::ref(prop_vec), size));
+        boost::mpl::for_each<PropertySequence>(
+            [&](auto&& graph)
+            {
+                return get_prop_vector()
+                    (std::forward<decltype(graph)>(graph), props, prop_vec,
+                     size);
+            });
         return prop_vec;
     }
 
@@ -92,8 +96,14 @@ void extended_clustering(GraphInterface& g, boost::python::list props)
         properties_vector;
 
     run_action<>()
-        (g, std::bind<void>(get_extended_clustering(), std::placeholders::_1,
-                            any_cast<GraphInterface::vertex_index_map_t>(g.get_vertex_index()),
-                            std::placeholders::_2),
-         properties_vector()) (vprop);
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return get_extended_clustering()
+                 (std::forward<decltype(graph)>(graph),
+                  any_cast<GraphInterface::vertex_index_map_t>(
+                      g.get_vertex_index()),
+                  std::forward<decltype(a2)>(a2));
+         },
+         properties_vector())(vprop);
 }

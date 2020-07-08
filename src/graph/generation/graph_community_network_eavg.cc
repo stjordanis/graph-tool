@@ -21,7 +21,6 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
-#include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
@@ -86,11 +85,15 @@ void community_network_eavg(GraphInterface& gi, GraphInterface& cgi,
         {
             // compute weighted values to temp
             run_action<>()
-                (gi, std::bind(get_weighted_edge_property_dispatch(),
-                               std::placeholders::_1, std::placeholders::_2,
-                               std::placeholders::_3, temp),
-                 eweight_properties(), eprops_t())
-                (eweight, eprop);
+                (gi,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return get_weighted_edge_property_dispatch()
+                         (std::forward<decltype(graph)>(graph),
+                          std::forward<decltype(a2)>(a2),
+                          std::forward<decltype(a3)>(a3), temp);
+                 },
+                 eweight_properties(), eprops_t())(eweight, eprop);
 
             // sum weighted values
             sum_eprops(gi, cgi, community_property,

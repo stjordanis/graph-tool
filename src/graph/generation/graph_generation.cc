@@ -64,10 +64,14 @@ void generate_graph(GraphInterface& gi, size_t N,
         gi.set_directed(false);
 
     run_action<graph_views>()
-        (gi, std::bind(gen_graph(), std::placeholders::_1, N,
-                       PythonFuncWrap(deg_sample),
-                       no_parallel, no_self_loops,
-                       std::ref(rng), verbose, verify))();
+        (gi,
+         [&](auto&& graph)
+         {
+             return gen_graph()
+                 (std::forward<decltype(graph)>(graph), N,
+                  PythonFuncWrap(deg_sample), no_parallel, no_self_loops, rng,
+                  verbose, verify);
+         })();
 }
 
 void generate_sbm(GraphInterface& gi, boost::any ab, boost::python::object ors,

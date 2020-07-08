@@ -218,10 +218,15 @@ void dijkstra_search(GraphInterface& g, size_t source, boost::any dist_map,
         apply<int64_t, GraphInterface::vertex_index_map_t>::type pred_t;
     pred_t pred = any_cast<pred_t>(pred_map);
     run_action<graph_tool::all_graph_views, mpl::true_>()
-        (g, std::bind(do_djk_search(), std::placeholders::_1, source,
-                      std::placeholders::_2, pred, weight,
-                      DJKVisitorWrapper(g, vis), DJKCmp(cmp), DJKCmb(cmb),
-                      make_pair(zero, inf)),
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_djk_search()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2), pred, weight,
+                  DJKVisitorWrapper(g, vis), DJKCmp(cmp), DJKCmb(cmb),
+                  make_pair(zero, inf));
+         },
          writable_vertex_properties())(dist_map);
 }
 
@@ -262,11 +267,16 @@ boost::python::object dijkstra_search_generator(GraphInterface& g,
         {
             DJKGeneratorVisitor vis(g, yield);
             run_action<graph_tool::all_graph_views, mpl::true_>()
-            (g, std::bind(do_djk_search(), std::placeholders::_1, source,
-                          std::placeholders::_2, dummy_property_map(), weight,
-                          vis, DJKCmp(cmp), DJKCmb(cmb),
-                          make_pair(zero, inf)),
-             writable_vertex_properties())(dist_map);
+                (g,
+                 [&](auto&& graph, auto&& a2)
+                 {
+                     return do_djk_search()
+                         (std::forward<decltype(graph)>(graph), source,
+                          std::forward<decltype(a2)>(a2), dummy_property_map(),
+                          weight, vis, DJKCmp(cmp), DJKCmb(cmb),
+                          make_pair(zero, inf));
+                 },
+                 writable_vertex_properties())(dist_map);
         };
     return boost::python::object(CoroGenerator(dispatch));
 #else
@@ -285,11 +295,17 @@ boost::python::object dijkstra_search_generator_fast(GraphInterface& g,
         {
             DJKGeneratorVisitor vis(g, yield);
             run_action<graph_tool::all_graph_views, mpl::true_>()
-            (g, std::bind(do_djk_search_fast(), std::placeholders::_1, source,
-                          std::placeholders::_2, std::placeholders::_3,
-                          vis, make_pair(zero, inf)),
-             writable_vertex_scalar_properties(),
-             edge_scalar_properties())(dist_map, weight);
+                (g,
+                 [&](auto&& graph, auto&& a2, auto&& a3)
+                 {
+                     return do_djk_search_fast()
+                         (std::forward<decltype(graph)>(graph), source,
+                          std::forward<decltype(a2)>(a2),
+                          std::forward<decltype(a3)>(a3), vis,
+                          make_pair(zero, inf));
+                 },
+                 writable_vertex_scalar_properties(),
+                 edge_scalar_properties())(dist_map, weight);
         };
     return boost::python::object(CoroGenerator(dispatch));
 #else
@@ -326,10 +342,14 @@ boost::python::object dijkstra_search_array(GraphInterface& g,
     std::vector<std::array<size_t, 2>> edges;
     DJKArrayVisitor vis(edges);
     run_action<graph_tool::all_graph_views, mpl::true_>()
-        (g, std::bind(do_djk_search(), std::placeholders::_1, source,
-                      std::placeholders::_2, dummy_property_map(), weight,
-                      vis, DJKCmp(cmp), DJKCmb(cmb),
-                      make_pair(zero, inf)),
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_djk_search()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2), dummy_property_map(), weight,
+                  vis, DJKCmp(cmp), DJKCmb(cmb), make_pair(zero, inf));
+         },
          writable_vertex_properties())(dist_map);
     return wrap_vector_owned<size_t,2>(edges);
 }
@@ -344,9 +364,14 @@ boost::python::object dijkstra_search_array_fast(GraphInterface& g,
     std::vector<std::array<size_t, 2>> edges;
     DJKArrayVisitor vis(edges);
     run_action<graph_tool::all_graph_views, mpl::true_>()
-        (g, std::bind(do_djk_search_fast(), std::placeholders::_1, source,
-                      std::placeholders::_2, std::placeholders::_3,
-                      vis, make_pair(zero, inf)),
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_djk_search_fast()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), vis, make_pair(zero, inf));
+         },
          writable_vertex_scalar_properties(),
          edge_scalar_properties())(dist_map, weight);
     return wrap_vector_owned<size_t,2>(edges);

@@ -40,6 +40,10 @@ struct get_transitive_closure
 void transitive_closure(GraphInterface& gi, GraphInterface& tcgi)
 {
     run_action<graph_tool::detail::always_directed>()
-        (gi, std::bind(get_transitive_closure(), std::placeholders::_1,
-                       std::ref(tcgi.get_graph())))();
+        (gi,
+         [&](auto&& graph)
+         {
+             return get_transitive_closure()
+                 (std::forward<decltype(graph)>(graph), tcgi.get_graph());
+         })();
 }

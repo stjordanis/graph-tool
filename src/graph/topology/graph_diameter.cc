@@ -149,16 +149,26 @@ python::object get_diam(GraphInterface& gi, size_t source, boost::any weight)
     if (weight.empty())
     {
         run_action<>()
-            (gi, std::bind(do_bfs_search(), std::placeholders::_1, source, gi.get_vertex_index(),
-                           std::ref(target), std::ref(max_dist)))();
+            (gi,
+             [&](auto&& graph)
+             {
+                 return do_bfs_search()
+                     (std::forward<decltype(graph)>(graph), source,
+                      gi.get_vertex_index(), target, max_dist);
+             })();
     }
     else
     {
         run_action<>()
-            (gi, std::bind(do_djk_search(), std::placeholders::_1, source, gi.get_vertex_index(),
-                           std::placeholders::_2, std::ref(target), std::ref(max_dist)),
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_djk_search()
+                     (std::forward<decltype(graph)>(graph), source,
+                      gi.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      target, max_dist);
+             },
              edge_scalar_properties())(weight);
-
     }
     return python::make_tuple(target, max_dist);
 }

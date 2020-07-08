@@ -68,11 +68,15 @@ long double hits(GraphInterface& g, boost::any w, boost::any x, boost::any y,
 
     long double eig = 0;
     run_action<>()
-        (g, std::bind(get_hits_dispatch(), std::placeholders::_1, g.get_vertex_index(),
-                      std::placeholders::_2,  std::placeholders::_3, y, epsilon, max_iter,
-                      std::ref(eig)),
-         weight_props_t(),
-         vertex_floating_properties())(w, x);
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_hits_dispatch()
+                 (std::forward<decltype(graph)>(graph), g.get_vertex_index(),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), y, epsilon, max_iter, eig);
+         },
+         weight_props_t(), vertex_floating_properties())(w, x);
     return eig;
 }
 

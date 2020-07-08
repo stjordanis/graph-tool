@@ -186,30 +186,50 @@ void out_edges_op(GraphInterface& gi, boost::any eprop, boost::any vprop,
 {
     if (op == "sum")
     {
-        run_action<>()(gi, std::bind(do_out_edges_op(), std::placeholders::_1,
-                                     std::placeholders::_2, vprop, SumOp()),
-                       edge_properties())
-            (eprop);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_out_edges_op()
+                     (std::forward<decltype(graph)>(graph),
+                      std::forward<decltype(a2)>(a2), vprop, SumOp());
+             },
+             edge_properties())(eprop);
     }
     else if (op == "prod")
     {
-        run_action<>()(gi, std::bind(do_out_edges_op(), std::placeholders::_1,
-                                     std::placeholders::_2, vprop, ProdOp()),
-                       edge_properties())
-            (eprop);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_out_edges_op()
+                     (std::forward<decltype(graph)>(graph),
+                      std::forward<decltype(a2)>(a2), vprop, ProdOp());
+             },
+             edge_properties())(eprop);
     }
     else if (op == "min")
     {
-        run_action<>()(gi, std::bind(do_out_edges_op(), std::placeholders::_1,
-                                     std::placeholders::_2, vprop, MinOp()),
-                       edge_properties())
-            (eprop);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_out_edges_op()
+                     (std::forward<decltype(graph)>(graph),
+                      std::forward<decltype(a2)>(a2), vprop, MinOp());
+             },
+             edge_properties())(eprop);
     }
     else if (op == "max")
     {
-        run_action<>()(gi, std::bind(do_out_edges_op(), std::placeholders::_1,
-                                     std::placeholders::_2, vprop, MaxOp()),
-                       edge_properties())
-            (eprop);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_out_edges_op()
+                     (std::forward<decltype(graph)>(graph),
+                      std::forward<decltype(a2)>(a2), vprop, MaxOp());
+             },
+             edge_properties())(eprop);
     }
 }

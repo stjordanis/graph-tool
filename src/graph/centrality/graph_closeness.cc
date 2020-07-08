@@ -22,7 +22,6 @@
 
 #include "graph_closeness.hh"
 
-#include <functional>
 #include <boost/python.hpp>
 
 using namespace std;
@@ -33,20 +32,30 @@ void do_get_closeness(GraphInterface& gi, boost::any weight,
 {
     if (weight.empty())
     {
-        run_action<>()(gi,
-                       std::bind(get_closeness(), std::placeholders::_1,
-                                 gi.get_vertex_index(), no_weightS(),
-                                 std::placeholders::_2, harmonic, norm),
-                       writable_vertex_scalar_properties())(closeness);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return get_closeness()
+                     (std::forward<decltype(graph)>(graph),
+                      gi.get_vertex_index(), no_weightS(),
+                      std::forward<decltype(a2)>(a2), harmonic, norm);
+             },
+             writable_vertex_scalar_properties())(closeness);
     }
     else
     {
-        run_action<>()(gi,
-                       std::bind(get_closeness(), std::placeholders::_1,
-                                 gi.get_vertex_index(), std::placeholders::_2,
-                                 std::placeholders::_3, harmonic, norm),
-                       edge_scalar_properties(),
-                       writable_vertex_scalar_properties())(weight, closeness);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return get_closeness()
+                     (std::forward<decltype(graph)>(graph),
+                      gi.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      std::forward<decltype(a3)>(a3), harmonic, norm);
+             },
+             edge_scalar_properties(),
+             writable_vertex_scalar_properties())(weight, closeness);
     }
 }
 

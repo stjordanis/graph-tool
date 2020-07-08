@@ -393,8 +393,13 @@ struct graph_type_name
 string get_graph_type(GraphInterface& g)
 {
     string name;
-    run_action<>()(g, std::bind(graph_type_name(), std::placeholders::_1,
-                                std::ref(name)))();
+    run_action<>()
+        (g,
+         [&](auto&& graph)
+         {
+             return graph_type_name()
+                 (std::forward<decltype(graph)>(graph), name);
+         })();
     return name;
 }
 

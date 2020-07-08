@@ -271,11 +271,13 @@ GraphInterface::GraphInterface(const GraphInterface& gi, bool keep_ref,
     boost::any avorder = python::extract<boost::any>(vorder)();
     run_action<>()
         (const_cast<GraphInterface&>(gi),
-         std::bind(do_graph_copy(gi._mg->get_edge_index_range()),
-                   std::placeholders::_1, std::ref(*_mg),
-                   gi._vertex_index, _vertex_index, gi._edge_index,
-                   _edge_index, std::placeholders::_2, std::ref(vprops),
-                   std::ref(eprops)),
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_graph_copy(gi._mg->get_edge_index_range())(
+                 std::forward<decltype(graph)>(graph), *_mg, gi._vertex_index,
+                 _vertex_index, gi._edge_index, _edge_index,
+                 std::forward<decltype(a2)>(a2), vprops, eprops);
+         },
          vertex_scalar_properties())(avorder);
     // filters will be copied in python
 }

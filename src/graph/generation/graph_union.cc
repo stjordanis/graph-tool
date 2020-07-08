@@ -20,7 +20,6 @@
 
 #include "graph_union.hh"
 
-#include <boost/bind.hpp>
 
 #include <boost/python/extract.hpp>
 
@@ -37,9 +36,14 @@ boost::python::tuple graph_union(GraphInterface& ugi, GraphInterface& gi,
     vprop_t vprop = boost::any_cast<vprop_t>(avprop);
     eprop_t eprop(gi.get_edge_index());
     gt_dispatch<boost::mpl::true_>()
-        (std::bind(graph_tool::graph_union(),
-                   std::placeholders::_1, std::placeholders::_2, vprop, eprop),
-         always_directed(), always_directed())
-        (ugi.get_graph_view(), gi.get_graph_view());
+        (
+            [&](auto&& graph, auto&& a2)
+            {
+                return graph_tool::graph_union()
+                    (std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2), vprop, eprop);
+            },
+            always_directed(),
+            always_directed())(ugi.get_graph_view(), gi.get_graph_view());
     return boost::python::make_tuple(avprop, boost::any(eprop));
 }

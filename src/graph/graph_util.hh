@@ -20,7 +20,6 @@
 
 // allow boost::python to bind to std::functions
 #include <boost/mpl/vector.hpp>
-#include <functional>
 namespace boost { namespace python { namespace detail {
     template <class R_, class... PS_, class T=void>
     boost::mpl::vector<R_, PS_...>
@@ -42,7 +41,6 @@ namespace boost { namespace python { namespace detail {
 
 #include <boost/functional/hash.hpp>
 
-#include <functional>
 #include <random>
 
 #include "graph_selectors.hh"

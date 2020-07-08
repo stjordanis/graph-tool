@@ -32,24 +32,41 @@ using namespace graph_tool;
 void do_label_parallel_edges(GraphInterface& gi, boost::any property,
                              bool mark_only)
 {
-    run_action<>()(gi, std::bind(label_parallel_edges(), std::placeholders::_1,
-                                 std::placeholders::_2, mark_only),
-                   writable_edge_scalar_properties())(property);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return label_parallel_edges()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), mark_only);
+         },
+         writable_edge_scalar_properties())(property);
 }
 
 void do_label_self_loops(GraphInterface& gi, boost::any property,
                          bool mark_only)
 {
-    run_action<>()(gi, std::bind(label_self_loops(),
-                                 std::placeholders::_1, std::placeholders::_2, mark_only),
-                   writable_edge_scalar_properties())(property);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return label_self_loops()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), mark_only);
+         },
+         writable_edge_scalar_properties())(property);
 }
 
 void do_remove_labeled_edges(GraphInterface& gi, boost::any property)
 {
     run_action<graph_tool::detail::always_directed_never_reversed, mpl::true_>()
-        (gi, std::bind(remove_labeled_edges(), std::placeholders::_1,
-                       std::placeholders::_2),
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return remove_labeled_edges()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2));
+         },
          edge_scalar_properties())(property);
 }
 

@@ -46,7 +46,6 @@ min(const T1& v1, const T2& v2)
 
 #include <boost/graph/push_relabel_max_flow.hpp>
 
-#include <boost/bind.hpp>
 
 using namespace graph_tool;
 using namespace boost;
@@ -86,10 +85,15 @@ void push_relabel_max_flow(GraphInterface& gi, size_t src, size_t sink,
                            boost::any capacity, boost::any res)
 {
     run_action<graph_tool::detail::always_directed, boost::mpl::true_>()
-        (gi, std::bind(get_push_relabel_max_flow(),
-                       std::placeholders::_1, gi.get_vertex_index(), gi.get_edge_index(),
-                       gi.get_edge_index_range(),
-                       src, sink,  std::placeholders::_2,  std::placeholders::_3),
-         writable_edge_scalar_properties(), writable_edge_scalar_properties())
-        (capacity,res);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_push_relabel_max_flow()
+                 (std::forward<decltype(graph)>(graph), gi.get_vertex_index(),
+                  gi.get_edge_index(), gi.get_edge_index_range(), src, sink,
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3));
+         },
+         writable_edge_scalar_properties(),
+         writable_edge_scalar_properties())(capacity, res);
 }

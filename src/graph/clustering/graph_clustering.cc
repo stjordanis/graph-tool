@@ -45,8 +45,13 @@ boost::python::tuple global_clustering(GraphInterface& g, boost::any weight)
 
     double c, c_err;
     run_action<graph_tool::detail::never_directed>()
-        (g, std::bind(get_global_clustering(), std::placeholders::_1,
-                      std::placeholders::_2, std::ref(c), std::ref(c_err)),
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return get_global_clustering()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), c, c_err);
+         },
          weight_props_t())(weight);
     return boost::python::make_tuple(c, c_err);
 }
@@ -64,12 +69,15 @@ void local_clustering(GraphInterface& g, boost::any prop, boost::any weight)
         weight = weight_map_t();
 
     run_action<>()
-        (g, std::bind(set_clustering_to_property(),
-                      std::placeholders::_1,
-                      std::placeholders::_2,
-                      std::placeholders::_3),
-         weight_props_t(),
-         writable_vertex_scalar_properties())(weight, prop);
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return set_clustering_to_property()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3));
+         },
+         weight_props_t(), writable_vertex_scalar_properties())(weight, prop);
 }
 
 using namespace boost::python;

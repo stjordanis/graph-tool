@@ -21,7 +21,6 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
-#include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
@@ -64,11 +63,14 @@ void sum_eprops(GraphInterface& gi, GraphInterface& cgi,
         eprops_t;
 
     run_action<>()
-        (gi, std::bind(get_edge_sum_dispatch(),
-                       std::placeholders::_1, std::ref(cgi.get_graph()),
-                       std::placeholders::_2,
-                       condensed_community_property, std::placeholders::_3,
-                       ceprop, self_loops, parallel_edges),
-         writable_vertex_properties(), eprops_t())
-        (community_property, eprop);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_edge_sum_dispatch()
+                 (std::forward<decltype(graph)>(graph), cgi.get_graph(),
+                  std::forward<decltype(a2)>(a2), condensed_community_property,
+                  std::forward<decltype(a3)>(a3), ceprop, self_loops,
+                  parallel_edges);
+         },
+         writable_vertex_properties(), eprops_t())(community_property, eprop);
 }

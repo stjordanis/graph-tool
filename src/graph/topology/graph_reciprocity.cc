@@ -57,7 +57,12 @@ struct get_reciprocity
 double reciprocity(GraphInterface& gi)
 {
     double reciprocity;
-    run_action<>()(gi, std::bind(get_reciprocity(), std::placeholders::_1,
-                                 std::ref(reciprocity)))();
+    run_action<>()
+        (gi,
+         [&](auto&& graph)
+         {
+             return get_reciprocity()
+                 (std::forward<decltype(graph)>(graph), reciprocity);
+         })();
     return reciprocity;
 }

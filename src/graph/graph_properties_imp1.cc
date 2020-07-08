@@ -77,13 +77,23 @@ void edge_endpoint(GraphInterface& gi, boost::any prop,
 {
     size_t edge_index_range = gi.get_edge_index_range();
     if (endpoint == "source")
-        run_action<>()(gi, std::bind(do_edge_endpoint<true>(), std::placeholders::_1,
-                                     gi.get_edge_index(), std::placeholders::_2, eprop,
-                                     edge_index_range),
-                       vertex_properties())(prop);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_edge_endpoint<true>()(
+                     std::forward<decltype(graph)>(graph), gi.get_edge_index(),
+                     std::forward<decltype(a2)>(a2), eprop, edge_index_range);
+             },
+             vertex_properties())(prop);
     else
-        run_action<>()(gi, std::bind(do_edge_endpoint<false>(), std::placeholders::_1,
-                                     gi.get_edge_index(), std::placeholders::_2, eprop,
-                                     edge_index_range),
-                       vertex_properties())(prop);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_edge_endpoint<false>()(
+                     std::forward<decltype(graph)>(graph), gi.get_edge_index(),
+                     std::forward<decltype(a2)>(a2), eprop, edge_index_range);
+             },
+             vertex_properties())(prop);
 }

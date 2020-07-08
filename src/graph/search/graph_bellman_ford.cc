@@ -151,14 +151,17 @@ bool bellman_ford_search(GraphInterface& g, size_t source, boost::any dist_map,
                          python::object inf)
 {
     bool ret = false;
-    run_action<graph_tool::all_graph_views,mpl::true_>()
-        (g, std::bind(do_bf_search(),  std::placeholders::_1, source,
-                      std::placeholders::_2, pred_map, weight,
-                      BFVisitorWrapper(g, vis),
-                      make_pair(BFCmp(cmp), BFCmb(cmb)), make_pair(zero, inf),
-                      std::ref(ret)),
-         writable_vertex_properties())
-        (dist_map);
+    run_action<graph_tool::all_graph_views, mpl::true_>()
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_bf_search()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2), pred_map, weight,
+                  BFVisitorWrapper(g, vis), make_pair(BFCmp(cmp), BFCmb(cmb)),
+                  make_pair(zero, inf), ret);
+         },
+         writable_vertex_properties())(dist_map);
     return ret;
 }
 

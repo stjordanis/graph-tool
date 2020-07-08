@@ -150,7 +150,8 @@ struct sample_some
     void operator()(std::vector<val_type>& extend, size_t d)
     {
         typedef std::uniform_real_distribution<double> rdist_t;
-        auto random = std::bind(rdist_t(), std::ref(*_rng));
+        auto random = [this] { return rdist_t()(*_rng); };
+
 
         double pd = (*_p)[d+1];
         size_t nc = extend.size();
@@ -177,8 +178,7 @@ struct sample_some
         typedef std::uniform_int_distribution<size_t> idist_t;
         for (size_t i = 0; i < n; ++i)
         {
-            auto random_v = std::bind(idist_t(0, extend.size()-i-1),
-                                      std::ref(*_rng));
+            auto random_v = [this, &extend, i] { return idist_t(0, extend.size()-i-1)(*_rng); };
             size_t j;
             #pragma omp critical (random)
             {
@@ -331,8 +331,7 @@ struct get_all_motifs
         hist.resize(subgraph_list.size());
 
         typedef std::uniform_real_distribution<double> rdist_t;
-        auto random = std::bind(rdist_t(), std::ref(rng));
-
+        auto random = [this] { return rdist_t()(rng); };
         // the set of vertices V to be sampled (filled only if p < 1)
         std::vector<size_t> V;
         if (p < 1)
@@ -349,8 +348,7 @@ struct get_all_motifs
             typedef std::uniform_int_distribution<size_t> idist_t;
             for (size_t i = 0; i < n; ++i)
             {
-                auto random_v = std::bind(idist_t(0, V.size()-i-1),
-                                          std::ref(rng));
+                auto random_v = [&V, i, this] { return idist_t(0, V.size()-i-1)(rng); };
                 size_t j = i + random_v();
                 std::swap(V[i], V[j]);
             }

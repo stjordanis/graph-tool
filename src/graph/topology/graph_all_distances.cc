@@ -134,20 +134,28 @@ void get_all_dists(GraphInterface& gi, boost::any dist_map, boost::any weight,
     if (weight.empty())
     {
         run_action<>()
-            (gi, std::bind(do_all_pairs_search_unweighted(),
-                           std::placeholders::_1, std::placeholders::_2),
-             vertex_scalar_vector_properties())
-            (dist_map);
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return do_all_pairs_search_unweighted()
+                     (std::forward<decltype(graph)>(graph),
+                      std::forward<decltype(a2)>(a2));
+             },
+             vertex_scalar_vector_properties())(dist_map);
     }
     else
     {
         run_action<>()
-            (gi, std::bind(do_all_pairs_search(), std::placeholders::_1,
-                           gi.get_vertex_index(), std::placeholders::_2,
-                           std::placeholders::_3, dense),
+            (gi,
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return do_all_pairs_search()
+                     (std::forward<decltype(graph)>(graph),
+                      gi.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      std::forward<decltype(a3)>(a3), dense);
+             },
              vertex_scalar_vector_properties(),
-             edge_scalar_properties())
-            (dist_map, weight);
+             edge_scalar_properties())(dist_map, weight);
     }
 }
 

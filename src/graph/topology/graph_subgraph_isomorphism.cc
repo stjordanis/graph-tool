@@ -228,14 +228,19 @@ subgraph_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
     if (!generator)
     {
         gt_dispatch<>()
-            (std::bind(get_subgraphs(), std::placeholders::_1, std::placeholders::_2,
-                       std::placeholders::_3, vertex_label2, std::placeholders::_4,
-                       edge_label2, std::ref(vmaps), max_n, induced, iso,
-                       ListMatch()),
-             all_graph_views(), all_graph_views(), vertex_props_t(),
-             edge_props_t())
-            (gi1.get_graph_view(), gi2.get_graph_view(), vertex_label1,
-             edge_label1);
+            (
+                [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+                {
+                    return get_subgraphs()
+                        (std::forward<decltype(graph)>(graph),
+                         std::forward<decltype(a2)>(a2),
+                         std::forward<decltype(a3)>(a3), vertex_label2,
+                         std::forward<decltype(a4)>(a4), edge_label2, vmaps,
+                         max_n, induced, iso, ListMatch());
+                },
+                all_graph_views(), all_graph_views(), vertex_props_t(),
+                edge_props_t())(gi1.get_graph_view(), gi2.get_graph_view(),
+                                vertex_label1, edge_label1);
 
         python::list vmapping;
         for (auto& vmap: vmaps)
@@ -246,16 +251,21 @@ subgraph_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
     {
 #ifdef HAVE_BOOST_COROUTINE
         auto dispatch = [&](auto& yield)
-            {
-                run_action<>()
-                    (gi1, std::bind(get_subgraphs(), std::placeholders::_1, std::placeholders::_2,
-                                    std::placeholders::_3, vertex_label2, std::placeholders::_4,
-                                    edge_label2, std::ref(vmaps), max_n, induced, iso,
-                                    GenMatch(yield)),
-                     all_graph_views(), vertex_props_t(),
-                     edge_props_t())(gi2.get_graph_view(),
-                                     vertex_label1, edge_label1);
-            };
+        {
+            run_action<>()
+                (gi1,
+                 [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+                 {
+                     return get_subgraphs()
+                         (std::forward<decltype(graph)>(graph),
+                          std::forward<decltype(a2)>(a2),
+                          std::forward<decltype(a3)>(a3), vertex_label2,
+                          std::forward<decltype(a4)>(a4), edge_label2, vmaps,
+                          max_n, induced, iso, GenMatch(yield));
+                 },
+                 all_graph_views(), vertex_props_t(), edge_props_t())(
+                    gi2.get_graph_view(), vertex_label1, edge_label1);
+        };
         CoroGenerator gen(dispatch);
         return boost::python::object(gen);
 #else

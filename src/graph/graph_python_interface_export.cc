@@ -22,7 +22,6 @@
 
 #include <boost/python.hpp>
 #include <boost/lambda/bind.hpp>
-#include <functional>
 
 using namespace std;
 using namespace boost;
@@ -77,9 +76,13 @@ struct export_vertex_property_map
                                       boost::mpl::quote1<std::add_pointer> >::type all_const_graph_views;
         typedef boost::mpl::joint_view<all_graph_views, all_const_graph_views>::type graph_views;
 
-        boost::mpl::for_each<graph_views>(std::bind(dispatch_access<PropertyMap>(),
-                                                    std::placeholders::_1,
-                                                    std::ref(pclass), return_policy()));
+        boost::mpl::for_each<graph_views>(
+            [&](auto&& graph)
+            {
+                return dispatch_access<PropertyMap>()(
+                    std::forward<decltype(graph)>(graph), pclass,
+                    return_policy());
+            });
     }
 
     template <class PropertyMap>
@@ -162,9 +165,13 @@ struct export_edge_property_map
                                       boost::mpl::quote1<std::add_pointer> >::type all_const_graph_views;
         typedef boost::mpl::joint_view<all_graph_views, all_const_graph_views>::type graph_views;
 
-        boost::mpl::for_each<graph_views>(std::bind(dispatch_access<PropertyMap>(),
-                                                    std::placeholders::_1,
-                                                    std::ref(pclass), return_policy()));
+        boost::mpl::for_each<graph_views>(
+            [&](auto&& graph)
+            {
+                return dispatch_access<PropertyMap>()(
+                    std::forward<decltype(graph)>(graph), pclass,
+                    return_policy());
+            });
     }
 };
 

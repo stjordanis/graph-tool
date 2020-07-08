@@ -56,8 +56,14 @@ double min_cut(GraphInterface& gi, boost::any weight, boost::any part_map)
         weight_maps;
 
     run_action<graph_tool::detail::never_directed>()
-        (gi, std::bind(get_min_cut(), std::placeholders::_1, std::placeholders::_2,
-                       std::placeholders::_3, std::ref(mc)),
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return get_min_cut()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), mc);
+         },
          weight_maps(), writable_vertex_scalar_properties())(weight, part_map);
     return mc;
 }
@@ -79,7 +85,13 @@ void get_residual_graph(GraphInterface& gi, boost::any capacity,
     typedef eprop_map_t<uint8_t>::type emap_t;
     emap_t augment = boost::any_cast<emap_t>(oaugment);
     run_action<>()
-        (gi, std::bind(do_get_residual_graph(), std::placeholders::_1,
-                       std::placeholders::_2, std::placeholders::_3, augment),
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_get_residual_graph()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), augment);
+         },
          edge_scalar_properties(), edge_scalar_properties())(capacity, res);
 }

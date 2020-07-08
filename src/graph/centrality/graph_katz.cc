@@ -53,12 +53,18 @@ void katz(GraphInterface& g, boost::any w, boost::any c, boost::any beta,
     if(beta.empty())
         beta = beta_map_t();
 
-    run_action<>()(g, std::bind(get_katz(), std::placeholders::_1, g.get_vertex_index(),
-                                std::placeholders::_2, std::placeholders::_3,
-                                std::placeholders::_4, alpha, epsilon, max_iter),
-                   weight_props_t(),
-                   vertex_floating_properties(),
-                   beta_props_t())(w, c, beta);
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+         {
+             return get_katz()
+                 (std::forward<decltype(graph)>(graph), g.get_vertex_index(),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3),
+                  std::forward<decltype(a4)>(a4), alpha, epsilon, max_iter);
+         },
+         weight_props_t(), vertex_floating_properties(),
+         beta_props_t())(w, c, beta);
 }
 
 void export_katz()

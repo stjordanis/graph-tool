@@ -19,7 +19,6 @@
 #include "graph.hh"
 #include "graph_filtering.hh"
 
-#include <boost/bind.hpp>
 #include <boost/python.hpp>
 
 #include "graph_rewiring.hh"
@@ -148,71 +147,88 @@ size_t random_rewire(GraphInterface& gi, string strat, size_t niter,
     if (strat == "erdos")
     {
         run_action<graph_tool::detail::never_reversed>()
-            (gi, std::bind(graph_rewire<ErdosRewireStrategy>(),
-                           std::placeholders::_1, gi.get_edge_index(),
-                           std::ref(corr), pin,
-                           self_loops, parallel_edges, configuration,
-                           make_pair(niter, no_sweep),
-                           std::make_tuple(persist, cache, verbose),
-                           std::ref(pcount), std::ref(rng)))();
+            (gi,
+             [&](auto&& graph)
+             {
+                 return graph_rewire<ErdosRewireStrategy>()(
+                     std::forward<decltype(graph)>(graph), gi.get_edge_index(),
+                     corr, pin, self_loops, parallel_edges, configuration,
+                     make_pair(niter, no_sweep),
+                     std::make_tuple(persist, cache, verbose), pcount, rng);
+             })();
     }
     else if (strat == "configuration")
     {
         run_action<graph_tool::detail::never_reversed>()
-            (gi, std::bind(graph_rewire<RandomRewireStrategy>(),
-                           std::placeholders::_1, gi.get_edge_index(), std::ref(corr),
-                           pin, self_loops, parallel_edges, configuration,
-                           make_pair(niter, no_sweep),
-                           std::make_tuple(persist, cache, verbose),
-                           std::ref(pcount), std::ref(rng)))();
+            (gi,
+             [&](auto&& graph)
+             {
+                 return graph_rewire<RandomRewireStrategy>()(
+                     std::forward<decltype(graph)>(graph), gi.get_edge_index(),
+                     corr, pin, self_loops, parallel_edges, configuration,
+                     make_pair(niter, no_sweep),
+                     std::make_tuple(persist, cache, verbose), pcount, rng);
+             })();
     }
     else if (strat == "constrained-configuration")
     {
         if (block.empty())
         {
             run_action<graph_tool::detail::never_reversed>()
-                (gi, std::bind(graph_rewire<CorrelatedRewireStrategy>(),
-                               std::placeholders::_1, gi.get_edge_index(), std::ref(corr),
-                               pin, self_loops, parallel_edges, configuration,
-                               make_pair(niter, no_sweep),
-                               std::make_tuple(persist, cache, verbose),
-                               std::ref(pcount), std::ref(rng)))();
+                (gi,
+                 [&](auto&& graph)
+                 {
+                     return graph_rewire<CorrelatedRewireStrategy>()(
+                         std::forward<decltype(graph)>(graph),
+                         gi.get_edge_index(), corr, pin, self_loops,
+                         parallel_edges, configuration,
+                         make_pair(niter, no_sweep),
+                         std::make_tuple(persist, cache, verbose), pcount, rng);
+                 })();
         }
         else
         {
             run_action<graph_tool::detail::never_reversed>()
-                (gi, std::bind(graph_rewire_correlated(),
-                               std::placeholders::_1, gi.get_edge_index(), std::ref(corr),
-                               pin, self_loops, parallel_edges, configuration,
-                               make_pair(niter, no_sweep),
-                               std::make_tuple(persist, cache, verbose),
-                               std::ref(pcount), std::ref(rng),
-                               std::placeholders::_2),
+                (gi,
+                 [&](auto&& graph, auto&& a2)
+                 {
+                     return graph_rewire_correlated()
+                         (std::forward<decltype(graph)>(graph),
+                          gi.get_edge_index(), corr, pin, self_loops,
+                          parallel_edges, configuration,
+                          make_pair(niter, no_sweep),
+                          std::make_tuple(persist, cache, verbose), pcount, rng,
+                          std::forward<decltype(a2)>(a2));
+                 },
                  vertex_properties())(block);
         }
     }
     else if (strat == "probabilistic-configuration")
     {
         run_action<>()
-            (gi, std::bind(graph_rewire<ProbabilisticRewireStrategy>(),
-                           std::placeholders::_1, gi.get_edge_index(), std::ref(corr),
-                           pin, self_loops, parallel_edges, configuration,
-                           make_pair(niter, no_sweep),
-                           std::make_tuple(persist, cache, verbose),
-                           std::ref(pcount), std::ref(rng)))();
+            (gi,
+             [&](auto&& graph)
+             {
+                 return graph_rewire<ProbabilisticRewireStrategy>()(
+                     std::forward<decltype(graph)>(graph), gi.get_edge_index(),
+                     corr, pin, self_loops, parallel_edges, configuration,
+                     make_pair(niter, no_sweep),
+                     std::make_tuple(persist, cache, verbose), pcount, rng);
+             })();
     }
     else if (strat == "blockmodel")
     {
         run_action<>()
-            (gi, std::bind(graph_rewire_block(traditional, micro),
-                           std::placeholders::_1, gi.get_edge_index(),
-                           std::ref(corr), pin,
-                           make_pair(self_loops, parallel_edges),
-                           configuration,
-                           std::placeholders::_2,
-                           make_pair(niter, no_sweep),
-                           std::make_tuple(persist, cache, verbose),
-                           std::ref(pcount), std::ref(rng)),
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return graph_rewire_block(traditional, micro)(
+                     std::forward<decltype(graph)>(graph), gi.get_edge_index(),
+                     corr, pin, make_pair(self_loops, parallel_edges),
+                     configuration, std::forward<decltype(a2)>(a2),
+                     make_pair(niter, no_sweep),
+                     std::make_tuple(persist, cache, verbose), pcount, rng);
+             },
              vertex_properties())(block);
     }
     else

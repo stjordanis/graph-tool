@@ -203,11 +203,16 @@ void get_radial(GraphInterface& gi, boost::any otpos, boost::any olevels,
     wmap_t weight = boost::any_cast<wmap_t>(oweight);
 
     run_action<graph_tool::detail::always_directed>()
-        (gi, std::bind(do_get_radial(), std::placeholders::_1, std::placeholders::_2,
-                       levels, std::placeholders::_3, weight, root, weighted, r,
-                       order_propagate),
-         vertex_scalar_vector_properties(),
-         vertex_properties())(otpos, oorder);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_get_radial()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), levels,
+                  std::forward<decltype(a3)>(a3), weight, root, weighted, r,
+                  order_propagate);
+         },
+         vertex_scalar_vector_properties(), vertex_properties())(otpos, oorder);
 }
 
 #include <boost/python.hpp>

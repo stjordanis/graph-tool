@@ -69,10 +69,15 @@ void perfect_vhash(GraphInterface& gi, boost::any prop, boost::any hprop,
                    boost::any& dict)
 {
     run_action<graph_tool::detail::always_directed>()
-        (gi, std::bind<void>(do_perfect_vhash(), std::placeholders::_1,
-         std::placeholders::_2, std::placeholders::_3, std::ref(dict)),
-         vertex_properties(), writable_vertex_scalar_properties())
-        (prop, hprop);
+        (gi,
+         [&](auto&& graph, auto&& a2, auto&& a3)
+         {
+             return do_perfect_vhash()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2),
+                  std::forward<decltype(a3)>(a3), dict);
+         },
+         vertex_properties(), writable_vertex_scalar_properties())(prop, hprop);
 }
 
 struct do_set_vertex_property
@@ -91,9 +96,15 @@ struct do_set_vertex_property
 void set_vertex_property(GraphInterface& gi, boost::any prop,
                          boost::python::object val)
 {
-    run_action<>()(gi, std::bind(do_set_vertex_property(), std::placeholders::_1,
-                                 std::placeholders::_2, val),
-                   writable_vertex_properties())(prop);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_set_vertex_property()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), val);
+         },
+         writable_vertex_properties())(prop);
 }
 
 struct do_set_edge_property
@@ -112,7 +123,13 @@ struct do_set_edge_property
 void set_edge_property(GraphInterface& gi, boost::any prop,
                        boost::python::object val)
 {
-    run_action<>()(gi, std::bind(do_set_edge_property(), std::placeholders::_1,
-                                 std::placeholders::_2, val),
-                   writable_edge_properties())(prop);
+    run_action<>()
+        (gi,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_set_edge_property()
+                 (std::forward<decltype(graph)>(graph),
+                  std::forward<decltype(a2)>(a2), val);
+         },
+         writable_edge_properties())(prop);
 }

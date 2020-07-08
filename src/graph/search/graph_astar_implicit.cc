@@ -71,14 +71,17 @@ void a_star_search_implicit(GraphInterface& g, size_t source,
                             python::object cmb, python::object zero,
                             python::object inf, python::object h)
 {
-    run_action<graph_tool::all_graph_views,mpl::true_>()
-        (g, std::bind(do_astar_search(), std::placeholders::_1, source,
-                      std::placeholders::_2, make_pair(pred, cost),
-                      weight,
-                      AStarVisitorWrapper(g, vis),
-                      make_pair(AStarCmp(cmp),
-                                AStarCmb(cmb)),
-                      make_pair(zero, inf), h, std::ref(g)),
+    run_action<graph_tool::all_graph_views, mpl::true_>()
+        (g,
+         [&](auto&& graph, auto&& a2)
+         {
+             return do_astar_search()
+                 (std::forward<decltype(graph)>(graph), source,
+                  std::forward<decltype(a2)>(a2), make_pair(pred, cost), weight,
+                  AStarVisitorWrapper(g, vis),
+                  make_pair(AStarCmp(cmp), AStarCmb(cmb)), make_pair(zero, inf),
+                  h, g);
+         },
          writable_vertex_properties())(dist_map);
 }
 

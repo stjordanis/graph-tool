@@ -38,23 +38,28 @@ python::object sampled_distance_histogram(GraphInterface& gi, boost::any weight,
 
     if (weight.empty())
     {
-        run_action<>()(gi,
-                       std::bind(get_sampled_distance_histogram(),
-                                 std::placeholders::_1,
-                                 gi.get_vertex_index(), no_weightS(),
-                                 n_samples, std::ref(bins),
-                                 std::ref(ret), std::ref(rng)))();
+        run_action<>()
+            (gi,
+             [&](auto&& graph)
+             {
+                 return get_sampled_distance_histogram()
+                     (std::forward<decltype(graph)>(graph),
+                      gi.get_vertex_index(), no_weightS(), n_samples, bins, ret,
+                      rng);
+             })();
     }
     else
     {
-        run_action<>()(gi,
-                       std::bind(get_sampled_distance_histogram(),
-                                 std::placeholders::_1,
-                                 gi.get_vertex_index(), std::placeholders::_2,
-                                 n_samples,
-                                 std::ref(bins), std::ref(ret),
-                                 std::ref(rng)),
-                           edge_scalar_properties())(weight);
+        run_action<>()
+            (gi,
+             [&](auto&& graph, auto&& a2)
+             {
+                 return get_sampled_distance_histogram()
+                     (std::forward<decltype(graph)>(graph),
+                      gi.get_vertex_index(), std::forward<decltype(a2)>(a2),
+                      n_samples, bins, ret, rng);
+             },
+             edge_scalar_properties())(weight);
     }
     return ret;
 }

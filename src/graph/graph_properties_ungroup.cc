@@ -44,14 +44,28 @@ void ungroup_vector_property(GraphInterface& g, boost::any vector_prop,
 {
     if (edge)
         run_action<graph_tool::detail::always_directed_never_reversed>()
-            (g, bind(do_group_vector_property<boost::mpl::false_,boost::mpl::true_>(),
-                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, pos),
-             edge_vector_properties(), writable_edge_properties())
-            (vector_prop, prop);
+            (g,
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return do_group_vector_property<boost::mpl::false_,
+                                                 boost::mpl::true_>()(
+                     std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2),
+                     std::forward<decltype(a3)>(a3), pos);
+             },
+             edge_vector_properties(),
+             writable_edge_properties())(vector_prop, prop);
     else
         run_action<graph_tool::detail::always_directed_never_reversed>()
-            (g, bind(do_group_vector_property<boost::mpl::false_,boost::mpl::false_>(),
-                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, pos),
-             vertex_vector_properties(), writable_vertex_properties())
-            (vector_prop, prop);
+            (g,
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return do_group_vector_property<boost::mpl::false_,
+                                                 boost::mpl::false_>()(
+                     std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2),
+                     std::forward<decltype(a3)>(a3), pos);
+             },
+             vertex_vector_properties(),
+             writable_vertex_properties())(vector_prop, prop);
 }

@@ -433,7 +433,7 @@ bool update_deg(size_t t_i, const pair<size_t, size_t>& deg, Vset& vset,
 struct gen_graph
 {
     template <class Graph, class DegSample>
-    void operator()(Graph& g, size_t N, DegSample& deg_sample, bool no_parallel,
+    void operator()(Graph& g, size_t N, DegSample const& deg_sample, bool no_parallel,
                     bool no_self_loops, rng_t& rng, bool verbose, bool verify)
         const
     {

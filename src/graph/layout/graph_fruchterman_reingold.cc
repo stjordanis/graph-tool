@@ -19,7 +19,6 @@
 #include "graph.hh"
 #include "graph_properties.hh"
 
-#include <boost/bind.hpp>
 
 #ifndef __clang__
 #include <ext/numeric>
@@ -172,18 +171,27 @@ void fruchterman_reingold_layout(GraphInterface& g, boost::any pos,
     if (square)
         run_action<graph_tool::detail::never_directed>()
             (g,
-             std::bind(get_layout<square_topology<> >(), std::placeholders::_1,
-                       std::placeholders::_2, std::placeholders::_3, make_pair(a, r), scale,
-                       grid, make_pair(ti, tf), max_iter),
-             vertex_floating_vector_properties(), edge_props_t())
-            (pos, weight);
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return get_layout<square_topology<>>()(
+                     std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2),
+                     std::forward<decltype(a3)>(a3), make_pair(a, r), scale,
+                     grid, make_pair(ti, tf), max_iter);
+             },
+             vertex_floating_vector_properties(), edge_props_t())(pos, weight);
     else
         run_action<graph_tool::detail::never_directed>()
             (g,
-             std::bind(get_layout<circle_topology<> >(), std::placeholders::_1,
-                       std::placeholders::_2, std::placeholders::_3, make_pair(a, r),
-                       scale, grid, make_pair(ti, tf), max_iter),
-             vertex_floating_vector_properties(), edge_props_t()) (pos, weight);
+             [&](auto&& graph, auto&& a2, auto&& a3)
+             {
+                 return get_layout<circle_topology<>>()(
+                     std::forward<decltype(graph)>(graph),
+                     std::forward<decltype(a2)>(a2),
+                     std::forward<decltype(a3)>(a3), make_pair(a, r), scale,
+                     grid, make_pair(ti, tf), max_iter);
+             },
+             vertex_floating_vector_properties(), edge_props_t())(pos, weight);
 }
 
 #include <boost/python.hpp>

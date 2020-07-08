@@ -90,24 +90,32 @@ bool check_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
     if (gi1.get_directed())
     {
         gt_dispatch<>()
-            (std::bind(check_iso(),
-                       std::placeholders::_1, std::placeholders::_2,
-                       inv_map1, inv_map2, max_inv, iso_map,
-                       gi1.get_vertex_index(),
-                       gi2.get_vertex_index(), std::ref(result)),
-             always_directed(), always_directed())
-            (gi1.get_graph_view(), gi2.get_graph_view());
+            (
+                [&](auto&& graph, auto&& a2)
+                {
+                    return check_iso()
+                        (std::forward<decltype(graph)>(graph),
+                         std::forward<decltype(a2)>(a2), inv_map1, inv_map2,
+                         max_inv, iso_map, gi1.get_vertex_index(),
+                         gi2.get_vertex_index(), result);
+                },
+                always_directed(),
+                always_directed())(gi1.get_graph_view(), gi2.get_graph_view());
     }
     else
     {
         gt_dispatch<>()
-            (std::bind(check_iso(),
-                       std::placeholders::_1, std::placeholders::_2,
-                       inv_map1, inv_map2, max_inv, iso_map,
-                       gi1.get_vertex_index(),
-                       gi2.get_vertex_index(), std::ref(result)),
-             never_directed(), never_directed())
-            (gi1.get_graph_view(), gi2.get_graph_view());
+            (
+                [&](auto&& graph, auto&& a2)
+                {
+                    return check_iso()
+                        (std::forward<decltype(graph)>(graph),
+                         std::forward<decltype(a2)>(a2), inv_map1, inv_map2,
+                         max_inv, iso_map, gi1.get_vertex_index(),
+                         gi2.get_vertex_index(), result);
+                },
+                never_directed(),
+                never_directed())(gi1.get_graph_view(), gi2.get_graph_view());
     }
 
     return result;

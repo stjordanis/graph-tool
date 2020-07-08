@@ -18,7 +18,6 @@
 #ifndef GRAPH_BLOCKMODEL_OVERLAP_PARTITION_HH
 #define GRAPH_BLOCKMODEL_OVERLAP_PARTITION_HH
 
-#include <functional>
 #include "graph_blockmodel_overlap_util.hh"
 #include "boost/container/small_vector.hpp"
 

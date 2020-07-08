@@ -23,7 +23,6 @@
 #include <vector>
 #include <memory>
 #include <random>
-#include <functional>
 #include <boost/functional/hash.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/extract.hpp>
@@ -195,8 +194,7 @@ public:
         if (_all_names.empty())
         {
             boost::mpl::for_each<TypeSequence>
-                (std::bind(get_all_names(), std::placeholders::_1,
-                      std::ref(_type_names), std::ref(_all_names)));
+                ([this](auto t){ get_all_names()(t, _type_names, _all_names); });
         }
     }
 
@@ -204,8 +202,7 @@ public:
     {
         std::string const* name;
         boost::mpl::for_each<TypeSequence>
-            (std::bind(find_name(), std::placeholders::_1, std::ref(type),
-                       std::ref(_all_names), std::ref(name)));
+            ([this, &type, &name](auto t){ find_name()(t, type, _all_names, name); });
         return *name;
     }
 
@@ -353,8 +350,7 @@ public:
     {
         ValueConverter* converter = 0;
         boost::mpl::for_each<PropertyTypes>
-            (std::bind(choose_converter(), std::placeholders::_1, std::ref(pmap),
-                       std::ref(converter)));
+            ([&pmap, &converter](auto t){ choose_converter()(t, pmap, converter); });
         if (converter == 0)
             throw boost::bad_lexical_cast();
         else
