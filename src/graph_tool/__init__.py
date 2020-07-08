@@ -430,6 +430,7 @@ class PropertyMap(object):
                  "long double", "vector<bool>", "vector<int16_t>",
                  "vector<int32_t>", "vector<int64_t>", "vector<double>",
                  "vector<long double>", "string", "vector<string>"]
+        p = None
         for t in types:
             try:
                 p = self.copy(value_type=t, full=full)
@@ -439,8 +440,10 @@ class PropertyMap(object):
                         continue
                 if p.copy(value_type=self.value_type(), full=full) == self:
                     break
-            except (TypeError, ValueError, OverflowError):
+            except (TypeError, ValueError, OverflowError, AttributeError):
                 pass
+        if p is None:
+            p = self.copy()
         return p
 
 
