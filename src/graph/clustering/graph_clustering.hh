@@ -109,6 +109,7 @@ struct get_global_clustering
                      auto temp = get_triangles(v, eweight, mask, g);
                      triangles += temp.first;
                      n += temp.second;
+                     ret[v] = temp;
                  });
         c = double(triangles) / n;
 
