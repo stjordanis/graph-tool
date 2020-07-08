@@ -21,7 +21,6 @@
 #include "graph_selectors.hh"
 
 #include <boost/mpl/for_each.hpp>
-#include <boost/mpl/contains.hpp>
 #include <boost/python/extract.hpp>
 
 using namespace std;

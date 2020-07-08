@@ -22,8 +22,6 @@
 #include "graph_util.hh"
 #include "idx_map.hh"
 
-#include <boost/range/adaptor/reversed.hpp>
-
 namespace graph_tool
 {
 using namespace std;

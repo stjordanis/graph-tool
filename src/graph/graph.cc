@@ -21,7 +21,6 @@
 
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
-#include <iostream>
 
 using namespace std;
 using namespace boost;

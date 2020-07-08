@@ -26,7 +26,6 @@
 #include "graph_util.hh"
 
 #include "coroutine.hh"
-#include "graph_python_interface.hh"
 
 using namespace std;
 using namespace boost;

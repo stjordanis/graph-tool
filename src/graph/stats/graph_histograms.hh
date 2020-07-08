@@ -22,8 +22,6 @@
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/python/object.hpp>
-#include <boost/python/list.hpp>
-#include <boost/python/extract.hpp>
 #include "numpy_bind.hh"
 #include "histogram.hh"
 #include "shared_map.hh"

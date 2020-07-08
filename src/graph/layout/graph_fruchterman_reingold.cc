@@ -31,10 +31,6 @@ Value power(Value value, int n)
 }
 #endif
 
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/special_functions/hypot.hpp>
-#include <boost/math/constants/constants.hpp>
-
 #include <boost/graph/fruchterman_reingold.hpp>
 
 using namespace std;

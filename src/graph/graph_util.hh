@@ -30,13 +30,9 @@ namespace boost { namespace python { namespace detail {
 } } }
 
 #include <boost/graph/graph_traits.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/type_traits/is_convertible.hpp>
 #include <string>
 
 #include <boost/functional/hash.hpp>
@@ -44,7 +40,6 @@ namespace boost { namespace python { namespace detail {
 #include <random>
 
 #include "graph_selectors.hh"
-#include "graph_reverse.hh"
 #include "graph_filtered.hh"
 
 namespace graph_tool

@@ -16,7 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "graph_filtering.hh"
-#include "graph_python_interface.hh"
 
 #include <boost/python.hpp>
 #include <boost/graph/astar_search.hpp>

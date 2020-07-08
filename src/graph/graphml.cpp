@@ -10,13 +10,11 @@
 //           Tiago de Paula Peixoto
 
 #include <boost/python.hpp>
-#include <boost/variant.hpp>
 #include <expat.h>
 #include <boost/graph/graphml.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/archive/iterators/xml_escape.hpp>
 #include <boost/archive/iterators/ostream_iterator.hpp>
-#include <boost/archive/iterators/insert_linebreaks.hpp>
 #include <sstream>
 
 #include "base64.hh"

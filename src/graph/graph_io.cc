@@ -22,8 +22,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/bzip2.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/device/file.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/graph/graphml.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/xpressive/xpressive.hpp>

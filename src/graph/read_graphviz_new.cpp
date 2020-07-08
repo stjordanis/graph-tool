@@ -25,8 +25,6 @@
 //         Ronald Garcia
 //
 
-#include <boost/ref.hpp>
-#include <boost/function/function2.hpp>
 #include <boost/version.hpp>
 #if (BOOST_VERSION >= 104000)
 #   include <boost/property_map/dynamic_property_map.hpp>
@@ -47,8 +45,6 @@
 #include <cstdlib>
 #include <boost/throw_exception.hpp>
 #include <boost/regex.hpp>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <boost/graph/graphviz.hpp>
 
 namespace boost {

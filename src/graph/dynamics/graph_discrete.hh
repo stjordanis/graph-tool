@@ -21,7 +21,6 @@
 #include "graph.hh"
 #include "graph_filtering.hh"
 #include "graph_util.hh"
-#include "graph_python_interface.hh"
 #ifdef _OPENMP
 #include <omp.h>
 #endif

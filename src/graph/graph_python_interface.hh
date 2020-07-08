@@ -19,7 +19,6 @@
 #define PYTHON_INTERFACE_HH
 
 #include <boost/python.hpp>
-#include <boost/python/type_id.hpp>
 
 namespace std
 {
@@ -37,6 +36,12 @@ namespace std
 #include <boost/mpl/logical.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <boost/version.hpp>
+#if (BOOST_VERSION >= 104000)
+#   include <boost/property_map/dynamic_property_map.hpp>
+#else
+#   include <boost/dynamic_property_map.hpp>
+#endif
 #include <type_traits>
 
 #include "graph.hh"

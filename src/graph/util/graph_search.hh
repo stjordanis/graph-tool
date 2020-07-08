@@ -24,7 +24,6 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#include <boost/type_traits.hpp>
 #endif
 
 

@@ -22,31 +22,14 @@
 #include <boost/version.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/erase.hpp>
-#include <boost/mpl/clear.hpp>
-#include <boost/mpl/map.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/at.hpp>
-#include <boost/mpl/or.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/logical.hpp>
-#include <boost/mpl/inserter.hpp>
-#include <boost/mpl/insert_range.hpp>
+#include <boost/mpl/back_inserter.hpp>
 #include <boost/mpl/assert.hpp>
-#include <boost/mpl/plus.hpp>
-#include <boost/mpl/divides.hpp>
-#include <boost/mpl/arithmetic.hpp>
-#include <boost/mpl/greater_equal.hpp>
-#include <boost/mpl/comparison.hpp>
-#include <boost/mpl/transform_view.hpp>
-#include <boost/mpl/quote.hpp>
-#include <boost/mpl/range_c.hpp>
-#include <boost/mpl/print.hpp>
 
 #include "graph_adaptor.hh"
 #include "graph_filtered.hh"
 #include "graph_reverse.hh"
-#include "graph_selectors.hh"
 #include "graph_util.hh"
 #include "mpl_nested_loop.hh"
 

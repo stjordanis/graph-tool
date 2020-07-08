@@ -21,6 +21,8 @@
 #include <array>
 #include <deque>
 
+#include "hash_map_wrap.hh"
+
 namespace graph_tool
 {
 

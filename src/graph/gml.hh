@@ -29,7 +29,6 @@
 #include <boost/variant/get.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
 #include <boost/foreach.hpp>
-#include <boost/type_traits.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -44,7 +43,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-
 #include <unordered_map>
 
 #include "base64.hh"

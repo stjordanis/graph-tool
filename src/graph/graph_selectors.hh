@@ -24,11 +24,12 @@
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/find.hpp>
-#include <boost/mpl/not.hpp>
-#include <boost/mpl/logical.hpp>
+#include <boost/mpl/transform.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/back_inserter.hpp>
+#include <boost/any.hpp>
+#include <boost/graph/graph_traits.hpp>
 
-#include "graph_adaptor.hh"
 #include "graph_properties.hh"
 #include "graph.hh"
 

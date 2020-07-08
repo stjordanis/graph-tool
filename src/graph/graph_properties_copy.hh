@@ -22,9 +22,7 @@
 #include "graph_filtering.hh"
 #include "graph_properties.hh"
 #include "graph_util.hh"
-
-#include <boost/mpl/contains.hpp>
-#include <boost/python/extract.hpp>
+#include "hash_map_wrap.hh"
 
 namespace graph_tool
 {

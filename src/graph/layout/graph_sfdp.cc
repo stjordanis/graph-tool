@@ -20,8 +20,6 @@
 #include "graph_properties.hh"
 #include "graph_exceptions.hh"
 
-#include <boost/lambda/bind.hpp>
-
 #include "graph_sfdp.hh"
 #include "random.hh"
 #include "hash_map_wrap.hh"

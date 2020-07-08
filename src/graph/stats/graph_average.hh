@@ -19,8 +19,6 @@
 #define GRAPH_AVERAGE_HH
 
 #include <algorithm>
-#include <boost/numeric/conversion/bounds.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 
 namespace graph_tool
 {

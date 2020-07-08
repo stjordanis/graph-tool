@@ -21,6 +21,8 @@
 #include "../support/util.hh"
 #include "../support/int_part.hh"
 
+#include "hash_map_wrap.hh"
+
 namespace graph_tool
 {
 
