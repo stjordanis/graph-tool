@@ -2559,17 +2559,17 @@ class Graph(object):
 
         if len(self.__properties) == 0:
             return
-        w = max([len(x[0]) for x in list(self.__properties.keys())]) + 4
-        w = w if w > 14 else 14
+        w = max(max([len(x[1]) for x in list(self.__properties.keys())]) + 4,
+                14)
 
         for k, v in self.graph_properties.items():
-            pref="%%-%ds (graph)   (type: %%s, val: " % w %  (k, v.value_type())
+            pref="%%-%ds (graph)   (type: %%s, val: " % w % (k, v.value_type())
             val = str(v[self])
             if len(val) > 1000:
                 val = val[:1000] + "..."
             tw = terminal_size()[0]
             val = textwrap.fill(val,
-                                width=max(tw - len(pref), 1))
+                                width=max(tw - len(pref) - 1, 1))
             val = val.replace("\n", "\n" + " " * len(pref))
             print("%s%s)" % (pref, val))
         for k, v in sorted(self.vertex_properties.items(), key=lambda k: k[0]):
