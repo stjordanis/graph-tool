@@ -101,7 +101,7 @@ def get_modularity_entropy_args(kargs, ignore=None):
     return ea
 
 class ModularityState(object):
-    r"""Obtain the partition of a network according to the Newman's modularity.
+    r"""Obtain the partition of a network according to Newman's modularity.
 
     .. warning::
 
