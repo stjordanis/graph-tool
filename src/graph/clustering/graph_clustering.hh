@@ -49,7 +49,7 @@ auto get_triangles(typename graph_traits<Graph>::vertex_descriptor v,
                    EWeight& eweight, VProp& mark, const Graph& g)
 {
     typedef typename property_traits<EWeight>::value_type val_t;
-    val_t triangles = 0, w1 = 0, w2 = 0, k = 0;
+    val_t triangles = 0, k = 0;
 
     for (auto e : out_edges_range(v, g))
     {
@@ -66,15 +66,17 @@ auto get_triangles(typename graph_traits<Graph>::vertex_descriptor v,
         auto n = target(e, g);
         if (n == v)
             continue;
-        w1 = eweight[e];
+        auto m = mark[n];
+        mark[n] = 0;
+        val_t t = 0;
         for (auto e2 : out_edges_range(n, g))
         {
             auto n2 = target(e2, g);
-            if (n2 == n)
-                continue;
-            w2 = eweight[e2];
-            triangles += mark[n2] * w1 * w2;
+            if (mark[n2] > 0)
+                t += eweight[e2];
         }
+        triangles += t * eweight[e];
+        mark[n] = m;
     }
 
     for (auto n : adjacent_vertices_range(v, g))
@@ -96,6 +98,7 @@ struct get_global_clustering
         typedef typename property_traits<EWeight>::value_type val_t;
         val_t triangles = 0, n = 0;
         vector<val_t> mask(num_vertices(g), 0);
+        vector<std::pair<val_t, val_t>> ret(num_vertices(g));
 
         #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
             firstprivate(mask) reduction(+:triangles, n)
@@ -112,17 +115,17 @@ struct get_global_clustering
         // "jackknife" variance
         c_err = 0.0;
         double cerr = 0.0;
-        #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
-            firstprivate(mask) reduction(+:cerr)
+        #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH)   \
+            reduction(+:cerr)
         parallel_vertex_loop_no_spawn
                 (g,
                  [&](auto v)
                  {
-                     auto temp = get_triangles(v, eweight, mask, g);
-                     double cl = double(triangles - temp.first) /
-                         (n - temp.second);
+                     auto cl = double(triangles - ret[v].first) /
+                         (n - ret[v].second);
                      cerr += power(c - cl, 2);
                  });
+
         c_err = sqrt(cerr);
     }
 };
