@@ -102,13 +102,13 @@ def random_graph(N, deg_sampler, directed=True,
         If ``True``, parallel edges are allowed.
     self_loops : bool (optional, default: ``False``)
         If ``True``, self-loops are allowed.
-    block_membership : list or :class:`~numpy.ndarray` or function (optional, default: ``None``)
+    block_membership : list or :class:`numpy.ndarray` or function (optional, default: ``None``)
         If supplied, the graph will be sampled from a stochastic blockmodel
         ensemble, and this parameter specifies the block membership of the
         vertices, which will be passed to the
         :func:`~graph_tool.generation.random_rewire` function.
 
-        If the value is a list or a :class:`~numpy.ndarray`, it must have
+        If the value is a list or a :class:`numpy.ndarray`, it must have
         ``len(block_membership) == N``, and the values will define to which
         block each vertex belongs.
 
@@ -1650,7 +1650,7 @@ def triangulation(points, type="simple", periodic=False):
 
     Parameters
     ----------
-    points : :class:`~numpy.ndarray`
+    points : :class:`numpy.ndarray`
         Point set for the triangulation. It may be either a N x d array, where N
         is the number of points, and d is the space dimension (either 2 or 3).
     type : string (optional, default: ``'simple'``)
@@ -1768,7 +1768,7 @@ def lattice(shape, periodic=False):
 
     Parameters
     ----------
-    shape : list or :class:`~numpy.ndarray`
+    shape : list or :class:`numpy.ndarray`
         List of sizes in each dimension.
     periodic : bool (optional, default: ``False``)
         If ``True``, periodic boundary conditions will be used.
@@ -1926,13 +1926,13 @@ def geometric_graph(points, radius, ranges=None):
 
     Parameters
     ----------
-    points : list or :class:`~numpy.ndarray`
+    points : list or :class:`numpy.ndarray`
         List of points. This must be a two-dimensional array, where the rows are
         coordinates in a N-dimensional space.
     radius : float
         Pairs of points with an euclidean distance lower than this parameters
         will be connected.
-    ranges : list or :class:`~numpy.ndarray` (optional, default: ``None``)
+    ranges : list or :class:`numpy.ndarray` (optional, default: ``None``)
         If provided, periodic boundary conditions will be assumed, and the
         values of this parameter it will be used as the ranges in all
         dimensions. It must be a two-dimensional array, where each row will

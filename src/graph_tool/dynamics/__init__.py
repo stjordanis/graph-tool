@@ -1172,7 +1172,7 @@ class PottsGlauberState(DiscreteStateBase):
         ----------
         g : :class:`~graph_tool.Graph`
            Graph to be used for the dynamics
-        f : list of lists or two-dimensional :class:`~numpy.ndarray`
+        f : list of lists or two-dimensional :class:`numpy.ndarray`
            Matrix of interactions between spin values, of dimension
            :math:`q\times q`, where :math:`q` is the number of spins.
         w : :class:`~graph_tool.EdgePropertyMap` or ``float`` (optional, default: ``1.``)
@@ -1263,7 +1263,7 @@ class PottsMetropolisState(DiscreteStateBase):
         ----------
         g : :class:`~graph_tool.Graph`
            Graph to be used for the dynamics
-        f : list of lists or two-dimensional :class:`~numpy.ndarray`
+        f : list of lists or two-dimensional :class:`numpy.ndarray`
            Matrix of interactions between spin values, of dimension
            :math:`q\times q`, where :math:`q` is the number of spins.
         w : :class:`~graph_tool.EdgePropertyMap` or ``float`` (optional, default: ``1.``)

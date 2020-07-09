@@ -80,9 +80,9 @@ def vertex_hist(g, deg, bins=[0, 1], float_count=True):
 
     Returns
     -------
-    counts : :class:`~numpy.ndarray`
+    counts : :class:`numpy.ndarray`
         The bin counts.
-    bins : :class:`~numpy.ndarray`
+    bins : :class:`numpy.ndarray`
         The bin edges.
 
     See Also
@@ -142,9 +142,9 @@ def edge_hist(g, eprop, bins=[0, 1], float_count=True):
 
     Returns
     -------
-    counts : :class:`~numpy.ndarray`
+    counts : :class:`numpy.ndarray`
         The bin counts.
-    bins : :class:`~numpy.ndarray`
+    bins : :class:`numpy.ndarray`
         The bin edges.
 
     See Also
@@ -391,9 +391,9 @@ def distance_histogram(g, weight=None, bins=[0, 1], samples=None,
 
     Returns
     -------
-    counts : :class:`~numpy.ndarray`
+    counts : :class:`numpy.ndarray`
         The bin counts.
-    bins : :class:`~numpy.ndarray`
+    bins : :class:`numpy.ndarray`
         The bin edges.
 
     See Also

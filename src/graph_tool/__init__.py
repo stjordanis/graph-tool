@@ -594,7 +594,7 @@ class PropertyMap(object):
     ma = property(__get_set_m_array,
                   lambda self, v: self.__get_set_m_array(v, False),
                   doc=r"""The same as the :attr:`~PropertyMap.a` attribute, but
-                  instead a :class:`~numpy.ma.MaskedArray` object is returned,
+                  instead a :class:`numpy.ma.MaskedArray` object is returned,
                   which contains only entries for vertices/edges which are not
                   filtered out. If there are no filters in place, a regular
                   :class:`~graph_tool.PropertyArray` is returned, which
@@ -951,7 +951,7 @@ class GraphPropertyMap(PropertyMap):
 
 
 class PropertyArray(numpy.ndarray):
-    """This is a :class:`~numpy.ndarray` subclass which keeps a reference of its
+    """This is a :class:`numpy.ndarray` subclass which keeps a reference of its
     :class:`~graph_tool.PropertyMap` owner.
     """
 
@@ -3468,7 +3468,7 @@ class GraphView(Graph):
     The argument ``g`` must be an instance of a :class:`~graph_tool.Graph`
     class. If specified, ``vfilt`` and ``efilt`` select which vertices and edges
     are filtered, respectively. These parameters can either be a boolean-valued
-    :class:`~graph_tool.PropertyMap` or :class:`~numpy.ndarray`, which specify
+    :class:`~graph_tool.PropertyMap` or :class:`numpy.ndarray`, which specify
     which vertices/edges are selected, or an unary function that returns
     ``True`` if a given vertex/edge is to be selected, or ``False`` otherwise.
 

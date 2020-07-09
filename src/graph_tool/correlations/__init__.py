@@ -216,11 +216,11 @@ def corr_hist(g, deg_source, deg_target, bins=[[0, 1], [0, 1]], weight=None,
 
     Returns
     -------
-    bin_counts : :class:`~numpy.ndarray`
+    bin_counts : :class:`numpy.ndarray`
         Two-dimensional array with the bin counts.
-    source_bins : :class:`~numpy.ndarray`
+    source_bins : :class:`numpy.ndarray`
         Source degree bins
-    target_bins : :class:`~numpy.ndarray`
+    target_bins : :class:`numpy.ndarray`
         Target degree bins
 
 
@@ -315,11 +315,11 @@ def combined_corr_hist(g, deg1, deg2, bins=[[0, 1], [0, 1]], float_count=True):
 
     Returns
     -------
-    bin_counts : :class:`~numpy.ndarray`
+    bin_counts : :class:`numpy.ndarray`
         Two-dimensional array with the bin counts.
-    first_bins : :class:`~numpy.ndarray`
+    first_bins : :class:`numpy.ndarray`
         First degree bins
-    second_bins : :class:`~numpy.ndarray`
+    second_bins : :class:`numpy.ndarray`
         Second degree bins
 
     Notes
@@ -406,12 +406,12 @@ def avg_neighbor_corr(g, deg_source, deg_target, bins=[0, 1], weight=None):
 
     Returns
     -------
-    bin_avg : :class:`~numpy.ndarray`
+    bin_avg : :class:`numpy.ndarray`
         Array with the deg_target average for the get_source bins.
-    bin_dev : :class:`~numpy.ndarray`
+    bin_dev : :class:`numpy.ndarray`
         Array with the standard deviation of the deg_target average for the
         get_source bins.
-    bins : :class:`~numpy.ndarray`
+    bins : :class:`numpy.ndarray`
         Source degree bins,
 
 
@@ -498,11 +498,11 @@ def avg_combined_corr(g, deg1, deg2, bins=[0, 1]):
 
     Returns
     -------
-    bin_avg : :class:`~numpy.ndarray`
+    bin_avg : :class:`numpy.ndarray`
         Array with the deg2 average for the deg1 bins.
-    bin_dev : :class:`~numpy.ndarray`
+    bin_dev : :class:`numpy.ndarray`
         Array with the standard deviation of the deg2 average for the deg1 bins.
-    bins : :class:`~numpy.ndarray`
+    bins : :class:`numpy.ndarray`
         The deg1 bins.
 
     Notes

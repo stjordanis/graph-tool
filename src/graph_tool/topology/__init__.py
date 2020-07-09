@@ -1210,9 +1210,9 @@ def label_components(g, vprop=None, directed=None, attractors=False):
     -------
     comp : :class:`~graph_tool.VertexPropertyMap`
         Vertex property map with component labels.
-    hist : :class:`~numpy.ndarray`
+    hist : :class:`numpy.ndarray`
         Histogram of component labels.
-    is_attractor : :class:`~numpy.ndarray`
+    is_attractor : :class:`numpy.ndarray`
         A Boolean array specifying if the strongly connected components are
         attractors or not. This returned only if ``attractors == True``, and the
         graph is directed.

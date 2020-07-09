@@ -225,7 +225,7 @@ def betweenness(g, pivots=None, vprop=None, eprop=None, weight=None, norm=True):
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    pivots : list or :class:`~numpy.ndarray`, optional (default: None)
+    pivots : list or :class:`numpy.ndarray`, optional (default: None)
         If provided, the betweenness will be estimated using the vertices in
         this list as pivots. If the list contains all nodes (the default) the
         algorithm will be exact, and if the vertices are randomly chosen the
