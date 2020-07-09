@@ -2407,11 +2407,11 @@ class Graph(object):
         """
         return libcore.remove_edge(self.__graph, edge)
 
-    def add_edge_list(self, edge_list, hashed=False, string_vals=False,
+    def add_edge_list(self, edge_list, hashed=False, hash_type="string",
                       eprops=None):
         """Add a list of edges to the graph, given by ``edge_list``, which can
         be an iterator of ``(source, target)`` pairs where both ``source`` and
-        ``target`` are vertex indexes, or a :class:`~numpy.ndarray` of shape
+        ``target`` are vertex indexes, or a :class:`numpy.ndarray` of shape
         ``(E,2)``, where ``E`` is the number of edges, and each line specifies a 
         ``(source, target)`` pair. If the list references vertices which do not
         exist in the graph, they will be created.
@@ -2420,10 +2420,11 @@ class Graph(object):
         are not assumed to correspond to vertex indices directly. In this case
         they will be mapped to vertex indices according to the order in which
         they are encountered, and a vertex property map with the vertex values
-        is returned. If ``string_vals == True``, the algorithm assumes that the
-        vertex values are strings. Otherwise, they will be assumed to be numeric
-        if ``edge_list`` is a :class:`~numpy.ndarray`, or arbitrary python
-        objects if it is not.
+        is returned. The option ``hash_type`` will determine the expected type
+        used by the hash keys, and they can be any property map value type (see
+        :class:`PropertyMap`), unless ``edge_list`` is a :class:`numpy.ndarray`,
+        in which case the value of this option is ignored, and the type is
+        determined automatically.
 
         If given, ``eprops`` should specify an iterable containing edge property
         maps that will be filled with the remaining values at each row, if there
@@ -2465,13 +2466,10 @@ class Graph(object):
         else:
             if isinstance(edge_list, numpy.ndarray):
                 vprop = self.new_vertex_property(_gt_type(edge_list.dtype))
-            elif string_vals:
-                vprop = self.new_vertex_property("string")
             else:
-                vprop = self.new_vertex_property("object")
+                vprop = self.new_vertex_property(hash_type)
             libcore.add_edge_list_hashed(self.__graph, edge_list,
-                                         _prop("v", self, vprop),
-                                         string_vals, eprops)
+                                         _prop("v", self, vprop), eprops)
             return vprop
 
     def set_fast_edge_removal(self, fast=True):

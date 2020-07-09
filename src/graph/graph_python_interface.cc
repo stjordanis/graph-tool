@@ -854,7 +854,7 @@ void do_add_edge_list(GraphInterface& gi, python::object aedge_list,
                       python::object eprops);
 
 void do_add_edge_list_hashed(GraphInterface& gi, python::object aedge_list,
-                             boost::any& vertex_map, bool is_str,
+                             boost::any& vertex_map,
                              python::object eprops);
 
 void do_add_edge_list_iter(GraphInterface& gi, python::object edge_list,
