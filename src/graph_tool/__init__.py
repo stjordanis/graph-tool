@@ -3327,7 +3327,7 @@ def load_graph(file_name, fmt="auto", ignore_vp=None, ignore_ep=None,
     return g
 
 def load_graph_from_csv(file_name, directed=False, eprop_types=None,
-                        eprop_names=None, string_vals=True, hashed=False,
+                        eprop_names=None, hashed=True, hash_type="string",
                         skip_first=False, strip_whitespace=True, ecols=(0,1),
                         csv_options={"delimiter": ",", "quotechar": '"'}):
     """Load a graph from a :mod:`csv` file containing a list of edges and edge
@@ -3347,16 +3347,14 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
         this is ``None``, and ``skip_first`` is ``True`` their values will be
         obtained from the first line, otherwise they will be called ``c1, c2,
         ...``).
-    string_vals : ``bool`` (optional, default: ``True``)
-        If ``True``, the vertex values are assumed to be arbitrary strings,
-        otherwise they will be assumed to correspond to integers.
-    hashed : ``bool`` (optional, default: ``False``)
-        If ``True`` and ``string_vals == False``, the vertex values in the edge
-        list are not assumed to correspond to vertex indices directly. In this
-        case they will be mapped to vertex indices according to the order in
-        which they are encountered, and a vertex property map with the vertex
-        values is returned. If ``string_vals == True``, this automatically means
-        ``hashed = True``.
+    hashed : ``bool`` (optional, default: ``True``)
+        If ``True`` the vertex values in the edge list are not assumed to
+        correspond to vertex indices directly. In this case they will be mapped
+        to vertex indices according to the order in which they are encountered,
+        and a vertex property map with the vertex values is returned.
+    hash_type : ``str`` (optional, default: ``string``)
+        If ``hashed == True``, this will determined the type of the vertex values.
+        It can be any property map value type (see :class:`PropertyMap`).
     skip_first : ``bool`` (optional, default: ``False``)
         If ``True`` the first line of the file will be skipped.
     strip_whitespace : ``bool`` (optional, default: ``True``)
@@ -3414,10 +3412,9 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
                 yield [s, t] + row
         r = reorder(r)
 
-    if not string_vals:
+    if not hashed:
         def conv(rows):
             for row in rows:
-                row = list(row)
                 row = list(row)
                 row[0] = int(row[0])
                 row[1] = int(row[1])
@@ -3432,10 +3429,8 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
     else:
         eprops = [g.new_ep(t) for t in eprop_types]
 
-    name = g.add_edge_list(itertools.chain([line], r),
-                           string_vals=string_vals,
-                           hashed=hashed or string_vals,
-                           eprops=eprops)
+    name = g.add_edge_list(itertools.chain([line], r), hashed=hashed,
+                           hash_type=hash_type, eprops=eprops)
 
     if eprop_names is None and skip_first and len(first_line) == len(line):
         eprop_names = list(first_line)
