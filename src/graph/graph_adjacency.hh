@@ -22,7 +22,6 @@
 #include <deque>
 #include <utility>
 #include <numeric>
-#include <iostream>
 #include <tuple>
 #include <boost/iterator.hpp>
 #include <boost/graph/graph_traits.hpp>

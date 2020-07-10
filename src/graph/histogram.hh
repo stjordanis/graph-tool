@@ -25,7 +25,6 @@
 #define BOOST_DISABLE_ASSERTS
 #include <boost/multi_array.hpp>
 
-#include <boost/type_traits.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/int.hpp>
 

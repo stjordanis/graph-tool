@@ -21,8 +21,6 @@
 #include "graph_python_interface.hh"
 
 #include <boost/python.hpp>
-#include <boost/python/stl_iterator.hpp>
-#include <set>
 
 #include "coroutine.hh"
 

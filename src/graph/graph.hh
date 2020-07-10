@@ -19,11 +19,11 @@
 #define GRAPH_HH
 #include "config.h"
 
-#include <Python.h>
 #include <boost/python/object.hpp>
-#include <boost/python/dict.hpp>
+#include <boost/python/list.hpp>
+#include <boost/python/tuple.hpp>
 
-#include <deque>
+#include <boost/any.hpp>
 
 #include "graph_adjacency.hh"
 
@@ -31,7 +31,7 @@
 
 #include "fast_vector_property_map.hh"
 #include <boost/variant.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/mpl/bool_fwd.hpp>
 #include "graph_properties.hh"
 #include "graph_exceptions.hh"
 

@@ -19,9 +19,6 @@
 #include "graph_filtering.hh"
 #include "graph_properties.hh"
 
-#include <boost/mpl/contains.hpp>
-#include <boost/python/extract.hpp>
-
 #include "graph_properties_copy.hh"
 
 using namespace std;

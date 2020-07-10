@@ -20,9 +20,6 @@
 
 #include "graph_union.hh"
 
-
-#include <boost/python/extract.hpp>
-
 using namespace graph_tool;
 using namespace boost;
 

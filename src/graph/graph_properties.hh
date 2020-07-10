@@ -26,24 +26,22 @@
 #include <boost/functional/hash.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/extract.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <boost/version.hpp>
 #if (BOOST_VERSION >= 104000)
 #   include <boost/property_map/property_map.hpp>
-#   include <boost/property_map/dynamic_property_map.hpp>
 #else
 #   include <boost/property_map.hpp>
-#   include <boost/dynamic_property_map.hpp>
 #endif
 #include "fast_vector_property_map.hh"
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/find.hpp>
+#include <boost/mpl/bind.hpp>
 
-#include "graph.hh"
 #include "graph_exceptions.hh"
-#include "hash_map_wrap.hh"
 
 // this file provides general functions for manipulating graph properties
 

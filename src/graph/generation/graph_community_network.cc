@@ -21,7 +21,6 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
-#include <boost/bind/placeholders.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
 

@@ -19,8 +19,6 @@
 #include "graph.hh"
 #include "graph_properties.hh"
 
-#include <boost/lambda/bind.hpp>
-
 #include "graph_arf.hh"
 
 using namespace std;

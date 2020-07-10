@@ -30,7 +30,6 @@
 #include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
 #include <boost/graph/dag_shortest_paths.hpp>
-#include <boost/python/stl_iterator.hpp>
 #include <boost/python.hpp>
 
 #if (BOOST_VERSION >= 106000)

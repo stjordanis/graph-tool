@@ -21,10 +21,6 @@
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-#include <boost/python/object.hpp>
-#include <boost/python/list.hpp>
-#include <boost/python/extract.hpp>
-
 #include "histogram.hh"
 #include "hash_map_wrap.hh"
 

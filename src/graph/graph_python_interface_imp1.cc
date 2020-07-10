@@ -19,6 +19,7 @@
 #include "graph.hh"
 #include "graph_util.hh"
 #include "graph_python_interface.hh"
+#include "hash_map_wrap.hh"
 
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>

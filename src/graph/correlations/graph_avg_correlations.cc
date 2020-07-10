@@ -25,8 +25,6 @@
 
 #include "graph_avg_correlations.hh"
 
-#include <iostream>
-
 using namespace std;
 using namespace boost;
 using namespace graph_tool;

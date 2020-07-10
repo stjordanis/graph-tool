@@ -21,7 +21,6 @@
 #include "demangle.hh"
 
 #include <boost/python.hpp>
-#include <boost/lambda/bind.hpp>
 
 using namespace std;
 using namespace boost;

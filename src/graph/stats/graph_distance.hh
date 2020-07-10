@@ -23,7 +23,6 @@
 
 #include <boost/python/object.hpp>
 #include <boost/python/list.hpp>
-#include <boost/python/extract.hpp>
 
 #include "histogram.hh"
 #include "numpy_bind.hh"

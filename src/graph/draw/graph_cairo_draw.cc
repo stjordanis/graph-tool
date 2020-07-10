@@ -22,7 +22,6 @@
 #include "graph_filtering.hh"
 
 #include <boost/python.hpp>
-#include <boost/utility/enable_if.hpp>
 
 #include "graph_selectors.hh"
 #include "graph_properties.hh"

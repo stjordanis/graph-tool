@@ -25,7 +25,6 @@
 #include "graph_tool.hh"
 #include "../support/graph_state.hh"
 #include "graph_blockmodel_dynamics.hh"
-#include "graph_python_interface.hh"
 
 namespace graph_tool
 {

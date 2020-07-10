@@ -23,10 +23,6 @@
 #include "graph_util.hh"
 #include "hash_map_wrap.hh"
 
-#include <boost/mpl/for_each.hpp>
-
-#include <boost/python/extract.hpp>
-
 using namespace std;
 using namespace boost;
 using namespace graph_tool;

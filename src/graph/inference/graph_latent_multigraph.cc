@@ -17,7 +17,6 @@
 
 #include "graph_latent_multigraph.hh"
 
-#include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
 
 using namespace std;

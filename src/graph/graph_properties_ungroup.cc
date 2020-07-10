@@ -22,8 +22,6 @@
 
 #include "graph_properties_group.hh"
 
-#include <boost/python/extract.hpp>
-
 using namespace std;
 using namespace boost;
 using namespace graph_tool;

@@ -10,14 +10,12 @@
 
 #include <boost/python.hpp>
 #include <boost/graph/depth_first_search.hpp>
-#include <boost/graph/undirected_dfs.hpp>
 
 #include "graph.hh"
 #include "graph_selectors.hh"
 #include "graph_util.hh"
 
 #include "coroutine.hh"
-#include "graph_python_interface.hh"
 
 using namespace std;
 using namespace boost;

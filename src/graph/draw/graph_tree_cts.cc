@@ -22,7 +22,6 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
-#include <boost/mpl/quote.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 
 #include <cmath>
