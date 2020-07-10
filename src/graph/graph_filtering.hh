@@ -423,9 +423,83 @@ struct action_wrap
     Action _a;
 };
 
-// this takes a functor and type ranges and iterates through the type
-// combinations when called with boost::any parameters, and calls the correct
-// function
+//
+// action_dispatch machinery
+//
+
+// a lightweight class for holding a list of types
+template <class... T>
+struct typelist {};
+
+template <class... T>
+constexpr auto to_typelist(std::tuple<T...>) -> typelist<T...>;
+
+template <class Tuple>
+using to_typelist_t = decltype(to_typelist(std::declval<Tuple>()));
+
+// handling one typelist/value
+// select a binding from the current list
+template<class    F,                               // function to bind
+         class... Ts,                              // current typelist
+         class... TRS,                             // remaining typelists
+         class    Arg,
+         class... Args>
+bool dispatch_loop(F                         f,
+                   typelist<typelist<Ts...>, TRS...>,
+                   Arg&&                     arg,
+                   Args&&...                 args) // remaining args
+{
+    using namespace boost::mpl;
+
+    // determine which one of the Ts we are looking at
+    // then recurse with the first argument of F bound accordingly
+
+    void *farg;         // pointer to extracted value from boost::any
+                        // we always will know what its type is
+
+    if constexpr (sizeof...(TRS) == 0)
+    {
+        // just one argument remains to be bound
+        return
+            // iterate over types, trying each
+            (((farg = boost::any_cast<Ts>(&arg))
+             ? (f(*static_cast<Ts*>(farg)), true)
+             // try reference_wrapper instead
+             : ((farg = boost::any_cast<std::reference_wrapper<Ts>>(&arg))
+                ? (f(static_cast<std::reference_wrapper<Ts>*>(farg)->get()), true)
+                : false)) || ...);
+    }
+    else
+    {
+        // helper function for setting up recursion
+        auto dl =
+            [f = std::move(f)](auto * a,        // extracted value from boost::any
+                               auto&&... args)  // boost::any's yet to be processed
+            {
+                // create the new F with N-1 arguments
+                return dispatch_loop
+                    ([f = std::move(f), a](auto &&... fargs){
+                         f(*a,
+                           std::forward<decltype(fargs)>(fargs)...);
+                     },
+                     typelist<TRS...>{},
+                     std::forward<decltype(args)>(args)...);
+            };
+
+        return
+            (((farg = boost::any_cast<Ts>(&arg))
+             ? dl(static_cast<Ts*>(farg),
+                  std::forward<Args>(args)...)
+             : ((farg = boost::any_cast<std::reference_wrapper<Ts>>(&arg))
+                ? dl(&static_cast<std::reference_wrapper<Ts>*>(farg)->get(),
+                     std::forward<Args>(args)...)
+                : false))
+            || ...);                           // iterate over Ts...
+    }
+}
+
+// this takes a functor and type ranges, locates the correct combination
+// from the boost::any parameters, and calls the correct function
 template <class Action, class Wrap, class... TRS>
 struct action_dispatch
 {
@@ -434,8 +508,11 @@ struct action_dispatch
     template <class... Args>
     void operator()(Args&&... args) const
     {
-        bool found =
-            boost::mpl::nested_for_each<TRS...>(_a, std::forward<Args>(args)...);
+        using namespace boost::mpl;
+
+        bool found = dispatch_loop(_a, typelist<to_typelist_t<to_tuple_t<TRS>>...>{},
+                                   std::forward<Args>(args)...);
+
         if (!found)
         {
             std::vector<const std::type_info*> args_t = {(&(args).type())...};
