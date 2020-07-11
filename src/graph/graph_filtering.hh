@@ -444,7 +444,7 @@ template<class    F,                               // function to bind
          class... TRS,                             // remaining typelists
          class    Arg,
          class... Args>
-bool dispatch_loop(F                         f,
+bool dispatch_loop(F&&                       f,
                    typelist<typelist<Ts...>, TRS...>,
                    Arg&&                     arg,
                    Args&&...                 args) // remaining args
@@ -459,42 +459,40 @@ bool dispatch_loop(F                         f,
 
     if constexpr (sizeof...(TRS) == 0)
     {
-        // just one argument remains to be bound
-        return
-            // iterate over types, trying each
-            (((farg = boost::any_cast<Ts>(&arg))
-             ? (f(*static_cast<Ts*>(farg)), true)
-             // try reference_wrapper instead
-             : ((farg = boost::any_cast<std::reference_wrapper<Ts>>(&arg))
-                ? (f(static_cast<std::reference_wrapper<Ts>*>(farg)->get()), true)
-                : false)) || ...);
+        // just one argument remains to be bound; iterate over types, trying each
+        return (((farg = boost::any_cast<Ts>(&arg))
+                 ? (f(*static_cast<Ts*>(farg)), true)
+                 // try reference_wrapper instead
+                 : ((farg = boost::any_cast<std::reference_wrapper<Ts>>(&arg))
+                    ? (f(static_cast<std::reference_wrapper<Ts>*>(farg)->get()),
+                       true)
+                    : false)) || ...);
     }
     else
     {
         // helper function for setting up recursion
         auto dl =
-            [f = std::move(f)](auto * a,        // extracted value from boost::any
-                               auto&&... args)  // boost::any's yet to be processed
+            [&f](auto* a,        // extracted value from boost::any
+                 auto&&... args)  // boost::any's yet to be processed
             {
                 // create the new F with N-1 arguments
                 return dispatch_loop
-                    ([f = std::move(f), a](auto &&... fargs){
-                         f(*a,
-                           std::forward<decltype(fargs)>(fargs)...);
+                    ([&f, a](auto &&... fargs)
+                     {
+                         f(*a, std::forward<decltype(fargs)>(fargs)...);
                      },
                      typelist<TRS...>{},
                      std::forward<decltype(args)>(args)...);
             };
 
-        return
-            (((farg = boost::any_cast<Ts>(&arg))
-             ? dl(static_cast<Ts*>(farg),
-                  std::forward<Args>(args)...)
-             : ((farg = boost::any_cast<std::reference_wrapper<Ts>>(&arg))
-                ? dl(&static_cast<std::reference_wrapper<Ts>*>(farg)->get(),
-                     std::forward<Args>(args)...)
-                : false))
-            || ...);                           // iterate over Ts...
+        return (((farg = boost::any_cast<Ts>(&arg))
+                 ? dl(static_cast<Ts*>(farg),
+                      std::forward<Args>(args)...)
+                 : ((farg = boost::any_cast<std::reference_wrapper<Ts>>(&arg))
+                    ? dl(&static_cast<std::reference_wrapper<Ts>*>(farg)->get(),
+                         std::forward<Args>(args)...)
+                    : false))
+                || ...);                           // iterate over Ts...
     }
 }
 
