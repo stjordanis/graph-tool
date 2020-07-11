@@ -60,7 +60,7 @@ python::object similarity(GraphInterface& gi1, GraphInterface& gi2,
          {
              auto l2 = uncheck(l1, label2);
              auto ew2 = uncheck(ew1, weight2);
-             auto ret = get_similarity(g1, g2, ew1, ew2, l1, l2, asym, norm);
+             auto ret = get_similarity(g1, g2, ew1, ew2, l1, l2, norm, asym);
              s = python::object(ret);
          },
          all_graph_views(),
