@@ -63,55 +63,6 @@ namespace mpl
 // of arguments according to the called types. If the cast is successful, the
 // function will be called with those types, and true will be returned.
 
-template <class Action, std::size_t N>
-struct all_any_cast
-{
-    all_any_cast(Action a, std::array<any*, N>& args)
-        : _a(a), _args(args) {}
-
-    template <class... Ts>
-    [[gnu::always_inline]]
-    bool operator()(Ts*... vs) const
-    {
-        return dispatch(std::make_index_sequence<sizeof...(Ts)>(), vs...);
-    }
-
-    template <class T>
-    T* try_any_cast(boost::any& a) const
-    {
-        T* t = any_cast<T>(&a);
-        if (t != nullptr)
-            return t;
-
-        std::reference_wrapper<T>* tr = any_cast<std::reference_wrapper<T>>(&a);
-        if (tr != nullptr)
-            return &(tr->get());
-
-        return nullptr;
-    }
-
-    template <std::size_t... Idx, class... Ts>
-    [[gnu::always_inline]]
-    bool dispatch(std::index_sequence<Idx...>, Ts*...) const
-    {
-        static_assert(sizeof...(Idx) == N,
-                      "all_any_cast: wrong number of arguments");
-
-        std::tuple<std::add_pointer_t<Ts>...> args;
-        if (((std::get<Idx>(args) = try_any_cast<Ts>(*_args[Idx])) && ...))
-        {
-            // successful set of casts. Dereference and call action.
-            std::apply([this](auto*... arg){ _a(*arg...); }, args);
-            return true;
-        }
-
-        return false;
-    }
-
-    Action _a;
-    std::array<any*, N>& _args;
-};
-
 // recursion-free variadic version of for_each
 template <class...>
 struct for_each_variadic;
@@ -142,6 +93,9 @@ struct to_tuple
     typedef typename mpl::fold<Seq, std::tuple<>,
                                to_tuple_imp<mpl::_1, mpl::_2>>::type type;
 };
+
+template <class Seq>
+using to_tuple_t = typename to_tuple<Seq>::type;
 
 // nested type loops via variadic templates
 
@@ -178,17 +132,6 @@ struct inner_loop<Action, std::tuple<Ts...>, TR1, TRS...>
 };
 
 // final function
-
-template <class TR1, class... TRS, class Action, class... Args>
-bool nested_for_each(Action a, Args&&... args)
-{
-    std::array<any*, sizeof...(args)> as{{&args...}};
-    auto b = all_any_cast<Action, sizeof...(args)>(a, as);
-    typedef decltype(b) action_t;
-    typedef typename to_tuple<TR1>::type tr_tuple;
-    typedef inner_loop<action_t, std::tuple<>, TRS...> inner_loop_t;
-    return for_each_variadic<inner_loop_t, tr_tuple>()(inner_loop_t(b));
-}
 
 template <class TR1, class... TRS, class Action>
 void nested_for_each(Action a)
