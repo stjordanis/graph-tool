@@ -105,6 +105,7 @@ struct Layers
                 for (auto e : edges_range(BaseState::_g))
                     _E += BaseState::_eweight[e];
             }
+            virtual ~LayerState(){}
 
             LayeredBlockState* _lstate;
             bmap_t& _block_map;
@@ -236,6 +237,7 @@ struct Layers
             for (auto& state : _layers)
                 state._lstate = this;
         }
+        virtual ~LayeredBlockState() {}
 
         std::vector<LayerState> _layers;
         size_t _actual_B = 0;

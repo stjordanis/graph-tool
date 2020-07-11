@@ -571,32 +571,6 @@ public:
             change_vertex_degs(v, nr, g, vweight, eweight, degs, 1);
     }
 
-    void change_k(size_t v, size_t r, bool deg_corr, int vweight,
-                  int kin, int kout, int diff)
-    {
-        if (_total[r] == 0 && diff * vweight > 0)
-            _actual_B++;
-
-        if (_total[r] == vweight && diff * vweight < 0)
-            _actual_B--;
-
-        _total[r] += diff * vweight;
-        _N += diff * vweight;
-
-        assert(_total[r] >= 0);
-
-        if (deg_corr)
-        {
-            auto deg = make_pair(kin, kout);
-            auto iter = _hist[r].insert({deg, 0}).first;
-            iter->second += diff * vweight;
-            if (iter->second == 0)
-                _hist[r].erase(iter);
-            _em[r] += diff * deg.first * vweight;
-            _ep[r] += diff * deg.second * vweight;
-        }
-    }
-
     void change_E(int dE)
     {
         _E += dE;

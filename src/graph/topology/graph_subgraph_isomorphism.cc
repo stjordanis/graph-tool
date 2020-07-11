@@ -245,7 +245,7 @@ subgraph_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
         python::list vmapping;
         for (auto& vmap: vmaps)
             vmapping.append(PythonPropertyMap<vlabel_t>(vmap));
-        return vmapping;
+        return std::move(vmapping);
     }
     else
     {

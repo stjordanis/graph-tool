@@ -70,6 +70,7 @@ class gibbs_sweep_dispatch : public gibbs_sweep_base
 {
 public:
     gibbs_sweep_dispatch(State& s) : _s(s) {}
+    virtual ~gibbs_sweep_dispatch() {}
 
     virtual std::tuple<double, size_t, size_t> run(rng_t& rng)
     {
@@ -118,7 +119,7 @@ python::object gibbs_overlap_sweep_parallel(python::object ogibbs_states,
     python::list orets;
     for (auto& ret : rets)
         orets.append(tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret));
-    return orets;
+    return std::move(orets);
 }
 
 void export_overlap_blockmodel_gibbs()

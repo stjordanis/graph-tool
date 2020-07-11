@@ -84,6 +84,7 @@ namespace boost
             blossom_ptr_t father;
 
             blossom() : dual_var(0), father(blossom_ptr_t()) {}
+            virtual ~blossom() {}
 
             // get the base vertex of a blossom by recursively getting
             // its base sub-blossom, which is always the first one in
@@ -129,6 +130,8 @@ namespace boost
         {
         public:
             trivial_blossom(vertex_descriptor_t v) : trivial_vertex(v) {}
+            virtual ~trivial_blossom() {}
+
             virtual vertex_descriptor_t get_base() const
             {
                 return trivial_vertex;

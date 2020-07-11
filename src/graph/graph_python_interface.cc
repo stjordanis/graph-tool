@@ -307,7 +307,7 @@ python::object get_edge(GraphInterface& gi, size_t s, size_t t, bool all_edges)
                  (std::forward<decltype(graph)>(graph), gi, s, t, all_edges,
                   es);
          })();
-    return es;
+    return std::move(es);
 }
 
 

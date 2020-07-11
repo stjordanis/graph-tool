@@ -619,7 +619,7 @@ public:
         _pmap.swap(other._pmap);
     }
 
-    void swap_dispatch(PythonPropertyMap& other, std::false_type)
+    void swap_dispatch(PythonPropertyMap&, std::false_type)
     {
         throw ValueException("Read-only property map cannot be swapped.");
     }
