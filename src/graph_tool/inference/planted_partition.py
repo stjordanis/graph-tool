@@ -130,6 +130,10 @@ class PPBlockState(object):
         r"Returns the total number of blocks."
         return len(np.unique(self.b.fa))
 
+    def get_nonempty_B(self):
+        r"Alias to :meth:`~PPBlockState.get_B`."
+        return self.get_B()
+
     def get_Be(self):
         r"""Returns the effective number of blocks, defined as :math:`e^{H}`, with
         :math:`H=-\sum_r\frac{n_r}{N}\ln \frac{n_r}{N}`, where :math:`n_r` is
@@ -139,6 +143,18 @@ class PPBlockState(object):
         w = w[w>0]
         w /= w.sum()
         return numpy.exp(-(w*log(w)).sum())
+
+    def virtual_vertex_move(self, v, s, **kwargs):
+        r"""Computes the entropy difference if vertex ``v`` is moved to block ``s``. The
+        remaining parameters are the same as in
+        :meth:`~graph_tool.inference.planted_partition.PPBlockState.entropy`."""
+        return self._state.virtual_move(int(v), self.b[v], s,
+                                        get_pp_entropy_args(dict(self._entropy_args,
+                                                                 **kwargs)))
+
+    def move_vertex(self, v, s):
+        r"""Move vertex ``v`` to block ``s``."""
+        self._state.move_vertex(int(v), int(s))
 
     def entropy(self, uniform=False, degree_dl_kind="distributed", **kwargs):
         r"""Return the model entropy (negative log-likelihood).
