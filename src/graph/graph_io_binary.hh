@@ -33,16 +33,19 @@ const uint8_t _version = 1;
 
 // deal with endianness
 
-inline bool is_bigendian()
+inline constexpr bool is_bigendian()
 {
-    // from: http://esr.ibiblio.org/?p=5095
-    return (*(uint16_t *)"\0\xff" < 0x100);
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    return false;
+#else
+    return true;
+#endif
 };
 
 template <bool BE, typename T>
 void byte_swap(T& p)
 {
-    if (BE == is_bigendian())
+    if constexpr (BE == is_bigendian())
         return;
     char& r = reinterpret_cast<char&>(p);
     std::reverse(&r, &r + sizeof(T));
