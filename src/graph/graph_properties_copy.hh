@@ -193,29 +193,29 @@ struct copy_external_edge_property_dispatch
     void dispatch(const GraphTgt& tgt, const GraphSrc& src,
                   PropertyTgt dst_map, PropertySrc src_map) const
     {
-        typedef typename boost::graph_traits<GraphSrc>::edge_descriptor edge_t;
-        gt_hash_map<std::tuple<size_t,size_t>, std::deque<edge_t>> src_edges;
-        for (auto e : edges_range(src))
+        typedef typename boost::graph_traits<GraphTgt>::edge_descriptor edge_t;
+        gt_hash_map<std::tuple<size_t,size_t>, std::deque<edge_t>> tgt_edges;
+        for (auto e : edges_range(tgt))
         {
-            auto u = source(e, src);
-            auto v = target(e, src);
-            if (!graph_tool::is_directed(src) && u > v)
+            auto u = source(e, tgt);
+            auto v = target(e, tgt);
+            if (!graph_tool::is_directed(tgt) && u > v)
                 std::swap(u, v);
-            src_edges[std::make_tuple(u, v)].push_back(e);
+            tgt_edges[std::make_tuple(u, v)].push_back(e);
         }
 
         try
         {
-            for (auto e : edges_range(tgt))
+            for (auto e : edges_range(src))
             {
-                auto u = source(e, tgt);
-                auto v = target(e, tgt);
+                auto u = source(e, src);
+                auto v = target(e, src);
                 if (!graph_tool::is_directed(src) && u > v)
                     std::swap(u, v);
-                auto& es = src_edges[std::make_tuple(u, v)];
+                auto& es = tgt_edges[std::make_tuple(u, v)];
                 if (es.empty())
                     throw ValueException("source and target graphs are not compatible");
-                put(dst_map, e, get(src_map, es.front()));
+                put(dst_map, es.front(), get(src_map, e));
                 es.pop_front();
             }
         }
