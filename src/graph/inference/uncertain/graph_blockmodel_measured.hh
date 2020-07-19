@@ -32,7 +32,6 @@ using namespace boost;
 using namespace std;
 
 #define MEASURED_STATE_params                                                  \
-    ((__class__,&, mpl::vector<python::object>, 1))                            \
     ((g, &, all_graph_views, 1))                                               \
     ((n,, eprop_map_t<int>::type, 0))                                          \
     ((x,, eprop_map_t<int>::type, 0))                                          \

@@ -32,7 +32,6 @@ using namespace boost;
 using namespace std;
 
 #define UNCERTAIN_STATE_params                                                 \
-    ((__class__,&, mpl::vector<python::object>, 1))                            \
     ((g, &, all_graph_views, 1))                                               \
     ((q,, eprop_map_t<double>::type, 0))                                       \
     ((q_default,, double, 0))                                                  \

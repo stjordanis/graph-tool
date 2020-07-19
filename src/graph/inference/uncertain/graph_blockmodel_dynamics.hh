@@ -35,7 +35,6 @@ typedef typename eprop_map_t<double>::type xmap_t;
 
 
 #define DYNAMICS_STATE_params                                                  \
-    ((__class__,&, mpl::vector<python::object>, 1))                            \
     ((g, &, all_graph_views, 1))                                               \
     ((params,, python::dict, 0))                                               \
     ((ot,, python::list, 0))                                                   \
