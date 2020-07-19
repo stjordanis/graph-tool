@@ -77,7 +77,8 @@ References
    :arxiv:`1310.4378`
 
 .. [peixoto-merge-split-2020] Tiago P. Peixoto, "Merge-split Markov
-   chain Monte Carlo for community detection", :arxiv:`2003.07070`
+   chain Monte Carlo for community detection", Phys. Rev. E 102, 012305
+   (2020), :doi:`10.1103/PhysRevE.102.012305`, :arxiv:`2003.07070`
 
 .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
    dissensus between network partitions", :arxiv:`2005.13977`
