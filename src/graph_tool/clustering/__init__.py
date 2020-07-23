@@ -131,7 +131,7 @@ def local_clustering(g, weight=None, prop=None, undirected=True):
     return prop
 
 
-def global_clustering(g, weight=None):
+def global_clustering(g, weight=None, ret_counts=False):
     r"""Return the global clustering coefficient.
 
     Parameters
@@ -140,11 +140,18 @@ def global_clustering(g, weight=None):
         Graph to be used.
     weight : :class:`~graph_tool.EdgePropertyMap`, optional (default: None)
         Edge weights. If omitted, a constant value of 1 will be used.
+    ret_counts : ``boolean`` (optional, default: ``False``)
+        If ``True`` the number of triangles and connected triples are also
+        returned.
 
     Returns
     -------
     c : tuple of floats
-        Global clustering coefficient and standard deviation (jacknife method)
+        Global clustering coefficient and standard deviation (jackknife method)
+    triangles : `int` (if ``ret_counts is True``)
+        Number of triangles.
+    triples : `int` (if ``ret_counts is True``)
+        Number of connected triples.
 
     See Also
     --------
@@ -192,7 +199,10 @@ def global_clustering(g, weight=None):
     if g.is_directed():
         g = GraphView(g, directed=False, skip_properties=True)
     c = _gt.global_clustering(g._Graph__graph, _prop("e", g, weight))
-    return c
+    if ret_counts:
+        return c[:2], c[2], c[3]
+    else:
+        return c[:2]
 
 
 def extended_clustering(g, props=None, max_depth=3, undirected=False):

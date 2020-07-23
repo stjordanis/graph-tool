@@ -90,80 +90,65 @@ auto get_triangles(typename graph_traits<Graph>::vertex_descriptor v,
 
 
 // retrieves the global clustering coefficient
-struct get_global_clustering
+template <class Graph, class EWeight>
+auto get_global_clustering(const Graph& g, EWeight eweight)
 {
-    template <class Graph, class EWeight>
-    void operator()(const Graph& g, EWeight eweight, double& c, double& c_err) const
-    {
-        typedef typename property_traits<EWeight>::value_type val_t;
-        val_t triangles = 0, n = 0;
-        vector<val_t> mask(num_vertices(g), 0);
-        vector<std::pair<val_t, val_t>> ret(num_vertices(g));
+    typedef typename property_traits<EWeight>::value_type val_t;
+    val_t triangles = 0, n = 0;
+    vector<val_t> mask(num_vertices(g), 0);
+    vector<std::pair<val_t, val_t>> ret(num_vertices(g));
 
-        #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
-            firstprivate(mask) reduction(+:triangles, n)
-        parallel_vertex_loop_no_spawn
-                (g,
-                 [&](auto v)
-                 {
-                     auto temp = get_triangles(v, eweight, mask, g);
-                     triangles += temp.first;
-                     n += temp.second;
-                     ret[v] = temp;
-                 });
-        c = double(triangles) / n;
-
-        // "jackknife" variance
-        c_err = 0.0;
-        double cerr = 0.0;
-        #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH)   \
-            reduction(+:cerr)
-        parallel_vertex_loop_no_spawn
-                (g,
-                 [&](auto v)
-                 {
-                     auto cl = double(triangles - ret[v].first) /
-                         (n - ret[v].second);
-                     cerr += power(c - cl, 2);
-                 });
-
-        c_err = sqrt(cerr);
-    }
-};
-
-// sets the local clustering coefficient to a property
-struct set_clustering_to_property
-{
-    template <class Graph, class EWeight, class ClustMap>
-    void operator()(const Graph& g, EWeight eweight, ClustMap clust_map) const
-    {
-        typedef typename property_traits<EWeight>::value_type val_t;
-        vector<val_t> mask(num_vertices(g), false);
-
-        #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
-            firstprivate(mask)
-        parallel_vertex_loop_no_spawn
+    #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
+        firstprivate(mask) reduction(+:triangles, n)
+    parallel_vertex_loop_no_spawn
             (g,
              [&](auto v)
              {
-                 auto triangles = get_triangles(v, eweight, mask, g);
-                 double clustering = (triangles.second > 0) ?
-                     double(triangles.first)/triangles.second :
-                     0.0;
-                 clust_map[v] = clustering;
+                 auto temp = get_triangles(v, eweight, mask, g);
+                 triangles += temp.first;
+                 n += temp.second;
+                 ret[v] = temp;
              });
-    }
+    double c = double(triangles) / n;
 
-    template <class Graph>
-    struct get_undirected_graph
-    {
-        typedef typename mpl::if_
-           <std::is_convertible<typename graph_traits<Graph>::directed_category,
-                                directed_tag>,
-            const undirected_adaptor<Graph>,
-            const Graph& >::type type;
-    };
-};
+    // "jackknife" variance
+    double c_err = 0.0;
+    #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH)   \
+        reduction(+:c_err)
+    parallel_vertex_loop_no_spawn
+            (g,
+             [&](auto v)
+             {
+                 auto cl = double(triangles - ret[v].first) /
+                     (n - ret[v].second);
+                 c_err += power(c - cl, 2);
+             });
+
+    c_err = sqrt(c_err);
+    return std::make_tuple(c, c_err, triangles/3, n);
+}
+
+// sets the local clustering coefficient to a property
+template <class Graph, class EWeight, class ClustMap>
+void set_clustering_to_property(const Graph& g, EWeight eweight,
+                                ClustMap clust_map)
+{
+    typedef typename property_traits<EWeight>::value_type val_t;
+    vector<val_t> mask(num_vertices(g), false);
+
+    #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
+        firstprivate(mask)
+    parallel_vertex_loop_no_spawn
+        (g,
+         [&](auto v)
+         {
+             auto triangles = get_triangles(v, eweight, mask, g);
+             double clustering = (triangles.second > 0) ?
+                 double(triangles.first)/triangles.second :
+                 0.0;
+             clust_map[v] = clustering;
+         });
+}
 
 } //graph-tool namespace
 
