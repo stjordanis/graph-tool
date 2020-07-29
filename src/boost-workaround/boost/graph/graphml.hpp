@@ -162,7 +162,7 @@ public:
                  (name, m_dp, graph_property_tag(), value, value_type,
                   type_found));
         }
-        catch (bad_lexical_cast)
+        catch (bad_lexical_cast&)
         {
             throw parse_error("invalid value \"" + value + "\" for key \"" +
                               name + "\" of type \"" + value_type + "\"");
@@ -188,7 +188,7 @@ public:
                  (name, m_dp, any_cast<vertex_descriptor>(vertex),
                   value, value_type, type_found));
         }
-        catch (bad_lexical_cast)
+        catch (bad_lexical_cast&)
         {
             throw parse_error("invalid value \"" + value + "\" for key " +
                               name + " of type " + value_type);
@@ -214,7 +214,7 @@ public:
                  (name, m_dp, any_cast<edge_descriptor>(edge),
                   value, value_type, type_found));
         }
-        catch (bad_lexical_cast)
+        catch (bad_lexical_cast&)
         {
             throw parse_error("invalid value \"" + value + "\" for key " +
                               name + " of type " + value_type);

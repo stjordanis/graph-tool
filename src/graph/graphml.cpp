@@ -293,7 +293,7 @@ private:
             {
                 id = lexical_cast<size_t>(std::string(v,1));
             }
-            catch (bad_lexical_cast)
+            catch (bad_lexical_cast&)
             {
                 std::stringstream s;
                 s << "on line " << XML_GetCurrentLineNumber(m_parser)

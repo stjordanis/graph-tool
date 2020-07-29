@@ -163,7 +163,7 @@ public:
             {
                 id = boost::get<double>(_stack.back().second["id"]);
             }
-            catch (bad_get)
+            catch (bad_get&)
             {
                 throw gml_parse_error("invalid node id");
             }
@@ -195,7 +195,7 @@ public:
                 source = boost::get<double>(_stack.back().second["source"]);
                 target = boost::get<double>(_stack.back().second["target"]);
             }
-            catch (bad_get)
+            catch (bad_get&)
             {
                 throw gml_parse_error("invalid source and target ids");
             }
