@@ -189,12 +189,24 @@ struct do_graph_copy
                     vector<pair<std::reference_wrapper<boost::any>,std::reference_wrapper<boost::any>>>& vprops,
                     vector<pair<std::reference_wrapper<boost::any>,std::reference_wrapper<boost::any>>>& eprops) const
     {
+        vector<size_t> vs;
+        for (auto v : vertices_range(src))
+            vs.push_back(v);
+        std::sort(vs.begin(), vs.end(),
+                  [&](auto u, auto v)
+                  {
+                      return get(vertex_order, u) < get(vertex_order, v);
+                  });
+        vector<size_t> pos(num_vertices(src));
+        for (size_t i = 0; i < vs.size(); ++i)
+            pos[vs[i]] = i;
+
         vector<size_t> index_map(num_vertices(src));
         for (auto v : vertices_range(src))
         {
             if (src_vertex_index[v] >= index_map.size())
                 index_map.resize(src_vertex_index[v] + 1);
-            auto new_v = get(vertex_order, v);
+            auto new_v = pos[v];
             while (size_t(new_v) >= num_vertices(tgt))
                 add_vertex(tgt);
             index_map[src_vertex_index[v]] = tgt_vertex_index[new_v];

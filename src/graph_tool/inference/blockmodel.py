@@ -97,8 +97,12 @@ def get_block_graph(g, B, b, vcount=None, ecount=None, rec=None, drec=None):
             cg.ep["drec%d" % i] = ae[0]
             del ae[0]
 
+    rs = numpy.setdiff1d(numpy.arange(B, dtype="int"), br.fa,
+                         assume_unique=True)
+    if len(rs) > 0:
+        cg.add_vertex(len(rs))
+        br.fa[-len(rs):] = rs
     cg = Graph(cg, vorder=br)
-    cg.add_vertex(B - cg.num_vertices())
 
     cg.gp.rec = cg.new_gp("object", [])
     if rec is not None:

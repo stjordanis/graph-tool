@@ -1662,8 +1662,10 @@ class Graph(object):
 
                 # The vertex ordering
                 if vorder is None:
-                    vorder = gv.new_vertex_property("int")
-                    vorder.fa = numpy.arange(gv.num_vertices())
+                    vorder = gv.new_vertex_property("int",
+                                                    vals=numpy.arange(gv.num_vertices()))
+                else:
+                    vorder = vorder.copy("int")
 
                 # The actual copying of the graph and property maps
                 self.__graph = libcore.GraphInterface(gv.__graph, False,
