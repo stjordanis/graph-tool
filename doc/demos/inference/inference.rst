@@ -116,10 +116,6 @@ References
    networks", Phys. Rev. E 97 062316 (2018),
    :doi:`10.1103/PhysRevE.97.062316`, :arxiv:`1705.07967`
 
-.. [mezard-information-2009] Marc Mézard, Andrea Montanari, "Information,
-   Physics, and Computation", Oxford Univ Press (2009).
-   :doi:`10.1093/acprof:oso/9780198570837.001.0001`
-
 .. [guimera-modularity-2004] Roger Guimerà, Marta Sales-Pardo, and
    Luís A. Nunes Amaral, "Modularity from fluctuations in random graphs
    and complex networks", Phys. Rev. E 70, 025101(R) (2004),
