@@ -392,11 +392,8 @@ class UncertainBlockState(UncertainBaseState):
     def __init__(self, g, q, q_default=0., aE=numpy.nan, nested=True, state_args={},
                  bstate=None, self_loops=False, **kwargs):
 
-        super(UncertainBlockState, self).__init__(g, nested=nested,
-                                                  state_args=state_args,
-                                                  bstate=bstate,
-                                                  self_loops=self_loops,
-                                                  **kwargs)
+        super().__init__(g, nested=nested, state_args=state_args, bstate=bstate,
+                         self_loops=self_loops, **kwargs)
         self._q = q
         self._q_default = q_default
 
@@ -423,7 +420,7 @@ class UncertainBlockState(UncertainBaseState):
         self._state = libinference.make_uncertain_state(self.bstate._state,
                                                         self)
     def __getstate__(self):
-        state = super(UncertainBlockState, self).__getstate__()
+        state = super().__getstate__()
         return dict(state,  q=self._q, q_default=self._q_default,
                     aE=self.aE)
 
@@ -479,11 +476,8 @@ class LatentMultigraphBlockState(UncertainBaseState):
     def __init__(self, g, aE=numpy.nan, nested=True, state_args={},
                  bstate=None, self_loops=False, **kwargs):
 
-        super(LatentMultigraphBlockState, self).__init__(g, nested=nested,
-                                                         state_args=state_args,
-                                                         bstate=bstate,
-                                                         self_loops=self_loops,
-                                                         **kwargs)
+        super().__init__(g, nested=nested, state_args=state_args, bstate=bstate,
+                         self_loops=self_loops, **kwargs)
 
         self.q = self.g.new_ep("double", val=numpy.inf)
         self.q_default = -numpy.inf
@@ -498,7 +492,7 @@ class LatentMultigraphBlockState(UncertainBaseState):
         self._state = libinference.make_uncertain_state(self.bstate._state,
                                                         self)
     def __getstate__(self):
-        state = super(LatentMultigraphBlockState, self).__getstate__()
+        state = super().__getstate__()
         return dict(state, aE=self.aE)
 
     def __setstate__(self, state):
@@ -576,9 +570,8 @@ class MeasuredBlockState(UncertainBaseState):
                  aE=numpy.nan, nested=True, state_args={}, bstate=None,
                  self_loops=False, **kwargs):
 
-        super(MeasuredBlockState, self).__init__(g, nested=nested,
-                                                 state_args=state_args,
-                                                 bstate=bstate, **kwargs)
+        super().__init__(g, nested=nested, state_args=state_args, bstate=bstate,
+                         **kwargs)
 
         self.aE = aE
         if numpy.isnan(aE):
@@ -599,7 +592,7 @@ class MeasuredBlockState(UncertainBaseState):
                                                        self)
 
     def __getstate__(self):
-        state = super(MeasuredBlockState, self).__getstate__()
+        state = super().__getstate__()
         return dict(state, n=self.n, x=self.x, n_default=self.n_default,
                     x_default=self.x_default,
                     fn_params=dict(alpha=self.alpha, beta=self.beta),
@@ -695,9 +688,8 @@ class MixedMeasuredBlockState(UncertainBaseState):
                  aE=numpy.nan, nested=True, state_args={}, bstate=None,
                  self_loops=False, **kwargs):
 
-        super(MixedMeasuredBlockState, self).__init__(g, nested=nested,
-                                                      state_args=state_args,
-                                                      bstate=bstate, **kwargs)
+        super().__init__(g, nested=nested, state_args=state_args, bstate=bstate,
+                         **kwargs)
         self.aE = aE
         if numpy.isnan(aE):
             self.E_prior = False
@@ -749,7 +741,7 @@ class MixedMeasuredBlockState(UncertainBaseState):
         self.sync_q()
 
     def __getstate__(self):
-        state = super(MixedMeasuredBlockState, self).__getstate__()
+        state = super().__getstate__()
         return dict(state, n=self.n, x=self.x, n_default=self.n_default,
                     x_default=self.x_default,
                     fn_params=dict(alpha=self.alpha, beta=self.beta),
@@ -784,10 +776,8 @@ class MixedMeasuredBlockState(UncertainBaseState):
         if ``multiflip=True``.
         """
 
-        return super(MixedMeasuredBlockState, self).mcmc_sweep(r=r,
-                                                               multiflip=multiflip,
-                                                               h=h, hstep=hstep,
-                                                               **kwargs)
+        return super().mcmc_sweep(r=r, multiflip=multiflip, h=h, hstep=hstep,
+                                  **kwargs)
 
     def _algo_sweep(self, algo, r=.5, h=.1, hstep=1, niter=1, **kwargs):
         if numpy.random.random() < h:
@@ -821,9 +811,7 @@ class MixedMeasuredBlockState(UncertainBaseState):
                     self.set_hparams(*hs)
             return (dS, nt, nm)
         else:
-            return super(MixedMeasuredBlockState, self)._algo_sweep(algo, r,
-                                                                    niter=niter,
-                                                                    **kwargs)
+            return super()._algo_sweep(algo, r, niter=niter, **kwargs)
 
     def _mcmc_sweep(self, mcmc_state):
         return libinference.mcmc_uncertain_sweep(mcmc_state,
@@ -838,10 +826,8 @@ class DynamicsBlockStateBase(UncertainBaseState):
         the stochastic block model as a prior. This class is not meant to be
         instantiated directly, only indirectly via one of its subclasses."""
 
-        super(DynamicsBlockStateBase, self).__init__(g, nested=nested,
-                                                     state_args=state_args,
-                                                     bstate=bstate,
-                                                     self_loops=self_loops)
+        super().__init__(g, nested=nested, state_args=state_args, bstate=bstate,
+                         self_loops=self_loops)
         self.s = [g.own_property(x) for x in s]
         self.t = [g.own_property(x) for x in t]
         if x is None:
@@ -874,7 +860,7 @@ class DynamicsBlockStateBase(UncertainBaseState):
         self._state.set_params(self.params)
 
     def __getstate__(self):
-        state = super(DynamicsBlockState, self).__getstate__()
+        state = super().__getstate__()
         return dict(state, s=self.s, t=self.t, x=self.x, aE=self.aE,
                     **self.params)
 
@@ -1108,16 +1094,11 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
             else:
                 x = u.new_ep("double", val=beta)
             x.fa = log1p(-x.fa)
-        super(EpidemicsBlockState, self).__init__(g, s=s, t=t,
-                                                  global_beta=global_beta,
-                                                  active=active,
-                                                  x=x, r=r, r_v=r_v,
-                                                  exposed=exposed, aE=aE,
-                                                  nested=nested,
-                                                  state_args=state_args,
-                                                  bstate=bstate,
-                                                  self_loops=self_loops,
-                                                  **kwargs)
+        super().__init__(g, s=s, t=t, global_beta=global_beta, active=active,
+                         x=x, r=r, r_v=r_v, exposed=exposed, aE=aE,
+                         nested=nested, state_args=state_args, bstate=bstate,
+                         self_loops=self_loops, **kwargs)
+
     def _make_state(self):
         return libinference.make_epidemics_state(self.bstate._state, self)
 
@@ -1167,11 +1148,8 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
 
         """
 
-        return super(EpidemicsBlockState, self).mcmc_sweep(r=r, p=p, pstep=p,
-                                                           h=h, hstep=hstep,
-                                                           xstep=xstep,
-                                                           multiflip=multiflip,
-                                                           **kwargs)
+        return super().mcmc_sweep(r=r, p=p, pstep=p, h=h, hstep=hstep,
+                                  xstep=xstep, multiflip=multiflip, **kwargs)
 
     def _algo_sweep(self, algo, r=.5, p=.1, pstep=.1, h=.1, hstep=1,
                     xstep=.1, niter=1, **kwargs):
@@ -1214,12 +1192,8 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
                 xdefault = log1p(-beta)
             else:
                 xdefault = 0
-            return super(EpidemicsBlockState, self)._algo_sweep(algo, r,
-                                                                xlog=True,
-                                                                xstep=xstep,
-                                                                xdefault=xdefault,
-                                                                niter=niter,
-                                                                **kwargs)
+            return super()._algo_sweep(algo, r, xlog=True, xstep=xstep,
+                                       xdefault=xdefault, niter=niter, **kwargs)
 
     def _mcmc_sweep(self, mcmc_state):
         return libinference.mcmc_epidemics_sweep(mcmc_state, self._state,
@@ -1314,12 +1288,11 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
             x = u.new_ep("double", 1)
         elif x is None:
             x = u.new_ep("double", numpy.random.random(g.num_edges()) - 1/2)
-        super(IsingBaseBlockState, self).__init__(g, s=s, t=t, beta=beta, x=x,
-                                                  aE=aE, nested=nested,
-                                                  state_args=state_args,
-                                                  bstate=bstate,
-                                                  self_loops=self_loops, h=h,
-                                                  has_zero=has_zero, **kwargs)
+        super().__init__(g, s=s, t=t, beta=beta, x=x, aE=aE, nested=nested,
+                         state_args=state_args, bstate=bstate,
+                         self_loops=self_loops, h=h, has_zero=has_zero,
+                         **kwargs)
+
     def __setstate__(self, state):
         beta = state.pop("beta", None)
         if "x" not in state:
@@ -1351,11 +1324,8 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
         if ``multiflip=True``.
         """
 
-        return super(IsingBaseBlockState, self).mcmc_sweep(r=r, p=p, pstep=p,
-                                                           h=h, hstep=hstep,
-                                                           xstep=xstep,
-                                                           multiflip=multiflip,
-                                                           **kwargs)
+        return super().mcmc_sweep(r=r, p=p, pstep=p, h=h, hstep=hstep,
+                                  xstep=xstep, multiflip=multiflip, **kwargs)
 
     def _algo_sweep(self, algo, r=.5, p=.1, pstep=1, h=.5, hstep=1, niter=1,
                     xstep=1, **kwargs):
@@ -1380,12 +1350,8 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
                     nm += ret[2]
                 return (dS, nt, nm)
         else:
-            return super(IsingBaseBlockState, self)._algo_sweep(algo, r,
-                                                                xlog=False,
-                                                                xstep=xstep,
-                                                                xdefault=1,
-                                                                niter=niter,
-                                                                **kwargs)
+            return super()._algo_sweep(algo, r, xlog=False, xstep=xstep,
+                                       xdefault=1, niter=niter, **kwargs)
 
 class IsingGlauberBlockState(IsingBaseBlockState):
     def __init__(self, *args, **kwargs):
@@ -1395,7 +1361,7 @@ class IsingGlauberBlockState(IsingBaseBlockState):
         See documentation for :class:`IsingBaseBlockState` for details.
         """
 
-        super(IsingGlauberBlockState, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _make_state(self):
         return libinference.make_ising_glauber_state(self.bstate._state, self)
@@ -1417,7 +1383,7 @@ class CIsingGlauberBlockState(IsingBaseBlockState):
         that in this case the ``s`` parameter should contain property maps of
         type ``vector<double>``, with values in the range :math:`[-1,1]`.
         """
-        super(CIsingGlauberBlockState, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _make_state(self):
         return libinference.make_cising_glauber_state(self.bstate._state, self)
@@ -1439,7 +1405,7 @@ class PseudoIsingBlockState(IsingBaseBlockState):
         that in this model "time-series" should be interpreted as a set of
         uncorrelated samples, not a temporal sequence.
         """
-        super(PseudoIsingBlockState, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _make_state(self):
         return libinference.make_pseudo_ising_state(self.bstate._state, self)
@@ -1463,7 +1429,7 @@ class PseudoCIsingBlockState(IsingBaseBlockState):
         parameter should contain property maps of type ``vector<double>``, with
         values in the range :math:`[-1,1]`.
         """
-        super(PseudoCIsingBlockState, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _make_state(self):
         return libinference.make_pseudo_cising_state(self.bstate._state, self)
