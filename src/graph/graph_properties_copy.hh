@@ -214,7 +214,7 @@ struct copy_external_edge_property_dispatch
                     std::swap(u, v);
                 auto& es = tgt_edges[std::make_tuple(u, v)];
                 if (es.empty())
-                    throw ValueException("source and target graphs are not compatible");
+                    continue;
                 put(dst_map, es.front(), get(src_map, e));
                 es.pop_front();
             }

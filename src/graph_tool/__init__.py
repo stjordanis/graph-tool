@@ -2727,6 +2727,24 @@ class Graph(object):
         from (defaults to the graph than owns `src`). If ``full == False``, then
         in the case of filtered graphs only the unmasked values are copied (with
         the remaining ones taking the type-dependent default value).
+
+        .. note::
+
+           In case the source property map belongs to different graphs, this
+           function behaves as follows.
+
+           For vertex properties, the source and target graphs must have the
+           same number of vertices, and the properties are copied according to
+           the index values.
+
+           For edge properties, the edge index is not important, and the
+           properties are copied by matching edges between the different graphs
+           according to the source and target vertex indexes. In case the graph
+           has parallel edges with the same source and target vertices, they are
+           matched according to their iteration order. The edge sets do not have
+           to be the same between source and target graphs, as the copying
+           occurs only for edges that lie at their intersection.
+
         """
         if tgt is None:
             tgt = self.new_property(src.key_type(),
