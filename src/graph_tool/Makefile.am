@@ -15,7 +15,9 @@ graph_tool_generationdir = $(MOD_DIR)/generation
 
 graph_tool_collection_PYTHON = \
     collection/__init__.py \
-    collection/konect.py
+    collection/konect.py \
+    collection/netzschleuder.py
+
 graph_tool_collection_DATA = \
     collection/adjnoun.gt.gz \
     collection/as-22july06.gt.gz \

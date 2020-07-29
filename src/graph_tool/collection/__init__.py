@@ -32,6 +32,17 @@ This module contains an assortment of useful networks.
     or alternatively in the ``"description"`` graph property which accompanies
     each graph object.
 
+.. data:: ns
+
+    Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
+    name of the dataset, fetched from the `Netzschleuder
+    <https://networks.skewed.de>`_ repository. For dataset entries with more
+    than one network, they are accessed either via a string
+    ``"<entry>/<network>"`` or a tuple ``("<entry>", "<network>")``. This is a
+    "lazy" dictionary, i.e. it only downloads the graphs when the items are
+    accessed for the first time. The description and summary information for
+    each graph are given in the :data:`ns_info` dictionary, or alternatively in
+    the graph properties which accompanies each graph object.
 
 .. data:: konect_data
 
@@ -57,6 +68,14 @@ Examples
     Anthropological Research 33, 452-473 (1977).
     <BLANKLINE>
 
+.. data:: ns_info
+
+    Dictionary containing descriptions and other summary information for
+    datasets available in the `Netzschleuder <https://networks.skewed.de>`_
+    repository. For dataset entries with more than one network, they are
+    accessed either via a string ``"<entry>/<network>"`` or a tuple
+    ``("<entry>", "<network>")``. The information is downloaded on-the-fly via
+    the available JSON API.
 
 .. data:: descriptions
 
@@ -337,4 +356,5 @@ def _print_table():
             print(" " * 57 + line)
     print("===================  ===========  ===========  ========  ================================================")
 
+from . netzschleuder import *
 from . konect import *
