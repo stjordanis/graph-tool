@@ -18,6 +18,8 @@
 #ifndef GML_HH
 #define GML_HH
 
+#define BOOST_SPIRIT_UNICODE
+
 #include <boost/config/warning_disable.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
@@ -29,6 +31,8 @@
 #include <boost/variant/get.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
 #include <boost/foreach.hpp>
+
+#include <boost/regex/pending/unicode_iterator.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -44,6 +48,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <codecvt>
 
 #include "base64.hh"
 
@@ -69,9 +74,15 @@ struct to_dict_visitor: public boost::static_visitor<>
         : key(key), dict(dict) {}
 
     template <class Val>
-    void operator()(Val& val) const
+    void operator()(Val&& val) const
     {
         const_cast<boost::python::dict&>(dict)[key] = val;
+    }
+
+    void operator()(std::wstring& val) const
+    {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+        const_cast<boost::python::dict&>(dict)[key] =  conv.to_bytes(val);
     }
 
     template <class Val>
@@ -94,9 +105,15 @@ struct prop_val_visitor: public boost::static_visitor<>
         : name(name), dp(dp), v(v) {}
 
     template <class Val>
-    void operator()(Val& val) const
+    void operator()(Val&& val) const
     {
         put(name, const_cast<dynamic_properties&>(dp), v, val);
+    }
+
+    void operator()(std::wstring& val) const
+    {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+        put(name, const_cast<dynamic_properties&>(dp), v, conv.to_bytes(val));
     }
 
     template <class Val>
@@ -126,7 +143,7 @@ public:
         : _g(g), _dp(dp), _directed(false), _ignore_vp(ignore_vp),
           _ignore_ep(ignore_ep), _ignore_gp(ignore_gp) {}
 
-    typedef boost::make_recursive_variant<std::string, int, double,
+    typedef boost::make_recursive_variant<std::string, std::wstring, int, double,
                                           std::unordered_map<std::string,
                                                              boost::recursive_variant_>>
         ::type val_t;
@@ -290,14 +307,14 @@ struct gml : spirit::qi::grammar<Iterator, void(), Skipper>
         : gml::base_type(start), _state(g, dp, ignore_vp, ignore_ep, ignore_gp)
     {
         using namespace spirit;
-        using spirit::ascii::char_;
+        using spirit::unicode::char_;
 
-        unesc_str = spirit::lexeme['"' >> *(unesc_char | (spirit::qi::graph - "\"") |
-                                            spirit::qi::space | "\\x" >> qi::hex) >> '"'];
+        unesc_str = spirit::lexeme['"' >> *(unesc_char |  (unicode::graph - "\"") |
+                                            unicode::space | "\\x" >> qi::hex) >> '"'];
         unesc_char.add("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
             ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
             ("\\\'", '\'')("\\\"", '\"');
-        key_identifier %= spirit::lexeme[((+((spirit::qi::alnum | "_") | "-")) >> *spirit::qi::alnum)];
+        key_identifier %= spirit::lexeme[((+((spirit::qi::unicode::alnum | "_") | "-")) >> *spirit::qi::unicode::alnum)];
         auto key_action = [this](auto && attr)
                           {
                               _state.push_key(std::forward<decltype(attr)>(attr));
@@ -305,7 +322,7 @@ struct gml : spirit::qi::grammar<Iterator, void(), Skipper>
         key = key_identifier[key_action];
 
         value_identifier %= (spirit::lexeme[spirit::qi::double_] | unesc_str);
-        auto value_action = [this](auto && attr)
+        auto value_action = [this](auto&& attr)
                             {
                                 _state.push_value(std::forward<decltype(attr)>(attr));
                             };
@@ -318,9 +335,9 @@ struct gml : spirit::qi::grammar<Iterator, void(), Skipper>
         start = list;
     }
 
-    typedef boost::variant<std::string, double> val_t;
+    typedef boost::variant<std::string, std::wstring, double> val_t;
 
-    spirit::qi::rule<Iterator, std::string(), Skipper> unesc_str;
+    spirit::qi::rule<Iterator, std::wstring(), Skipper> unesc_str;
     spirit::qi::symbols<char const, char const> unesc_char;
     spirit::qi::rule<Iterator, std::string(), Skipper> key, key_identifier;
     spirit::qi::rule<Iterator, val_t(), Skipper> value, value_identifier;
@@ -338,8 +355,7 @@ bool parse_grammar(Iterator begin, Iterator end, Graph& g,
                    const std::unordered_set<std::string>& ignore_gp = std::unordered_set<std::string>())
 {
     using namespace spirit;
-    gml<spirit::istream_iterator, Graph, Skipper> parser(g, dp, ignore_vp,
-                                                         ignore_ep, ignore_gp);
+    gml<Iterator, Graph, Skipper> parser(g, dp, ignore_vp, ignore_ep, ignore_gp);
     bool ok = qi::phrase_parse(begin, end, parser, skip);
     if (!ok)
         throw gml_parse_error("invalid syntax");
@@ -359,9 +375,11 @@ bool read_gml(istream& in, Graph& g, dynamic_properties& dp,
     spirit::istream_iterator begin(in);
     spirit::istream_iterator end;
 
+    u8_to_u32_iterator<spirit::istream_iterator> tbegin(begin), tend(end);
+
     bool directed =
-        parse_grammar(begin, end, g, dp,
-                      (ascii::space |'#' >> *(ascii::char_ - qi::eol) >> qi::eol),
+        parse_grammar(tbegin, tend, g, dp,
+                      (unicode::space | '#' >> *(unicode::char_ - qi::eol) >> qi::eol),
                       ignore_vp, ignore_ep, ignore_gp);
 
     return directed;
@@ -375,7 +393,7 @@ struct get_str
         try
         {
             ValueType v = any_cast<ValueType>(val);
-            if (std::is_same<ValueType, python::object>::value)
+            if constexpr (std::is_same<ValueType, python::object>::value)
             {
                 sval = base64_encode(lexical_cast<string>(v));
             }
@@ -386,7 +404,7 @@ struct get_str
                 sval = s.str();
             }
 
-            if (!std::is_scalar<ValueType>::value)
+            if constexpr (!std::is_scalar<ValueType>::value)
             {
                 replace_all(sval, "\"", "\\\"");
                 sval = "\"" + sval + "\"";
