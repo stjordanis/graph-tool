@@ -390,28 +390,24 @@ struct get_str
     template <typename ValueType>
     void operator()(const boost::any& val, std::string& sval, ValueType) const
     {
-        try
+        const ValueType* v = any_cast<ValueType>(&val);
+        if (v == nullptr)
+            return;
+        if constexpr (std::is_same<ValueType, python::object>::value)
         {
-            ValueType v = any_cast<ValueType>(val);
-            if constexpr (std::is_same<ValueType, python::object>::value)
-            {
-                sval = base64_encode(lexical_cast<string>(v));
-            }
-            else
-            {
-                stringstream s;
-                s << v;
-                sval = s.str();
-            }
-
-            if constexpr (!std::is_scalar<ValueType>::value)
-            {
-                replace_all(sval, "\"", "\\\"");
-                sval = "\"" + sval + "\"";
-            }
+            sval = base64_encode(lexical_cast<string>(*v));
         }
-        catch (bad_any_cast&)
+        else
         {
+            stringstream s;
+            s << *v;
+            sval = s.str();
+        }
+
+        if constexpr (!std::is_scalar<ValueType>::value)
+        {
+            replace_all(sval, "\"", "\\\"");
+            sval = "\"" + sval + "\"";
         }
     }
 };
@@ -450,6 +446,9 @@ void write_gml(std::ostream& out, const Graph& g, VertexIndexMap vertex_index,
     if (graph_is_directed)
         out << "   directed " << 1 << endl;
 
+    dynamic_properties vdp;
+    dynamic_properties edp;
+
     for (auto& i : dp)
     {
         if (i.second->key() == typeid(graph_property_tag))
@@ -460,6 +459,14 @@ void write_gml(std::ostream& out, const Graph& g, VertexIndexMap vertex_index,
                 continue;
             out << "   " << i.first << " " << val << endl;
         }
+        else if (i.second->key() == typeid(vertex_descriptor))
+        {
+            vdp.insert(i.first, i.second);
+        }
+        else if (i.second->key() == typeid(edge_descriptor))
+        {
+            edp.insert(i.first, i.second);
+        }
     }
 
     for (auto v : vertices_range(g))
@@ -467,15 +474,12 @@ void write_gml(std::ostream& out, const Graph& g, VertexIndexMap vertex_index,
         out << "   node [" << endl;
         out << "      id " << get(vertex_index, v) << endl;
 
-        for (auto& i : dp)
+        for (auto& i : vdp)
         {
-            if (i.second->key() == typeid(vertex_descriptor))
-            {
-                std::string val = print_val<value_types>(*i.second, v);
-                if (val.empty())
-                    continue;
-                out << "      " << i.first << " " << val << endl;
-            }
+            std::string val = print_val<value_types>(*i.second, v);
+            if (val.empty())
+                continue;
+            out << "      " << i.first << " " << val << endl;
         }
         out << "   ]" << endl;
     }
@@ -488,15 +492,12 @@ void write_gml(std::ostream& out, const Graph& g, VertexIndexMap vertex_index,
         out << "      source " << get(vertex_index, source(e, g)) << endl;
         out << "      target " << get(vertex_index, target(e, g)) << endl;
 
-        for (auto& i : dp)
+        for (auto& i : edp)
         {
-            if (i.second->key() == typeid(edge_descriptor))
-            {
-                std::string val = print_val<value_types>(*i.second, e);
-                if (val.empty())
-                    continue;
-                out << "      " << i.first << " " << val << endl;
-            }
+            std::string val = print_val<value_types>(*i.second, e);
+            if (val.empty())
+                continue;
+            out << "      " << i.first << " " << val << endl;
         }
         out << "   ]" << endl;
     }
