@@ -1120,7 +1120,8 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
             scale_ink(ink_scale, vprops, eprops)
         return interactive_window(g, pos, vprops, eprops, vorder, eorder,
                                   nodesfirst, geometry=output_size,
-                                  fit_view=fit_view, **kwargs)
+                                  fit_view=fit_view, bg_color=bg_color,
+                                  **kwargs)
     else:
         adjust_default_sizes(g, output_size, vprops, eprops)
 
@@ -1175,6 +1176,8 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         cr.translate(-x, -y)
 
         if bg_color is not None:
+            if isinstance(bg_color, str):
+                bg_color = matplotlib.colors.to_rgba(bg_color)
             cr.set_source_rgba(bg_color[0], bg_color[1],
                                bg_color[2], bg_color[3])
             cr.paint()

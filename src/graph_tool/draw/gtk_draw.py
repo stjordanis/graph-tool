@@ -286,6 +286,8 @@ class GraphWidget(Gtk.DrawingArea):
         self.base_geometry = None
         self.background = None
         self.bg_color = bg_color if bg_color is not None else [1, 1, 1, 1]
+        if isinstance(self.bg_color, str):
+            self.bg_color = matplotlib.colors.to_rgba(self.bg_color)
         self.regenerate_generator = None
         self.regenerate_max_time = max_render_time
         self.max_render_time = max_render_time
