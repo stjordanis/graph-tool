@@ -53,6 +53,58 @@ struct get_adjacency
     }
 };
 
+template <class Graph, class Vindex, class Weight, class V>
+void adj_matvec(Graph& g, Vindex index, Weight w, V& x, V& ret)
+{
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             size_t i = get(index, v);
+             std::remove_reference_t<decltype(ret[i])> y = 0;
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                     y += get(w, e) * x[get(index, target(e, g))];
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                     y += x[get(index, u)];
+             }
+             ret[i] = y;
+         });
+}
+
+template <class Graph, class Vindex, class Weight, class M>
+void adj_matmat(Graph& g, Vindex index, Weight w, M& x, M& ret)
+{
+    size_t k = x.shape()[1];
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             size_t i = get(index, v);
+             auto y = ret[i];
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto w_e = get(w, e);
+                     for (size_t l = 0; l < k; ++l)
+                         y[l] += w_e * x[get(index, target(e, g))][l];
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                     for (size_t l = 0; l < k; ++l)
+                         y[l] += x[get(index, u)][l];
+             }
+
+         });
+}
+
 } // namespace graph_tool
 
 #endif // GRAPH_ADJACENCY_MATRIX_HH

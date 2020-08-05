@@ -39,7 +39,7 @@ struct get_incidence
         {
             for (const auto& e : out_edges_range(v, g))
             {
-                if (graph_tool::is_directed(g))
+                if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
                     data[pos] = -1;
                 else
                     data[pos] = 1;
@@ -48,7 +48,7 @@ struct get_incidence
                 ++pos;
             }
 
-            if (graph_tool::is_directed(g))
+            if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
             {
                 for (const auto& e : in_edges_range(v, g))
                 {
@@ -61,6 +61,105 @@ struct get_incidence
         }
     }
 };
+
+template <class Graph, class Vindex, class EIndex, class V>
+void inc_matvec(Graph& g, Vindex vindex, EIndex eindex, V& x, V& ret, bool transpose)
+{
+    if (!transpose)
+    {
+        parallel_vertex_loop
+            (g,
+             [&](auto v)
+             {
+                 auto& y = ret[get(vindex, v)];
+                 for (const auto& e : out_edges_range(v, g))
+                 {
+                    auto u = eindex[e];
+                    if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
+                        y -= x[u];
+                    else
+                        y += x[u];
+                 }
+
+                 if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
+                 {
+                    for (const auto& e : in_edges_range(v, g))
+                    {
+                        auto u = eindex[e];
+                        y += x[u];
+                    }
+                 }
+             });
+    }
+    else
+    {
+        parallel_edge_loop
+            (g,
+             [&](const auto& e)
+             {
+                 auto u = eindex[e];
+                 if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
+                     ret[u] = x[get(vindex, target(e, g))] - x[get(vindex, source(e, g))];
+                 else
+                     ret[u] = x[get(vindex, target(e, g))] + x[get(vindex, source(e, g))];
+             });
+    }
+}
+
+template <class Graph, class Vindex, class Eindex, class M>
+void inc_matmat(Graph& g, Vindex vindex, Eindex eindex, M& x, M& ret, bool transpose)
+{
+    size_t k = x.shape()[1];
+    if (!transpose)
+    {
+        parallel_vertex_loop
+            (g,
+             [&](auto v)
+             {
+                 auto y = ret[get(vindex, v)];
+                 for (const auto& e : out_edges_range(v, g))
+                 {
+                    auto u = eindex[e];
+                    for (size_t i = 0; i < k; ++i)
+                    {
+                        if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
+                            y[i] -= x[u][i];
+                        else
+                            y[i] += x[u][i];
+                    }
+                 }
+
+                 if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
+                 {
+                    for (const auto& e : in_edges_range(v, g))
+                    {
+                        auto u = eindex[e];
+                        for (size_t i = 0; i < k; ++i)
+                            y[i] += x[u][i];
+                    }
+                 }
+             });
+    }
+    else
+    {
+        parallel_edge_loop
+            (g,
+             [&](const auto& e)
+             {
+                 auto u = eindex[e];
+                 auto s = get(vindex, source(e, g));
+                 auto t = get(vindex, target(e, g));
+                 for (size_t i = 0; i < k; ++i)
+                 {
+                     if constexpr (graph_tool::is_directed_::apply<Graph>::type::value)
+                         ret[u][i] = x[t][i] - x[s][i];
+                     else
+                         ret[u][i] = x[t][i] + x[s][i];
+                 }
+             });
+    }
+}
+
 
 } // namespace graph_tool
 

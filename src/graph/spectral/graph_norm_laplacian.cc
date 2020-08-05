@@ -70,3 +70,67 @@ void norm_laplacian(GraphInterface& g, boost::any index, boost::any weight,
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }
+
+void norm_laplacian_matvec(GraphInterface& g, boost::any index,
+                           boost::any weight, boost::any deg, python::object ov,
+                           python::object oret)
+{
+    if (!belongs<vertex_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    typedef UnityPropertyMap<double, GraphInterface::edge_t> weight_map_t;
+    typedef mpl::push_back<edge_scalar_properties, weight_map_t>::type
+        weight_props_t;
+
+    if (!weight.empty() && !belongs<edge_scalar_properties>()(weight))
+        throw ValueException("weight edge property must have a scalar value type");
+
+    if(weight.empty())
+        weight = weight_map_t();
+
+    multi_array_ref<double,1> v = get_array<double,1>(ov);
+    multi_array_ref<double,1> ret = get_array<double,1>(oret);
+
+    typedef typename vprop_map_t<double>::type deg_t;
+    deg_t::unchecked_t d = any_cast<deg_t>(deg).get_unchecked();
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& vi, auto&& w)
+         {
+             return nlap_matvec(graph, vi, w, d, v, ret);
+         },
+         vertex_scalar_properties(), weight_props_t())(index, weight);
+}
+
+void norm_laplacian_matmat(GraphInterface& g, boost::any index,
+                           boost::any weight, boost::any deg, python::object ov,
+                           python::object oret)
+{
+    if (!belongs<vertex_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    typedef UnityPropertyMap<double, GraphInterface::edge_t> weight_map_t;
+    typedef mpl::push_back<edge_scalar_properties, weight_map_t>::type
+        weight_props_t;
+
+    if (!weight.empty() && !belongs<edge_scalar_properties>()(weight))
+        throw ValueException("weight edge property must have a scalar value type");
+
+    if(weight.empty())
+        weight = weight_map_t();
+
+    typedef typename vprop_map_t<double>::type deg_t;
+    deg_t::unchecked_t d = any_cast<deg_t>(deg).get_unchecked();
+
+    multi_array_ref<double,2> v = get_array<double,2>(ov);
+    multi_array_ref<double,2> ret = get_array<double,2>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& vi, auto&& w)
+         {
+             return nlap_matmat(graph, vi, w, d, v, ret);
+         },
+         vertex_scalar_properties(), weight_props_t())(index, weight);
+}

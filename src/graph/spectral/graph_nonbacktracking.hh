@@ -54,6 +54,117 @@ void get_nonbacktracking(Graph& g, Index index,
     }
 }
 
+template <bool transpose, class Graph, class EIndex, class V>
+void nbt_matvec(Graph& g, EIndex eindex, V& x, V& ret)
+{
+    auto get_idx =
+        [&](auto& e, bool reverse = false)
+        {
+            int64_t idx = get(eindex, e);
+            if constexpr (!graph_tool::is_directed_::apply<Graph>::type::value)
+            {
+                size_t u = source(e, g);
+                size_t v = target(e, g);
+                if (reverse)
+                    std::swap(u, v);
+                if constexpr (!transpose)
+                    idx = (idx << 1) + (u > v);
+                else
+                    idx = (idx << 1) + (v > u);
+            }
+            return idx;
+        };
+
+
+    parallel_edge_loop
+        (g,
+         [&](const auto& e)
+         {
+             size_t u = source(e, g);
+             size_t v = target(e, g);
+
+             int64_t idx = get_idx(e);
+
+             for (const auto& e2 : out_edges_range(v, g))
+             {
+                 auto w = target(e2, g);
+                 if (w == u || w == v)
+                     continue;
+                 int64_t idx2 = get_idx(e2);
+                 ret[idx] += x[idx2];
+             }
+
+             idx = get_idx(e, true);
+
+             for (const auto& e2 : out_edges_range(u, g))
+             {
+                 auto w = target(e2, g);
+                 if (w == u || w == v)
+                     continue;
+                 int64_t idx2 = get_idx(e2);
+                 ret[idx] += x[idx2];
+             }
+
+         });
+}
+
+template <bool transpose, class Graph, class EIndex, class V>
+void nbt_matmat(Graph& g, EIndex eindex, V& x, V& ret)
+{
+    auto get_idx =
+        [&](auto& e, bool reverse = false)
+        {
+            int64_t idx = get(eindex, e);
+            if constexpr (!graph_tool::is_directed_::apply<Graph>::type::value)
+            {
+                size_t u = source(e, g);
+                size_t v = target(e, g);
+                if (reverse)
+                    std::swap(u, v);
+                if constexpr (!transpose)
+                    idx = (idx << 1) + (u > v);
+                else
+                    idx = (idx << 1) + (v > u);
+            }
+            return idx;
+        };
+
+
+    size_t k = x.shape()[1];
+    parallel_edge_loop
+        (g,
+         [&](const auto& e)
+         {
+             size_t u = source(e, g);
+             size_t v = target(e, g);
+
+             int64_t idx = get_idx(e);
+
+             for (const auto& e2 : out_edges_range(v, g))
+             {
+                 auto w = target(e2, g);
+                 if (w == u || w == v)
+                     continue;
+                 int64_t idx2 = get_idx(e2);
+                 for (size_t i = 0; i < k; ++i)
+                     ret[idx][i] += x[idx2][i];
+             }
+
+             idx = get_idx(e, true);
+
+             for (const auto& e2 : out_edges_range(u, g))
+             {
+                 auto w = target(e2, g);
+                 if (w == u || w == v)
+                     continue;
+                 int64_t idx2 = get_idx(e2);
+                 for (size_t i = 0; i < k; ++i)
+                     ret[idx][i] += x[idx2][i];
+             }
+
+         });
+}
+
 template <class Graph>
 void get_compact_nonbacktracking(Graph& g,
                                  std::vector<int64_t>& i,
@@ -89,6 +200,76 @@ void get_compact_nonbacktracking(Graph& g,
         x.push_back(k-1);
     }
 }
+
+template <bool transpose, class Graph, class VIndex, class V>
+void cnbt_matvec(Graph& g, VIndex vindex, V& x, V& ret)
+{
+    size_t N = HardNumVertices()(g);
+    parallel_vertex_loop
+        (g,
+         [&](const auto& v)
+         {
+             size_t i = get(vindex, v);
+             auto& y = ret[i];
+             for (const auto& e : out_edges_range(v, g))
+             {
+                 auto u = target(e, g);
+                 size_t j = get(vindex, u);
+                 y += x[j];
+             }
+
+             if constexpr (!transpose)
+             {
+                 ret[i] -= x[i + N];
+                 ret[i + N] = (out_degree(v, g) - 1) * x[i];
+             }
+             else
+             {
+                 ret[i + N] -= x[i];
+                 ret[i] = (out_degree(v, g) - 1) * x[i + N];
+             }
+         });
+}
+
+template <bool transpose, class Graph, class VIndex, class V>
+void cnbt_matmat(Graph& g, VIndex vindex, V& x, V& ret)
+{
+    size_t k = x.shape()[1];
+    size_t N = HardNumVertices()(g);
+    parallel_vertex_loop
+        (g,
+         [&](const auto& v)
+         {
+             size_t i = get(vindex, v);
+             auto y = ret[i];
+             for (const auto& e : out_edges_range(v, g))
+             {
+                 auto u = target(e, g);
+                 size_t j = get(vindex, u);
+                 for (size_t l = 0; l < k; ++l)
+                     y[l] += x[j][l];
+             }
+
+             auto d = (out_degree(v, g) - 1);
+             if constexpr (!transpose)
+             {
+                 for (size_t l = 0; l < k; ++l)
+                 {
+                     ret[i][l] -= x[i + N][l];
+                     ret[i + N][l] = d * x[i][l];
+                 }
+             }
+             else
+             {
+                 for (size_t l = 0; l < k; ++l)
+                 {
+                     ret[i + N][l] -= x[i][l];
+                     ret[i][l] = d * x[i + N][l];
+                 }
+             }
+         });
+}
+
 
 } // namespace graph_tool
 

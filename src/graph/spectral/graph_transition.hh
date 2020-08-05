@@ -69,6 +69,93 @@ struct get_transition
     }
 };
 
+template <bool transpose, class Graph, class Vindex, class Weight, class Deg, class V>
+void trans_matvec(Graph& g, Vindex vindex, Weight w, Deg id, V& x, V& ret)
+{
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             std::remove_reference_t<decltype(ret[v])> y = 0;
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto u = target(e, g);
+                     auto w_e = get(w, e);
+                     auto ui = get(vindex, u);
+                     if constexpr (!transpose)
+                         y += w_e * x[ui] * id[u];
+                     else
+                         y += w_e * x[ui];
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                 {
+                     auto ui = get(vindex, u);
+                     if constexpr (!transpose)
+                         y += x[ui] * id[u];
+                     else
+                         y += x[ui];
+                 }
+             }
+             if constexpr (transpose)
+                 y *= id[v];
+             ret[get(vindex, v)] = y;
+         });
+}
+
+
+template <bool transpose, class Graph, class Vindex, class Weight, class Deg, class Mat>
+void trans_matmat(Graph& g, Vindex vindex, Weight w, Deg id, Mat& x, Mat& ret)
+{
+    size_t M = x.shape()[1];
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             auto vi = get(vindex, v);
+             auto y = ret[vi];
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto u = target(e, g);
+                     auto w_e = get(w, e);
+                     auto ui = get(vindex, u);
+                     for (size_t i = 0; i < M; ++i)
+                     {
+                         if constexpr (!transpose)
+                             y[i] += w_e * x[ui][i] * id[u];
+                         else
+                             y[i] += w_e * x[ui][i];
+                     }
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                 {
+                     auto ui = get(vindex, u);
+                     for (size_t i = 0; i < M; ++i)
+                     {
+                         if constexpr (!transpose)
+                             y[i] += x[ui][i] * id[u];
+                         else
+                             y[i] += x[ui][i];
+                     }
+                 }
+             }
+             if constexpr (transpose)
+             {
+                 for (size_t i = 0; i < M; ++i)
+                     y[i] *= id[v];
+             }
+         });
+}
+
 } // namespace graph_tool
 
 #endif // GRAPH_TRANSITION_HH

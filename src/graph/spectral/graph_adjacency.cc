@@ -61,3 +61,59 @@ void adjacency(GraphInterface& g, boost::any index, boost::any weight,
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }
+
+void adjacency_matvec(GraphInterface& g, boost::any index, boost::any weight,
+                      python::object ov, python::object oret)
+{
+    if (!belongs<vertex_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    typedef UnityPropertyMap<double, GraphInterface::edge_t> weight_map_t;
+    typedef mpl::push_back<edge_scalar_properties, weight_map_t>::type
+        weight_props_t;
+
+    if (!weight.empty() && !belongs<edge_scalar_properties>()(weight))
+        throw ValueException("weight edge property must have a scalar value type");
+
+    if(weight.empty())
+        weight = weight_map_t();
+
+    multi_array_ref<double,1> v = get_array<double,1>(ov);
+    multi_array_ref<double,1> ret = get_array<double,1>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& vi, auto&& w)
+         {
+             return adj_matvec(graph, vi, w, v, ret);
+         },
+         vertex_scalar_properties(), weight_props_t())(index, weight);
+}
+
+void adjacency_matmat(GraphInterface& g, boost::any index, boost::any weight,
+                      python::object ov, python::object oret)
+{
+    if (!belongs<vertex_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    typedef UnityPropertyMap<double, GraphInterface::edge_t> weight_map_t;
+    typedef mpl::push_back<edge_scalar_properties, weight_map_t>::type
+        weight_props_t;
+
+    if (!weight.empty() && !belongs<edge_scalar_properties>()(weight))
+        throw ValueException("weight edge property must have a scalar value type");
+
+    if(weight.empty())
+        weight = weight_map_t();
+
+    multi_array_ref<double,2> v = get_array<double,2>(ov);
+    multi_array_ref<double,2> ret = get_array<double,2>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& vi, auto&& w)
+         {
+             return adj_matmat(graph, vi, w, v, ret);
+         },
+         vertex_scalar_properties(), weight_props_t())(index, weight);
+}

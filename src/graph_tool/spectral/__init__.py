@@ -35,6 +35,13 @@ Summary
    modularity_matrix
    hashimoto
 
+   AdjacencyOperator
+   LaplacianOperator
+   IncidenceOperator
+   TransitionOperator
+   HashimotoOperator
+   CompactHashimotoOperator
+
 Contents
 ++++++++
 """
@@ -49,11 +56,12 @@ import scipy.sparse.linalg
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_spectral")
 
-__all__ = ["adjacency", "laplacian", "incidence", "transition",
-           "modularity_matrix", "hashimoto"]
+__all__ = ["adjacency", "AdjacencyOperator", "laplacian", "LaplacianOperator",
+           "incidence", "IncidenceOperator", "transition", "TransitionOperator",
+           "modularity_matrix", "hashimoto", "HashimotoOperator",
+           "CompactHashimotoOperator"]
 
-
-def adjacency(g, weight=None, index=None):
+def adjacency(g, weight=None, vindex=None, operator=False):
     r"""Return the adjacency matrix of the graph.
 
     Parameters
@@ -62,13 +70,16 @@ def adjacency(g, weight=None, index=None):
         Graph to be used.
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
         Edge property map with the edge weights.
-    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
         Vertex property map specifying the row/column indexes. If not provided, the
         internal vertex index is used.
+    operator : ``bool`` (optional, default: ``False``)
+        If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
+        returned, instead of a sparse matrix.
 
     Returns
     -------
-    A : :class:`~scipy.sparse.csr_matrix`
+    A : :class:`~scipy.sparse.csr_matrix` or :class:`AdjacencyOperator`
         The (sparse) adjacency matrix.
 
     Notes
@@ -110,6 +121,17 @@ def adjacency(g, weight=None, index=None):
         i`. Although this is a typical definition in network and graph theory
         literature, many also use the transpose of this matrix.
 
+    .. note::
+
+        For many linear algebra computations it is more efficient to pass
+        ``operator=True``. This makes this function return a
+        :class:`scipy.sparse.linalg.LinearOperator` subclass, which implements
+        matrix-vector and matrix-matrix multiplication, and is sufficient for
+        the sparse linear algebra operations available in the scipy module
+        :mod:`scipy.sparse.linalg`. This avoids copying the whole graph as a
+        sparse matrix, and performs the multiplication operations in parallel
+        (if enabled during compilation).
+
     Examples
     --------
     .. testsetup::
@@ -118,8 +140,11 @@ def adjacency(g, weight=None, index=None):
        from pylab import *
 
     >>> g = gt.collection.data["polblogs"]
-    >>> A = gt.adjacency(g)
-    >>> ew, ev = scipy.linalg.eig(A.todense())
+    >>> A = gt.adjacency(g, operator=True)
+    >>> N = g.num_vertices()
+    >>> ew1 = scipy.sparse.linalg.eigs(A, k=N//2, which="LR", return_eigenvectors=False)
+    >>> ew2 = scipy.sparse.linalg.eigs(A, k=N-N//2, which="SR", return_eigenvectors=False)
+    >>> ew = np.concatenate((ew1, ew2))
 
     >>> figure(figsize=(8, 2))
     <...>
@@ -135,7 +160,7 @@ def adjacency(g, weight=None, index=None):
     .. figure:: adjacency-spectrum.*
         :align: center
 
-        Adjacency matrix spectrum for the political blog network.
+        Adjacency matrix spectrum for the political blogs network.
 
     References
     ----------
@@ -143,12 +168,15 @@ def adjacency(g, weight=None, index=None):
 
     """
 
-    if index is None:
+    if operator:
+        return AdjacencyOperator(g, weight=weight, vindex=vindex)
+
+    if vindex is None:
         if g.get_vertex_filter()[0] is not None:
-            index = g.new_vertex_property("int64_t")
-            index.fa = numpy.arange(g.num_vertices())
+            vindex = g.new_vertex_property("int64_t")
+            vindex.fa = numpy.arange(g.num_vertices())
         else:
-            index = g.vertex_index
+            vindex = g.vertex_index
 
     E = g.num_edges() if g.is_directed() else 2 * g.num_edges()
 
@@ -156,7 +184,7 @@ def adjacency(g, weight=None, index=None):
     i = numpy.zeros(E, dtype="int32")
     j = numpy.zeros(E, dtype="int32")
 
-    libgraph_tool_spectral.adjacency(g._Graph__graph, _prop("v", g, index),
+    libgraph_tool_spectral.adjacency(g._Graph__graph, _prop("v", g, vindex),
                                      _prop("e", g, weight), data, i, j)
 
     if E > 0:
@@ -168,9 +196,58 @@ def adjacency(g, weight=None, index=None):
     m = m.tocsr()
     return m
 
+class AdjacencyOperator(scipy.sparse.linalg.LinearOperator):
+    def __init__(self, g, weight=None, vindex=None):
+        r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the adjacency
+        matrix of a graph. See :func:`adjacency` for details."""
+        self.g = g
+        self.weight = weight
+
+        if vindex is None:
+            if g.get_vertex_filter()[0] is not None:
+                self.vindex = g.new_vertex_property("int64_t")
+                self.vindex.fa = numpy.arange(g.num_vertices())
+                N = g.num_vertices()
+            else:
+                self.vindex = g.vertex_index
+                N = g.num_vertices()
+        else:
+            self.vindex = vindex
+            if vindex is vindex.get_graph().vertex_index:
+                N = g.num_vertices()
+            else:
+                N = vindex.fa.max() + 1
+
+        self.shape = (N, N)
+        self.dtype = numpy.dtype("float")
+
+    def _matvec(self, x):
+        y = numpy.zeros(self.shape[0])
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.adjacency_matvec(self.g._Graph__graph,
+                                                _prop("v", self.g, self.vindex),
+                                                _prop("e", self.g, self.weight),
+                                                x, y)
+        return y
+
+    def _matmat(self, x):
+        y = numpy.zeros((self.shape[0], x.shape[1]))
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.adjacency_matvec(self.g._Graph__graph,
+                                                _prop("v", self.g, self.vindex),
+                                                _prop("e", self.g, self.weight),
+                                                x, y)
+        return y
+
+    def _adjoint(self):
+        if self.g.is_directed():
+            return AdjacencyOperator(GraphView(self.g, reversed=True),
+                                     self.weight, self.vindex)
+        else:
+            return self
 
 @_limit_args({"deg": ["total", "in", "out"]})
-def laplacian(g, deg="total", normalized=False, weight=None, index=None):
+def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False):
     r"""Return the Laplacian matrix of the graph.
 
     Parameters
@@ -179,17 +256,20 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
         Graph to be used.
     deg : str (optional, default: "total")
         Degree to be used, in case of a directed graph.
-    normalized : bool (optional, default: False)
+    norm : bool (optional, default: False)
         Whether to compute the normalized Laplacian.
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
         Edge property map with the edge weights.
-    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
         Vertex property map specifying the row/column indexes. If not provided, the
         internal vertex index is used.
+    operator : ``bool`` (optional, default: ``False``)
+        If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
+        returned, instead of a sparse matrix.
 
     Returns
     -------
-    l : :class:`~scipy.sparse.csr_matrix`
+    L : :class:`~scipy.sparse.csr_matrix` or :class:`LaplacianOperator`
         The (sparse) Laplacian matrix.
 
     Notes
@@ -221,7 +301,7 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
 
     For directed graphs, it is assumed :math:`\Gamma(v_i)=\sum_j A_{ij}w_{ij} +
     \sum_j A_{ji}w_{ji}` if ``deg=="total"``, :math:`\Gamma(v_i)=\sum_j A_{ji}w_{ji}`
-    if ``deg=="out"`` or :math:`\Gamma(v_i)=\sum_j A_{ij}w_{ij}` ``deg=="in"``.
+    if ``deg=="out"`` or :math:`\Gamma(v_i)=\sum_j A_{ij}w_{ij}` if ``deg=="in"``.
 
     .. note::
 
@@ -229,6 +309,17 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
         :math:`\ell_{i,j}` corresponds to the directed edge :math:`j\to
         i`. Although this is a typical definition in network and graph theory
         literature, many also use the transpose of this matrix.
+
+    .. note::
+
+        For many linear algebra computations it is more efficient to pass
+        ``operator=True``. This makes this function return a
+        :class:`scipy.sparse.linalg.LinearOperator` subclass, which implements
+        matrix-vector and matrix-matrix multiplication, and is sufficient for
+        the sparse linear algebra operations available in the scipy module
+        :mod:`scipy.sparse.linalg`. This avoids copying the whole graph as a
+        sparse matrix, and performs the multiplication operations in parallel
+        (if enabled during compilation).
 
     Examples
     --------
@@ -239,8 +330,11 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
        from pylab import *
 
     >>> g = gt.collection.data["polblogs"]
-    >>> L = gt.laplacian(g)
-    >>> ew, ev = scipy.linalg.eig(L.todense())
+    >>> L = gt.laplacian(g, operator=True)
+    >>> N = g.num_vertices()
+    >>> ew1 = scipy.sparse.linalg.eigs(L, k=N//2, which="LR", return_eigenvectors=False)
+    >>> ew2 = scipy.sparse.linalg.eigs(L, k=N-N//2, which="SR", return_eigenvectors=False)
+    >>> ew = np.concatenate((ew1, ew2))
 
     >>> figure(figsize=(8, 2))
     <...>
@@ -256,10 +350,12 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
     .. figure:: laplacian-spectrum.*
         :align: center
 
-        Laplacian matrix spectrum for the political blog network.
+        Laplacian matrix spectrum for the political blogs network.
 
-    >>> L = gt.laplacian(g, normalized=True)
-    >>> ew, ev = scipy.linalg.eig(L.todense())
+    >>> L = gt.laplacian(g, norm=True, operator=True)
+    >>> ew1 = scipy.sparse.linalg.eigs(L, k=N//2, which="LR", return_eigenvectors=False)
+    >>> ew2 = scipy.sparse.linalg.eigs(L, k=N-N//2, which="SR", return_eigenvectors=False)
+    >>> ew = np.concatenate((ew1, ew2))
 
     >>> figure(figsize=(8, 2))
     <...>
@@ -275,19 +371,23 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
     .. figure:: norm-laplacian-spectrum.*
         :align: center
 
-        Normalized Laplacian matrix spectrum for the political blog network.
+        Normalized Laplacian matrix spectrum for the political blogs network.
 
     References
     ----------
     .. [wikipedia-laplacian] http://en.wikipedia.org/wiki/Laplacian_matrix
     """
 
-    if index is None:
+    if operator:
+        return LaplacianOperator(g, deg=deg, norm=norm, weight=weight,
+                                 vindex=vindex)
+
+    if vindex is None:
         if g.get_vertex_filter()[0] is not None:
-            index = g.new_vertex_property("int64_t")
-            index.fa = numpy.arange(g.num_vertices())
+            vindex = g.new_vertex_property("int64_t")
+            vindex.fa = numpy.arange(g.num_vertices())
         else:
-            index = g.vertex_index
+            vindex = g.vertex_index
 
     V = g.num_vertices()
     nself = int(label_self_loops(g, mark_only=True).a.sum())
@@ -300,11 +400,11 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
     i = numpy.zeros(N, dtype="int32")
     j = numpy.zeros(N, dtype="int32")
 
-    if normalized:
-        libgraph_tool_spectral.norm_laplacian(g._Graph__graph, _prop("v", g, index),
+    if norm:
+        libgraph_tool_spectral.norm_laplacian(g._Graph__graph, _prop("v", g, vindex),
                                               _prop("e", g, weight), deg, data, i, j)
     else:
-        libgraph_tool_spectral.laplacian(g._Graph__graph, _prop("v", g, index),
+        libgraph_tool_spectral.laplacian(g._Graph__graph, _prop("v", g, vindex),
                                          _prop("e", g, weight), deg, data, i, j)
     if E > 0:
         V = max(g.num_vertices(), max(i.max() + 1, j.max() + 1))
@@ -315,8 +415,85 @@ def laplacian(g, deg="total", normalized=False, weight=None, index=None):
     m = m.tocsr()
     return m
 
+class LaplacianOperator(scipy.sparse.linalg.LinearOperator):
 
-def incidence(g, vindex=None, eindex=None):
+    @_limit_args({"deg": ["total", "in", "out"]})
+    def __init__(self, g, weight=None, deg="out", norm=False, vindex=None):
+        r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the laplacian
+        matrix of a graph. See :func:`laplacian` for details."""
+
+        self.g = g
+        self.weight = weight
+
+        if vindex is None:
+            if g.get_vertex_filter()[0] is not None:
+                self.vindex = g.new_vertex_property("int64_t")
+                self.vindex.fa = numpy.arange(g.num_vertices())
+                N = g.num_vertices()
+            else:
+                self.vindex = g.vertex_index
+                N = g.num_vertices()
+        else:
+            self.vindex = vindex
+            if vindex is vindex.get_graph().vertex_index:
+                N = g.num_vertices()
+            else:
+                N = vindex.fa.max() + 1
+
+        self.shape = (N, N)
+        self.deg = deg
+        self.d = self.g.degree_property_map(deg, weight)
+        if norm:
+            idx = self.d.a > 0
+            d = g.new_vp("double")
+            d.a[idx] = 1./numpy.sqrt(self.d.a[idx])
+            self.d = d
+        else:
+            self.d = self.d.copy("double")
+        self.norm = norm
+        self.dtype = numpy.dtype("float")
+
+    def _matvec(self, x):
+        y = numpy.zeros(self.shape[0])
+        x = numpy.asarray(x, dtype="float")
+        if self.norm:
+            matvec = libgraph_tool_spectral.norm_laplacian_matvec
+        else:
+            matvec = libgraph_tool_spectral.laplacian_matvec
+        matvec(self.g._Graph__graph,
+               _prop("v", self.g, self.vindex),
+               _prop("e", self.g, self.weight),
+               _prop("v", self.g, self.d), x, y)
+        return y
+
+    def _matmat(self, x):
+        y = numpy.zeros((self.shape[0], x.shape[1]))
+        x = numpy.asarray(x, dtype="float")
+        if self.norm:
+            matmat = libgraph_tool_spectral.norm_laplacian_matmat
+        else:
+            matmat = libgraph_tool_spectral.laplacian_matmat
+        matmat(self.g._Graph__graph,
+               _prop("v", self.g, self.vindex),
+               _prop("e", self.g, self.weight),
+               _prop("v", self.g, self.d), x, y)
+        return y
+
+    def _adjoint(self):
+        if self.g.is_directed():
+            deg = self.deg
+            if deg == "in":
+                deg = "out"
+            elif deg == "out":
+                deg = "in"
+            return LaplacianOperator(GraphView(self.g, reversed=True),
+                                     self.weight, deg=deg, norm=self.norm,
+                                     vindex=self.vindex)
+        else:
+            return self
+
+
+def incidence(g, vindex=None, eindex=None, operator=False):
     r"""Return the incidence matrix of the graph.
 
     Parameters
@@ -329,10 +506,13 @@ def incidence(g, vindex=None, eindex=None):
     eindex : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
         Edge property map specifying the column indexes. If not provided, the
         internal edge index is used.
+    operator : ``bool`` (optional, default: ``False``)
+        If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
+        returned, instead of a sparse matrix.
 
     Returns
     -------
-    a : :class:`~scipy.sparse.csr_matrix`
+    a : :class:`~scipy.sparse.csr_matrix` or :class:`IncidenceOperator`
         The (sparse) incidence matrix.
 
     Notes
@@ -358,27 +538,56 @@ def incidence(g, vindex=None, eindex=None):
             0 & \text{otherwise}
         \end{cases}
 
+    .. note::
+
+        For many linear algebra computations it is more efficient to pass
+        ``operator=True``. This makes this function return a
+        :class:`scipy.sparse.linalg.LinearOperator` subclass, which implements
+        matrix-vector and matrix-matrix multiplication, and is sufficient for
+        the sparse linear algebra operations available in the scipy module
+        :mod:`scipy.sparse.linalg`. This avoids copying the whole graph as a
+        sparse matrix, and performs the multiplication operations in parallel
+        (if enabled during compilation).
+
     Examples
     --------
+
     .. testsetup::
 
-      gt.seed_rng(42)
+       import scipy.linalg
+       from pylab import *
 
-    >>> g = gt.random_graph(100, lambda: (2,2))
-    >>> m = gt.incidence(g)
-    >>> print(m.todense())
-    [[-1. -1.  0. ...  0.  0.  0.]
-     [ 0.  0.  0. ...  0.  0.  0.]
-     [ 1.  0.  0. ...  0.  0.  0.]
-     ...
-     [ 0.  0. -1. ...  0.  0.  0.]
-     [ 0.  0.  0. ...  0.  0.  0.]
-     [ 0.  0.  0. ...  0.  0.  0.]]
+    >>> g = gt.collection.data["polblogs"]
+    >>> B = gt.incidence(g, operator=True)
+    >>> N = g.num_vertices()
+    >>> s1 = scipy.sparse.linalg.svds(B, k=N//2, which="LM", return_singular_vectors=False)
+    >>> s2 = scipy.sparse.linalg.svds(B, k=N-N//2, which="SM", return_singular_vectors=False)
+    >>> s = np.concatenate((s1, s2))
+    >>> s.sort()
+
+    >>> figure(figsize=(8, 2))
+    <...>
+    >>> plot(s, "s")
+    [...]
+    >>> xlabel(r"$i$")
+    Text(...)
+    >>> ylabel(r"$\lambda_i$")
+    Text(...)
+    >>> tight_layout()
+    >>> savefig("polblogs-indidence-svd.svg")
+
+    .. figure:: polblogs-indidence-svd.*
+        :align: center
+
+        Incidence singular values for the political blogs network.
 
     References
     ----------
     .. [wikipedia-incidence] http://en.wikipedia.org/wiki/Incidence_matrix
     """
+
+    if operator:
+        return IncidenceOperator(g, vindex=vindex, eindex=eindex)
 
     if vindex is None:
         if g.get_edge_filter()[0] is not None:
@@ -409,7 +618,76 @@ def incidence(g, vindex=None, eindex=None):
     m = m.tocsr()
     return m
 
-def transition(g, weight=None, index=None):
+
+class IncidenceOperator(scipy.sparse.linalg.LinearOperator):
+
+    def __init__(self, g, vindex=None, eindex=None, transpose=False):
+        r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the incidence
+        matrix of a graph. See :func:`incidence` for details.
+        """
+
+        self.g = g
+        self.transpose = transpose
+        self.dtype = numpy.dtype("float")
+
+        if vindex is None:
+            if g.get_vertex_filter()[0] is not None:
+                self.vindex = g.new_vertex_property("int64_t")
+                self.vindex.fa = numpy.arange(g.num_vertices())
+                N = g.num_vertices()
+            else:
+                self.vindex = g.vertex_index
+                N = g.num_vertices()
+        else:
+            self.vindex = vindex
+            if vindex is vindex.get_graph().vertex_index:
+                N = g.num_vertices()
+            else:
+                N = vindex.fa.max() + 1
+
+        if eindex is None:
+            if g.get_edge_filter()[0] is not None:
+                self.eindex = g.new_edge_property("int64_t")
+                self.eindex.fa = numpy.arange(g.num_edges())
+                E = g.num_edges()
+            else:
+                self.eindex = g.edge_index
+                E = g.edge_index_range
+        else:
+            self.eindex = eindex
+            if eindex is g.edge_index:
+                E = g.edge_index_range
+            else:
+                E = self.eindex.fa.max() + 1
+
+        if not transpose:
+            self.shape = (N, E)
+        else:
+            self.shape = (E, N)
+
+    def _matvec(self, x):
+        y = numpy.zeros(self.shape[0])
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.incidence_matvec(self.g._Graph__graph,
+                                                _prop("v", self.g, self.vindex),
+                                                _prop("e", self.g, self.eindex),
+                                                x, y, self.transpose)
+        return y
+
+    def _matmat(self, x):
+        y = numpy.zeros((self.shape[0], x.shape[1]))
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.incidence_matmat(self.g._Graph__graph,
+                                                _prop("v", self.g, self.vindex),
+                                                _prop("e", self.g, self.eindex),
+                                                x, y, self.transpose)
+        return y
+
+    def _adjoint(self):
+        return IncidenceOperator(self.g, vindex=self.vindex, eindex=self.eindex,
+                                 transpose=not self.transpose)
+
+def transition(g, weight=None, vindex=None, operator=False):
     r"""Return the transition matrix of the graph.
 
     Parameters
@@ -418,13 +696,16 @@ def transition(g, weight=None, index=None):
         Graph to be used.
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
         Edge property map with the edge weights.
-    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
-        Vertex property map specifying the row/column indexes. If not provided, the
-        internal vertex index is used.
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+        Vertex property map specifying the row/column indexes. If not provided,
+        the internal vertex index is used.
+    operator : ``bool`` (optional, default: ``False``)
+        If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
+        returned, instead of a sparse matrix.
 
     Returns
     -------
-    T : :class:`~scipy.sparse.csr_matrix`
+    T : :class:`~scipy.sparse.csr_matrix` or :class:`TransitionOperator`
         The (sparse) transition matrix.
 
     Notes
@@ -448,6 +729,16 @@ def transition(g, weight=None, index=None):
         i`. Although this is a typical definition in network and graph theory
         literature, many also use the transpose of this matrix.
 
+    .. note::
+
+        For many linear algebra computations it is more efficient to pass
+        ``operator=True``. This makes this function return a
+        :class:`scipy.sparse.linalg.LinearOperator` subclass, which implements
+        matrix-vector and matrix-matrix multiplication, and is sufficient for
+        the sparse linear algebra operations available in the scipy module
+        :mod:`scipy.sparse.linalg`. This avoids copying the whole graph as a
+        sparse matrix, and performs the multiplication operations in parallel
+        (if enabled during compilation).
 
     Examples
     --------
@@ -457,8 +748,11 @@ def transition(g, weight=None, index=None):
        from pylab import *
 
     >>> g = gt.collection.data["polblogs"]
-    >>> T = gt.transition(g)
-    >>> ew, ev = scipy.linalg.eig(T.todense())
+    >>> T = gt.transition(g, operator=True)
+    >>> N = g.num_vertices()
+    >>> ew1 = scipy.sparse.linalg.eigs(T, k=N//2, which="LR", return_eigenvectors=False)
+    >>> ew2 = scipy.sparse.linalg.eigs(T, k=N-N//2, which="SR", return_eigenvectors=False)
+    >>> ew = np.concatenate((ew1, ew2))
 
     >>> figure(figsize=(8, 2))
     <...>
@@ -474,26 +768,30 @@ def transition(g, weight=None, index=None):
     .. figure:: transition-spectrum.*
         :align: center
 
-        Transition matrix spectrum for the political blog network.
+        Transition matrix spectrum for the political blogs network.
 
     References
     ----------
     .. [wikipedia-transition] https://en.wikipedia.org/wiki/Stochastic_matrix
+
     """
 
-    if index is None:
+    if operator:
+        return TransitionOperator(g, weight=weight, vindex=vindex)
+
+    if vindex is None:
         if g.get_vertex_filter()[0] is not None:
-            index = g.new_vertex_property("int64_t")
-            index.fa = numpy.arange(g.num_vertices())
+            vindex = g.new_vertex_property("int64_t")
+            vindex.fa = numpy.arange(g.num_vertices())
         else:
-            index = g.vertex_index
+            vindex = g.vertex_index
 
     E = g.num_edges() if g.is_directed() else 2 * g.num_edges()
     data = numpy.zeros(E, dtype="double")
     i = numpy.zeros(E, dtype="int32")
     j = numpy.zeros(E, dtype="int32")
 
-    libgraph_tool_spectral.transition(g._Graph__graph, _prop("v", g, index),
+    libgraph_tool_spectral.transition(g._Graph__graph, _prop("v", g, vindex),
                                       _prop("e", g, weight), data, i, j)
 
     if E > 0:
@@ -504,9 +802,74 @@ def transition(g, weight=None, index=None):
     m = m.tocsr()
     return m
 
+class TransitionOperator(scipy.sparse.linalg.LinearOperator):
+
+    def __init__(self, g, weight=None, transpose=False, inv_d=None, vindex=None):
+        r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the transition
+        matrix of a graph. See :func:`transition` for details.
+        """
+
+        self.g = g
+        self.weight = weight
+
+        if vindex is None:
+            if g.get_vertex_filter()[0] is not None:
+                self.vindex = g.new_vertex_property("int64_t")
+                self.vindex.fa = numpy.arange(g.num_vertices())
+                N = g.num_vertices()
+            else:
+                self.vindex = g.vertex_index
+                N = g.num_vertices()
+        else:
+            self.vindex = vindex
+            if vindex is vindex.get_graph().vertex_index:
+                N = g.num_vertices()
+            else:
+                N = vindex.fa.max() + 1
+
+        self.shape = (N, N)
+        if inv_d is None:
+            d = self.g.degree_property_map("out", weight)
+            nd = g.new_vp("double")
+            idx = d.a > 0
+            nd.a[idx] = 1/d.a[idx]
+            self.d = nd
+        else:
+            self.d = inv_d.copy("double")
+        self.dtype = numpy.dtype("float")
+        self.transpose = transpose
+
+    def _matvec(self, x):
+        y = numpy.zeros(self.shape[0])
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.transition_matvec(self.g._Graph__graph,
+                                                 _prop("v", self.g, self.vindex),
+                                                 _prop("e", self.g, self.weight),
+                                                 _prop("v", self.g, self.d), x,
+                                                 y, self.transpose)
+        return y
+
+    def _matmat(self, x):
+        y = numpy.zeros((self.shape[0], x.shape[1]))
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.transition_matmat(self.g._Graph__graph,
+                                                 _prop("v", self.g, self.vindex),
+                                                 _prop("e", self.g, self.weight),
+                                                 _prop("v", self.g, self.d), x,
+                                                 y, self.transpose)
+        return y
+
+    def _adjoint(self):
+        if self.g.is_directed():
+            g = GraphView(self.g, reversed=True)
+        else:
+            g = self.g
+        return TransitionOperator(g, self.weight, inv_d=self.d,
+                                  transpose=not self.transpose,
+                                  vindex=self.vindex)
 
 
-def modularity_matrix(g, weight=None, index=None):
+def modularity_matrix(g, weight=None, vindex=None):
     r"""Return the modularity matrix of the graph.
 
     Parameters
@@ -549,8 +912,10 @@ def modularity_matrix(g, weight=None, index=None):
 
     >>> g = gt.collection.data["polblogs"]
     >>> B = gt.modularity_matrix(g)
-    >>> B = B * np.identity(B.shape[0])  # transform to a dense matrix
-    >>> ew, ev = scipy.linalg.eig(B)
+    >>> N = g.num_vertices()
+    >>> ew1 = scipy.sparse.linalg.eigs(B, k=N//2, which="LR", return_eigenvectors=False)
+    >>> ew2 = scipy.sparse.linalg.eigs(B, k=N-N//2, which="SR", return_eigenvectors=False)
+    >>> ew = np.concatenate((ew1, ew2))
 
     >>> figure(figsize=(8, 2))
     <...>
@@ -560,13 +925,14 @@ def modularity_matrix(g, weight=None, index=None):
     Text(...)
     >>> ylabel(r"$\operatorname{Im}(\lambda)$")
     Text(...)
+    >>> autoscale()
     >>> tight_layout()
     >>> savefig("modularity-spectrum.svg")
 
     .. figure:: modularity-spectrum.*
         :align: center
 
-        Modularity matrix spectrum for the political blog network.
+        Modularity matrix spectrum for the political blogs network.
 
     References
     ----------
@@ -575,28 +941,29 @@ def modularity_matrix(g, weight=None, index=None):
        :doi:`10.1103/PhysRevE.69.026113`
     """
 
-    A = adjacency(g, weight=weight, index=index)
+    A = adjacency(g, weight=weight, vindex=vindex, operator=True)
+    A_T = A.adjoint()
     if g.is_directed():
         k_in = g.degree_property_map("in", weight=weight).fa
     else:
         k_in = g.degree_property_map("out", weight=weight).fa
     k_out = g.degree_property_map("out", weight=weight).fa
 
-    N = A.shape[0]
+    N = g.num_vertices()
     E2 = float(k_out.sum())
 
     def matvec(x):
         M = x.shape[0]
         if len(x.shape) > 1:
             x = x.reshape(M)
-        nx = A * x - k_out * numpy.dot(k_in, x) / E2
+        nx = A.matvec(x) - k_out * numpy.dot(k_in, x) / E2
         return nx
 
     def rmatvec(x):
         M = x.shape[0]
         if len(x.shape) > 1:
             x = x.reshape(M)
-        nx = A.T * x - k_in * numpy.dot(k_out, x) / E2
+        nx = A_T.matvec(x) - k_in * numpy.dot(k_out, x) / E2
         return nx
 
     B = scipy.sparse.linalg.LinearOperator((g.num_vertices(), g.num_vertices()),
@@ -605,7 +972,7 @@ def modularity_matrix(g, weight=None, index=None):
 
     return B
 
-def hashimoto(g, index=None, compact=False):
+def hashimoto(g, index=None, compact=False, operator=False):
     r"""Return the Hashimoto (or non-backtracking) matrix of a graph.
 
     Parameters
@@ -618,10 +985,13 @@ def hashimoto(g, index=None, compact=False):
     compact : ``boolean`` (optional, default: ``False``)
         If ``True``, a compact :math:`2|V|\times 2|V|` version of the matrix is
         returned.
+    operator : ``bool`` (optional, default: ``False``)
+        If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
+        returned, instead of a sparse matrix.
 
     Returns
     -------
-    H : :class:`~scipy.sparse.csr_matrix`
+    H : :class:`~scipy.sparse.csr_matrix` or :class:`HashimotoOperator` or :class:`CompactHashimotoOperator`
         The (sparse) Hashimoto matrix.
 
     Notes
@@ -655,6 +1025,17 @@ def hashimoto(g, index=None, compact=False):
     where :math:`\boldsymbol A` is the adjacency matrix, and :math:`\boldsymbol
     D` is the diagonal matrix with the node degrees [krzakala_spectral]_.
 
+    .. note::
+
+        For many linear algebra computations it is more efficient to pass
+        ``operator=True``. This makes this function return a
+        :class:`scipy.sparse.linalg.LinearOperator` subclass, which implements
+        matrix-vector and matrix-matrix multiplication, and is sufficient for
+        the sparse linear algebra operations available in the scipy module
+        :mod:`scipy.sparse.linalg`. This avoids copying the whole graph as a
+        sparse matrix, and performs the multiplication operations in parallel
+        (if enabled during compilation).
+
     Examples
     --------
     .. testsetup::
@@ -663,8 +1044,12 @@ def hashimoto(g, index=None, compact=False):
        from pylab import *
 
     >>> g = gt.collection.data["football"]
-    >>> H = gt.hashimoto(g)
-    >>> ew, ev = scipy.linalg.eig(H.todense())
+    >>> H = gt.hashimoto(g, operator=True)
+    >>> N = 2 * g.num_edges()
+    >>> ew1 = scipy.sparse.linalg.eigs(H, k=N//2, which="LR", return_eigenvectors=False)
+    >>> ew2 = scipy.sparse.linalg.eigs(H, k=N-N//2, which="SR", return_eigenvectors=False)
+    >>> ew = np.concatenate((ew1, ew2))
+
     >>> figure(figsize=(8, 4))
     <...>
     >>> scatter(real(ew), imag(ew), c=sqrt(abs(ew)), linewidths=0, alpha=0.6)
@@ -694,6 +1079,9 @@ def hashimoto(g, index=None, compact=False):
     """
 
     if compact:
+        if operator:
+            return CompactHashimotoOperator(g)
+
         i = Vector_int64_t()
         j = Vector_int64_t()
         x = Vector_double()
@@ -704,6 +1092,9 @@ def hashimoto(g, index=None, compact=False):
         N = g.num_vertices(ignore_filter=True)
         m = scipy.sparse.coo_matrix((x, (i.a,j.a)), shape=(2 * N, 2 * N))
     else:
+        if operator:
+            return HashimotoOperator(g, eindex=index)
+
         if index is None:
             if g.get_edge_filter()[0] is not None:
                 index = g.new_edge_property("int64_t")
@@ -726,3 +1117,107 @@ def hashimoto(g, index=None, compact=False):
         m = scipy.sparse.coo_matrix((data, (i.a,j.a)), shape=(E, E))
     m = m.tocsr()
     return m
+
+
+class HashimotoOperator(scipy.sparse.linalg.LinearOperator):
+
+    def __init__(self, g, eindex=None, transpose=False):
+        r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the hashimoto
+        matrix of a graph. See :func:`hashimoto` for details.
+        """
+
+        self.g = g
+        if eindex is None:
+            if g.get_edge_filter()[0] is not None:
+                self.eindex = g.new_edge_property("int64_t")
+                self.eindex.fa = numpy.arange(g.num_edges())
+                E = g.num_edges()
+            else:
+                self.eindex = g.edge_index
+                E = g.edge_index_range
+        else:
+            self.eindex = eindex
+            if eindex is g.edge_index:
+                E = g.edge_index_range
+            else:
+                E = self.eindex.fa.max() + 1
+        if g.is_directed():
+            self.shape = (E, E)
+        else:
+            self.shape = (2 * E, 2 * E)
+
+        self.dtype = numpy.dtype("float")
+        self.transpose = transpose
+
+    def _matvec(self, x):
+        y = numpy.zeros(self.shape[0])
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.nonbacktracking_matvec(self.g._Graph__graph,
+                                                      _prop("e", self.g, self.eindex),
+                                                      x, y, self.transpose)
+        return y
+
+    def _matmat(self, x):
+        y = numpy.zeros((self.shape[0], x.shape[1]))
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.nonbacktracking_matmat(self.g._Graph__graph,
+                                                      _prop("e", self.g, self.eindex),
+                                                      x, y, self.transpose)
+        return y
+
+    def _adjoint(self):
+        if self.g.is_directed():
+            g = GraphView(self.g, reversed=True)
+        else:
+            g = self.g
+        return HashimotoOperator(g, self.eindex, transpose=not self.transpose)
+
+class CompactHashimotoOperator(scipy.sparse.linalg.LinearOperator):
+
+    def __init__(self, g, vindex=None, transpose=False):
+        r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the compact
+        hashimoto matrix of a graph. See :func:`hashimoto` for details.
+        """
+
+        self.g = g
+        if vindex is None:
+            if g.get_vertex_filter()[0] is not None:
+                self.vindex = g.new_vertex_property("int64_t")
+                self.vindex.fa = numpy.arange(g.num_vertices())
+                N = g.num_vertices()
+            else:
+                self.vindex = g.vertex_index
+                N = g.num_vertices()
+        else:
+            self.vindex = vindex
+            if vindex is vindex.get_graph().vertex_index:
+                N = g.num_vertices()
+            else:
+                N = vindex.fa.max() + 1
+
+        self.shape = (2 * N, 2 * N)
+        self.dtype = numpy.dtype("float")
+        self.transpose = transpose
+
+    def _matvec(self, x):
+        y = numpy.zeros(self.shape[0])
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.compact_nonbacktracking_matvec(self.g._Graph__graph,
+                                                              _prop("v", self.g, self.vindex),
+                                                              x, y, self.transpose)
+        return y
+
+    def _matmat(self, x):
+        y = numpy.zeros((self.shape[0], x.shape[1]))
+        x = numpy.asarray(x, dtype="float")
+        libgraph_tool_spectral.compact_nonbacktracking_matmat(self.g._Graph__graph,
+                                                              _prop("v", self.g, self.vindex),
+                                                              x, y, self.transpose)
+        return y
+
+    def _adjoint(self):
+        if self.g.is_directed():
+            g = GraphView(self.g, reversed=True)
+        else:
+            g = self.g
+        return CompactHashimotoOperator(g, self.vindex, transpose=not self.transpose)

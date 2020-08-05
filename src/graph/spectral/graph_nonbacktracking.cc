@@ -42,10 +42,98 @@ void nonbacktracking(GraphInterface& gi, boost::any index,
 
 }
 
+void nonbacktracking_matvec(GraphInterface& g, boost::any index,
+                            python::object ov, python::object oret,
+                            bool transpose)
+{
+    if (!belongs<edge_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    multi_array_ref<double,1> v = get_array<double,1>(ov);
+    multi_array_ref<double,1> ret = get_array<double,1>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& ei)
+         {
+             if (!transpose)
+                 nbt_matvec<false>(graph, ei, v, ret);
+             else
+                 nbt_matvec<true>(graph, ei, v, ret);
+         },
+         edge_scalar_properties())(index);
+}
+
+void nonbacktracking_matmat(GraphInterface& g, boost::any index,
+                            python::object ov, python::object oret,
+                            bool transpose)
+{
+    if (!belongs<edge_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    multi_array_ref<double,2> v = get_array<double,2>(ov);
+    multi_array_ref<double,2> ret = get_array<double,2>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& ei)
+         {
+             if (!transpose)
+                 nbt_matmat<false>(graph, ei, v, ret);
+             else
+                 nbt_matmat<true>(graph, ei, v, ret);
+         },
+         edge_scalar_properties())(index);
+}
+
 void compact_nonbacktracking(GraphInterface& gi, std::vector<int64_t>& i,
                              std::vector<int64_t>& j, std::vector<double>& x)
 {
     run_action<>()
         (gi, [&](auto& g){ get_compact_nonbacktracking(g, i, j, x);})();
 
+}
+
+void compact_nonbacktracking_matvec(GraphInterface& g, boost::any index,
+                                    python::object ov, python::object oret,
+                                    bool transpose)
+{
+    if (!belongs<vertex_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    multi_array_ref<double,1> v = get_array<double,1>(ov);
+    multi_array_ref<double,1> ret = get_array<double,1>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& ei)
+         {
+             if (!transpose)
+                 cnbt_matvec<false>(graph, ei, v, ret);
+             else
+                 cnbt_matvec<true>(graph, ei, v, ret);
+         },
+         vertex_scalar_properties())(index);
+}
+
+void compact_nonbacktracking_matmat(GraphInterface& g, boost::any index,
+                                    python::object ov, python::object oret,
+                                    bool transpose)
+{
+    if (!belongs<vertex_scalar_properties>()(index))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    multi_array_ref<double,2> v = get_array<double,2>(ov);
+    multi_array_ref<double,2> ret = get_array<double,2>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& ei)
+         {
+             if (!transpose)
+                 cnbt_matmat<false>(graph, ei, v, ret);
+             else
+                 cnbt_matmat<true>(graph, ei, v, ret);
+         },
+         vertex_scalar_properties())(index);
 }

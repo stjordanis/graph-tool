@@ -53,3 +53,39 @@ void incidence(GraphInterface& g, boost::any vindex, boost::any eindex,
          },
          vertex_scalar_properties(), edge_scalar_properties())(vindex, eindex);
 }
+
+void incidence_matvec(GraphInterface& g, boost::any vindex, boost::any eindex,
+                      python::object ov, python::object oret, bool transpose)
+{
+    if (!belongs<vertex_scalar_properties>()(vindex))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    multi_array_ref<double,1> v = get_array<double,1>(ov);
+    multi_array_ref<double,1> ret = get_array<double,1>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& vi, auto&& ei)
+         {
+             return inc_matvec(graph, vi, ei, v, ret, transpose);
+         },
+         vertex_scalar_properties(), edge_scalar_properties())(vindex, eindex);
+}
+
+void incidence_matmat(GraphInterface& g, boost::any vindex, boost::any eindex,
+                      python::object ov, python::object oret, bool transpose)
+{
+    if (!belongs<vertex_scalar_properties>()(vindex))
+        throw ValueException("index vertex property must have a scalar value type");
+
+    multi_array_ref<double,2> v = get_array<double,2>(ov);
+    multi_array_ref<double,2> ret = get_array<double,2>(oret);
+
+    run_action<>()
+        (g,
+         [&](auto&& graph, auto&& vi, auto&& ei)
+         {
+             return inc_matmat(graph, vi, ei, v, ret, transpose);
+         },
+         vertex_scalar_properties(), edge_scalar_properties())(vindex, eindex);
+}

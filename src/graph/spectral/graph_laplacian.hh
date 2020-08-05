@@ -119,6 +119,76 @@ struct get_laplacian
     }
 };
 
+template <class Graph, class Vindex, class Weight, class Deg, class V>
+void lap_matvec(Graph& g, Vindex index, Weight w, Deg d, V& x, V& ret)
+{
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             std::remove_reference_t<decltype(ret[v])> y = 0;
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto u = target(e, g);
+                     if (u == v)
+                         continue;
+                     auto w_e = get(w, e);
+                     y += w_e * x[get(index, u)];
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                 {
+                     if (u == v)
+                         continue;
+                     y += x[get(index, u)];
+                 }
+             }
+             ret[get(index, v)] = d[v] * x[get(index, v)] - y;
+         });
+}
+
+template <class Graph, class Vindex, class Weight, class Deg, class Mat>
+void lap_matmat(Graph& g, Vindex index, Weight w, Deg d, Mat& x, Mat& ret)
+{
+    size_t M = x.shape()[1];
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             auto vi = get(index, v);
+             auto y = ret[vi];
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto u = target(e, g);
+                     if (u == v)
+                         continue;
+                     auto w_e = get(w, e);
+                     auto ui = get(index, u);
+                     for (size_t i = 0; i < M; ++i)
+                         y[i] += w_e * x[ui][i];
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                 {
+                     if (u == v)
+                         continue;
+                     auto ui = get(index, u);
+                     for (size_t i = 0; i < M; ++i)
+                         y[i] += x[ui][i];
+                 }
+             }
+             for (size_t i = 0; i < M; ++i)
+                 ret[vi][i] = d[v] * x[vi][i] - y[i];
+         });
+}
 
 
 struct get_norm_laplacian
@@ -130,41 +200,34 @@ struct get_norm_laplacian
                     multi_array_ref<int32_t,1>& j) const
     {
         int pos = 0;
+        std::vector<double> degs(num_vertices(g));
         for (auto v : vertices_range(g))
         {
-            double ks = 0;
+            double k = 0;
             switch (deg)
             {
             case OUT_DEG:
-                ks = sum_degree(g, v, weight, out_edge_iteratorS<Graph>());
+                k = sum_degree(g, v, weight, out_edge_iteratorS<Graph>());
                 break;
             case IN_DEG:
-                ks = sum_degree(g, v, weight, in_edge_iteratorS<Graph>());
+                k = sum_degree(g, v, weight, in_edge_iteratorS<Graph>());
                 break;
             case TOTAL_DEG:
-                ks = sum_degree(g, v, weight, all_edges_iteratorS<Graph>());
+                k = sum_degree(g, v, weight, all_edges_iteratorS<Graph>());
             }
+            degs[v] = sqrt(k);
+        }
 
+        for (auto v : vertices_range(g))
+        {
+            double ks = degs[v];
             for(const auto& e : out_edges_range(v, g))
             {
                 if (source(e, g) == target(e, g))
                     continue;
-                double kt = 0;
-
-                switch (deg)
-                {
-                case OUT_DEG:
-                    kt = sum_degree(g, target(e, g), weight, out_edge_iteratorS<Graph>());
-                    break;
-                case IN_DEG:
-                    kt = sum_degree(g, target(e, g), weight, in_edge_iteratorS<Graph>());
-                    break;
-                case TOTAL_DEG:
-                    kt = sum_degree(g, target(e, g), weight, all_edges_iteratorS<Graph>());
-                }
-
+                double kt = degs[target(e, g)];
                 if (ks * kt > 0)
-                    data[pos] = -get(weight, e) / sqrt(ks * kt);
+                    data[pos] = -get(weight, e) / (ks * kt);
                 i[pos] = get(index, target(e, g));
                 j[pos] = get(index, source(e, g));
 
@@ -179,6 +242,83 @@ struct get_norm_laplacian
 
     }
 };
+
+template <class Graph, class Vindex, class Weight, class Deg, class V>
+void nlap_matvec(Graph& g, Vindex index, Weight w, Deg id, V& x, V& ret)
+{
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             auto vi = get(index, v);
+             std::remove_reference_t<decltype(ret[v])> y = 0;
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto u = target(e, g);
+                     if (u == v)
+                         continue;
+                     auto w_e = get(w, e);
+                     y += w_e * x[get(index, u)] * id[u];
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                 {
+                     if (u == v)
+                         continue;
+                     y += x[get(index, u)] * id[u];
+                 }
+             }
+             if (id[v] > 0)
+                 ret[vi] = x[vi] - y * id[v];
+         });
+}
+
+template <class Graph, class Vindex, class Weight, class Deg, class Mat>
+void nlap_matmat(Graph& g, Vindex index, Weight w, Deg id, Mat& x, Mat& ret)
+{
+    size_t M = x.shape()[1];
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             auto vi = get(index, v);
+             auto y = ret[vi];
+             if constexpr (!std::is_same_v<Weight, UnityPropertyMap<double, GraphInterface::edge_t>>)
+             {
+                 for (auto e : in_or_out_edges_range(v, g))
+                 {
+                     auto u = target(e, g);
+                     if (u == v)
+                         continue;
+                     auto w_e = get(w, e);
+                     auto ui = get(index, u);
+                     for (size_t i = 0; i < M; ++i)
+                         y[i] += w_e * x[ui][i] * id[u];
+                 }
+             }
+             else
+             {
+                 for (auto u : in_or_out_neighbors_range(v, g))
+                 {
+                     if (u == v)
+                         continue;
+                     auto ui = get(index, u);
+                     for (size_t i = 0; i < M; ++i)
+                         y[i] += x[ui][i] * id[u];
+                 }
+             }
+
+             if (id[v] > 0)
+             {
+                 for (size_t i = 0; i < M; ++i)
+                     y[i] = x[vi][i] - y[i] * id[v];
+             }
+         });
+}
 
 
 } // namespace graph_tool
