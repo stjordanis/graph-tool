@@ -211,22 +211,27 @@ void cnbt_matvec(Graph& g, VIndex vindex, V& x, V& ret)
          {
              size_t i = get(vindex, v);
              auto& y = ret[i];
+             size_t k = 0;
              for (const auto& e : out_edges_range(v, g))
              {
                  auto u = target(e, g);
                  size_t j = get(vindex, u);
                  y += x[j];
+                 ++k;
              }
 
-             if constexpr (!transpose)
+             if (k > 0)
              {
-                 ret[i] -= x[i + N];
-                 ret[i + N] = (out_degree(v, g) - 1) * x[i];
-             }
-             else
-             {
-                 ret[i + N] -= x[i];
-                 ret[i] = (out_degree(v, g) - 1) * x[i + N];
+                 if constexpr (!transpose)
+                 {
+                     ret[i] -= x[i + N];
+                     ret[i + N] = (k - 1) * x[i];
+                 }
+                 else
+                 {
+                     ret[i + N] -= x[i];
+                     ret[i] = (k - 1) * x[i + N];
+                 }
              }
          });
 }
@@ -242,29 +247,34 @@ void cnbt_matmat(Graph& g, VIndex vindex, V& x, V& ret)
          {
              size_t i = get(vindex, v);
              auto y = ret[i];
+             size_t d = 0;
              for (const auto& e : out_edges_range(v, g))
              {
                  auto u = target(e, g);
                  size_t j = get(vindex, u);
                  for (size_t l = 0; l < k; ++l)
                      y[l] += x[j][l];
+                 ++d;
              }
 
-             auto d = (out_degree(v, g) - 1);
-             if constexpr (!transpose)
+             if (d > 0)
              {
-                 for (size_t l = 0; l < k; ++l)
+                 --d;
+                 if constexpr (!transpose)
                  {
-                     ret[i][l] -= x[i + N][l];
-                     ret[i + N][l] = d * x[i][l];
+                     for (size_t l = 0; l < k; ++l)
+                     {
+                         ret[i][l] -= x[i + N][l];
+                         ret[i + N][l] = d * x[i][l];
+                     }
                  }
-             }
-             else
-             {
-                 for (size_t l = 0; l < k; ++l)
+                 else
                  {
-                     ret[i + N][l] -= x[i][l];
-                     ret[i][l] = d * x[i + N][l];
+                     for (size_t l = 0; l < k; ++l)
+                     {
+                         ret[i + N][l] -= x[i][l];
+                         ret[i][l] = d * x[i + N][l];
+                     }
                  }
              }
          });
