@@ -48,7 +48,7 @@ struct get_price
         double p;
         for (auto v : vertices_range(g))
         {
-            p = pow(Deg()(v, g) + c, gamma);
+            p = pow(Deg()(v, g), gamma) + c;
             if (p < 0)
                 throw GraphException("Cannot connect edges: probabilities are negative");
             if (p > 0)
@@ -76,12 +76,12 @@ struct get_price
                 visited.insert(w);
                 add_edge(v, w, g);
 
-                p = pow(Deg()(w, g) + c, gamma);
+                p = pow(Deg()(w, g), gamma) + c;
 
                 sampler.remove(w);
                 sampler.insert(w, p);
             }
-            p = pow(Deg()(v, g) + c, gamma);
+            p = pow(Deg()(v, g), gamma) + c;
             if (p > 0)
                 sampler.insert(v, p);
         }
