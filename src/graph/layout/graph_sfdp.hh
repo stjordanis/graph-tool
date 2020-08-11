@@ -321,7 +321,7 @@ struct get_sfdp_layout
                 (vertices,
                  [&](size_t, auto v)
                  {
-                     pos_t diff(2, 0), pos_u(2, 0), ftot(2, 0), cm(2, 0);
+                     pos_t diff(2, 0), ftot(2, 0), cm(2, 0);
 
                      // global repulsive forces
                      Q.push_back(&qt);
@@ -377,7 +377,7 @@ struct get_sfdp_layout
                          auto u = target(e, g);
                          if (u == v)
                              continue;
-                         pos_u = pos[u];
+                         auto& pos_u = pos[u];
                          get_diff(pos_u, pos_v, diff);
                          val_t f = f_a(K, pos_u, pos_v);
                          f *= get(eweight, e) * get(vweight, u) * get(vweight, v);
