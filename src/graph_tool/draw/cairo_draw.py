@@ -345,7 +345,8 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
         if isinstance(val, PropertyMap):
             if val.value_type() in ["vector<double>", "vector<long double>"]:
                 return val
-            if val.value_type() in ["vector<int32_t>", "vector<int64_t>", "vector<bool>"]:
+            if val.value_type() in ["vector<int16_t>", "vector<int32_t>",
+                                    "vector<int64_t>", "vector<bool>"]:
                 g = val.get_graph()
                 new_val = g.new_vertex_property("vector<double>")
                 rg = [numpy.inf, -numpy.inf]
@@ -407,12 +408,12 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
         elif isinstance(val, PropertyMap):
             if val.value_type() in ["vector<double>", "vector<long double>"]:
                 new_val = val
-            elif val.value_type() in ["int32_t", "int64_t", "double",
+            elif val.value_type() in ["int16_t", "int32_t", "int64_t", "double",
                                       "long double", "unsigned long",
                                       "unsigned int", "bool"]:
                 g = val.get_graph()
-                if val.value_type() in ["int32_t", "int64_t", "unsigned long",
-                                        "unsigned int"]:
+                if val.value_type() in ["int16_t", "int32_t", "int64_t",
+                                        "unsigned long", "unsigned int"]:
                     nval = perfect_prop_hash([val])[0]
                 else:
                     nval = val
