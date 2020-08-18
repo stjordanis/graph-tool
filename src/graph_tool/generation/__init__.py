@@ -53,6 +53,7 @@ dl_import("from . import libgraph_tool_generation")
 
 from .. import Graph, GraphView, _check_prop_scalar, _prop, _limit_args, \
     _gt_type, _get_rng, Vector_double
+from .. stats import remove_parallel_edges
 import inspect
 import types
 import numpy
@@ -61,11 +62,10 @@ import scipy.optimize
 import scipy.sparse
 
 __all__ = ["random_graph", "random_rewire", "generate_sbm",
-           "solve_sbm_fugacities", "generate_maxent_sbm", "predecessor_tree",
-           "line_graph", "graph_union", "triangulation", "lattice",
-           "geometric_graph", "price_network", "complete_graph",
+           "solve_sbm_fugacities", "generate_maxent_sbm", "generate_knn",
+           "predecessor_tree", "line_graph", "graph_union", "triangulation",
+           "lattice", "geometric_graph", "price_network", "complete_graph",
            "circular_graph", "condensation_graph"]
-
 
 def random_graph(N, deg_sampler, directed=True,
                  parallel_edges=False, self_loops=False, block_membership=None,
@@ -1378,7 +1378,95 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
                        multigraph, self_loops, _get_rng())
     return g
 
+def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
+                 directed=False, cache_dist=True):
+    r"""Generate a graph of k-nearest neighbors from a set of multidimensional points.
 
+    Parameters
+    ----------
+    points : iterable of lists (or :class:`numpy.ndarray`) of dimension :math:`N\times D` or ``int``
+        Points of dimension :math:`D` to be considered. If the parameter `dist`
+        is passed, this should be just an `int` containing the number of points.
+    k : ``int``
+        Number of nearest neighbors.
+    dist : function (optional, default: ``None``)
+        If given, this should be a function that returns the distance between
+        two points. The arguments of this function should just be two integers,
+        corresponding to the vertex index. In this case the value of ``points``
+        should just be the total number of points. If ``dist is None``, then the
+        L2-norm (Euclidean distance) is used.
+    exact : ``bool`` (optional, default: ``False``)
+        If ``False``, an fast approximation will be used, otherwise an exact but
+        slow algorithm will be used.
+    r : ``float`` (optional, default: ``.5``)
+        If ``exact is False``, this specifies the fraction of randomly chosen
+        neighbors that are used for the search.
+    epsilon : ``float`` (optional, default: ``.001``)
+        If ``exact is False``, this determines the convergence criterion used by
+        the algorithm. When the fraction of updated neighbors drops below this
+        value, the algorithm stops.
+    directed : ``bool`` (optional, default: ``False``)
+        If ``True`` a directed version of the graph will be returned, otherwise
+        the graph is undirected.
+    cache_dist : ``bool`` (optional, default: ``True``)
+        If ``True``, an internal cache of the distance values are kept,
+        implemented as a hash table.
+
+    Returns
+    -------
+    g : :class:`~graph_tool.Graph`
+        The k-nearest neighbors graph.
+    w : :class:`~graph_tool.EdgePropertyMap`
+        Edge property map with the computed distances.
+
+    Notes
+    -----
+
+    The approximate version of this algorithm is based on
+    [[dong-efficient-2020]_, and has an (empirical) run-time of
+    :math:`O(N^{1.14})`. The exact version has a complexity of :math:`O(N^2)`.
+
+    If enabled during compilation, this algorithm runs in parallel.
+
+    References
+    ----------
+    .. [dong-efficient-2020] Wei Dong, Charikar Moses, and Kai Li, "Efficient
+       k-nearest neighbor graph construction for generic similarity measures",
+       In Proceedings of the 20th international conference on World wide web
+       (WWW '11). Association for Computing Machinery, New York, NY, USA,
+       577–586, (2011) :doi:`https://doi.org/10.1145/1963405.1963487`
+
+    Examples
+    --------
+
+    >>> points = np.random.random((1000, 10))
+    >>> g, w = gt.generate_knn(points, k=5)
+
+    """
+
+    if dist is not None:
+        N = points
+        points = dist
+    else:
+        points = numpy.asarray(points, dtype="float")
+        N = points.shape[0]
+
+    g = Graph()
+    g.add_vertex(N)
+    w = g.new_ep("double")
+
+    if exact:
+        libgraph_tool_generation.gen_knn_exact(g._Graph__graph, points, k,
+                                               _prop("e", g, w))
+    else:
+        libgraph_tool_generation.gen_knn(g._Graph__graph, points, k, r, epsilon,
+                                         cache_dist, _prop("e", g, w), _get_rng())
+
+    if not directed:
+        g.set_directed(False)
+        remove_parallel_edges(g)
+
+    return g, w
 
 def predecessor_tree(g, pred_map):
     """Return a graph from a list of predecessors given by the ``pred_map`` vertex property."""

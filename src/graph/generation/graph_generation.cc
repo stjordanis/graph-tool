@@ -79,6 +79,13 @@ void generate_sbm(GraphInterface& gi, boost::any ab, boost::python::object ors,
                   boost::any ain_deg, boost::any aout_deg, bool micro_ers,
                   bool micro_degs, rng_t& rng);
 
+void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
+                  double r, double epsilon, bool cache, boost::any aw,
+                  rng_t& rng);
+
+void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
+                        boost::any aw);
+
 size_t random_rewire(GraphInterface& gi, string strat, size_t niter,
                      bool no_sweep, bool self_loops, bool parallel_edges,
                      bool configuration, bool traditional, bool micro,
@@ -135,6 +142,8 @@ BOOST_PYTHON_MODULE(libgraph_tool_generation)
     docstring_options dopt(true, false);
     def("gen_graph", &generate_graph);
     def("gen_sbm", &generate_sbm);
+    def("gen_knn", &generate_knn);
+    def("gen_knn_exact", &generate_knn_exact);
     def("random_rewire", &random_rewire);
     def("predecessor_graph", &predecessor_graph);
     def("line_graph", &line_graph);

@@ -23,6 +23,7 @@ libgraph_tool_generation_la_SOURCES = \
     graph_complete.cc \
     graph_generation.cc \
     graph_geometric.cc \
+    graph_knn.cc \
     graph_lattice.cc \
     graph_line_graph.cc \
     graph_maxent_sbm.cc \
@@ -42,6 +43,7 @@ libgraph_tool_generation_la_include_HEADERS = \
     graph_complete.hh \
     graph_generation.hh \
     graph_geometric.hh \
+    graph_knn.hh \
     graph_lattice.hh \
     graph_maxent_sbm.hh \
     graph_predecessor.hh \
