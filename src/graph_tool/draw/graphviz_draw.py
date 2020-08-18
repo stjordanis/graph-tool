@@ -66,14 +66,17 @@ try:
     libgv.agedge.restype = ptype
     libgv.agget.restype = ptype
     libgv.agstrdup_html.restype = ptype
+    libgv.agstrdup_html.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+    libgv.agraphof.restype = ctypes.c_void_p
+    libgv.agraphof.argtypes = [ctypes.c_void_p]
     # create a context to use the whole time (if we keep freeing and recreating
     # it, we will hit a memory leak in graphviz)
     gvc = libgv.gvContext()
 
     try:
         gv_new_api = True
-        libgv_directed = libgv.Agdirected
-        libgv_undirected = libgv.Agundirected
+        libgv_directed = ctypes.c_int.in_dll(libgv, "Agdirected")
+        libgv_undirected = ctypes.c_int.in_dll(libgv, "Agundirected")
     except AttributeError:
         gv_new_api = False
         libgv_directed = 1
@@ -85,14 +88,15 @@ except OSError:
     warnings.warn(msg, ImportWarning)
 
 
-def htmlize(val):
+def htmlize(elem, val):
     if len(val) >= 2 and val[0] == "<" and val[-1] == ">":
-        return ctypes.string_at(libgv.agstrdup_html(val[1:-1]))
+        g = libgv.agraphof(elem)
+        return ctypes.string_at(libgv.agstrdup_html(g, str(val[1:-1]).encode("utf8")))
     return val
 
 
 def aset(elem, attr, value):
-    v = htmlize(str(value)).encode("utf8")
+    v = htmlize(elem, str(value))
     libgv.agsafeset(elem, str(attr).encode("utf8"), v, v)
 
 
