@@ -805,8 +805,7 @@ class mutate_graph_impl : public mutate_graph
   {
     if (m_ignore_gp.find(key) != m_ignore_gp.end())
         return;
-    /* RG: pointer to graph prevents copying */
-    put(key, dp_, &graph_, value);
+    put(key, dp_, graph_property_tag(), value);
   }
 
 
