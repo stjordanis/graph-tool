@@ -120,10 +120,7 @@ dnl Checks for programs.
 
 dnl Checks for libraries.
 dnl expat
-AX_LIB_EXPAT()
-if test "$HAVE_EXPAT" = "no"; then
-    AC_MSG_ERROR([expat library not found])
-fi
+PKG_CHECK_MODULES([EXPAT], [expat])
 
 dnl python
 AM_PATH_PYTHON([2.7])
