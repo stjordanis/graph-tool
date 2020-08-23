@@ -1220,6 +1220,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         del srf
         return pos
 
+_min_pen_width = 0.05
 
 def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
     if "size" not in vprops or force:
@@ -1231,9 +1232,9 @@ def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
         size = vprops["size"]
         if isinstance(vprops["size"], PropertyMap):
             size = vprops["size"].fa.mean()
-        vprops["pen_width"] = size / 10
+        vprops["pen_width"] = max(size / 10, _min_pen_width)
         if "pen_width" not in eprops or force:
-            eprops["pen_width"] = size / 10
+            eprops["pen_width"] = max(size / 10, _min_pen_width)
         if "marker_size" not in eprops or force:
             eprops["marker_size"] = size * 0.8
 
@@ -1254,24 +1255,25 @@ def scale_ink(scale, vprops, eprops, copy=True):
     vink_props = ["size", "pen_width", "font_size", "text_out_width"]
     eink_props = ["marker_size", "pen_width", "font_size", "text_distance",
                   "text_out_width"]
-    for p in vink_props:
-        if p not in vprops:
-            vprops[p] = _vdefaults[p]
-        if isinstance(vprops[p], PropertyMap):
-            if copy:
-                vprops[p] = vprops[p].copy()
-            vprops[p].fa *= scale
-        else:
-            vprops[p] *= scale
-    for p in eink_props:
-        if p not in eprops:
-            eprops[p] = _edefaults[p]
-        if isinstance(eprops[p], PropertyMap):
-            if copy:
-                eprops[p] = eprops[p].copy()
-            eprops[p].fa *= scale
-        else:
-            eprops[p] *= scale
+    for ink_props, props, defaults in zip([vink_props, eink_props],
+                                          [vprops, eprops],
+                                          [_vdefaults, _edefaults]):
+        for p in ink_props:
+            if p not in props:
+                props[p] = defaults[p]
+            if isinstance(props[p], PropertyMap):
+                if copy:
+                    props[p] = props[p].copy()
+                props[p].fa *= scale
+                if p == "pen_width":
+                    x = props[p].fa
+                    x[x<_min_pen_width] = _min_pen_width
+                    props[p].fa = x
+            else:
+                props[p] *= scale
+                if p == "pen_width":
+                    props[p] = max(props[p],
+                                   _min_pen_width)
 
 def get_bb(g, pos):
     pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
@@ -1313,6 +1315,19 @@ def fit_to_view_ink(g, pos, output_size, vprops, eprops, adjust_aspect=False,
 
     cr.scale(zoom, zoom)
     cr.translate(-x, -y)
+
+    # work around cairo bug with small line widths
+    def min_lw(lw):
+        if isinstance(lw, PropertyMap):
+            lw = lw.copy()
+            x = lw.fa
+            x[x < 0.05] = 0.1
+            lw.fa = x
+        else:
+            lw = max(lw, 0.1)
+        return lw
+    vprops = dict(vprops, pen_width=min_lw(vprops.get("pen_width")))
+    eprops = dict(eprops, pen_width=min_lw(eprops.get("pen_width")))
 
     cairo_draw(g, pos, cr, vprops, eprops)
 
