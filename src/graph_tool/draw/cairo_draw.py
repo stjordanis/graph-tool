@@ -730,9 +730,9 @@ def auto_colors(g, bg, pos, back):
 
 def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                nodesfirst=False, output_size=(600, 600), fit_view=True,
-               adjust_aspect=True, ink_scale=1, inline=is_draw_inline,
-               inline_scale=2, mplfig=None, output=None, fmt="auto",
-               bg_color=None, **kwargs):
+               fit_view_ink=None, adjust_aspect=True, ink_scale=1,
+               inline=is_draw_inline, inline_scale=2, mplfig=None, output=None,
+               fmt="auto", bg_color=None, **kwargs):
     r"""Draw a graph to screen or to a file using :mod:`cairo`.
 
     Parameters
@@ -765,6 +765,13 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         addition the viewport will be scaled out by that factor. If a tuple
         value is given, it should have four values ``(x, y, w, h)`` that
         specify the view in user coordinates.
+    fit_view_ink : bool (optional, default: ``None``)
+        If ``True``, and ``fit_view == True`` the drawing will be performed once
+        to figure out the bounding box, before the actual drawing is
+        made. Otherwise, only the vertex positions will be used for this
+        purpose. If the value is ``None``, then it will be assumed ``True`` for
+        networks of size 10,000 nodes or less, otherwise it will be assumed
+        ``False``.
     adjust_aspect : bool (optional, default: ``True``)
         If ``True``, and ``fit_view == True`` the output size will be decreased
         in the width or height to remove empty spaces.
@@ -1140,8 +1147,16 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
             except TypeError:
                 pad = fit_view if fit_view is not True else 0.9
                 output_size = list(output_size)
-                x, y, zoom = fit_to_view_ink(g, pos, output_size, vprops,
-                                             eprops, adjust_aspect, pad=pad)
+                if fit_view_ink is None:
+                    fit_view_ink = g.num_vertices() <= 1000
+                if fit_view_ink:
+                    x, y, zoom = fit_to_view_ink(g, pos, output_size, vprops,
+                                                 eprops, adjust_aspect, pad=pad)
+                else:
+                    x, y, zoom = fit_to_view(get_bb(g, pos), output_size,
+                                             adjust_aspect=adjust_aspect,
+                                             pad=pad)
+
         else:
             x, y, zoom = 0, 0, 1
 
@@ -1279,11 +1294,11 @@ def get_bb(g, pos):
     pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
     x_range = [pos_x.fa.min(), pos_x.fa.max()]
     y_range = [pos_y.fa.min(), pos_y.fa.max()]
-    return x_range[0], y_range[1], x_range[1] - x_range[0], y_range[1] - y_range[0]
+    return x_range[0], y_range[0], x_range[1] - x_range[0], y_range[1] - y_range[0]
 
 def fit_to_view(rec, output_size, adjust_aspect=False, pad=.9):
     x, y, w, h = rec
-    d = max(w, h)
+
     if adjust_aspect:
         if h > w:
             output_size[0] = int(round(float(output_size[1] * w / h)))

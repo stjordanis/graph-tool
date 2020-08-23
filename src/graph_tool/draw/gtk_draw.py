@@ -130,8 +130,8 @@ class GraphWidget(Gtk.DrawingArea):
     def __init__(self, g, pos, vprops=None, eprops=None, vorder=None,
                  eorder=None, nodesfirst=False, update_layout=False,
                  layout_K=1., multilevel=False, display_props=None,
-                 display_props_size=11, fit_view=True, bg_color=None,
-                 max_render_time=300, layout_callback=None,
+                 display_props_size=11, fit_view=True, fit_view_ink=None,
+                 bg_color=None, max_render_time=300, layout_callback=None,
                  key_press_callback=None, highlight_color=None, **kwargs):
         r"""Interactive GTK+ widget displaying a given graph.
 
@@ -172,6 +172,13 @@ class GraphWidget(Gtk.DrawingArea):
             addition the viewport will be scaled out by that factor. If a tuple
             value is given, it should have four values ``(x, y, w, h)`` that
             specify the view in user coordinates.
+        fit_view_ink : bool (optional, default: ``None``)
+            If ``True``, and ``fit_view == True`` the drawing will be performed
+            once to figure out the bounding box, before the actual drawing is
+            made. Otherwise, only the vertex positions will be used for this
+            purpose. If the value is ``None``, then it will be assumed ``True``
+            for networks of size 10,000 nodes or less, otherwise it will be
+            assumed ``False``.
         bg_color : str or sequence (optional, default: ``None``)
             Background color. The default is white.
         max_render_time : int (optional, default: ``300``)
@@ -276,6 +283,10 @@ class GraphWidget(Gtk.DrawingArea):
         self.moved_picked = False
         self.vertex_matrix = None
         self.fit_view = fit_view
+        if fit_view_ink is None:
+            self.fit_view_ink = self.g.num_vertices() <= 1000
+        else:
+            self.fit_view_ink = fit_view_ink
 
         self.display_prop = g.vertex_index if display_props is None \
                             else display_props
@@ -787,8 +798,13 @@ class GraphWidget(Gtk.DrawingArea):
                 pos_y.fa = P[1, :]
                 pos = group_vector_property([pos_x, pos_y])
 
-                x, y, zoom = fit_to_view_ink(g, pos, geometry, self.vprops,
-                                             self.eprops, pad=pad)
+                if self.fit_view_ink:
+                    x, y, zoom = fit_to_view_ink(g, pos, geometry, self.vprops,
+                                                 self.eprops, pad=pad)
+                else:
+                    x, y, zoom = fit_to_view(get_bb(g, pos), geometry,
+                                             pad=pad)
+
         else:
             x, y, zoom = 0, 0, 1
 
