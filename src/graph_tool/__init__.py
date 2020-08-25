@@ -91,8 +91,8 @@ Contents
 
 __author__ = "Tiago de Paula Peixoto <tiago@skewed.de>"
 __copyright__ = "Copyright 2006-2020 Tiago de Paula Peixoto"
-__license__ = "GPL version 3 or above"
-__URL__ = "http://graph-tool.skewed.de"
+__license__ = "LGPL version 3 or above"
+__URL__ = "https://graph-tool.skewed.de"
 
 # import numpy and scipy before everything to avoid weird segmentation faults
 # depending on the order things are imported.
