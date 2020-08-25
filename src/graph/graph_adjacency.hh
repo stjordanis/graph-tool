@@ -1201,7 +1201,11 @@ void remove_vertex(Vertex v, adj_list<Vertex>& g)
     g._edges.erase(g._edges.begin() + v);
 
     size_t N = g._edges.size();
-    #pragma omp parallel for schedule(runtime) if (N > 100)
+
+    if (v == N)
+        return;
+
+    #pragma omp parallel for schedule(runtime) if (N > 1000)
     for (size_t i = 0; i < N; ++i)
     {
         for (auto& e : g._edges[i].second)
