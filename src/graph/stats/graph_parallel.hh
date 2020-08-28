@@ -28,109 +28,100 @@ using namespace std;
 using namespace boost;
 
 // label parallel edges in the order they are found, starting from 1
-struct label_parallel_edges
+template <class Graph, class ParallelMap>
+void label_parallel_edges(const Graph& g, ParallelMap parallel, bool mark_only)
 {
-    template <class Graph, class ParallelMap>
-    void operator()(const Graph& g, ParallelMap parallel, bool mark_only) const
-    {
-        typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
-        typedef typename graph_traits<Graph>::edge_descriptor edge_t;
-        typename property_map<Graph, edge_index_t>::type eidx = get(edge_index, g);
+    typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
+    typedef typename graph_traits<Graph>::edge_descriptor edge_t;
+    typename property_map<Graph, edge_index_t>::type eidx = get(edge_index, g);
 
-        idx_map<vertex_t, edge_t> vset;
-        idx_map<size_t, bool> self_loops;
+    idx_map<vertex_t, edge_t> vset;
+    idx_map<size_t, bool> self_loops;
 
-        #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
-            firstprivate(vset) firstprivate(self_loops)
-        parallel_vertex_loop_no_spawn
-            (g,
-             [&](auto v)
+    #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
+        firstprivate(vset) firstprivate(self_loops)
+    parallel_vertex_loop_no_spawn
+        (g,
+         [&](auto v)
+         {
+             for (auto e : out_edges_range(v, g))
              {
-                 for (auto e : out_edges_range(v, g))
+                 vertex_t u = target(e, g);
+
+                 // do not visit edges twice in undirected graphs
+                 if (!graph_tool::is_directed(g) && u < v)
+                     continue;
+
+                 if (u == v)
                  {
-                     vertex_t u = target(e, g);
-
-                     // do not visit edges twice in undirected graphs
-                     if (!graph_tool::is_directed(g) && u < v)
+                     if (self_loops[eidx[e]])
                          continue;
+                     self_loops[eidx[e]] = true;
+                 }
 
-                     if (u == v)
+                 auto iter = vset.find(u);
+                 if (iter == vset.end())
+                 {
+                     vset[u] = e;
+                 }
+                 else
+                 {
+                     if (mark_only)
                      {
-                         if (self_loops[eidx[e]])
-                             continue;
-                         self_loops[eidx[e]] = true;
+                         parallel[e] = true;
                      }
-
-                     auto iter = vset.find(u);
-                     if (iter == vset.end())
+                     else
                      {
+                         parallel[e] = parallel[iter->second] + 1;
                          vset[u] = e;
                      }
-                     else
-                     {
-                         if (mark_only)
-                         {
-                             parallel[e] = true;
-                         }
-                         else
-                         {
-                             parallel[e] = parallel[iter->second] + 1;
-                             vset[u] = e;
-                         }
-                     }
                  }
-                 vset.clear();
-                 self_loops.clear();
-             });
-    }
-};
+             }
+             vset.clear();
+             self_loops.clear();
+         });
+}
 
 // label self loops edges in the order they are found, starting from 1
-struct label_self_loops
+template <class Graph, class SelfMap>
+void label_self_loops(const Graph& g, SelfMap self, bool mark_only)
 {
-    template <class Graph, class SelfMap>
-    void operator()(const Graph& g, SelfMap self, bool mark_only) const
-    {
-        parallel_vertex_loop
-            (g,
-             [&](auto v)
+    parallel_vertex_loop
+        (g,
+         [&](auto v)
+         {
+             size_t n = 1;
+             for (auto e : out_edges_range(v, g))
              {
-                 size_t n = 1;
-                 for (auto e : out_edges_range(v, g))
-                 {
-                     if (target(e, g) == v)
-                         put(self, e, mark_only ? 1 : n++);
-                     else
-                    put(self, e, 0);
-                 }
-             });
-    }
+                 if (target(e, g) == v)
+                     put(self, e, mark_only ? 1 : n++);
+                 else
+                     put(self, e, 0);
+             }
+         });
 };
 
 // remove edges with label larger than 0
-struct remove_labeled_edges
+template <class Graph, class LabelMap>
+void remove_labeled_edges(Graph& g, LabelMap label)
 {
-    template <class Graph, class LabelMap>
-    void operator()(Graph& g, LabelMap label) const
+    typedef typename graph_traits<Graph>::edge_descriptor edge_t;
+    vector<edge_t> r_edges;
+    for (auto v : vertices_range(g))
     {
-        typedef typename graph_traits<Graph>::edge_descriptor edge_t;
-        vector<edge_t> r_edges;
-        for (auto v : vertices_range(g))
+        for (auto e : out_edges_range(v, g))
         {
-            for (auto e : out_edges_range(v, g))
-            {
-                if (label[e] > 0)
-                    r_edges.push_back(e);
-            }
+            if (label[e] > 0)
+                r_edges.push_back(e);
+        }
 
-            while (!r_edges.empty())
-            {
-                remove_edge(r_edges.back(), g);
-                r_edges.pop_back();
-            }
+        while (!r_edges.empty())
+        {
+            remove_edge(r_edges.back(), g);
+            r_edges.pop_back();
         }
     }
-};
+}
 
 } // graph_tool namespace
 

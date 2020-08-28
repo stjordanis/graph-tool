@@ -36,7 +36,7 @@ void do_label_parallel_edges(GraphInterface& gi, boost::any property,
         (gi,
          [&](auto&& graph, auto&& a2)
          {
-             return label_parallel_edges()
+             return label_parallel_edges
                  (std::forward<decltype(graph)>(graph),
                   std::forward<decltype(a2)>(a2), mark_only);
          },
@@ -50,7 +50,7 @@ void do_label_self_loops(GraphInterface& gi, boost::any property,
         (gi,
          [&](auto&& graph, auto&& a2)
          {
-             return label_self_loops()
+             return label_self_loops
                  (std::forward<decltype(graph)>(graph),
                   std::forward<decltype(a2)>(a2), mark_only);
          },
@@ -63,7 +63,7 @@ void do_remove_labeled_edges(GraphInterface& gi, boost::any property)
         (gi,
          [&](auto&& graph, auto&& a2)
          {
-             return remove_labeled_edges()
+             return remove_labeled_edges
                  (std::forward<decltype(graph)>(graph),
                   std::forward<decltype(a2)>(a2));
          },
