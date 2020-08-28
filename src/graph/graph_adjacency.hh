@@ -1034,19 +1034,18 @@ void remove_edge(const typename adj_list<Vertex>::edge_descriptor& e,
     if (!g._keep_epos) // O(k_s + k_t)
     {
         // remove and shift
-        auto remove_e = [&] (auto& elist, auto&& begin, auto&& end, auto v)
+        auto remove_e = [&] (auto& elist, auto&& begin, auto&& end)
             {
                 auto iter = std::find_if(begin, end,
                                          [&] (const auto& ei) -> bool
-                                         { return v == ei.first &&
-                                                  idx == ei.second; });
+                                         { return idx == ei.second; });
                 assert(iter != end);
                 elist.erase(iter);
             };
 
-        remove_e(s_es, s_es.begin(), s_es.begin() + s_pos, t);
+        remove_e(s_es, s_es.begin(), s_es.begin() + s_pos);
         s_pos--;
-        remove_e(t_es, t_es.begin() + t_pos, t_es.end(), s);
+        remove_e(t_es, t_es.begin() + t_pos, t_es.end());
     }
     else // O(1)
     {
