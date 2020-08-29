@@ -54,7 +54,7 @@ public:
     {
         uniform_int_distribution<size_t> sample(0, _urn.size() - 1);
         size_t i = sample(rng);
-        if (replacement)
+        if constexpr (replacement)
         {
             return _urn[i];
         }
