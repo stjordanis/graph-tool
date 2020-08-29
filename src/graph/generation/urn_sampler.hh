@@ -61,9 +61,9 @@ public:
         else
         {
             std::swap(_urn[i], _urn.back());
-            _temp = _urn.back();
+            Value temp = _urn.back();
             _urn.pop_back();
-            return _temp;
+            return temp;
         }
     }
 
@@ -73,7 +73,6 @@ public:
 
 private:
     vector<Value> _urn;
-    Value _temp;
 };
 
 } // namespace graph_tool

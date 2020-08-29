@@ -127,7 +127,6 @@ private:
     vector<size_t> _alias;
     uniform_int_distribution<size_t> _sample;
     double _S;
-    size_t _size;
 };
 
 // uniform sampling from containers
