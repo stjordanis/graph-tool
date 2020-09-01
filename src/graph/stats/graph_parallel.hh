@@ -35,8 +35,8 @@ void label_parallel_edges(const Graph& g, ParallelMap parallel, bool mark_only)
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
     typename property_map<Graph, edge_index_t>::type eidx = get(edge_index, g);
 
-    idx_map<vertex_t, edge_t> vset;
-    idx_map<size_t, bool> self_loops;
+    gt_hash_map<vertex_t, edge_t> vset;
+    gt_hash_map<size_t, bool> self_loops;
 
     #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
         firstprivate(vset) firstprivate(self_loops)
@@ -73,7 +73,7 @@ void label_parallel_edges(const Graph& g, ParallelMap parallel, bool mark_only)
                      else
                      {
                          parallel[e] = parallel[iter->second] + 1;
-                         vset[u] = e;
+                         iter->second = e;
                      }
                  }
              }
