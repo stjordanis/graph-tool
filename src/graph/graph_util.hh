@@ -33,6 +33,7 @@ namespace boost { namespace python { namespace detail {
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <string>
 
 #include <boost/functional/hash.hpp>
@@ -363,7 +364,7 @@ public:
         }
     }
 
-    typename RandomAccessIterator::value_type operator*()
+    typename std::iterator_traits<RandomAccessIterator>::reference operator*()
     {
         return *_i;
     }
@@ -399,6 +400,19 @@ private:
     RNG* _rng;
 };
 
+template <class Iter, class RNG>
+auto random_permutation_range(Iter begin, Iter end, RNG& rng)
+{
+    random_permutation_iterator<Iter, RNG> rbegin(begin, end, rng);
+    random_permutation_iterator<Iter, RNG> rend(end, end, rng);
+    return boost::make_iterator_range(rbegin, rend);
+}
+
+template <class V, class RNG>
+auto random_permutation_range(V& v, RNG& rng)
+{
+    return random_permutation_range(v.begin(), v.end(), rng);
+}
 
 //
 // Useful hash<> specializations
