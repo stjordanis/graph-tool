@@ -2869,7 +2869,7 @@ class Graph(object):
                 try:
                     cctx = zstandard.ZstdDecompressor()
                 except NameError:
-                    raise NotImplementedError("zstandard module not installed")
+                    raise NotImplementedError("zstandard module not installed, but it's required for decompression")
                 fctx = contextlib.ExitStack()
                 f = open(file_name, mode="rb")
                 fctx.enter_context(f)
@@ -2963,7 +2963,7 @@ class Graph(object):
                 try:
                     cctx = zstandard.ZstdCompressor(level=19)
                 except NameError:
-                    raise NotImplementedError("zstandard module not installed")
+                    raise NotImplementedError("zstandard module not installed, but it's required for compression")
                 fctx = contextlib.ExitStack()
                 f = open(file_name, mode="wb")
                 fctx.enter_context(f)

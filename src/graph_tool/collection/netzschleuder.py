@@ -64,7 +64,10 @@ def get_ns_network(k, token=None):
         url = f"{url_prefix}/net/{k[0]}/files/{k[1]}.gt.zst"
 
     with open_ns_file(url, token) as f:
-        cctx = zstandard.ZstdDecompressor()
+        try:
+            cctx = zstandard.ZstdDecompressor()
+        except NameError:
+            raise NotImplementedError("zstandard module not installed, but it's required for zstd de-compression")
         with cctx.stream_reader(f) as fc:
             g = load_graph(fc, fmt="gt")
 
