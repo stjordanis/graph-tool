@@ -66,7 +66,7 @@ class NestedBlockState(object):
 
         if bs is None:
             if base_type is OverlapBlockState or state_args.get("overlap", False):
-                b = zeros(2 * g.num_vertices(), dtype="int")
+                b = zeros(2 * g.num_edges(), dtype="int")
             else:
                 b = zeros(g.num_vertices(), dtype="int")
             bs = [b] + [zeros(1, dtype="int")] * int(ceil(log2(len(b))))
