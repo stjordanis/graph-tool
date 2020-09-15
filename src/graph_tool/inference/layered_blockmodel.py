@@ -160,9 +160,10 @@ class LayeredBlockState(OverlapBlockState, BlockState):
 
         if overlap and self.ec is not None:
             self.base_ec = self.base_g.own_property(ec.copy())
-            ec = agg_state.eindex.copy()
-            pmap(ec, self.ec)
-            self.ec = ec.copy("int")
+            ec = agg_state.g.new_ep("int")
+            eindex = self.base_g.edge_index.copy()
+            ec.fa = self.ec.a[eindex.fa]
+            self.ec = ec
 
         self.eweight = eweight
         self.vweight = vweight

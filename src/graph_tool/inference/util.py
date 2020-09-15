@@ -87,8 +87,8 @@ def partition_entropy(B, N, nr=None):
     return S
 
 def pmap(prop, value_map):
-    """Maps all the values of `prop` to the values given by `value_map`, which
-    is indexed by the values of `prop`."""
+    """Maps all the values of `prop` to the values given by `value_map` in-place
+    according to: ``prop[i] = value_map[prop[i]]``."""
     if isinstance(prop, PropertyMap):
         a = prop.fa
     else:
@@ -96,7 +96,7 @@ def pmap(prop, value_map):
     if isinstance(value_map, PropertyMap):
         value_map = value_map.fa
     if a.max() >= len(value_map):
-        raise ValueError("value map is not large enough!" +
+        raise ValueError("value_map is not large enough!" +
                          " max val: %s, map size: %s" % (a.max(),
                                                          len(value_map)))
     if a.dtype != value_map.dtype:
