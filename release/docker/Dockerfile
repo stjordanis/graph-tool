@@ -12,8 +12,8 @@ RUN pacman -S binutils make gcc fakeroot --noconfirm --needed
 RUN pacman -S expac yajl git --noconfirm --needed
 RUN pacman -S sudo grep file --noconfirm --needed
 
-RUN pacman -S sudo boost python3 python3-scipy python-numpy \
-              cgal cairomm python-cairo sparsehash cairomm   \
+RUN pacman -S sudo boost python3 python3-scipy python-numpy python-zstandard \
+              cgal cairomm python-cairo sparsehash cairomm \
 	      autoconf-archive autoconf automake pkg-config --noconfirm --needed
 
 ENV MAKEPKG_USER=mkpkg \
