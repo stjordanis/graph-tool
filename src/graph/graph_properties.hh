@@ -23,6 +23,7 @@
 #include <vector>
 #include <memory>
 #include <random>
+#include <unordered_map>
 #include <boost/functional/hash.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/extract.hpp>
