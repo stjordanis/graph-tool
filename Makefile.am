@@ -24,7 +24,6 @@ nobase_dist_graphtooldoc_DATA = \
 	doc/Makefile \
 	doc/quickstart.rst \
 	doc/generation.rst \
-	doc/mathjax.py \
 	doc/stats.rst \
 	doc/graph_tool.rst \
 	doc/modules.rst \
