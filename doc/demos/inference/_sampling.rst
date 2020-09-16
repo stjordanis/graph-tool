@@ -306,25 +306,25 @@ distribution.
        state.draw(output="lesmis-partition-sample-%i.svg" % i, empty_branches=False)
 
 .. image:: lesmis-partition-sample-0.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-1.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-2.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-3.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-4.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-5.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-6.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-7.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-8.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-sample-9.svg
-   :width: 200px
+   :width: 19%
 
 Characterizing the posterior distribution
 +++++++++++++++++++++++++++++++++++++++++
@@ -392,12 +392,12 @@ corresponding to their collective posterior probability.
 Below are the marginal node distributions representing the partitions that belong to each inferred mode:
        
 .. image:: lesmis-partition-mode-0.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-mode-1.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-mode-2.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-mode-3.svg
-   :width: 200px
+   :width: 19%
 .. image:: lesmis-partition-mode-4.svg
-   :width: 200px
+   :width: 19%
