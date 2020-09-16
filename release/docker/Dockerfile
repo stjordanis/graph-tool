@@ -32,7 +32,7 @@ ADD PKGBUILD PKGBUILD
 RUN makepkg PKGBUILD --needed GIT_REF=$GIT_REF CXXFLAGS="-mtune=generic -O3 -pipe -flto=2 -ffunction-sections -fdata-sections" LDFLAGS="-Wl,--gc-sections"
 
 USER root
-RUN mv -v "${MAKEPKG_ROOT}/"python-graph-tool-*-x86_64.pkg.tar.xz /tmp/python-graph-tool.pkg.tar.xz
+RUN mv -v "${MAKEPKG_ROOT}/"python-graph-tool-*-x86_64.pkg.tar.zst /tmp/python-graph-tool.pkg.tar.zst
 
 # Non-build
 
@@ -40,10 +40,10 @@ FROM archlinux/base:latest
 
 RUN echo "Server=https://archive.archlinux.org/repos/`date -d 'yesterday 13:00' +%Y/%m/%d`/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
 
-COPY --from=builder /tmp/python-graph-tool.pkg.tar.xz /tmp/python-graph-tool.pkg.tar.xz
+COPY --from=builder /tmp/python-graph-tool.pkg.tar.zst /tmp/python-graph-tool.pkg.tar.zst
 
 RUN pacman -Syu --noconfirm --disable-download-timeout \
- && pacman -U --noconfirm --noprogressbar --needed  /tmp/python-graph-tool.pkg.tar.xz \
+ && pacman -U --noconfirm --noprogressbar --needed  /tmp/python-graph-tool.pkg.tar.zst \
  && yes | pacman -Scc --noconfirm
 
 RUN pacman -S ipython gtk3 python-gobject python-matplotlib python-pandas jupyter-notebook mathjax python-cairocffi pandoc --noconfirm --needed
