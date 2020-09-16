@@ -2006,7 +2006,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
                       t.new_ep(eorder.value_type(),
                                eorder.fa.max() + 1)))
 
-    u, props = graph_union(g, t, props=props)
+    u, props = graph_union(GraphView(g, directed=True), t, props=props)
 
     for k in set(list(vprops.keys()) + list(hvprops.keys())):
         t_vprops[k] = props.pop(0)
