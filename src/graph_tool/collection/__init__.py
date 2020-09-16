@@ -68,6 +68,10 @@ Examples
     Anthropological Research 33, 452-473 (1977).
     <BLANKLINE>
 
+    >>> g = gt.collection.ns["advogato"]
+    >>> print(g.gp.description)
+    A network of trust relationships among users on Advogato, an online community of open source software developers. Edge direction indicates that node i trusts node j, and edge weight denotes one of four increasing levels of declared trust from i to j: observer (0.4), apprentice (0.6), journeyer (0.8), and master (1.0).
+
 .. data:: ns_info
 
     Dictionary containing descriptions and other summary information for
