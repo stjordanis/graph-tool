@@ -24,6 +24,19 @@ job_clang_amd64:
   except:
     - tags
 
+job_clang_cxx_amd64:
+  script:
+    - ./autogen.sh
+    - ./configure CXX="ccache clang++" PYTHON=python3 --prefix=$PWD/install --with-python-module-path=$PWD/install/site-packages CPPFLAGS="-I/usr/include/c++/v1" CXXFLAGS="--std=gnu++17 -nostdinc++ -O3" LDFLAGS="-nodefaultlibs -lc++ -lc++abi -lm -lc -lgcc_s -lgcc"
+    - CCACHE_BASEDIR=$PWD make $MAKEOPTS
+    - make install
+    - export PYTHONPATH=$PWD/install/site-packages
+    - cd doc; (mkdir builds envs; pids=(); for f in `ls *rst`; do python3 /usr/bin/sphinx-build -E -d envs/$f -b doctest . builds/$f $f & pids+=($!); done; for p in "${pids[@]}"; do wait "$p"; done);
+  tags:
+    - amd64
+  except:
+    - tags
+
 build_tarball:
   script:
     - ./autogen.sh
