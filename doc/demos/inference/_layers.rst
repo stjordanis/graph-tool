@@ -37,7 +37,7 @@ separating these two types of interactions in two layers:
          
 .. testcode:: layered-model
 
-   g = gt.collection.konect_data["ucidata-gama"]
+   g = gt.collection.ns["new_guinea_tribes"]
 
    # The edge types are stored in the edge property map "weights".
 

@@ -108,7 +108,7 @@ the weights, as follows:
          
 .. testcode:: weighted-model
 
-   g = gt.collection.konect_data["moreno_train"]
+   g = gt.collection.ns["train_terrorists"]
 
    # This network contains an internal edge property map with name
    # "weight" that contains the strength of interactions. The values
@@ -168,7 +168,7 @@ follows:
          
 .. testcode:: food-web
 
-   g = gt.collection.konect_data["foodweb-baywet"]
+   g = gt.collection.ns["foodweb_baywet"]
 
    # This network contains an internal edge property map with name
    # "weight" that contains the energy flow between species. The values
@@ -224,7 +224,7 @@ can fit this alternative model simply by using the transformed weights:
                                                                   rec_types=["real-normal"]))
 
    # improve solution with merge-split
-   state_ln = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4, sampling=True)
+   state_ln = state.copy(bs=state_ln.get_bs() + [np.zeros(1)] * 4, sampling=True)
 
    for i in range(100):
        ret = state_ln.multiflip_mcmc_sweep(niter=10, beta=np.inf)
@@ -276,9 +276,9 @@ Therefore, we can compute the posterior odds ratio between both models as:
 .. testoutput:: food-web
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  16490.463643...
+   ln Λ:  16506.096401...
 
-A value of :math:`\Lambda \approx \mathrm{e}^{16490} \approx 10^{7161}`
+A value of :math:`\Lambda \approx \mathrm{e}^{16506} \approx 10^{7168}`
 in favor the log-normal model indicates that the exponential model does
 not provide a better fit for this particular data. Based on this, we
 conclude that the log-normal model should be preferred in this case.
@@ -293,7 +293,7 @@ initialization, e.g..
 
 .. testcode:: weighted-model
 
-   g = gt.collection.konect_data["foodweb-baywet"]
+   g = gt.collection.ns["foodweb_baywet"]
 
    state = gt.NestedBlockState(g, state_args=dict(recs=[g.ep.weight], rec_types=["real-exponential"]))
 
