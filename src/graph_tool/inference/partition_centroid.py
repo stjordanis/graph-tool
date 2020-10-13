@@ -203,7 +203,7 @@ def variation_information(x, y, norm=False):
         First partition.
     y : iterable of ``int`` values
         Second partition.
-    norm : (optional, default: ``True``)
+    norm : (optional, default: ``False``)
         If ``True``, the result will be normalized in the range :math:`[0,1]`.
 
     Returns
