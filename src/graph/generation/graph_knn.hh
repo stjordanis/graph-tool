@@ -112,11 +112,15 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                          auto iter = Bv.lower_bound({w, l});
                          if (iter != Bv.end() && get<0>(*iter) != w)
                          {
+                             size_t n = Bv.size();
                              Bv.insert(iter, {w, l});
-                             iter = Bv.end();
-                             --iter;
-                             Bv.erase(iter);
-                             ++c;
+                             if (Bv.size() > n)
+                             {
+                                 iter = Bv.end();
+                                 --iter;
+                                 Bv.erase(iter);
+                                 ++c;
+                             }
                          }
                      }
                  }
