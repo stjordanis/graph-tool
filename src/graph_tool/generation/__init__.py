@@ -33,6 +33,7 @@ Summary
    generate_sbm
    generate_maxent_sbm
    solve_sbm_fugacities
+   generate_knn
    predecessor_tree
    line_graph
    graph_union
