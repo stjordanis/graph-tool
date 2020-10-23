@@ -128,6 +128,19 @@ build_focal:
     paths:
       - release/debian/build/*
 
+build_groovy:
+  script:
+    - BASE=ubuntu:groovy
+    - img=`echo $BASE | sed s/:/_/`
+    - cd release/debian
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker run -v $PWD:/mount $img tar -c build | tar x
+  only:
+    - tags
+  artifacts:
+    paths:
+      - release/debian/build/*
+
 build_docker:
   script:
     - cd release/docker
