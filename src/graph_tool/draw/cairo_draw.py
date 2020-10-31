@@ -1341,8 +1341,9 @@ def fit_to_view_ink(g, pos, output_size, vprops, eprops, adjust_aspect=False,
         else:
             lw = max(lw, 0.1)
         return lw
-    vprops = dict(vprops, pen_width=min_lw(vprops.get("pen_width")))
-    eprops = dict(eprops, pen_width=min_lw(eprops.get("pen_width")))
+
+    vprops = dict(vprops, pen_width=min_lw(vprops.get("pen_width", 0.)))
+    eprops = dict(eprops, pen_width=min_lw(eprops.get("pen_width", 0.)))
 
     cairo_draw(g, pos, cr, vprops, eprops)
 
