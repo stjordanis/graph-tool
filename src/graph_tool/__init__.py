@@ -1424,17 +1424,17 @@ class PropertyDict(object):
     For convenience, the dictionary entries are also available via attributes.
     """
     def __init__(self, properties, t):
-        super(PropertyDict, self).__setattr__("properties", properties)
-        super(PropertyDict, self).__setattr__("t", t)
+        super(PropertyDict, self).__setattr__("_PropertyDict__properties", properties)
+        super(PropertyDict, self).__setattr__("_PropertyDict__t", t)
 
     def __contains__(self, key):
-        return (self.t, key) in self.properties
+        return (self.__t, key) in self.__properties
 
     def __getitem__(self, key):
-        if self.t == "g":
-            p = self.properties[(self.t, key)]
+        if self.__t == "g":
+            p = self.__properties[(self.__t, key)]
             return p[p.get_graph()]
-        return self.properties[(self.t, key)]
+        return self.__properties[(self.__t, key)]
 
     def get(self, key, default=None):
         try:
@@ -1451,14 +1451,14 @@ class PropertyDict(object):
             return default
 
     def __setitem__(self, key, val):
-        k = (self.t, key)
-        if self.t == "g" and not isinstance(val, PropertyMap) and k in self.properties:
-            p = self.properties[k]
+        k = (self.__t, key)
+        if self.__t == "g" and not isinstance(val, PropertyMap) and k in self.__properties:
+            p = self.__properties[k]
             p[p.get_graph()] = val
         else:
             if not isinstance(val, PropertyMap):
                 raise ValueError("value must be of type PropertyMap, not %s" % str(type(val)))
-            if val.key_type() != self.t:
+            if val.key_type() != self.__t:
                 def name(t):
                     if t == "e":
                         return "Edge"
@@ -1467,32 +1467,32 @@ class PropertyDict(object):
                     if t == "g":
                         return "Graph"
                 raise ValueError("wanted a property map of type '%s', not '%s'" %
-                                 (name(self.t), name(val.key_type())))
-            self.properties[k] = val
+                                 (name(self.__t), name(val.key_type())))
+            self.__properties[k] = val
 
     def setdefault(self, key, default=None):
-        self.properties.setdefault((self.t, key), default)
+        self.__properties.setdefault((self.__t, key), default)
 
     def update(self, *args, **kwargs):
         temp = dict(*args, **kwargs)
         for k, v in temp.items():
-            self.properties[(self.t, k)] = v
+            self.__properties[(self.__t, k)] = v
 
     def __delitem__(self, key):
-        del self.properties[(self.t, key)]
+        del self.__properties[(self.__t, key)]
 
     def clear(self):
         keys = []
-        for k in self.properties.keys():
-            if k[0] == self.t:
+        for k in self.__properties.keys():
+            if k[0] == self.__t:
                 keys.append(k)
         for k in keys:
-            del self.properties[k]
+            del self.__properties[k]
 
     def __len__(self):
         count = 0
-        for k in self.properties.keys():
-            if k[0] == self.t:
+        for k in self.__properties.keys():
+            if k[0] == self.__t:
                 count += 1
         return count
 
@@ -1500,18 +1500,18 @@ class PropertyDict(object):
         return self.keys()
 
     def iterkeys(self):
-        for k in self.properties.keys():
-            if k[0] == self.t:
+        for k in self.__properties.keys():
+            if k[0] == self.__t:
                 yield k[1]
 
     def items(self):
-        for k, v in self.properties.items():
-            if k[0] == self.t:
+        for k, v in self.__properties.items():
+            if k[0] == self.__t:
                 yield k[1], v
 
     def itervalues(self):
-        for k, v in self.properties.items():
-            if k[0] == self.t:
+        for k, v in self.__properties.items():
+            if k[0] == self.__t:
                 yield v
 
     def keys(self):
@@ -1521,7 +1521,7 @@ class PropertyDict(object):
         return self.itervalues()
 
     def __repr__(self):
-        temp = dict([(k[1], v) for k, v in self.properties.items() if k[0] == self.t])
+        temp = dict([(k[1], v) for k, v in self.__properties.items() if k[0] == self.__t])
         return repr(temp)
 
     def __getattr__(self, attr):
