@@ -44,16 +44,6 @@ This module contains an assortment of useful networks.
     each graph are given in the :data:`ns_info` dictionary, or alternatively in
     the graph properties which accompanies each graph object.
 
-.. data:: konect_data
-
-    Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
-    name of the graph, fetched from the `Koblenz Network Collection
-    <http://konect.cc/>`_. See the website for a list of available
-    data. The key of the dictionary must correspond to the name of the file
-    minus the ``.tar.bz2`` part.  This is a "lazy" dictionary, i.e. it only
-    downloads the graphs from the web when the items are accessed for the first
-    time.
-
 Examples
 ========
 
@@ -291,7 +281,7 @@ import os.path
 import textwrap
 from .. import load_graph
 
-__all__ = ["data", "descriptions", "get_data_path", "konect_data"]
+__all__ = ["data", "descriptions", "get_data_path"]
 
 base_dir = os.path.dirname(__file__)
 
@@ -361,4 +351,3 @@ def _print_table():
     print("===================  ===========  ===========  ========  ================================================")
 
 from . netzschleuder import *
-from . konect import *
