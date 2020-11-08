@@ -1787,7 +1787,9 @@ class Graph(object):
         >>> assert(vlist == vlist2)
 
         """
-        return libcore.get_vertices(self.__graph)
+        viter = libcore.get_vertices(self.__graph)
+        viter._g = self
+        return viter
 
     def iter_vertices(self, vprops=[]):
         """Return an iterator over the vertex indices, and optional vertex properties
@@ -1814,8 +1816,10 @@ class Graph(object):
         5
 
         """
-        return libcore.get_vertex_iter(self.__graph, 0,
-                                       [vp._get_any() for vp in vprops])
+        viter = libcore.get_vertex_iter(self.__graph, 0,
+                                        [vp._get_any() for vp in vprops])
+        viter._g = self
+        return viter
 
     def get_vertices(self, vprops=[]):
         """Return a :class:`numpy.ndarray` containing the vertex indices, and optional
@@ -1902,7 +1906,9 @@ class Graph(object):
            ordering.
 
         """
-        return libcore.get_edges(self.__graph)
+        eiter = libcore.get_edges(self.__graph)
+        eiter._g = self
+        return eiter
 
     def iter_edges(self, eprops=[]):
         """Return an iterator over the edge ```(source, target)`` pairs, and optional
@@ -1916,16 +1922,19 @@ class Graph(object):
 
         Examples
         --------
-        >>> g = gt.random_graph(6, lambda: 1, directed=False)
-        >>> for s, t, i in g.iter_edges([g.edge_index])
+        >>> g = gt.collection.data["karate"]
+        >>> for s, t, i in g.iter_edges([g.edge_index]):
         ...     print(s, t, i)
+        ...     if s == 5:
+        ...         break
         2 1 2
         3 4 0
         5 0 1
-
         """
-        return libcore.get_edge_iter(self.__graph, 0,
-                                     [ep._get_any() for ep in eprops])
+        eiter = libcore.get_edge_iter(self.__graph, 0,
+                                      [ep._get_any() for ep in eprops])
+        eiter._g = self
+        return eiter
 
     def get_edges(self, eprops=[]):
         """Return a :class:`numpy.ndarray` containing the edges, and optional edge
@@ -1964,15 +1973,18 @@ class Graph(object):
         Examples
         --------
         >>> g = gt.collection.data["pgp-strong-2009"]
-        >>> for s, t, i in g.iter_out_edges(66, [g.edge_index])
+        >>> for s, t, i in g.iter_out_edges(66, [g.edge_index]):
         ...     print(s, t, i)
-        2 1 2
-        3 4 0
-        5 0 1
-
+        66 63 5266
+        66 20369 5267
+        66 13980 5268
+        66 8687 5269
+        66 38674 5270
         """
-        return libcore.get_out_edge_iter(self.__graph, int(v),
-                                         [ep._get_any() for ep in eprops])
+        eiter = libcore.get_out_edge_iter(self.__graph, int(v),
+                                          [ep._get_any() for ep in eprops])
+        eiter._g = self
+        return eiter
 
     def get_out_edges(self, v, eprops=[]):
         """Return a :class:`numpy.ndarray` containing the out-edges of vertex ``v``, and
@@ -2009,15 +2021,16 @@ class Graph(object):
         Examples
         --------
         >>> g = gt.collection.data["pgp-strong-2009"]
-        >>> for s, t, i in g.iter_in_edges(66, [g.edge_index])
+        >>> for s, t, i in g.iter_in_edges(66, [g.edge_index]):
         ...     print(s, t, i)
-        2 1 2
-        3 4 0
-        5 0 1
-
+        8687 66 179681
+        20369 66 255033
+        38674 66 300230
         """
-        return libcore.get_out_edge_iter(self.__graph, int(v),
+        eiter = libcore.get_in_edge_iter(self.__graph, int(v),
                                          [ep._get_any() for ep in eprops])
+        eiter._g = self
+        return eiter
 
     def get_in_edges(self, v, eprops=[]):
         """Return a :class:`numpy.ndarray` containing the in-edges of vertex ``v``, and
@@ -2045,21 +2058,27 @@ class Graph(object):
         .. note::
 
            This mode of iteration is more efficient than using
-           :meth:`~graph_tool.Vertex.in_edges`, as descriptor objects are not
+           :meth:`~graph_tool.Vertex.all_edges`, as descriptor objects are not
            created.
 
         Examples
         --------
         >>> g = gt.collection.data["pgp-strong-2009"]
-        >>> for s, t, i in g.iter_all_edges(66, [g.edge_index])
+        >>> for s, t, i in g.iter_all_edges(66, [g.edge_index]):
         ...     print(s, t, i)
-        2 1 2
-        3 4 0
-        5 0 1
-
+        66 63 5266
+        66 20369 5267
+        66 13980 5268
+        66 8687 5269
+        66 38674 5270
+        8687 66 179681
+        20369 66 255033
+        38674 66 300230
         """
-        return libcore.get_out_edge_iter(self.__graph, int(v),
-                                         [ep._get_any() for ep in eprops])
+        eiter = libcore.get_all_edge_iter(self.__graph, int(v),
+                                          [ep._get_any() for ep in eprops])
+        eiter._g = self
+        return eiter
 
     def get_all_edges(self, v, eprops=[]):
         """Return a :class:`numpy.ndarray` containing the in- and out-edges of vertex v,
@@ -2099,15 +2118,18 @@ class Graph(object):
         Examples
         --------
         >>> g = gt.collection.data["pgp-strong-2009"]
-        >>> for s, t, i in g.iter_out_neighbors(66, [g.vp.uid])
-        ...     print(s, t, i)
-        2 1 2
-        3 4 0
-        5 0 1
-
+        >>> for u, i in g.iter_out_neighbors(66, [g.vp.uid]):
+        ...     print(u, i)
+        63 ['paul wilders <webmaster@wilders.org>']
+        20369 ['Zhen-Xjell <zhen-xjell@teamhelix.net>']
+        13980 ['Hooman <Hooman@iname.com>']
+        8687 ['H. Loeung (howe81) <howe81@unixque.com>', 'howe81 <howe81@bigpond.net.au>', 'Howie L (howe81) <howe81@bigpond.net.au>']
+        38674 ['Howie L (howe81) <howe81@bigpond.net.au>']
         """
-        return libcore.get_out_neighbors_iter(self.__graph, int(v),
-                                              [vp._get_any() for vp in vprops])
+        viter = libcore.get_out_neighbors_iter(self.__graph, int(v),
+                                               [vp._get_any() for vp in vprops])
+        viter._g = self
+        return viter
 
     iter_out_neighbours = iter_out_neighbors
 
@@ -2148,15 +2170,16 @@ class Graph(object):
         Examples
         --------
         >>> g = gt.collection.data["pgp-strong-2009"]
-        >>> for s, t, i in g.iter_in_neighbors(66, [g.vp.uid])
-        ...     print(s, t, i)
-        2 1 2
-        3 4 0
-        5 0 1
-
+        >>> for u, i in g.iter_in_neighbors(66, [g.vp.uid]):
+        ...     print(u, i)
+        8687 ['H. Loeung (howe81) <howe81@unixque.com>', 'howe81 <howe81@bigpond.net.au>', 'Howie L (howe81) <howe81@bigpond.net.au>']
+        20369 ['Zhen-Xjell <zhen-xjell@teamhelix.net>']
+        38674 ['Howie L (howe81) <howe81@bigpond.net.au>']
         """
-        return libcore.get_in_neighbors_iter(self.__graph, int(v),
-                                             [vp._get_any() for vp in vprops])
+        viter = libcore.get_in_neighbors_iter(self.__graph, int(v),
+                                              [vp._get_any() for vp in vprops])
+        viter._g = self
+        return viter
 
     iter_in_neighbours = iter_in_neighbors
 
@@ -2197,15 +2220,21 @@ class Graph(object):
         Examples
         --------
         >>> g = gt.collection.data["pgp-strong-2009"]
-        >>> for s, t, i in g.iter_all_neighbors(66, [g.vp.uid])
-        ...     print(s, t, i)
-        2 1 2
-        3 4 0
-        5 0 1
-
+        >>> for u, i in g.iter_all_neighbors(66, [g.vp.uid]):
+        ...     print(u, i)
+        63 ['paul wilders <webmaster@wilders.org>']
+        20369 ['Zhen-Xjell <zhen-xjell@teamhelix.net>']
+        13980 ['Hooman <Hooman@iname.com>']
+        8687 ['H. Loeung (howe81) <howe81@unixque.com>', 'howe81 <howe81@bigpond.net.au>', 'Howie L (howe81) <howe81@bigpond.net.au>']
+        38674 ['Howie L (howe81) <howe81@bigpond.net.au>']
+        8687 ['H. Loeung (howe81) <howe81@unixque.com>', 'howe81 <howe81@bigpond.net.au>', 'Howie L (howe81) <howe81@bigpond.net.au>']
+        20369 ['Zhen-Xjell <zhen-xjell@teamhelix.net>']
+        38674 ['Howie L (howe81) <howe81@bigpond.net.au>']
         """
-        return libcore.get_in_neighbors_iter(self.__graph, int(v),
-                                             [vp._get_any() for vp in vprops])
+        viter = libcore.get_all_neighbors_iter(self.__graph, int(v),
+                                               [vp._get_any() for vp in vprops])
+        viter._g = self
+        return viter
 
     iter_all_neighbours = iter_all_neighbors
 

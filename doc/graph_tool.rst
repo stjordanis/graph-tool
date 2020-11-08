@@ -18,10 +18,23 @@
 
     See :ref:`sec_iteration` for more documentation and examples.
 
-    Iterator-based interface:
+    Iterator-based interface with descriptors:
 
     .. automethod:: vertices
     .. automethod:: edges
+
+    Iterator-based interface without descriptors:
+
+    .. automethod:: iter_vertices
+    .. automethod:: iter_edges
+
+    .. automethod:: iter_out_edges
+    .. automethod:: iter_in_edges
+    .. automethod:: iter_all_edges
+
+    .. automethod:: iter_out_neighbors
+    .. automethod:: iter_in_neighbors
+    .. automethod:: iter_all_neighbors
 
     Array-based interface:
 

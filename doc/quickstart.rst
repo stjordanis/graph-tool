@@ -348,13 +348,76 @@ vertices in the graph.
    is being used. Removal during iteration will cause bad things to
    happen.
 
-Fast iteration over vertices and edges
-""""""""""""""""""""""""""""""""""""""
+Faster iteration over vertices and edges without descriptor
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-While convenient, looping over the graph as described in the previous
-section is not the most efficient approach. This is because the loops
-are performed in pure Python, and hence it undermines the main feature
-of the library, which is the offloading of loops from Python to
+The mode of iteration considered above is convenient, but requires the
+creation of vertex and edge descriptor objects, which incurs a
+performance overhead. A faster approach involves the use of the methods
+:meth:`~graph_tool.Graph.iter_vertices`,
+:meth:`~graph_tool.Graph.iter_edges`,
+:meth:`~graph_tool.Graph.iter_out_edges`,
+:meth:`~graph_tool.Graph.iter_in_edges`,
+:meth:`~graph_tool.Graph.iter_all_edges`,
+:meth:`~graph_tool.Graph.iter_out_neighbors`,
+:meth:`~graph_tool.Graph.iter_in_neighbors`,
+:meth:`~graph_tool.Graph.iter_all_neighbors`, which return vertex
+indexes and pairs thereof, instead of descriptors objects, to specify
+vertex and edges, respectively.
+
+The equivalent of the above examples can be obtained as:
+
+.. testcode::
+
+   for v in g.iter_vertices():
+       print(v)
+   for e in g.iter_edges():
+       print(e)
+
+.. testoutput::
+   :hide:
+
+   0
+   1
+   2
+   3
+   4
+   5
+   6
+   7
+   8
+   9
+   10
+   11
+   (0, 1)
+   (2, 3)
+
+and likewise for the iteration over the neighborhood of a vertex:
+   
+.. testcode::
+
+   for v in g.iter_vertices():
+      for e in g.iter_out_edges(v):
+          print(e)
+      for w in g.iter_out_neighbors(v):
+          print(w)
+
+.. testoutput::
+   :hide:
+
+   (0, 1)
+   1
+   (2, 3)
+   3
+
+   
+Even faster iteration over vertices and edges using arrays
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+While more convenient, looping over the graph as described in the
+previous sections are not the most efficient approaches. This is because
+the loops are performed in pure Python, and hence it undermines the main
+feature of the library, which is the offloading of loops from Python to
 C++. Following the :mod:`numpy` philosophy, :mod:`graph_tool` also
 provides an array-based interface that avoids loops in Python. This is
 done with the :meth:`~graph_tool.Graph.get_vertices`,
