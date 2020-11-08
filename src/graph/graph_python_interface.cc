@@ -468,7 +468,7 @@ template <int kind>
 python::object get_vertex_iter(GraphInterface& gi, int v, python::list ovprops)
 {
 #ifdef HAVE_BOOST_COROUTINE
-    auto dispatch = [&](auto&&vrange)
+    auto dispatch = [&](auto&& vrange)
         {
             auto yield_dispatch = [&](auto& yield)
                 {
@@ -477,7 +477,7 @@ python::object get_vertex_iter(GraphInterface& gi, int v, python::list ovprops)
                         run_action<>()(gi,
                                        [&](auto& g)
                                        {
-                                           for (auto v: vertices_range(g))
+                                           for (auto v: vrange(g))
                                                yield(python::object(v));
                                        })();
                     }
@@ -507,6 +507,7 @@ python::object get_vertex_iter(GraphInterface& gi, int v, python::list ovprops)
                 };
             return boost::python::object(CoroGenerator(yield_dispatch));
         };
+
     switch (kind)
     {
     case range_t::FULL:
