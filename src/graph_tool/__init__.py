@@ -1813,8 +1813,6 @@ class Graph(object):
         2
         3
         4
-        5
-
         """
         viter = libcore.get_vertex_iter(self.__graph, 0,
                                         [vp._get_any() for vp in vprops])
@@ -1927,9 +1925,14 @@ class Graph(object):
         ...     print(s, t, i)
         ...     if s == 5:
         ...         break
+        1 0 0
+        2 0 1
         2 1 2
-        3 4 0
-        5 0 1
+        3 0 3
+        3 1 4
+        3 2 5
+        4 0 6
+        5 0 7
         """
         eiter = libcore.get_edge_iter(self.__graph, 0,
                                       [ep._get_any() for ep in eprops])

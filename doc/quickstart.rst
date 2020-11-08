@@ -348,8 +348,8 @@ vertices in the graph.
    is being used. Removal during iteration will cause bad things to
    happen.
 
-Faster iteration over vertices and edges without descriptor
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Faster iteration over vertices and edges without descriptors
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 The mode of iteration considered above is convenient, but requires the
 creation of vertex and edge descriptor objects, which incurs a
@@ -389,8 +389,8 @@ The equivalent of the above examples can be obtained as:
    9
    10
    11
-   (0, 1)
-   (2, 3)
+   [0, 1]
+   [2, 3]
 
 and likewise for the iteration over the neighborhood of a vertex:
    
@@ -405,9 +405,9 @@ and likewise for the iteration over the neighborhood of a vertex:
 .. testoutput::
    :hide:
 
-   (0, 1)
+   [0, 1]
    1
-   (2, 3)
+   [2, 3]
    3
 
    
