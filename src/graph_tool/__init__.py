@@ -2808,7 +2808,7 @@ class Graph(object):
 
         if src.key_type() == "v":
             if g.num_vertices() > sf.num_vertices():
-                raise ValueError("graphs with incompatible sizes (%d, %d)" %
+                raise ValueError("graphs with incompatible number of vertices (%d, %d)" %
                                  (g.num_vertices(), sf.num_vertices()))
             try:
                 sf.__graph.copy_vertex_property(g.__graph,
@@ -2819,7 +2819,7 @@ class Graph(object):
                                  (src.value_type(), tgt.value_type(), str(e)))
         elif src.key_type() == "e":
             if g.num_edges() > sf.num_edges():
-                raise ValueError("graphs with incompatible sizes (%d, %d)" %
+                raise ValueError("graphs with incompatible number of edges (%d, %d)" %
                                  (g.num_edges(), sf.num_edges()))
             try:
                 if g is sf:
