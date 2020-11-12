@@ -265,7 +265,7 @@ public:
     template <bool Add, class EFilt>
     void modify_vertex(size_t v, size_t r, EFilt&& efilt)
     {
-        if (Add)
+        if constexpr (Add)
             get_move_entries(v, null_group, r, _m_entries,
                              std::forward<EFilt>(efilt));
         else
@@ -274,7 +274,7 @@ public:
 
         apply_delta<Add,!Add>(*this, _m_entries);
 
-        if (Add)
+        if constexpr (Add)
             BlockState::add_partition_node(v, r);
         else
             BlockState::remove_partition_node(v, r);
@@ -679,7 +679,7 @@ public:
         }
 
         auto me = _emat.get_me(r, s);
-        if (Add)
+        if constexpr (Add)
         {
             if (me == _emat.get_null_edge())
             {
@@ -737,7 +737,7 @@ public:
 
         if (_coupled_state != nullptr)
         {
-            if (Add)
+            if constexpr (Add)
                 _coupled_state->add_edge(r, s, me, rec);
             else
                 _coupled_state->remove_edge(r, s, me, rec);
@@ -748,13 +748,13 @@ public:
     void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e,
                      std::false_type)
     {
-        if (Add)
+        if constexpr (Add)
         {
             e = boost::add_edge(u, v, _g).first;
         }
         else
         {
-            if (Deplete)
+            if constexpr (Deplete)
             {
                 boost::remove_edge(e, _g);
                 e = GraphInterface::edge_t();
@@ -766,7 +766,7 @@ public:
     void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e,
                      std::true_type)
     {
-        if (Add)
+        if constexpr (Add)
         {
             if (e == GraphInterface::edge_t())
             {
@@ -2196,7 +2196,7 @@ public:
                             degs[0] = {kin, kout};
                             if (u != v)
                             {
-                                if (Add)
+                                if constexpr (Add)
                                     degs[1] = {kin, kout + 1};
                                 else
                                     degs[1] = {kin, kout - 1};
@@ -2205,14 +2205,14 @@ public:
                             {
                                 if constexpr (!is_directed_::apply<g_t>::type::value)
                                 {
-                                    if (Add)
+                                    if constexpr (Add)
                                         degs[1] = {kin, kout + 2};
                                     else
                                         degs[1] = {kin, kout - 2};
                                 }
                                 else
                                 {
-                                    if (Add)
+                                    if constexpr (Add)
                                         degs[1] = {kin + 1, kout + 1};
                                     else
                                         degs[1] = {kin - 1, kout - 1};
@@ -2234,14 +2234,14 @@ public:
                                 degs[0] = {kin, kout};
                                 if constexpr (!is_directed_::apply<g_t>::type::value)
                                 {
-                                    if (Add)
+                                    if constexpr (Add)
                                         degs[1] = {kin, kout + 1};
                                     else
                                         degs[1] = {kin, kout - 1};
                                 }
                                 else
                                 {
-                                    if (Add)
+                                    if constexpr (Add)
                                         degs[1] = {kin + 1, kout};
                                     else
                                         degs[1] = {kin - 1, kout};
@@ -2261,7 +2261,7 @@ public:
                         [&] (size_t kin, size_t kout, auto)
                         {
                             degs[0] = {kin, kout};
-                            if (Add)
+                            if constexpr (Add)
                                 degs[1] = {kin, kout + 1};
                             else
                                 degs[1] = {kin, kout - 1};
@@ -2274,14 +2274,14 @@ public:
 
                             if constexpr (!is_directed_::apply<g_t>::type::value)
                             {
-                                if (Add)
+                                if constexpr (Add)
                                     degs[3] = {kin, kout + 1};
                                 else
                                     degs[3] = {kin, kout - 1};
                             }
                             else
                             {
-                                if (Add)
+                                if constexpr (Add)
                                     degs[3] = {kin + 1, kout};
                                 else
                                     degs[3] = {kin - 1, kout};
