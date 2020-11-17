@@ -559,11 +559,11 @@ def graphviz_draw(g, pos=None, size=(15, 15), pin=False, layout=None,
                                        output.encode("utf8"))
                 data = open(output).read()
                 os.remove(output)
-        else:
+        elif output is not None:
             if output_format == "auto":
                 if output == "":
                     output_format = "xlib"
-                elif output is not None:
+                else:
                     output_format = output.split(".")[-1]
 
             # if using xlib we need to fork the process, otherwise good ol'
@@ -576,7 +576,7 @@ def graphviz_draw(g, pos=None, size=(15, 15), pin=False, layout=None,
                     os._exit(0)  # since we forked, it's good to be sure
                 if output_format != "xlib":
                     os.wait()
-            elif output is not None:
+            else:
                 libgv.gvRenderFilename(gvc, gvg, output_format.encode("utf8"),
                                        output.encode("utf8"))
 
