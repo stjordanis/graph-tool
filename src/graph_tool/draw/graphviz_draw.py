@@ -236,14 +236,13 @@ def graphviz_draw(g, pos=None, size=(15, 15), pin=False, layout=None,
         Scalar edge property map which specifies the order with which edges
         are drawn.
     output : string (default: ``""``)
-        Output file name.
+        Output file name. If ``None`` then no output is produced.
     output_format : string (default: ``"auto"``)
         Output file format. Possible values are ``"auto"``, ``"xlib"``,
         ``"ps"``, ``"svg"``, ``"svgz"``, ``"fig"``, ``"mif"``, ``"hpgl"``,
         ``"pcl"``, ``"png"``, ``"gif"``, ``"dia"``, ``"imap"``, ``"cmapx"``. If
         the value is ``"auto"``, the format is guessed from the ``output``
-        parameter, or ``xlib`` if it is empty. If the value is ``None``, no
-        output is produced.
+        parameter, or ``xlib`` if it is empty.
     fork : bool (default: ``False``)
         If ``True``, the program is forked before drawing. This is used as a
         work-around for a bug in graphviz, where the ``exit()`` function is
