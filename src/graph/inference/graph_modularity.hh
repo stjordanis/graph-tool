@@ -18,11 +18,6 @@
 #ifndef GRAPH_MODULARITY_HH
 #define GRAPH_MODULARITY_HH
 
-#include <tuple>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-
 #include "graph_tool.hh"
 #include "hash_map_wrap.hh"
 

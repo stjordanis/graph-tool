@@ -20,7 +20,6 @@
 
 #include <stack>
 #include <boost/graph/breadth_first_search.hpp>
-#include <boost/graph/max_cardinality_matching.hpp>
 #include "idx_map.hh"
 
 namespace graph_tool

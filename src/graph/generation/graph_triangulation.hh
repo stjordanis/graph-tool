@@ -23,8 +23,6 @@
 #ifndef GRAPH_TRIANGULATION_HH
 #define GRAPH_TRIANGULATION_HH
 
-#include <tuple>
-
 #include "graph_util.hh"
 #include "hash_map_wrap.hh"
 

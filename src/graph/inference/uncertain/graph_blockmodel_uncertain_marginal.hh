@@ -20,8 +20,6 @@
 
 #include "config.h"
 
-#include <vector>
-
 #include "../support/graph_state.hh"
 #include "../blockmodel/graph_blockmodel_util.hh"
 #include "graph_blockmodel_sample_edge.hh"

@@ -31,18 +31,12 @@
 #else
 #   include <boost/dynamic_property_map.hpp>
 #endif
-#include <boost/graph/graph_traits.hpp>
-#include <boost/detail/workaround.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <algorithm>
-#include <exception> // for std::exception
 #include <string>
 #include <vector>
 #include <set>
 #include <utility>
 #include <map>
-#include <iostream>
-#include <cstdlib>
 #include <boost/throw_exception.hpp>
 #include <boost/regex.hpp>
 #include <boost/graph/graphviz.hpp>

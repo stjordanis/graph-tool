@@ -22,18 +22,13 @@
 #include <boost/preprocessor/comparison/equal.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/size.hpp>
-#include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
-#include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/arithmetic/dec.hpp>
 #include <boost/preprocessor/seq/transform.hpp>
 #include <boost/preprocessor/seq/filter.hpp>
 #include <boost/preprocessor/comparison/equal.hpp>
-#include <boost/preprocessor/comparison/not_equal.hpp>
-#include <boost/preprocessor/punctuation/comma.hpp>
-#include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/seq/first_n.hpp>
 
 #include "graph.hh"

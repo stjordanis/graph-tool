@@ -10,8 +10,6 @@
 
 #include "config.h"
 
-#include <cmath>
-#include <iostream>
 #include <boost/multi_array.hpp>
 
 #include "cache.hh"

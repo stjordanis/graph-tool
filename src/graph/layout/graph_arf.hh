@@ -18,9 +18,6 @@
 #ifndef GRAPH_ARF_HH
 #define GRAPH_ARF_HH
 
-#include <limits>
-#include <iostream>
-
 namespace graph_tool
 {
 using namespace std;

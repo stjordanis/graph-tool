@@ -24,9 +24,6 @@
 # define GRAPH_REVERSE
 
 #include <boost/graph/adjacency_iterator.hpp>
-#include <boost/graph/properties.hpp>
-#include <boost/iterator/transform_iterator.hpp>
-#include <boost/mpl/if.hpp>
 #include <utility>
 
 #if BOOST_WORKAROUND(BOOST_MSVC, < 1300)

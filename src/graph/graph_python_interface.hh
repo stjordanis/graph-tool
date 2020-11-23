@@ -33,8 +33,6 @@ namespace std
 }
 
 #include <boost/graph/graph_traits.hpp>
-#include <boost/mpl/logical.hpp>
-#include <boost/iterator/iterator_facade.hpp>
 
 #include <boost/version.hpp>
 #if (BOOST_VERSION >= 104000)
@@ -42,7 +40,6 @@ namespace std
 #else
 #   include <boost/dynamic_property_map.hpp>
 #endif
-#include <type_traits>
 
 #include "graph.hh"
 #include "graph_filtering.hh"

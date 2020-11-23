@@ -20,8 +20,6 @@
 
 #include "config.h"
 
-#include <vector>
-
 namespace graph_tool
 {
 using namespace boost;

@@ -18,11 +18,6 @@
 #ifndef NESTED_FOR_LOOP_HH
 #define NESTED_FOR_LOOP_HH
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/empty.hpp>
-#include <boost/any.hpp>
-
 namespace boost
 {
 namespace mpl

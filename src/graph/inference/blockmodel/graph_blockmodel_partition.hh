@@ -23,6 +23,8 @@
 
 #include "hash_map_wrap.hh"
 
+#include <boost/range/counting_range.hpp>
+
 namespace graph_tool
 {
 

@@ -19,6 +19,8 @@
 #include "random.hh"
 #include "parallel_rng.hh"
 
+#include <random>
+
 rng_t get_rng(size_t seed)
 {
     parallel_rng<rng_t>::clear();

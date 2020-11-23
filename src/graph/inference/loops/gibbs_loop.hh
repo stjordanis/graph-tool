@@ -20,9 +20,6 @@
 
 #include "config.h"
 
-#include <iostream>
-#include <queue>
-
 #include <tuple>
 
 #include "hash_map_wrap.hh"

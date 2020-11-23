@@ -18,10 +18,6 @@
 #ifndef GRAPH_SBM_HH
 #define GRAPH_SBM_HH
 
-#include <tuple>
-#include <iostream>
-#include <boost/functional/hash.hpp>
-
 #include "graph.hh"
 #include "graph_filtering.hh"
 #include "graph_util.hh"

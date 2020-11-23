@@ -19,7 +19,6 @@
 #define GRAPH_KNN_HH
 
 #include <tuple>
-#include <iostream>
 #include <random>
 #include <boost/functional/hash.hpp>
 

@@ -23,8 +23,6 @@
 
 #include <boost/python.hpp>
 
-#include <iostream>
-
 using namespace std;
 using namespace boost;
 using namespace graph_tool;
