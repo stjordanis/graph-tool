@@ -20,6 +20,8 @@
 
 import numpy
 
+import copy
+
 from .. import GraphView, PropertyMap, ungroup_vector_property, \
     group_vector_property, infect_vertex_property, edge_endpoint_property, _prop
 from .cairo_draw import *
@@ -380,6 +382,9 @@ class GraphWidget(Gtk.DrawingArea):
     def update(self, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                nodesfirst=None, display_props=None,
                fit_view=True, bg_color=None, **kwargs):
+
+        vprops = {} if vprops is None else copy.copy(vprops)
+        eprops = {} if eprops is None else copy.copy(eprops)
 
         props, kwargs = parse_props("vertex", kwargs)
         vprops.update(props)
