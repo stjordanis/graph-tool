@@ -9,7 +9,6 @@
 //           Andrew Lumsdaine
 //           Tiago de Paula Peixoto
 
-#include <boost/python.hpp>
 #include <expat.h>
 #include <boost/graph/graphml.hpp>
 #include <boost/algorithm/string/replace.hpp>

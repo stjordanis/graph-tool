@@ -19,7 +19,6 @@
 #define GRAPH_SBM_SAMPLE_EDGE_HH
 
 #include <tuple>
-#include <iostream>
 
 #include "graph.hh"
 #include "graph_filtering.hh"

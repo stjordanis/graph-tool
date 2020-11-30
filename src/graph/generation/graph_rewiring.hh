@@ -20,7 +20,6 @@
 
 #include <tuple>
 #include <iostream>
-#include <boost/functional/hash.hpp>
 
 #include "graph.hh"
 #include "graph_filtering.hh"

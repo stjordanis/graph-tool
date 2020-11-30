@@ -22,29 +22,18 @@
 
 #include <boost/config/warning_disable.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
-#include <boost/spirit/include/phoenix_fusion.hpp>
-#include <boost/spirit/include/phoenix_stl.hpp>
-#include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/variant/recursive_variant.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
-#include <boost/foreach.hpp>
-
-#include <boost/regex/pending/unicode_iterator.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
 #include <boost/property_map/dynamic_property_map.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <boost/graph/graph_traits.hpp>
-#include <boost/graph/properties.hpp>
 
 #include <boost/python.hpp>
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <unordered_map>

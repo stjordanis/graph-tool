@@ -18,8 +18,6 @@
 #ifndef GRAPH_GENERATION_HH
 #define GRAPH_GENERATION_HH
 
-#include <tuple>
-#include <boost/functional/hash.hpp>
 #include <map>
 #include <set>
 #include <iostream>

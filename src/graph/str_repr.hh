@@ -18,7 +18,6 @@
 #ifndef STR_REPR_HH
 #define STR_REPR_HH
 
-#include <iostream>
 #include <clocale>
 #include <sstream>
 #include <boost/lexical_cast.hpp>

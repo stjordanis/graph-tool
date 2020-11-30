@@ -18,7 +18,6 @@
 #ifndef GRAPH_LATTICE_HH
 #define GRAPH_LATTICE_HH
 
-#include <iostream>
 #include "graph_util.hh"
 
 namespace graph_tool

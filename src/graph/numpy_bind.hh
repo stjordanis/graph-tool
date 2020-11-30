@@ -34,10 +34,8 @@
 #include <boost/multi_array.hpp>
 
 #include <boost/mpl/int.hpp>
-#include <boost/mpl/vector.hpp>
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/pair.hpp>
-#include <boost/mpl/for_each.hpp>
 
 #include "demangle.hh"
 

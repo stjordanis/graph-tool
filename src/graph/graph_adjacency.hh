@@ -21,14 +21,11 @@
 #include <vector>
 #include <deque>
 #include <utility>
-#include <numeric>
-#include <tuple>
 #include <boost/iterator.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/range/irange.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/properties.hpp>
-#include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
 #ifdef __clang__

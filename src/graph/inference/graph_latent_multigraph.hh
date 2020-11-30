@@ -18,10 +18,7 @@
 #ifndef GRAPH_LATENT_MULTIGRAPH_HH
 #define GRAPH_LATENT_MULTIGRAPH_HH
 
-#include <tuple>
 #include <iostream>
-#include <fstream>
-#include <iomanip>
 
 #include "graph_tool.hh"
 #include "hash_map_wrap.hh"

@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <algorithm>
-#include <queue>
 
 #include "graph_tool.hh"
 #include "../support/graph_state.hh"

@@ -28,8 +28,6 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/int.hpp>
 
-#include <boost/python/object.hpp>
-
 //
 // This is a generic multidimensional histogram type
 //

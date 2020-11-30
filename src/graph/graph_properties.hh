@@ -18,11 +18,8 @@
 #ifndef GRAPH_PROPERTIES_HH
 #define GRAPH_PROPERTIES_HH
 
-#include <typeinfo>
 #include <string>
 #include <vector>
-#include <memory>
-#include <random>
 #include <unordered_map>
 #include <boost/functional/hash.hpp>
 #include <boost/python/object.hpp>

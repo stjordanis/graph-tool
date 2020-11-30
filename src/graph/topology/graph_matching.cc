@@ -19,7 +19,6 @@
 #include "graph.hh"
 #include "graph_properties.hh"
 
-#include <boost/graph/max_cardinality_matching.hpp>
 #include <boost/graph/maximum_weighted_matching.hpp>
 
 #include "graph_bipartite_weighted_matching.hh"

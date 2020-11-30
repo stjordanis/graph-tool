@@ -19,7 +19,6 @@
 #define GRAPH_MAXENT_SBM_HH
 
 #include <tuple>
-#include <iostream>
 
 #include "graph.hh"
 #include "graph_filtering.hh"

@@ -21,11 +21,8 @@
 #include "config.h"
 
 #include <cmath>
-#include <iostream>
 
 #include "cache.hh"
-
-#include <boost/range/counting_range.hpp>
 
 namespace graph_tool
 {
