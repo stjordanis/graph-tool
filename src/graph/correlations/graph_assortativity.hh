@@ -46,7 +46,7 @@ struct get_assortativity_coefficient
         wval_t e_kk = 0;
 
         typedef typename DegreeSelector::value_type val_t;
-        typedef gt_hash_map<val_t, size_t> map_t;
+        typedef gt_hash_map<val_t, wval_t> map_t;
         map_t a, b;
 
         SharedMap<map_t> sa(a), sb(b);
