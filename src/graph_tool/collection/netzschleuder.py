@@ -45,9 +45,7 @@ def open_ns_file(url, token=None):
     if token is None:
         req = urllib.request.Request(url)
     else:
-        req = urllib.request.Request(url,
-                                     headers={"WWW-Authenticate" :
-                                              f"Authorization: Bearer {token}"})
+        req = urllib.request.Request(url, headers={"WWW-Authenticate" : token})
 
     with urllib.request.urlopen(req) as f:
         yield f
