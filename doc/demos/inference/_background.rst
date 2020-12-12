@@ -80,7 +80,7 @@ where
    \Sigma = -\ln P(\boldsymbol A|\boldsymbol\theta, \boldsymbol b) - \ln P(\boldsymbol\theta, \boldsymbol b)
 
 is called the **description length** of the network :math:`\boldsymbol
-G`. It measures the amount of `information
+A`. It measures the amount of `information
 <https://en.wikipedia.org/wiki/Information_theory>`_ required to
 describe the data, if we `encode
 <https://en.wikipedia.org/wiki/Entropy_encoding>`_ it using the
