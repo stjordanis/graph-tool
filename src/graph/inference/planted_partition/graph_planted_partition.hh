@@ -440,10 +440,13 @@ public:
         for (auto v : vertices_range(_g))
         {
             S -= lgamma_fast(out_degree(v, _g) + 1);
+
             gt_hash_map<decltype(v), size_t> us;
             for (auto e : out_edges_range(v, _g))
             {
                 auto u = target(e, _g);
+                if (u < v)
+                    continue;
                 us[u] += _eweight[e];
             }
 
