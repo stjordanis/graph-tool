@@ -236,7 +236,7 @@ struct MCMC
 
             double a = 0;
             if (dm != 0)
-                a += (_edge_sampler.log_prob(u, v, m + dm, dm) -
+                a += (_edge_sampler.log_prob(u, v, m, dm) -
                       _edge_sampler.log_prob(u, v, m, 0));
 
             a -= log(get_move_prob(dm, dx, m, x));
@@ -256,17 +256,14 @@ struct MCMC
             {
                 _state.update_edge(u, v, dx);
             }
-            else if (dm < 0)
-            {
-                size_t m = get<0>(node_state(u, v));
-                _edge_sampler.template update_edge<false>(u, v, m);
-                _state.remove_edge(u, v);
-            }
             else
             {
                 size_t m = get<0>(node_state(u, v));
-                _state.add_edge(u, v, dx);
-                _edge_sampler.template update_edge<true>(u, v, m);
+                _edge_sampler.update_edge(u, v, m, dm);
+                if (dm < 0)
+                    _state.remove_edge(u, v);
+                else
+                    _state.add_edge(u, v, dx);
             }
         }
 

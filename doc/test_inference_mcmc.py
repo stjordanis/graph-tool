@@ -6,6 +6,7 @@ from pylab import *
 from graph_tool.all import *
 import numpy.random
 from numpy.random import randint
+from collections import defaultdict
 import scipy.stats
 import os.path
 
@@ -114,6 +115,46 @@ for directed in [True, False]:
     gca().set_ylim(-.1, .1)
 
     savefig("test_mcmc/test_mcmc_move_prob_directed%s.pdf" % directed)
+
+for directed in [True, False]:
+    for deg_corr in [True, False]:
+        print(f"test edge sampling directed={directed}, deg_corr={deg_corr}...")
+
+        g = collection.data["football"]
+        g.set_directed(directed)
+        state = LatentMultigraphBlockState(g, state_args=dict(deg_corr=deg_corr))
+        for i in range(1000):
+            state.multiflip_mcmc_sweep(niter=10)
+        print(state)
+        esampler = state.bstate._state.get_edge_sampler(False)
+
+        ecount = defaultdict(int)
+        for i in range(10000000):
+            u, v = esampler.sample(graph_tool._get_rng())
+            if v < u and not directed:
+                u, v = v, u
+            ecount[(u,v)] += 1
+
+        N = sum([x for x in ecount.values()])
+
+        Lp = []
+        Ls = []
+        for e, c in ecount.items():
+            p = log(c)-log(N)
+            u, v = e
+            e = state.bstate.g.edge(u, v)
+            if e is None:
+                m = 0
+            else:
+                m = state.bstate.eweight[e]
+            Le = esampler.log_prob(u, v, m)
+            Lp.append(Le)
+            Ls.append(p)
+
+        clf()
+        plot(Ls, Lp, "o")
+        plot(Ls, Ls, "-")
+        savefig(f"test_mcmc/test_mcmc_edge_sample_directed{directed}_deg_corr{deg_corr}.pdf")
 
 if os.path.exists("g_small.gt"):
     g_small = load_graph("g_small.gt")

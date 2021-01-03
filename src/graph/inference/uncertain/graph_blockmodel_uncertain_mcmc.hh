@@ -105,42 +105,54 @@ struct MCMC
         {
             _e = _edge_sampler.sample(rng);
 
-            std::bernoulli_distribution coin(.5);
-            size_t m = node_state(get<0>(_e), get<1>(_e));
-            if (m > 0 && coin(rng))
-            {
-                return -1;
-            }
-            else
-            {
-                return 1;
-            }
+            int m = node_state(get<0>(_e), get<1>(_e));
+
+            std::geometric_distribution<int> sample_m(1./(m + 2));
+
+            return sample_m(rng) - m;
         }
 
         std::tuple<double, double>
         virtual_move_dS(size_t, int dm)
         {
+            if (dm == 0)
+                return {0., 0.};
+
             size_t u, v;
             std::tie(u, v) = get_edge();
 
             double dS = 0;
             if (dm < 0)
+            {
                 dS = _state.remove_edge_dS(u, v, _entropy_args);
+                for (int i = 0; i < -dm-1; ++i)
+                {
+                    _state.remove_edge(u, v);
+                    dS += _state.remove_edge_dS(u, v, _entropy_args);
+                }
+                for (int i = 0; i < -dm-1; ++i)
+                    _state.add_edge(u, v);
+            }
             else
+            {
                 dS = _state.add_edge_dS(u, v, _entropy_args);
+                for (int i = 0; i < dm-1; ++i)
+                {
+                    _state.add_edge(u, v);
+                    dS += _state.add_edge_dS(u, v, _entropy_args);
+                }
+                for (int i = 0; i < dm-1; ++i)
+                    _state.remove_edge(u, v);
+            }
 
             size_t m = node_state(u, v);
-            double a = (_edge_sampler.log_prob(u, v, m + dm, dm) -
+            double a = (_edge_sampler.log_prob(u, v, m, dm) -
                         _edge_sampler.log_prob(u, v, m, 0));
 
-            if (m > 0)
-            {
-                a -= -log(2);
-            }
-            if (m + dm > 0)
-            {
-                a += -log(2);
-            }
+            size_t nm = m + dm;
+
+            a -= nm * safelog_fast(m + 1) - (nm + 1) * safelog_fast(m + 2);
+            a += m * safelog_fast(nm + 1) - (m + 1) * safelog_fast(nm + 2);
 
             return std::make_tuple(dS, a);
         }
@@ -152,15 +164,18 @@ struct MCMC
             size_t u, v;
             std::tie(u, v) = get_edge();
             size_t m = node_state(u, v);
+
+            _edge_sampler.update_edge(u, v, m, dm);
+
             if (dm < 0)
             {
-                _edge_sampler.template update_edge<false>(u, v, m);
-                _state.remove_edge(u, v);
+                for (int i = 0; i < -dm; ++i)
+                    _state.remove_edge(u, v);
             }
             else
             {
-                _state.add_edge(u, v);
-                _edge_sampler.template update_edge<true>(u, v, m);
+                for (int i = 0; i < dm; ++i)
+                    _state.add_edge(u, v);
             }
         }
 

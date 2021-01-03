@@ -102,6 +102,9 @@ public:
         _NB = B * B;
     }
 
+    SBMEdgeSampler(const SBMEdgeSampler& other)
+        : SBMEdgeSampler(other._state, other._edges_only) {}
+
     std::tuple<size_t, size_t> get_edge(size_t u, size_t v)
     {
         if (!graph_tool::is_directed(_state._g) && u > v)
@@ -110,38 +113,31 @@ public:
     }
 
 
-    template <bool add>
-    void update_edge(size_t u, size_t v, size_t m)
+    void update_edge(size_t u, size_t v, size_t m, int delta)
     {
         if (_edges_only)
             return;
 
-        if (add)
+        if (m == 0 && delta > 0)
         {
-            if (m == 0)
-            {
-                _edges.push_back(get_edge(u, v));
-                _edge_pos[_edges.back()] = _edges.size() - 1;
-            }
-        }
-        else
-        {
-            if (m == 1)
-            {
-                auto iter = _edge_pos.find(get_edge(u, v));
-                size_t pos = iter->second;
-                _edge_pos.erase(iter);
-                if (pos < _edges.size() - 1)
-                {
-                    std::swap(_edges[pos], _edges.back());
-                    _edge_pos[_edges[pos]] = pos;
-                }
-                _edges.pop_back();
-            }
+            _edges.push_back(get_edge(u, v));
+            _edge_pos[_edges.back()] = _edges.size() - 1;
         }
 
-        constexpr int delta = (add) ? 0 : -1;
-        _E += (add) ? 1 : -1;
+        if (m > 0 && m + delta == 0)
+        {
+            auto iter = _edge_pos.find(get_edge(u, v));
+            size_t pos = iter->second;
+            _edge_pos.erase(iter);
+            if (pos < _edges.size() - 1)
+            {
+                std::swap(_edges[pos], _edges.back());
+                _edge_pos[_edges[pos]] = pos;
+            }
+            _edges.pop_back();
+        }
+
+        _E += delta;
         size_t r = _state._b[u];
         size_t s = _state._b[v];
 
@@ -149,12 +145,15 @@ public:
         if (me != _state._emat.get_null_edge())
         {
             auto ers = _state._mrs[me] + delta;
-            if (!add || ers > 1)
+            if (ers == 0)
+            {
                 _rs_sampler.remove(_rs_pos[me]);
-            if (ers > 0)
-                _rs_pos[me] = _rs_sampler.insert({r,s}, ers);
-            else
                 _rs_pos[me] = std::numeric_limits<size_t>::max();
+            }
+            else
+            {
+                _rs_pos[me] = _rs_sampler.insert({r,s}, ers);
+            }
         }
 
         if (_state._deg_corr)
@@ -207,9 +206,6 @@ public:
     template <class RNG>
     std::tuple<size_t, size_t> sample(RNG& rng)
     {
-        // std::uniform_int_distribution<size_t> sample(0, _N-1);
-        // return {sample(rng), sample(rng)};
-
         if (_edges_only)
         {
             std::bernoulli_distribution coin(_edges.size() /
@@ -329,11 +325,11 @@ public:
         if (!graph_tool::is_directed(g) && u != v)
             lp += log(2);
 
-        if (m > 0)
+        if (m + delta > 0)
         {
             double rp;
-            if (m == 1 && delta == 1)
-                rp = -log(_edges.size() + delta);
+            if (m == 0)
+                rp = -log(_edges.size() + 1);
             else
                 rp = -log(_edges.size());
             double x = std::max(rp, lp);
@@ -342,7 +338,7 @@ public:
         }
         else
         {
-            return lp;
+            return lp - log(2);
         }
     }
 

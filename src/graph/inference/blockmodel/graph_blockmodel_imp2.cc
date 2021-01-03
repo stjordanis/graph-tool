@@ -22,6 +22,7 @@
 
 #include "graph_blockmodel_util.hh"
 #include "graph_blockmodel.hh"
+#include "../uncertain/graph_blockmodel_sample_edge.hh"
 #include "../support/graph_state.hh"
 
 using namespace boost;
@@ -98,6 +99,27 @@ void export_sbm_state()
                  .def("rebuild_neighbor_sampler",
                       &state_t::rebuild_neighbor_sampler)
                  .def("sync_emat",
-                      &state_t::sync_emat);
+                      &state_t::sync_emat)
+                 .def("get_edge_sampler",
+                      +[](state_t& state, bool edges_only)
+                      {
+                          return SBMEdgeSampler(state, edges_only);
+                      });
+
+             typedef SBMEdgeSampler<state_t> edge_sampler_t;
+             class_<edge_sampler_t>
+                 es(name_demangle(typeid(edge_sampler_t).name()).c_str(),
+                    no_init);
+             es.def("sample",
+                    +[](edge_sampler_t& es, rng_t& rng)
+                    {
+                        auto e = es.sample(rng);
+                        return python::make_tuple(get<0>(e), get<1>(e));
+                    })
+                 .def("log_prob",
+                      +[](edge_sampler_t& es, size_t u, size_t v, size_t m)
+                      {
+                          return es.log_prob(u, v, m, 0);
+                      });
          });
 }
