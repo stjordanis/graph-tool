@@ -140,6 +140,8 @@ extern void export_pp_multiflip_mcmc();
 extern void export_modularity_state();
 extern void export_modularity_mcmc();
 extern void export_modularity_multiflip_mcmc();
+extern void export_latent_closure_state();
+extern void export_latent_closure_mcmc();
 
 BOOST_PYTHON_MODULE(libgraph_tool_inference)
 {
@@ -216,6 +218,8 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     export_modularity_state();
     export_modularity_mcmc();
     export_modularity_multiflip_mcmc();
+    export_latent_closure_state();
+    export_latent_closure_mcmc();
 
     def("vector_map", vector_map<int32_t>);
     def("vector_map64", vector_map<int64_t>);

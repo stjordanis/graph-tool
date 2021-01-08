@@ -80,6 +80,7 @@ graph_tool_inference_PYTHON = \
     inference/partition_modes.py \
     inference/planted_partition.py \
     inference/latent_multigraph.py \
+    inference/latent_layers.py \
     inference/util.py
 graph_tool_inferencedir = $(MOD_DIR)/inference
 

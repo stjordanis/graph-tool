@@ -64,9 +64,10 @@ import scipy.sparse
 
 __all__ = ["random_graph", "random_rewire", "generate_sbm",
            "solve_sbm_fugacities", "generate_maxent_sbm", "generate_knn",
-           "predecessor_tree", "line_graph", "graph_union", "triangulation",
-           "lattice", "geometric_graph", "price_network", "complete_graph",
-           "circular_graph", "condensation_graph"]
+           "generate_triadic_closure", "predecessor_tree", "line_graph",
+           "graph_union", "triangulation", "lattice", "geometric_graph",
+           "price_network", "complete_graph", "circular_graph",
+           "condensation_graph"]
 
 def random_graph(N, deg_sampler, directed=True,
                  parallel_edges=False, self_loops=False, block_membership=None,
@@ -1468,6 +1469,23 @@ def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
         remove_parallel_edges(g)
 
     return g, w
+
+def generate_triadic_closure(g, t, probs=False, curr=None, ego=None):
+    _check_prop_scalar(t, name="t")
+    if curr is None:
+        curr = g.new_ep("bool", val=True)
+    if curr.value_type() != "bool":
+        curr = curr.copy("bool")
+    if ego is None:
+        ego = g.new_ep("int64_t", val=-1)
+    if ego.value_type() != "int64_t":
+        ego = ego.copy("int64_t")
+    libgraph_tool_generation.gen_triadic_closure(g._Graph__graph,
+                                                 _prop("e", g, curr),
+                                                 _prop("e", g, ego),
+                                                 _prop("v", g, t),
+                                                 probs, _get_rng())
+    return ego
 
 def predecessor_tree(g, pred_map):
     """Return a graph from a list of predecessors given by the ``pred_map`` vertex property."""

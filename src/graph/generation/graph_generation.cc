@@ -86,6 +86,10 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
 void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
                         boost::any aw);
 
+void generate_triadic_closure(GraphInterface& gi, boost::any acurr,
+                              boost::any aego, boost::any oEs, bool probs,
+                              rng_t& rng);
+
 size_t random_rewire(GraphInterface& gi, string strat, size_t niter,
                      bool no_sweep, bool self_loops, bool parallel_edges,
                      bool configuration, bool traditional, bool micro,
@@ -144,6 +148,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_generation)
     def("gen_sbm", &generate_sbm);
     def("gen_knn", &generate_knn);
     def("gen_knn_exact", &generate_knn_exact);
+    def("gen_triadic_closure", &generate_triadic_closure);
     def("random_rewire", &random_rewire);
     def("predecessor_graph", &predecessor_graph);
     def("line_graph", &line_graph);

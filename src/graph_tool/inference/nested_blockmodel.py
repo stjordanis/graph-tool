@@ -825,7 +825,8 @@ class NestedBlockState(object):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
-            if _bm_test():
+            test = kwargs.get("test", True)
+            if _bm_test() and test:
                 kwargs = dict(kwargs, test=False)
                 entropy_args = kwargs.get("entropy_args", {})
                 Si = self.entropy(**entropy_args)
@@ -833,7 +834,7 @@ class NestedBlockState(object):
             dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.mcmc_sweep(**a),
                                                   c=c, **kwargs)
 
-            if _bm_test():
+            if _bm_test() and test:
                 Sf = self.entropy(**entropy_args)
                 assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
                     "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
@@ -876,14 +877,15 @@ class NestedBlockState(object):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
-            if _bm_test():
+            test = kwargs.get("test", True)
+            if _bm_test() and test:
                 kwargs = dict(kwargs, test=False)
                 entropy_args = kwargs.get("entropy_args", {})
                 Si = self.entropy(**entropy_args)
 
             dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.multiflip_mcmc_sweep(**a),
                                                   c=c, **kwargs)
-            if _bm_test():
+            if _bm_test() and test:
                 Sf = self.entropy(**entropy_args)
                 assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
                     r"inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,

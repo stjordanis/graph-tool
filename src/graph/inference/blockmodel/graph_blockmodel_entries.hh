@@ -126,6 +126,8 @@ class EntrySet
 public:
     typedef typename graph_traits<BGraph>::edge_descriptor bedge_t;
 
+    EntrySet() {};
+
     EntrySet(size_t B)
         : _dummy(_null)
     {

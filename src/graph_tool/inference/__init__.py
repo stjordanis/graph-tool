@@ -200,6 +200,9 @@ __all__ = ["minimize_blockmodel_dl",
            "PseudoIsingBlockState",
            "CIsingGlauberBlockState",
            "PseudoCIsingBlockState",
+           "LatentLayerBaseState",
+           "LatentClosureBlockState",
+           "MeasuredClosureBlockState",
            "mcmc_equilibrate",
            "mcmc_anneal",
            "mcmc_multilevel",
@@ -257,3 +260,4 @@ from . latent_multigraph import *
 from . partition_centroid import *
 from . partition_modes import *
 from . planted_partition import *
+from . latent_layers import *

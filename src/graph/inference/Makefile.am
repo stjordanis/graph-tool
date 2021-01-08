@@ -84,6 +84,8 @@ libgraph_tool_inference_la_SOURCES = \
     uncertain/graph_blockmodel_dynamics_pseudo_ising.cc \
     uncertain/graph_blockmodel_dynamics_pseudo_ising_mcmc.cc \
     uncertain/graph_blockmodel_dynamics_pseudo_ising_mcmc_h.cc \
+    uncertain/graph_blockmodel_latent_closure.cc \
+    uncertain/graph_blockmodel_latent_closure_mcmc.cc \
     uncertain/graph_blockmodel_measured.cc \
     uncertain/graph_blockmodel_measured_mcmc.cc \
     uncertain/graph_blockmodel_uncertain.cc \
@@ -131,6 +133,8 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     uncertain/graph_blockmodel_dynamics_epidemics_mcmc_h.hh \
     uncertain/graph_blockmodel_dynamics_mcmc.hh \
     uncertain/graph_blockmodel_dynamics_pseudo_ising_mcmc_h.hh \
+    uncertain/graph_blockmodel_latent_closure.hh \
+    uncertain/graph_blockmodel_latent_layers.hh \
     uncertain/graph_blockmodel_measured.hh \
     uncertain/graph_blockmodel_uncertain.hh \
     uncertain/graph_blockmodel_uncertain_marginal.hh \
