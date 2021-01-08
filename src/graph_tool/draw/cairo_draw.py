@@ -1042,6 +1042,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         else:
             pos = sfdp_layout(g)
     else:
+        pos = g.own_property(pos)
         _check_prop_vector(pos, name="pos", floating=True)
         if output is None and not inline and mplfig is None:
             if "layout_K" not in kwargs:
