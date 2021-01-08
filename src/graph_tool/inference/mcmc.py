@@ -685,7 +685,7 @@ class TemperingState(object):
                 if check_verbose(verbose):
                     print(verbose_pad(verbose)
                           + u"swapped states: %d [β = %g] <-> %d [β = %g], a: %g" % \
-                            (i, b1, j, b2, a))
+                            (i, b1, j, b2, exp(-ddS)))
         return dS, nswaps
 
     def states_move(self, sweep_algo, **kwargs):
@@ -721,7 +721,7 @@ class TemperingState(object):
         if numpy.random.random() < r:
             return self.states_swap(adjacent=adjacent, **kwargs)
         else:
-            return self.states_move(algo, **kwargs)
+            return self.states_move(algo, **dict(kwargs, verbose=False))
 
     def mcmc_sweep(self, **kwargs):
         """Perform a full mcmc sweep of the parallel states, where swap or moves are
