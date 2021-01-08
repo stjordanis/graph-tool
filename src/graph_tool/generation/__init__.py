@@ -53,7 +53,7 @@ from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_generation")
 
 from .. import Graph, GraphView, _check_prop_scalar, _prop, _limit_args, \
-    _gt_type, _get_rng, Vector_double
+    _gt_type, _get_rng, Vector_double, VertexPropertyMap
 from .. stats import remove_parallel_edges
 import inspect
 import types
@@ -1123,7 +1123,7 @@ def solve_sbm_fugacities(b, ers, out_degs=None, in_degs=None, multigraph=False,
     References
     ----------
     .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-       networks with heterogeneous density", :arxiv:`2002.07803`
+       networks with heterogeneous density", :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
     """
 
     b = numpy.asarray(b, dtype="int32")
@@ -1316,7 +1316,7 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
     References
     ----------
     .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-       networks with heterogeneous density", :arxiv:`2002.07803`
+       networks with heterogeneous density", :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
 
     Examples
     --------
@@ -1470,7 +1470,71 @@ def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
 
     return g, w
 
-def generate_triadic_closure(g, t, probs=False, curr=None, ego=None):
+def generate_triadic_closure(g, t, probs=True, curr=None, ego=None):
+    r"""Closes open triads in a graph, according to an ego-based process.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be modified.
+    t : :class:`~graph_tool.VertexPropertyMap` or scalar
+        Vertex property map (or scalar value) with the ego closure propensities
+        for every node.
+    probs : ``boolean`` (optional, default: ``False``)
+        If ``True``, the values of ``t`` will be interpreted as the independent
+        probability of connecting two neighbors of the respective
+        vertex. Otherwise, it will determine the integer number of pairs of
+        neighbors that will be closed.
+    curr : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        If given, this should be a boolean-valued edge property map, such that
+        triads will only be closed if they contain at least one edge marged with
+        the value ``True``.
+    ego : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        If given, this should be an integer-valued edge property map, containing
+        the ego vertex for each closed triad, which will be updated with the new
+        generation.
+
+    Returns
+    -------
+    ego : :class:`~graph_tool.EdgePropertyMap`
+        Integer-valued edge property map, containing the ego vertex for each
+        closed triad.
+
+    Notes
+    -----
+
+    This algorithm [peixoto-disentangling-2021]_ consist in, for each node
+    ``u``, connecting all its neighbors with probability given by ``t[u]``. In
+    case ``probs == False``, then ``t[u]`` indicates the number of random pairs
+    of neighbors of ``u`` that are connected. This algorithm may generate
+    parallel edges.
+
+    This algorithm has a complexity of :math:`O(N\left<k^2\right>)`, where
+    :math:`\left<k^2\right>` is the second moment of the degree distribution.
+
+    References
+    ----------
+    .. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
+       community structure and triadic closure in networks", :arxiv:`2101.02510`
+
+    Examples
+    --------
+
+    >>> g = gt.collection.data["karate"].copy()
+    >>> gt.generate_triadic_closure(g, .5)
+    <...>
+    >>> gt.graph_draw(g, g.vp.pos, output="karate-triadic.png")
+    <...>
+
+    .. figure:: karate-triadic.*
+       :align: center
+       :width: 40%
+
+       Karate club network with added random triadic closure edges.
+
+    """
+    if not isinstance(t, VertexPropertyMap):
+        t = g.new_vp("double" if probs else "int64_t", val=t)
     _check_prop_scalar(t, name="t")
     if curr is None:
         curr = g.new_ep("bool", val=True)

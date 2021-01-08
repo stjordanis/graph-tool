@@ -127,7 +127,9 @@ State classes
    :nosignatures:
 
    ~graph_tool.inference.uncertain_blockmodel.LatentMultigraphBlockState
+   ~graph_tool.inference.latent_layers.LatentClosureBlockState
    ~graph_tool.inference.uncertain_blockmodel.MeasuredBlockState
+   ~graph_tool.inference.latent_layers.MeasuredClosureBlockState
    ~graph_tool.inference.uncertain_blockmodel.MixedMeasuredBlockState
    ~graph_tool.inference.uncertain_blockmodel.UncertainBlockState
    ~graph_tool.inference.uncertain_blockmodel.UncertainBaseState

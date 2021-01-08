@@ -470,7 +470,7 @@ class LatentMultigraphBlockState(UncertainBaseState):
     References
     ----------
     .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-       networks with heterogeneous density", :arxiv:`2002.07803`
+       networks with heterogeneous density", :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
     """
 
     def __init__(self, g, aE=numpy.nan, nested=True, state_args={},
@@ -669,7 +669,7 @@ class MixedMeasuredBlockState(UncertainBaseState):
         Arguments to be passed to
         :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
         :class:`~graph_tool.inference.blockmodel.BlockState`.
-    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState` (optional, default: ``None``)
         If passed, this will be used to initialize the block state
         directly.
     self_loops : bool (optional, default: ``False``)

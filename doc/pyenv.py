@@ -36,10 +36,7 @@ rcParams["ps.usedistiller"] = "xpdf"
 rcParams["pdf.compression"] = 9
 rcParams["ps.useafm"] = True
 rcParams["path.simplify"] = True
-rcParams["text.latex.preamble"] = [#r"\usepackage{times}",
-                                   #r"\usepackage{euler}",
-                                   r"\usepackage{amssymb}",
-                                   r"\usepackage{amsmath}"]
+rcParams["text.latex.preamble"] = r"\usepackage{amssymb}\usepackage{amsmath}"
 
 import scipy
 import scipy.stats

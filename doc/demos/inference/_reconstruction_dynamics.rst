@@ -146,8 +146,8 @@ The reconstruction can accurately recover the hidden network and the infection p
                  
 .. testoutput:: dynamics
 
-   Posterior similarity:  0.990587...
-   Inferred infection probability: 0.692324 ± 0.0496223
+    Posterior similarity:  0.987436...
+    Inferred infection probability: 0.69167 ± 0.054943...
 
 The figure below shows the reconstructed network and the inferred community structure.   
                  

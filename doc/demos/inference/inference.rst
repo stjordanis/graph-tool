@@ -9,7 +9,6 @@ explain the basic functionality with self-contained examples. For a more
 thorough theoretical introduction to the methods described here, the
 reader is referred to [peixoto-bayesian-2019]_.
 
-
 .. include:: _background.rst
 .. include:: _minimization.rst
 .. include:: _model_selection.rst
@@ -20,7 +19,6 @@ reader is referred to [peixoto-bayesian-2019]_.
 .. include:: _assortative.rst
 .. include:: _reconstruction.rst
 .. include:: _prediction.rst
-
 
 References
 ----------
@@ -89,6 +87,9 @@ References
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8
    041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
+
+.. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
+   community structure and triadic closure in networks", :arxiv:`2101.02510`
 
 .. [peixoto-network-2019] Tiago P. Peixoto, "Network reconstruction and
    community detection from dynamics", Phys. Rev. Lett. 123 128301

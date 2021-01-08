@@ -92,7 +92,7 @@ def latent_multigraph(g, epsilon=1e-8, max_niter=0, verbose=False):
     References
     ----------
     .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-       networks with heterogeneous density", :arxiv:`2002.07803`
+       networks with heterogeneous density", :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
 
     """
 

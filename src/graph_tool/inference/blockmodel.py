@@ -2280,7 +2280,7 @@ class BlockState(object):
         self-loops : ``bool`` (optional, default: ``True``)
             If ``True``, self-loops will be allowed.
         sample_params : ``bool`` (optional, default: ``True``)
-            If ``True``, and ``canonical == False`` and ``max_ent == False``,
+            If ``True``, and ``canonical == True`` and ``max_ent == False``,
             the count parameters (edges between groups and node degrees) will be
             sampled from their posterior distribution conditioned on the actual
             state. Otherwise, their maximum-likelihood values will be used.

@@ -35,7 +35,10 @@ from . uncertain_blockmodel import get_uentropy_args, UncertainBaseState
 import numpy.random
 
 class LatentLayerBaseState(object):
+    r"""Base state for uncertain network inference."""
+
     def get_ec(self, ew=None):
+        """Return edge property map with layer membership."""
         if ew is None:
             ew = self.ew
         ec = []
@@ -49,14 +52,15 @@ class LatentLayerBaseState(object):
 
         Parameters
         ----------
-        g : :class:`~graph_tool.Graph` (optional, default: ``None``)
-            Previous marginal graph.
+        g : list of :class:`~graph_tool.Graph` (optional, default: ``None``)
+            Previous marginal graphs.
 
         Returns
         -------
-        g : :class:`~graph_tool.Graph`
-            New marginal graph, with internal edge :class:`~graph_tool.EdgePropertyMap`
-            ``"eprob"``, containing the marginal probabilities for each edge.
+        g : list :class:`~graph_tool.Graph`
+            New list of marginal graphs, each with internal edge
+            :class:`~graph_tool.EdgePropertyMap` ``"eprob"``, containing the
+            marginal probabilities for each edge.
 
         Notes
         -----
@@ -69,6 +73,7 @@ class LatentLayerBaseState(object):
         where :math:`P(\boldsymbol A|\boldsymbol D)` is the posterior
         probability given the data.
 
+        This function returns a list with the marginal graphs for every layer.
         """
 
         if gs is None:
@@ -101,17 +106,17 @@ class LatentLayerBaseState(object):
         return gs
 
     def collect_marginal_multigraph(self, gs=None):
-        r"""Collect marginal latent multigraph during MCMC runs.
+        r"""Collect marginal latent multigraphs during MCMC runs.
 
         Parameters
         ----------
-        g : :class:`~graph_tool.Graph` (optional, default: ``None``)
-            Previous marginal multigraph.
+        g : list of :class:`~graph_tool.Graph` (optional, default: ``None``)
+            Previous marginal multigraphs.
 
         Returns
         -------
-        g : :class:`~graph_tool.Graph`
-            New marginal graph, with internal edge
+        g : list of :class:`~graph_tool.Graph`
+            New marginal multigraphs, each with internal edge
             :class:`~graph_tool.EdgePropertyMap` ``"w"`` and ``"wcount"``,
             containing the edge multiplicities and their respective counts.
 
@@ -128,6 +133,7 @@ class LatentLayerBaseState(object):
         where :math:`P(\boldsymbol G|\boldsymbol D)` is the posterior
         probability of a multigraph :math:`\boldsymbol G` given the data.
 
+        This function returns a list with the marginal graphs for every layer.
         """
 
         if gs is None or len(gs) != len(self.us):
@@ -210,11 +216,49 @@ class LatentLayerBaseState(object):
                                     r=r, **kwargs)
 
     def multiflip_mcmc_sweep(self, **kwargs):
-        r"""Alias for :meth:`~UncertainBaseState.mcmc_sweep` with ``multiflip=True``."""
+        r"""Alias for :meth:`~LatentLayerBaseState.mcmc_sweep` with ``multiflip=True``."""
         return self.mcmc_sweep(multiflip=True, **kwargs)
 
 
 class LatentClosureBlockState(LatentLayerBaseState):
+    r"""Inference state of the stochastic block model with latent triadic closure
+    edges.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Observed graph.
+    L : ``int`` (optional, default: ``1``)
+        Maximum number of triadic closure generations.
+    b : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
+        Inital partition (or hierarchical partition ``nested=True``).
+    aE : ``float`` (optional, default: ``NaN``)
+        Expected total number of edges used in prior. If ``NaN``, a flat
+        prior will be used instead.
+    nested : ``boolean`` (optional, default: ``True``)
+        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        will be used, otherwise
+        :class:`~graph_tool.inference.blockmodel.BlockState`.
+    state_args : ``dict`` (optional, default: ``{}``)
+        Arguments to be passed to
+        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
+        :class:`~graph_tool.inference.blockmodel.BlockState`.
+    g_orig : :class:`~graph_tool.Graph` (optional, default: ``None``)
+        Original graph, if ``g`` is used to initialize differently from a graph with no triadic closure edges.
+    ew : list of :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        List of edge property maps of ``g``, containing the initial weights
+        (counts) at each triadic generation.
+    ex : list of :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        List of edge property maps of ``g``, each containing a list of integers
+        with the ego graph memberships of every edge, for every triadic
+        generation.
+
+    References
+    ----------
+    .. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
+       community structure and triadic closure in networks", :arxiv:`2101.02510`
+    """
+
     def __init__(self, g, L=1, b=None, aE=numpy.nan, nested=True,
                  state_args={}, g_orig=None, ew=None, ex=None, **kwargs):
         self.g = g
@@ -356,7 +400,36 @@ class LatentClosureBlockState(LatentLayerBaseState):
         return S
 
     def sample_graph(self, sample_sbm=True, canonical_sbm=False,
-                     sample_params=False, canonical_closure=False):
+                     sample_params=True, canonical_closure=True):
+        """Sample graph from inferred model.
+
+        Parameters
+        ----------
+        sample_sbm : ``boolean`` (optional, default: ``True``)
+            If ``True``, the substrate network will be sampled anew from the SBM
+            parameters. Otherwise, it will be the same as the current posterior
+            state.
+        canonical_sbm : ``boolean`` (optional, default: ``False``)
+            If ``True``, the canonical SBM will be used, otherwise the
+            microcanonical SBM will be used.
+        sample_params : ``bool`` (optional, default: ``True``)
+            If ``True``, and ``canonical_sbm == True`` the count parameters
+            (edges between groups and node degrees) will be sampled from their
+            posterior distribution conditioned on the actual state. Otherwise,
+            their maximum-likelihood values will be used.
+        canonical_closure : ``boolean`` (optional, default: ``True``)
+            If ``True``, the canonical version of triadic clousre will be used
+            (i.e. conditioned on a probability), otherwise the microcanonical
+            version will be used (i.e. conditional on the count number).
+
+        Returns
+        -------
+        u : list :class:`~graph_tool.Graph`
+            Sampled graph, with internal edge
+            :class:`~graph_tool.EdgePropertyMap` ``"gen"``, containing the
+            triadic generation of each edge.
+
+        """
         if sample_sbm:
             if self.nested:
                 bstate = self.bstate.levels[0]
@@ -445,14 +518,19 @@ class LatentClosureBlockState(LatentLayerBaseState):
 
         Parameters
         ----------
-        g : :class:`~graph_tool.Graph` (optional, default: ``None``)
-            Previous marginal graph.
+        g : list of :class:`~graph_tool.Graph` (optional, default: ``None``)
+            Previous marginal graphs.
 
         Returns
         -------
-        g : :class:`~graph_tool.Graph`
-            New marginal graph, with internal edge :class:`~graph_tool.EdgePropertyMap`
-            ``"eprob"``, containing the marginal probabilities for each edge.
+        g : list :class:`~graph_tool.Graph`
+
+            New list of marginal graphs, each with internal
+            :class:`~graph_tool.EdgePropertyMap` ``"eprob"``, containing the
+            marginal probabilities for each edge, as well as
+            :class:`~graph_tool.VertexPropertyMap` ``"t"``, ``"m"``, ``"c"``,
+            containing the average number of closures, open triads, and fraction
+            of closed triads on each node.
 
         Notes
         -----
@@ -464,6 +542,8 @@ class LatentClosureBlockState(LatentLayerBaseState):
 
         where :math:`P(\boldsymbol A|\boldsymbol D)` is the posterior
         probability given the data.
+
+        This function returns a list with the marginal graphs for every layer.
 
         """
 
@@ -500,6 +580,63 @@ class LatentClosureBlockState(LatentLayerBaseState):
         return gs
 
 class MeasuredClosureBlockState(LatentClosureBlockState, UncertainBaseState):
+    r"""Inference state of a measured graph, using the stochastic block model with
+    triadic closure as a prior.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Measured graph.
+    n : :class:`~graph_tool.EdgePropertyMap`
+        Edge property map of type ``int``, containing the total number of
+        measurements for each edge.
+    x : :class:`~graph_tool.EdgePropertyMap`
+        Edge property map of type ``int``, containing the number of
+        positive measurements for each edge.
+    n_default : ``int`` (optional, default: ``1``)
+        Total number of measurements for each non-edge.
+    x_default : ``int`` (optional, default: ``0``)
+        Total number of positive measurements for each non-edge.
+    L : ``int`` (optional, default: ``1``)
+        Maximum number of triadic closure generations.
+    b : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
+        Inital partition (or hierarchical partition ``nested=True``).
+    fn_params : ``dict`` (optional, default: ``dict(alpha=1, beta=1)``)
+        Beta distribution hyperparameters for the probability of missing
+        edges (false negatives).
+    fp_params : ``dict`` (optional, default: ``dict(mu=1, nu=1)``)
+        Beta distribution hyperparameters for the probability of spurious
+        edges (false positives).
+    aE : ``float`` (optional, default: ``NaN``)
+        Expected total number of edges used in prior. If ``NaN``, a flat
+        prior will be used instead.
+    nested : ``boolean`` (optional, default: ``True``)
+        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        will be used, otherwise
+        :class:`~graph_tool.inference.blockmodel.BlockState`.
+    state_args : ``dict`` (optional, default: ``{}``)
+        Arguments to be passed to
+        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
+        :class:`~graph_tool.inference.blockmodel.BlockState`.
+    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+        If passed, this will be used to initialize the block state
+        directly.
+    g_orig : :class:`~graph_tool.Graph` (optional, default: ``None``)
+        Original graph, if ``g`` is used to initialize differently from a graph with no triadic closure edges.
+    ew : list of :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        List of edge property maps of ``g``, containing the initial weights
+        (counts) at each triadic generation.
+    ex : list of :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        List of edge property maps of ``g``, each containing a list of integers
+        with the ego graph memberships of every edge, for every triadic
+        generation.
+
+    References
+    ----------
+    .. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
+       community structure and triadic closure in networks", :arxiv:`2101.02510`
+    """
+
     def __init__(self, g, n, x, n_default=1, x_default=0, L=1, b=None,
                  fn_params=dict(alpha=1, beta=1), fp_params=dict(mu=1, nu=1),
                  aE=numpy.nan, nested=True, state_args={}, bstate=None,

@@ -44,7 +44,7 @@ maximum of this distribution,
 
 We can also make estimates :math:`\hat y` of arbitrary scalar network
 properties :math:`y(\boldsymbol A)` via posterior averages,
-      
+
 .. math::
    \begin{align}
        \hat y &= \sum_{\boldsymbol A, \boldsymbol b}y(\boldsymbol A)P(\boldsymbol A, \boldsymbol b | \boldsymbol{\mathcal{D}}),\\
@@ -58,7 +58,7 @@ the use of the SBM means that the reconstruction can take advantage of
 the *correlations* observed in the data to further inform it, which
 generally can lead to substantial improvements
 [peixoto-reconstructing-2018]_ [peixoto-network-2019]_.
-       
+
 In graph-tool there is support for reconstruction with the above
 framework for three measurement processes: 1. Repeated measurements with
 uniform errors (via
@@ -71,6 +71,8 @@ which we describe in the following.
 
 In addition, it is also possible to reconstruct networks from observed
 dynamical, as described in :ref:`reconstruction_dynamics`.
+
+.. _measured_networks:
 
 Measured networks
 +++++++++++++++++
@@ -124,7 +126,7 @@ In this situation the priors :math:`P(p|\alpha=1,\beta=1)` and
 Below, we illustrate how the reconstruction can be performed with a
 simple example, using
 :class:`~graph_tool.inference.uncertain_blockmodel.MeasuredBlockState`:
-      
+
 .. testsetup:: measured
 
    import os
@@ -158,7 +160,7 @@ simple example, using
    state = gt.MeasuredBlockState(g, n=n, n_default=1, x=x, x_default=0)
 
    # We will first equilibrate the Markov chain
-   gt.mcmc_equilibrate(state, wait=10000, mcmc_args=dict(niter=10))
+   gt.mcmc_equilibrate(state, wait=100, mcmc_args=dict(niter=10))
 
    # Now we collect the marginals for exactly 100,000 sweeps, at
    # intervals of 10 sweeps:
@@ -179,17 +181,17 @@ simple example, using
 
    eprob = u.ep.eprob
    print("Posterior probability of edge (11, 36):", eprob[u.edge(11, 36)])
-   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)])
+   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)] if u.edge(15, 73) is not None else 0.)
    print("Estimated average local clustering: %g ± %g" % (np.mean(cs), np.std(cs)))
 
 
 Which yields the following output:
-   
+
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 0.829782...
-   Posterior probability of non-edge (15, 73): 0.058105...
-   Estimated average local clustering: 0.572087 ± 0.003632...
+   Posterior probability of edge (11, 36): 0.490149...
+   Posterior probability of non-edge (15, 73): 0.024602...
+   Estimated average local clustering: 0.571138 ± 0.003013...
 
 We have a successful reconstruction, where both ambiguous adjacency
 matrix entries are correctly recovered. The value for the average
@@ -225,7 +227,7 @@ reconstructed network:
    # Disambiguate partitions and obtain marginals
    pmode = gt.PartitionModeState(bs, converge=True)
    pv = pmode.get_marginal(u)
-   
+
    edash = u.new_ep("vector<double>")
    edash[u.edge(15, 73)] = [.1, .1, 0]
    bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
@@ -289,7 +291,7 @@ with uniform error rates, as we see with the same example:
    state = gt.MixedMeasuredBlockState(g, n=n, n_default=1, x=x, x_default=0)
 
    # We will first equilibrate the Markov chain
-   gt.mcmc_equilibrate(state, wait=1000, mcmc_args=dict(niter=10))
+   gt.mcmc_equilibrate(state, wait=200, mcmc_args=dict(niter=10))
 
    # Now we collect the marginals for exactly 100,000 sweeps, at
    # intervals of 10 sweeps:
@@ -303,22 +305,22 @@ with uniform error rates, as we see with the same example:
 
    eprob = u.ep.eprob
    print("Posterior probability of edge (11, 36):", eprob[u.edge(11, 36)])
-   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)])
+   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)] if u.edge(15, 73) is not None else 0.)
    print("Estimated average local clustering: %g ± %g" % (np.mean(cs), np.std(cs)))
 
 Which yields:
-   
+
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 0.655165...
-   Posterior probability of non-edge (15, 73): 0.013301...
-   Estimated average local clustering: 0.553358 ± 0.01615...
+   Posterior probability of edge (11, 36): 0.051405...
+   Posterior probability of non-edge (15, 73): 0.029202...
+   Estimated average local clustering: 0.569803 ± 0.002879...
 
 The results are very similar to the ones obtained with the uniform model
 in this case, but can be quite different in situations where a large
 number of measurements has been performed (see
 [peixoto-reconstructing-2018]_ for details).
-    
+
 Extraneous error estimates
 ++++++++++++++++++++++++++
 
@@ -372,7 +374,7 @@ similar to the one considered previously, where two adjacency matrix
 entries with the same ambiguous edge probability :math:`Q_{ij}=1/2` are
 correctly reconstructed as edge and non-edge, due to the joint SBM
 inference:
-   
+
 .. testsetup:: uncertain
 
    import os
@@ -398,17 +400,17 @@ inference:
 
    e = g.add_edge(15, 73)
    q[e] = .5                     # ambiguous spurious edge
-   
+
    # We inititialize UncertainBlockState, assuming that each non-edge
    # has an uncertainty of q_default, chosen to preserve the expected
    # density of the original network:
 
    q_default = (E - q.a.sum()) / ((N * (N - 1))/2 - E)
-   
+
    state = gt.UncertainBlockState(g, q=q, q_default=q_default)
 
    # We will first equilibrate the Markov chain
-   gt.mcmc_equilibrate(state, wait=2000, mcmc_args=dict(niter=10))
+   gt.mcmc_equilibrate(state, wait=100, mcmc_args=dict(niter=10))
 
    # Now we collect the marginals for exactly 100,000 sweeps, at
    # intervals of 10 sweeps:
@@ -416,7 +418,7 @@ inference:
    u = None              # marginal posterior edge probabilities
    bs = []               # partitions
    cs = []               # average local clustering coefficient
-   
+
    def collect_marginals(s):
       global bs, u, cs
       u = s.collect_marginal(u)
@@ -429,34 +431,34 @@ inference:
 
    eprob = u.ep.eprob
    print("Posterior probability of edge (11, 36):", eprob[u.edge(11, 36)])
-   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)])
+   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)] if u.edge(15, 73) is not None else 0.)
    print("Estimated average local clustering: %g ± %g" % (np.mean(cs), np.std(cs)))
 
 The above yields the output:
-   
+
 .. testoutput:: uncertain
 
-   Posterior probability of edge (11, 36): 0.775777...
-   Posterior probability of non-edge (15, 73): 0.010001...
-   Estimated average local clustering: 0.523013 ± 0.017268...
+   Posterior probability of edge (11, 36): 0.516751...
+   Posterior probability of non-edge (15, 73): 0.0
+   Estimated average local clustering: 0.522627 ± 0.014965...
 
 The reconstruction is accurate, despite the two ambiguous entries having
 the same measurement probability. The reconstructed network is visualized below.
-    
+
 .. testcode:: uncertain
 
    # The maximum marginal posterior estimator can be obtained by
    # filtering the edges with probability larger than .5
 
    u = gt.GraphView(u, efilt=u.ep.eprob.fa > .5)
-                       
+
    # Mark the recovered true edges as red, and the removed spurious edges as green
    ecolor = u.new_ep("vector<double>", val=[0, 0, 0, .6])
    edash = u.new_ep("vector<double>")
    for e in u.edges():
        if g.edge(e.source(), e.target()) is None or (e.source(), e.target()) == (11, 36):
            ecolor[e] = [1, 0, 0, .6]
-       
+
    for e in g.edges():
        if u.edge(e.source(), e.target()) is None:
            ne = u.add_edge(e.source(), e.target())
@@ -501,7 +503,7 @@ heterogeneous density, such as strong community structure and broad
 degree distributions [peixoto-latent-2020]_. This can be incorporated
 into the scheme of Eq. :eq:`posterior-reconstruction` by considering
 the data to be the observed simple graph,
-:math:`\boldsymbol{\mathcal{D}} = \boldsymbol G`.  We proceed in same
+:math:`\boldsymbol{\mathcal{D}} = \boldsymbol G`. We proceed in same
 way as in the previous reconstruction scenarios, but using instead
 :class:`~graph_tool.inference.uncertain_blockmodel.LatentMultigraphBlockState`.
 
@@ -522,7 +524,7 @@ latent multiedges of a network of political books:
 
    u = None              # marginal posterior multigraph
    bs = []               # partitions
-   
+
    def collect_marginals(s):
       global bs, u
       u = s.collect_marginal_multigraph(u)
@@ -539,7 +541,7 @@ latent multiedges of a network of political books:
    wcount = u.ep.wcount
    for e in u.edges():
        ew[e] = (wcount[e].a * w[e].a).sum() / wcount[e].a.sum()
-   
+
    bstate = state.get_block_state()
    bstate = bstate.levels[0].copy(g=u)
 
@@ -550,7 +552,7 @@ latent multiedges of a network of political books:
    bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
                edge_pen_width=gt.prop_to_size(ew, .1, 8, power=1), edge_gradient=None,
                output="polbooks-erased-poisson.svg")
-   
+
 .. figure:: polbooks-erased-poisson.*
    :align: center
    :width: 450px
@@ -559,5 +561,165 @@ latent multiedges of a network of political books:
    political books, showing the marginal mean edge multiplicities as
    line thickness.  The pie fractions on the nodes correspond to the
    probability of being in group associated with the respective color.
+
+
+Latent triadic closures
++++++++++++++++++++++++
+
+Another useful reconstruction scenario is when we assume our observed
+network is the outcome of a mixture of different edge placement
+mechanisms. One example is the combination of triadic closure with
+community structure [peixoto-disentangling-2021]_. This approach can be
+used to separate the effects of triangle formation from node homophily,
+which are typically conflated. We proceed in same way as in the previous
+reconstruction scenarios, but using instead
+:class:`~graph_tool.inference.latent_layers.LatentClosureBlockState`.
+
+For example, in the following we will obtain the community structure and
+latent closure edges of a network of political books:
+
+.. testsetup:: latent-closure
+
+   import os
+   try:
+      os.chdir("demos/inference")
+   except FileNotFoundError:
+       pass
+   np.random.seed(43)
+   gt.seed_rng(45)
+
+.. testcode:: latent-closure
+
+   g = gt.collection.data["polbooks"]
+
+   state = gt.LatentClosureBlockState(g, L=10)
+
+   # We will first equilibrate the Markov chain
+   gt.mcmc_equilibrate(state, wait=100, mcmc_args=dict(niter=10))
+
+   # Now we collect the marginals for exactly 100,000 sweeps, at
+   # intervals of 10 sweeps:
+
+   us = None             # marginal posterior graphs
+   bs = []               # partitions
+   
+   def collect_marginals(s):
+      global bs, us
+      us = s.collect_marginal(us)
+      bstate = state.bstate
+      bs.append(bstate.levels[0].b.a.copy())
+
+   gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
+                       callback=collect_marginals)
+
+   u = us[0]             # marginal seminal edges
+   
+   # Disambiguate partitions and obtain marginals
+   pmode = gt.PartitionModeState(bs, converge=True)
+   pv = pmode.get_marginal(u)
+
+   bstate = state.bstate.levels[0].copy(g=u)
+
+   # edge width
+   ew = u.ep.eprob.copy()
+   ew.a = abs(ew.a - .5)
+
+   # get a color map
+   clrs = [(1, 0, 0, 1.0),
+           (0, 0, 0, 1.0)]
+   red_cm = matplotlib.colors.LinearSegmentedColormap.from_list("Set3", clrs)
+
+   # draw red edge last
+   eorder = u.ep.eprob.copy()
+   eorder.a *= -1
+
+   bstate.draw(pos=u.own_property(g.vp.pos), vertex_shape="pie", vertex_pie_fractions=pv,
+               edge_pen_width=gt.prop_to_size(ew, .1, 4, power=1),
+               edge_gradient=None, edge_color=u.ep.eprob, ecmap=red_cm,
+               eorder=eorder, output="polbooks-closure.svg")
+   
+.. figure:: polbooks-closure.*
+   :align: center
+   :width: 450px
+
+   Reconstructed degree-corrected SBM with latent closure edges for a
+   network of political books, showing the marginal probability of an
+   edge being due to triadic closure as the color red. The pie fractions
+   on the nodes correspond to the probability of being in group
+   associated with the respective color.
+
+
+Triadic closure can also be used to perform uncertain network
+reconstruction, using
+:class:`~graph_tool.inference.uncertain_blockmodel.MeasuredClosureBlockState`,
+in a manner analogous to what was done in :ref:`measured_networks`:
+
+.. testsetup:: measured-closure
+
+   import os
+   try:
+      os.chdir("demos/inference")
+   except FileNotFoundError:
+       pass
+   np.random.seed(43)
+   gt.seed_rng(45)
+
+.. testcode:: measured-closure
+
+   g = gt.collection.data["lesmis"].copy()
+
+   # pretend we have measured and observed each edge twice
+
+   n = g.new_ep("int", 2)   # number of measurements
+   x = g.new_ep("int", 2)   # number of observations
+
+   e = g.edge(11, 36)
+   x[e] = 1                 # pretend we have observed edge (11, 36) only once
+
+   e = g.add_edge(15, 73)
+   n[e] = 2                 # pretend we have measured non-edge (15, 73) twice,
+   x[e] = 1                 # but observed it as an edge once.
+
+   # We inititialize MeasuredBlockState, assuming that each non-edge has
+   # been measured only once (as opposed to twice for the observed
+   # edges), as specified by the 'n_default' and 'x_default' parameters.
+
+   state = gt.MeasuredClosureBlockState(g, n=n, n_default=1, x=x, x_default=0, L=10)
+
+   # We will first equilibrate the Markov chain
+   gt.mcmc_equilibrate(state, wait=100, mcmc_args=dict(niter=10))
+
+   # Now we collect the marginals for exactly 100,000 sweeps, at
+   # intervals of 10 sweeps:
+
+   us = None             # marginal posterior edge probabilities
+   bs = []               # partitions
+   cs = []               # average local clustering coefficient
+
+   def collect_marginals(s):
+      global us, bs, cs
+      us = s.collect_marginal(us)
+      bstate = s.get_block_state()
+      bs.append(bstate.levels[0].b.a.copy())
+      cs.append(gt.local_clustering(s.get_graph()).fa.mean())
+
+   gt.mcmc_equilibrate(state, force_niter=10000, mcmc_args=dict(niter=10),
+                       callback=collect_marginals)
+
+   u = us[-1]
+   eprob = u.ep.eprob
+   print("Posterior probability of edge (11, 36):", eprob[u.edge(11, 36)])
+   print("Posterior probability of non-edge (15, 73):", eprob[u.edge(15, 73)] if u.edge(15, 73) is not None else 0.)
+   print("Estimated average local clustering: %g ± %g" % (np.mean(cs), np.std(cs)))
+
+
+Which yields the following output:
+
+.. testoutput:: measured-closure
+
+   Posterior probability of edge (11, 36): 1.0
+   Posterior probability of non-edge (15, 73): 0.0
+   Estimated average local clustering: 0.573381 ± 0.002078...
+
 
 .. include:: _reconstruction_dynamics.rst
