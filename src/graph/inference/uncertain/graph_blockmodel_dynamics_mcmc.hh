@@ -135,82 +135,83 @@ struct MCMC
             size_t m;
             double x;
             std::tie(m, x) = node_state(get<0>(_e), get<1>(_e));
-            if (m > 0)
-            {
-                if (_xstep == 0 || coin(rng))
-                {
-                    if (coin(rng))
-                        return {-1, 0};
-                    return {1, 0};
-                }
-                if (_xlog)
-                {
-                    double p = 1 - exp(x);
-                    std::uniform_real_distribution<> u(std::max(0., p - _xstep),
-                                                       std::min(1., p + _xstep));
-                    p = u(rng);
-                    double nx = log1p(-p);
-                    return {0, nx - x};
-                }
-                else
-                {
-                    std::uniform_real_distribution<> u(std::max(-.5, x - _xstep),
-                                                       std::min(.5, x + _xstep));
-                    return {0, u(rng) - x};
-                }
-            }
-            else
-            {
-                if (_xstep == 0)
-                    return {1, _xdefault};
-                if (_xlog)
-                {
-                    std::uniform_real_distribution<> u(0, 1);
-                    return {1, log1p(-u(rng))};
-                }
-                else
-                {
-                    std::uniform_real_distribution<> u(-.5, .5);
-                    return {1, u(rng)};
-                }
-            }
-        }
 
-        double get_move_prob(int dm, double, int m, double x)
-        {
-            if (dm == -1)
+            int dm = 0;
+            if (coin(rng) || _xstep == 0)
             {
-                if (_xstep == 0)
-                    return (m > 0) ? 1/2. : 0;
-                return (m > 0) ? 1/4. : 0;
+                std::geometric_distribution<int> sample_m(1./(m + 2));
+                dm = sample_m(rng) - m;
             }
+
             if (dm == 0)
             {
-                if (_xstep == 0)
-                    return 0.;
-                if (m > 0)
+                if (m > 0 && _xstep > 0)
                 {
                     if (_xlog)
                     {
                         double p = 1 - exp(x);
-                        return (1/2.) / (std::min(1., p + _xstep) -
-                                         std::max(0., p - _xstep));
+                        std::uniform_real_distribution<> u(std::max(0., p - _xstep),
+                                                           std::min(1., p + _xstep));
+                        p = u(rng);
+                        double nx = log1p(-p);
+                        return {0, nx - x};
                     }
                     else
                     {
-                        return (1/2.) / (std::min(.5, x + _xstep) -
-                                         std::max(-.5, x - _xstep));
+                        std::uniform_real_distribution<> u(std::max(-.5, x - _xstep),
+                                                           std::min(.5, x + _xstep));
+                        return {0, u(rng) - x};
                     }
                 }
-                return 0;
+                return {0, .0};
             }
-            if (dm == 1)
+            else
             {
-                if (m > 0)
-                    return 1/4.;
-                return 1.;
+                if (m + dm == 0)
+                    return {dm, -x};
+                if (m == 0)
+                {
+                    if (_xstep == 0)
+                    {
+                        return {dm, _xdefault};
+                    }
+                    if (_xlog)
+                    {
+                        std::uniform_real_distribution<> u(0, 1);
+                        return {dm, log1p(-u(rng))};
+                    }
+                    else
+                    {
+                        std::uniform_real_distribution<> u(-.5, .5);
+                        return {dm, u(rng)};
+                    }
+                }
+                return {dm, 0.};
             }
-            return 0.;
+        }
+
+        double get_move_lprob(int dm, double dx, int m, double x)
+        {
+            size_t nm = m + dm;
+            double L = 0;
+            L = nm * safelog_fast(m + 1) - (nm + 1) * safelog_fast(m + 2) - log(2);
+
+            if (dm == 0)
+            {
+                L = log(.5 + exp(L));
+                if (dx == 0 || _xstep == 0)
+                    return L;
+                if (_xlog)
+                {
+                    double p = 1 - exp(x);
+                    L -= log(std::min(1., p + _xstep) - std::max(0., p - _xstep)) + log(2);
+                }
+                else
+                {
+                    L -= log(std::min(.5, x + _xstep) - std::max(-.5, x - _xstep)) + log(2);
+                }
+            }
+            return L;
         }
 
         std::tuple<double, double>
@@ -222,25 +223,45 @@ struct MCMC
             size_t u, v;
             std::tie(u, v) = get_edge();
 
-            double dS = 0;
-            if (dm == 0)
-                dS = _state.update_edge_dS(u, v, dx, _entropy_args);
-            else if (dm < 0)
-                dS = _state.remove_edge_dS(u, v, _entropy_args);
-            else
-                dS = _state.add_edge_dS(u, v, dx, _entropy_args);
-
             size_t m;
             double x;
             std::tie(m, x) = node_state(u, v);
+
+            double dS = 0;
+            if (dm == 0)
+            {
+                dS = _state.update_edge_dS(u, v, dx, _entropy_args);
+            }
+            else if (dm < 0)
+            {
+                dS = _state.remove_edge_dS(u, v, _entropy_args);
+                for (int i = 0; i < -dm-1; ++i)
+                {
+                    _state.remove_edge(u, v);
+                    dS += _state.remove_edge_dS(u, v, _entropy_args);
+                }
+                for (int i = 0; i < -dm-1; ++i)
+                    _state.add_edge(u, v, (i == 0) ? x : 0);
+            }
+            else
+            {
+                dS = _state.add_edge_dS(u, v, dx, _entropy_args);
+                for (int i = 0; i < dm-1; ++i)
+                {
+                    _state.add_edge(u, v, 0);
+                    dS += _state.add_edge_dS(u, v, 0, _entropy_args);
+                }
+                for (int i = 0; i < dm-1; ++i)
+                    _state.remove_edge(u, v);
+            }
 
             double a = 0;
             if (dm != 0)
                 a += (_edge_sampler.log_prob(u, v, m, dm) -
                       _edge_sampler.log_prob(u, v, m, 0));
 
-            a -= log(get_move_prob(dm, dx, m, x));
-            a += log(get_move_prob(-dm, -dx, m + dm, x + dx));
+            a -= get_move_lprob(dm, dx, m, x);
+            a += get_move_lprob(-dm, -dx, m + dm, x + dx);
 
             return std::make_tuple(dS, a);
         }
@@ -261,9 +282,15 @@ struct MCMC
                 size_t m = get<0>(node_state(u, v));
                 _edge_sampler.update_edge(u, v, m, dm);
                 if (dm < 0)
-                    _state.remove_edge(u, v);
+                {
+                    for (int i = 0; i < -dm; ++i)
+                        _state.remove_edge(u, v);
+                }
                 else
-                    _state.add_edge(u, v, dx);
+                {
+                    for (int i = 0; i < dm; ++i)
+                        _state.add_edge(u, v, (i == 0) ? dx : 0);
+                }
             }
         }
 
