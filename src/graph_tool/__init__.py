@@ -3,7 +3,7 @@
 #
 # graph_tool -- a general graph manipulation python module
 #
-# Copyright (C) 2006-2020 Tiago de Paula Peixoto <tiago@skewed.de>
+# Copyright (C) 2006-2021 Tiago de Paula Peixoto <tiago@skewed.de>
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the Free
@@ -90,7 +90,7 @@ Contents
 """
 
 __author__ = "Tiago de Paula Peixoto <tiago@skewed.de>"
-__copyright__ = "Copyright 2006-2020 Tiago de Paula Peixoto"
+__copyright__ = "Copyright 2006-2021 Tiago de Paula Peixoto"
 __license__ = "LGPL version 3 or above"
 __URL__ = "https://graph-tool.skewed.de"
 
