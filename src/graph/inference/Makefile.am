@@ -135,6 +135,7 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     uncertain/graph_blockmodel_dynamics_pseudo_ising_mcmc_h.hh \
     uncertain/graph_blockmodel_latent_closure.hh \
     uncertain/graph_blockmodel_latent_layers.hh \
+    uncertain/graph_blockmodel_latent_layers_mcmc.hh \
     uncertain/graph_blockmodel_measured.hh \
     uncertain/graph_blockmodel_uncertain.hh \
     uncertain/graph_blockmodel_uncertain_marginal.hh \
