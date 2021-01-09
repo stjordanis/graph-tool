@@ -651,7 +651,7 @@ latent closure edges of a network of political books:
 
 Triadic closure can also be used to perform uncertain network
 reconstruction, using
-:class:`~graph_tool.inference.uncertain_blockmodel.MeasuredClosureBlockState`,
+:class:`~graph_tool.inference.latent_layers.MeasuredClosureBlockState`,
 in a manner analogous to what was done in :ref:`measured_networks`:
 
 .. testsetup:: measured-closure
