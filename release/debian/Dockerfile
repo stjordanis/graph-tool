@@ -6,6 +6,7 @@ ARG BASE
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Berlin
+
 RUN apt-get update
 RUN apt-get -y dist-upgrade
 RUN apt-get -y install git dpkg-dev dh-make autotools-dev autoconf python3-dev python3-scipy libboost-dev libboost-graph-dev libboost-iostreams-dev libboost-python-dev libboost-context-dev libboost-coroutine-dev libboost-regex-dev libcgal-dev python3-cairo-dev libsparsehash-dev libcairomm-1.0-dev libffi-dev libexpat1-dev cdbs devscripts
@@ -34,6 +35,9 @@ RUN mkdir build
 RUN mv python3-graph-tool*.deb build/
 
 FROM $BASE
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Berlin
 
 RUN apt-get update
 RUN apt-get -y dist-upgrade
