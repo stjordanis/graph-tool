@@ -5,7 +5,7 @@ MAINTAINER Tiago de Paula Peixoto <tiago@skewed.de>
 
 RUN pacman -Sy
 RUN pacman -S pacman-contrib --noconfirm --disable-download-timeout
-RUN curl -s "https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 - > /etc/pacman.d/mirrorlist
+RUN curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 - > /etc/pacman.d/mirrorlist
 
 RUN pacman -Syu --noconfirm --disable-download-timeout
 RUN pacman -S binutils make gcc fakeroot --noconfirm --needed
