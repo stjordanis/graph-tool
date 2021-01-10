@@ -97,7 +97,7 @@ void gen_sbm(Graph& g, VProp b, IVec& rs, IVec& ss, FVec probs, VDProp in_deg,
         }
 
         size_t ers = (&r_sampler != &s_sampler) ? mrs : 2 * mrs;
-        if (!r_sampler.has_n(ers) || !s_sampler.has_n(ers))
+        if (micro_deg && (!r_sampler.has_n(ers) || !s_sampler.has_n(ers)))
             throw GraphException("Inconsistent SBM parameters: node degrees do not agree with matrix of edge counts between groups");
 
         for (size_t j = 0; j < mrs; ++j)

@@ -2348,13 +2348,9 @@ class BlockState(object):
                 probs[idx] = numpy.random.gamma(probs[idx] + 1, p/(p + 1))
                 for r in rs:
                     idx = self.b.fa == r
-                    er = probs[r,:].sum()
                     out_degs[idx] = numpy.random.dirichlet(out_degs[idx] + 1)
-                    out_degs[idx] = numpy.random.multinomial(int(er), out_degs[idx])
                     if in_degs is not None:
-                        er = probs[:,r].sum()
                         in_degs[idx] = numpy.random.dirichlet(in_degs[idx] + 1)
-                        in_degs[idx] = numpy.random.multinomial(int(er), in_degs[idx])
 
             g = generate_sbm(b=self.b.fa, probs=probs,
                              in_degs=in_degs, out_degs=out_degs,
