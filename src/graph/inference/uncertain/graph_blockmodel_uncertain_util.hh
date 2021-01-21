@@ -25,7 +25,7 @@ struct uentropy_args_t:
 };
 
 template <class T>
-T logsum(T a, T b)
+static T logsum(T a, T b)
 {
     return std::max(a, b) + log1p(exp(std::min(a, b) - std::max(a, b)));
 }
