@@ -28,9 +28,6 @@
 #   define CGAL_CFG_NO_TR1_ARRAY
 #   define CGAL_CFG_NO_TR1_TUPLE
 #endif
-#ifdef __clang__
-#   define CGAL_CFG_ARRAY_MEMBER_INITIALIZATION_BUG
-#endif
 
 
 #include <CGAL/version.h>
