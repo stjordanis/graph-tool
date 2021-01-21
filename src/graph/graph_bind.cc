@@ -25,14 +25,6 @@
 
 #include "random.hh"
 
-#ifdef HAVE_SCIPY // integration with scipy weave
-#include "weave/scxx/object.h"
-#include "weave/scxx/list.h"
-#include "weave/scxx/tuple.h"
-#include "weave/scxx/dict.h"
-#include "weave/scxx/str.h"
-#endif
-
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python/stl_iterator.hpp>
@@ -283,18 +275,6 @@ struct variant_from_python
         data->convertible = storage;
     }
 };
-
-// scipy weave integration
-#ifdef HAVE_SCIPY
-template <class ScxxType>
-struct scxx_to_python
-{
-    static PyObject* convert(const ScxxType& o)
-    {
-        return incref((PyObject*)(o));
-    }
-};
-#endif
 
 template <class T>
 struct integer_from_convertible
