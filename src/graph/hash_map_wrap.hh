@@ -318,19 +318,6 @@ public:
 #ifndef HAVE_SPARSEHASH
     void resize(size_t n) { base_t::reserve(n); }
 #endif
-
-#if !defined(HAVE_SPARSEHASH) && defined(__clang__)
-    // this is a workaround for a bug in clang:
-    // https://llvm.org/bugs/show_bug.cgi?id=24770
-    // https://llvm.org/bugs/show_bug.cgi?id=14858
-    Value& operator[](const Key& key )
-    {
-        auto iter = this->find(key);
-        if (iter == this->end())
-            iter = this->insert({key, Value()}).first;
-        return iter->second;
-    }
-#endif
 };
 
 #endif // HASH_MAP_WRAP_HH
