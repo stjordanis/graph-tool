@@ -10,6 +10,8 @@
 
 #include "config.h"
 
+#include "../support/util.hh"
+
 namespace graph_tool
 {
 using namespace boost;
@@ -23,12 +25,6 @@ struct uentropy_args_t:
     bool latent_edges;
     bool density;
 };
-
-template <class T>
-static T logsum(T a, T b)
-{
-    return std::max(a, b) + log1p(exp(std::min(a, b) - std::max(a, b)));
-}
 
 template <class State, class... X>
 double get_edge_prob(State& state, size_t u, size_t v, const uentropy_args_t& ea,
@@ -57,7 +53,7 @@ double get_edge_prob(State& state, size_t u, size_t v, const uentropy_args_t& ea
         state.add_edge(u, v, x...);
         S += dS;
         double old_L = L;
-        L = logsum(L, -S);
+        L = log_sum_exp(L, -S);
         ne++;
         delta = abs(L-old_L);
     }

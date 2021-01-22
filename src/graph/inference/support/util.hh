@@ -1,3 +1,4 @@
+
 // graph-tool -- a general graph modification and manipulation thingy
 //
 // Copyright (C) 2006-2021 Tiago de Paula Peixoto <tiago@skewed.de>
@@ -76,11 +77,13 @@ inline auto lbeta(T x, T y)
 }
 
 template <class T>
-T log_sum(T a, T b)
+[[gnu::const]]
+inline T log_sum_exp(T a, T b)
 {
-    if (a < b)
-        std::swap(a, b);
-    return a + std::log1p(exp(b-a));
+    if (a >= b)
+        return a + std::log1p(exp(b-a));
+    else
+        return b + std::log1p(exp(a-b));
 }
 
 template <class Vec, class PosMap, class Val>

@@ -44,9 +44,9 @@ void init_q_cache(size_t n_max)
         __q_cache[n][1] = 0;
         for (size_t k = 2; k <= n; ++k)
         {
-            __q_cache[n][k] = log_sum(__q_cache[n][k], __q_cache[n][k - 1]);
+            __q_cache[n][k] = log_sum_exp(__q_cache[n][k], __q_cache[n][k - 1]);
             if (n > k)
-                __q_cache[n][k] = log_sum(__q_cache[n][k], __q_cache[n - k][k]);
+                __q_cache[n][k] = log_sum_exp(__q_cache[n][k], __q_cache[n - k][k]);
         }
     }
 }

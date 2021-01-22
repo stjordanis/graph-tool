@@ -253,7 +253,7 @@ struct MCMC
 
                 if (!std::isinf(beta) && !std::isinf(ddS))
                 {
-                    double Z = log_sum(0., -ddS * beta);
+                    double Z = log_sum_exp(0., -ddS * beta);
                     p[0] = -ddS * beta - Z;
                     p[1] = -Z;
                 }
@@ -398,7 +398,7 @@ struct MCMC
                 ps[1] = _state.virtual_move(v, _state._b[v], rt[1],
                                             _entropy_args);;
 
-                double Z = log_sum(ps[0], ps[1]);
+                double Z = log_sum_exp(ps[0], ps[1]);
                 double p0 = ps[0] - Z;
                 std::bernoulli_distribution sample(exp(p0));
                 if (sample(rng))
@@ -490,7 +490,7 @@ struct MCMC
                 ps[1] = _state.virtual_move(v, _state._b[v], rt[1],
                                             _entropy_args);;
 
-                double Z = log_sum(ps[0], ps[1]);
+                double Z = log_sum_exp(ps[0], ps[1]);
                 double p0 = ps[0] - Z;
                 std::bernoulli_distribution sample(exp(p0));
                 if (sample(rng))
@@ -584,7 +584,7 @@ struct MCMC
                 if (!std::isinf(ddS))
                 {
                     ddS *= _beta;
-                    double Z = log_sum(0., -ddS);
+                    double Z = log_sum_exp(0., -ddS);
 
                     if (tbv == nbv)
                     {
