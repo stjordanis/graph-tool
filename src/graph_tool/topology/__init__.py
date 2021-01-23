@@ -2500,7 +2500,9 @@ def all_circuits(g, unique=False):
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
-        A directed graph to be used.
+        A directed graph to be used. (Undirected graphs are also accepted, in
+        which case each undirected edge is assumed to be equivalent to two
+        directed edges in both directions.)
     unique : ``bool`` (optional, default: None)
         If ``True``, parallel edges and self-loops will be ignored.
 
@@ -2540,8 +2542,6 @@ def all_circuits(g, unique=False):
 
     """
 
-    if not g.is_directed():
-        raise ValueError("The graph must be directed.")
     circuits_iterator = libgraph_tool_topology.get_all_circuits(g._Graph__graph,
                                                                 unique)
     return circuits_iterator
