@@ -83,6 +83,7 @@ libgraph_tool_core_la_workaround_HEADERS = \
     ../boost-workaround/boost/graph/detail/read_graphviz_new.hpp \
     ../boost-workaround/boost/graph/graphml.hpp \
     ../boost-workaround/boost/graph/graphviz.hpp \
+    ../boost-workaround/boost/graph/hawick_circuits.hpp \
     ../boost-workaround/boost/graph/isomorphism.hpp \
     ../boost-workaround/boost/graph/kamada_kawai_spring_layout.hpp \
     ../boost-workaround/boost/graph/maximum_weighted_matching.hpp \
