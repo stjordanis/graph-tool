@@ -2511,8 +2511,9 @@ def all_circuits(g, unique=False):
 
     Notes
     -----
-    This algorithm [hawick-enumerating-2008]_ runs in worst time
-    :math:`O[(V + E)(C + 1)]`, where :math:`C` is the number of circuits.
+    This algorithm [johnson-finding-1975]_[hawick-enumerating-2008]_ runs in
+    worst time :math:`O[(V + E)(C + 1)]`, where :math:`C` is the number of
+    circuits.
 
     Examples
     --------
@@ -2529,6 +2530,8 @@ def all_circuits(g, unique=False):
 
     References
     ----------
+    .. [johnson-finding-1975] D.B. Johnson, "Finding all the elementary circuits of a directed graph",
+       SIAM Journal on Computing, 1975. :doi:`10.1137/0204007`
     .. [hawick-enumerating-2008] K.A. Hawick and H.A. James, "Enumerating
        Circuits and Loops in Graphs with Self-Arcs and Multiple-Arcs.",
        In Proceedings of FCS. 2008, 14-20,

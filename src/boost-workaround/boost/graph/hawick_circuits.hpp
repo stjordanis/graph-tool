@@ -217,20 +217,20 @@ namespace hawick_circuits_detail
         }
 
         //! @internal Main procedure as described in the paper.
-        void circuit(Vertex start, Vertex vi)
+        void circuit(Vertex start)
         {
             // Cache some values that are used more than once in the function.
             VertexIndex const index_of_start = index_of(start);
 
-            std::vector<decltype(GetAdjacentVertices()(vi, graph_))> astack;
+            std::vector<decltype(GetAdjacentVertices()(start, graph_))> astack;
             std::vector<std::tuple<bool, AdjacencyIterator, AdjacencyIterator>> wstack;
             std::vector<Vertex> stack;
 
-            astack.push_back(GetAdjacentVertices()(vi, graph_));
+            astack.push_back(GetAdjacentVertices()(start, graph_));
             wstack.emplace_back(false, boost::begin(astack.back()),
                                 boost::end(astack.back()));
-            stack.push_back(vi);
-            block(vi);
+            stack.push_back(start);
+            block(start);
 
             while (!wstack.empty())
             {
@@ -308,7 +308,7 @@ namespace hawick_circuits_detail
         }
 
     public:
-        void operator()(Vertex start) { circuit(start, start); }
+        void operator()(Vertex start) { circuit(start); }
 
     private:
         Graph const& graph_;
