@@ -267,12 +267,6 @@ void parallel_loop(Container&& v, F&& f)
 
 } // namespace graph_tool
 
-namespace std
-{
-// STL omission?
-inline bool max(const bool& a, const bool& b) { return a || b; }
-}
-
 //
 // Data type string representation
 // ===============================

@@ -46,7 +46,7 @@ struct do_maximal_vertex_set
         {
             vlist.push_back(*v);
             mvs[*v] = marked[*v] = false;
-            max_deg = max(out_degree(*v, g), max_deg);
+            max_deg = max(static_cast<double>(out_degree(*v, g)), max_deg);
         }
 
         vector<vertex_t> selected, tmp;
@@ -115,7 +115,8 @@ struct do_maximal_vertex_set
                          #pragma omp critical (tmp)
                          {
                              tmp_.push_back(v);
-                             tmp_max_deg_ = max(tmp_max_deg_, out_degree(v, g));
+                             tmp_max_deg_ = max(tmp_max_deg_,
+                                 static_cast<double>(out_degree(v, g)));
                          }
                      }
                  });
@@ -158,7 +159,8 @@ struct do_maximal_vertex_set
                          #pragma omp critical (tmp)
                          {
                              tmp_.push_back(v);
-                             tmp_max_deg_ = max(tmp_max_deg_, out_degree(v, g));
+                             tmp_max_deg_ = max(tmp_max_deg_,
+                                 static_cast<double>(out_degree(v, g)));
                          }
                      }
                      marked[v] = false;
