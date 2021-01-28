@@ -904,7 +904,7 @@ struct MCMC
             }
 
             if (move == move_t::null)
-                return {_null_move, std::max(1, _nmoves)};
+                return {_null_move, _nmoves ? _nmoves : 1};
 
             _move = move;
 

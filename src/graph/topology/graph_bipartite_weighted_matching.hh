@@ -313,7 +313,8 @@ void maximum_bipartite_weighted_imperfect_matching(Graph& g,
         max_weight = 0;
     for (auto e : edges_range(g))
     {
-        max_weight = std::max(max_weight, std::abs(weight_t(get(weight, e))));
+        max_weight = std::max(max_weight,
+            weight_t(std::abs(weight_t(get(weight, e)))));
 
         auto ne = add_edge(vmap[source(e, g)],
                            vmap[target(e, g)], u);
