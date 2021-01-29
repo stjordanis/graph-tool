@@ -24,7 +24,6 @@
 
 #include "graph_tool.hh"
 #include "../support/graph_state.hh"
-#include "graph_blockmodel_latent_layers.hh"
 #include "graph_blockmodel_sample_edge.hh"
 
 namespace std

@@ -33,7 +33,6 @@
 #include <boost/variant.hpp>
 #include <boost/mpl/bool_fwd.hpp>
 #include "graph_properties.hh"
-#include "graph_exceptions.hh"
 
 namespace graph_tool
 {

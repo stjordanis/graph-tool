@@ -18,8 +18,6 @@
 #ifndef GRAPH_PROPERTIES_COPY_HH
 #define GRAPH_PROPERTIES_COPY_HH
 
-#include "graph.hh"
-#include "graph_filtering.hh"
 #include "graph_properties.hh"
 #include "graph_util.hh"
 #include "hash_map_wrap.hh"

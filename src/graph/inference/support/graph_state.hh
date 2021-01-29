@@ -28,7 +28,6 @@
 #include <boost/preprocessor/arithmetic/dec.hpp>
 #include <boost/preprocessor/seq/transform.hpp>
 #include <boost/preprocessor/seq/filter.hpp>
-#include <boost/preprocessor/comparison/equal.hpp>
 #include <boost/preprocessor/seq/first_n.hpp>
 
 #include "graph.hh"

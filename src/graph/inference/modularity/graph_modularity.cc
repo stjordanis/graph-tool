@@ -16,7 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "graph_tool.hh"
-#include "random.hh"
 
 #include <boost/python.hpp>
 

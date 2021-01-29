@@ -22,7 +22,6 @@
 
 #include <vector>
 
-#include "graph_blockmodel_dynamics.hh"
 #include "graph_python_interface.hh"
 
 namespace graph_tool
