@@ -22,10 +22,7 @@
 
 #include <vector>
 
-#include "../../idx_map.hh"
 #include "../support/graph_state.hh"
-#include "../blockmodel/graph_blockmodel_util.hh"
-#include "graph_blockmodel_uncertain_util.hh"
 #include <boost/range/counting_range.hpp>
 
 namespace graph_tool

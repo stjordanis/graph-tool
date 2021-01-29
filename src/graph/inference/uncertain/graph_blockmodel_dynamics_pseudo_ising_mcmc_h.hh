@@ -24,7 +24,6 @@
 
 #include "graph_tool.hh"
 #include "../support/graph_state.hh"
-#include "graph_blockmodel_dynamics.hh"
 
 namespace graph_tool
 {

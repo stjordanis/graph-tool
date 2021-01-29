@@ -18,16 +18,12 @@
 #ifndef GRAPH_PRICE_HH
 #define GRAPH_PRICE_HH
 
-#include <iostream>
 #include <boost/functional/hash.hpp>
 #include "graph_util.hh"
 #include "random.hh"
 
 #include "idx_map.hh"
 #include "dynamic_sampler.hh"
-
-#include <map>
-#include <iostream>
 
 namespace graph_tool
 {

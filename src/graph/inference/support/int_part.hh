@@ -12,8 +12,6 @@
 
 #include <boost/multi_array.hpp>
 
-#include "cache.hh"
-
 namespace graph_tool
 {
 using namespace boost;

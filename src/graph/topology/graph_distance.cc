@@ -23,7 +23,6 @@
 #include "numpy_bind.hh"
 #include "hash_map_wrap.hh"
 #include "coroutine.hh"
-#include "graph_python_interface.hh"
 #include "../generation/sampler.hh"
 
 #include <boost/graph/breadth_first_search.hpp>
