@@ -328,9 +328,8 @@ def mutual_information(x, y, norm=False):
     MI /= N
     MI += np.log(N)
     if norm:
-        N = mrs.sum()
-        Hx = -((nr * np.log(nr))[part == 0]).sum() + N * np.log(N)
-        Hy = -((nr * np.log(nr))[part == 1]).sum() + N * np.log(N)
+        Hx = -((nr * np.log(nr))[part == 0]).sum() / N + np.log(N)
+        Hy = -((nr * np.log(nr))[part == 1]).sum() / N + np.log(N)
         MI /= (Hx + Hy)/2
     return float(MI)
 
