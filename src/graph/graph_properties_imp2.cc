@@ -53,19 +53,6 @@ void operator*=(std::vector<Val1>& v1, const std::vector<Val2>& v2)
         v1[i] *= v2[i];
 }
 
-template <class Val1, class Val2>
-bool operator<(const std::vector<Val1>& v1, const std::vector<Val2>& v2)
-{
-    if (v1.size() != v2.size())
-        return v1.size() < v2.size();
-    for (size_t i = 0; i < v2.size(); ++i)
-    {
-        if (v1[i] < v2[i])
-            return true;
-    }
-    return false;
-}
-
 struct SumOp
 {
     template <class Graph, class Vertex, class EProp, class VProp>
