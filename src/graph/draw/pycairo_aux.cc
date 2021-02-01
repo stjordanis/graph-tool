@@ -21,18 +21,10 @@
 
 #include PYCAIRO_HEADER
 
-#if PY_MAJOR_VERSION < 3
-static Pycairo_CAPI_t *Pycairo_CAPI = nullptr;
-#endif
-
 extern "C"
 PyObject* gt_PycairoContext_FromContext(cairo_t *ctx, PyTypeObject *type,
                                         PyObject *base)
 {
-#if PY_MAJOR_VERSION < 3
-    if (Pycairo_CAPI == nullptr)
-        Pycairo_IMPORT;
-#endif
     return PycairoContext_FromContext(ctx, type, base);
 }
 
