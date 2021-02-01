@@ -17,14 +17,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h> // for FILE
-#include <boost/version.hpp>
-#if (BOOST_VERSION >= 104000)
-#   include <boost/property_map/property_map.hpp>
-#   include <boost/property_map/dynamic_property_map.hpp>
-#else
-#   include <boost/property_map.hpp>
-#   include <boost/dynamic_property_map.hpp>
-#endif
+#include <boost/property_map/property_map.hpp>
+#include <boost/property_map/dynamic_property_map.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/properties.hpp>

@@ -26,12 +26,7 @@
 #include <boost/python/extract.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <boost/version.hpp>
-#if (BOOST_VERSION >= 104000)
-#   include <boost/property_map/property_map.hpp>
-#else
-#   include <boost/property_map.hpp>
-#endif
+#include <boost/property_map/property_map.hpp>
 #include "fast_vector_property_map.hh"
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>

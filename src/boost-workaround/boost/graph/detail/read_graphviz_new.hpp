@@ -29,11 +29,7 @@
 #define BOOST_READ_GRAPHVIZ_NEW_HPP
 
 #include <boost/ref.hpp>
-#if (BOOST_VERSION >= 104000)
-#   include <boost/property_map/dynamic_property_map.hpp>
-#else
-#   include <boost/dynamic_property_map.hpp>
-#endif
+#include <boost/property_map/dynamic_property_map.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/detail/workaround.hpp>
 #include <algorithm>

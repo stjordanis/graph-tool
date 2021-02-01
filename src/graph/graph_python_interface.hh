@@ -34,12 +34,7 @@ namespace std
 
 #include <boost/graph/graph_traits.hpp>
 
-#include <boost/version.hpp>
-#if (BOOST_VERSION >= 104000)
-#   include <boost/property_map/dynamic_property_map.hpp>
-#else
-#   include <boost/dynamic_property_map.hpp>
-#endif
+#include <boost/property_map/dynamic_property_map.hpp>
 
 #include "graph.hh"
 #include "graph_filtering.hh"
