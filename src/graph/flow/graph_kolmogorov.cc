@@ -48,13 +48,8 @@ min(const T1& v1, const T2& v2)
 using namespace graph_tool;
 using namespace boost;
 
-#if (BOOST_VERSION >= 104400)
-# include <boost/graph/boykov_kolmogorov_max_flow.hpp>
-# define KOLMOGOROV_MAX_FLOW boost::boykov_kolmogorov_max_flow
-#else
-# include <boost/graph/kolmogorov_max_flow.hpp>
-# define KOLMOGOROV_MAX_FLOW boost::kolmogorov_max_flow
-#endif
+#include <boost/graph/boykov_kolmogorov_max_flow.hpp>
+#define KOLMOGOROV_MAX_FLOW boost::boykov_kolmogorov_max_flow
 
 struct get_kolmogorov_max_flow
 {

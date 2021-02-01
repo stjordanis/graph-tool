@@ -25,12 +25,7 @@
 //         Ronald Garcia
 //
 
-#include <boost/version.hpp>
-#if (BOOST_VERSION >= 104000)
-#   include <boost/property_map/dynamic_property_map.hpp>
-#else
-#   include <boost/dynamic_property_map.hpp>
-#endif
+#include <boost/property_map/dynamic_property_map.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <string>
 #include <vector>
