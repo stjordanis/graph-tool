@@ -725,14 +725,9 @@ public:
         _s.read(&buf[0], n);
         buf.resize(_s.gcount());
 
-#if (PY_MAJOR_VERSION >= 3)
-        // in python 3 we need to construct a 'bytes' instance
         PyObject* bytes = PyBytes_FromStringAndSize(&buf[0], buf.size());
         boost::python::handle<> x(bytes);
         boost::python::object pbuf(x);
-#else
-        boost::python::str pbuf(buf);
-#endif
         return pbuf;
     }
 
