@@ -40,11 +40,6 @@ point_t interpolate(const point_t& p1, const point_t& p2, double r = 0.5)
     return ret;
 }
 
-double dist(point_t& p1, point_t& p2)
-{
-    return sqrt(pow(p1.first - p2.first, 2) + pow(p1.second - p2.second, 2));
-}
-
 void to_bezier(const vector<point_t> &x, vector<point_t>& ncp)
 {
     vector<point_t> cp(x.size() + 6);
