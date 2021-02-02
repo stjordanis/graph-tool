@@ -679,7 +679,7 @@ private:
 };
 
 template <class T>
-double l2cosh(T x) // log(exp(x) + exp(-x))
+static double l2cosh(T x) // log(exp(x) + exp(-x))
 {
     if (x > 0)
         return x + log1p(exp(-2*x)); // exp(x) * (1 + exp(-2x))
@@ -688,7 +688,7 @@ double l2cosh(T x) // log(exp(x) + exp(-x))
 }
 
 template <class T>
-double l1p2cosh(T x) // log(1 + exp(x) + exp(-x))
+static double l1p2cosh(T x) // log(1 + exp(x) + exp(-x))
 {
     if (x > 0)
         return x + log1p(exp(-x + log1p(exp(-x)))); // exp(x) * (1 + exp(-x)(1 + exp(-x)))

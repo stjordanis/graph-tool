@@ -33,12 +33,12 @@ using namespace boost;
 using namespace std;
 
 template <size_t n, typename... T>
-typename std::enable_if<(n >= sizeof...(T))>::type
+static typename std::enable_if<(n >= sizeof...(T))>::type
     print_tuple(std::ostream&, const std::tuple<T...>&)
 {}
 
 template <size_t n, typename... T>
-typename std::enable_if<(n < sizeof...(T))>::type
+static typename std::enable_if<(n < sizeof...(T))>::type
     print_tuple(std::ostream& os, const std::tuple<T...>& tup)
 {
     if (n != 0)

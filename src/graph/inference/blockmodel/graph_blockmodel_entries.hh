@@ -82,19 +82,19 @@ VAdapter<PMap> make_vadapter(std::vector<PMap>& v,
 
 // tuple utils
 template <size_t i, class T, class OP>
-void tuple_op_imp(T&, OP&&)
+static void tuple_op_imp(T&, OP&&)
 {
 }
 
 template <size_t i, class T, class OP, class Ti, class... Ts>
-void tuple_op_imp(T& tuple, OP&& op, Ti&& v, Ts&&... vals)
+static void tuple_op_imp(T& tuple, OP&& op, Ti&& v, Ts&&... vals)
 {
     op(get<i>(tuple), std::forward<Ti>(v));
     tuple_op_imp<i+1>(tuple, std::forward<OP>(op), std::forward<Ts>(vals)...);
 }
 
 template <class OP, class T, class... Ts>
-[[gnu::flatten]]
+[[gnu::flatten]] static
 void tuple_op(T& tuple, OP&& op, Ts&&... vals)
 {
     tuple_op_imp<0>(tuple, std::forward<OP>(op), std::forward<Ts>(vals)...);

@@ -31,7 +31,7 @@ using namespace boost;
 using namespace graph_tool;
 
 template <class Val1, class Val2>
-void operator+=(std::vector<Val1>& v1, const std::vector<Val2>& v2)
+static void operator+=(std::vector<Val1>& v1, const std::vector<Val2>& v2)
 {
     if (v2.size() > v1.size())
         v1.resize(v2.size());
@@ -39,13 +39,13 @@ void operator+=(std::vector<Val1>& v1, const std::vector<Val2>& v2)
         v1[i] += v2[i];
 }
 
-void operator*=(std::string&, const std::string&)
+static void operator*=(std::string&, const std::string&)
 {
     throw GraphException("Cannot multiply strings.");
 }
 
 template <class Val1, class Val2>
-void operator*=(std::vector<Val1>& v1, const std::vector<Val2>& v2)
+static void operator*=(std::vector<Val1>& v1, const std::vector<Val2>& v2)
 {
     if (v2.size() > v1.size())
         v1.resize(v2.size());

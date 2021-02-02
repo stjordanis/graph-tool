@@ -76,7 +76,7 @@ python::object lexical_cast<python::object,string>(const string& ps)
 
 namespace python
 {
-std::ostringstream& operator<<(std::ostringstream& stream, const boost::python::object& o)
+static std::ostringstream& operator<<(std::ostringstream& stream, const boost::python::object& o)
 {
     stream << base64_encode(lexical_cast<string>(o));
     return stream;

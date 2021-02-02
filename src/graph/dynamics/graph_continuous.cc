@@ -96,7 +96,7 @@ struct add_ptr
 
 
 template <class State>
-void export_cstate()
+static void export_cstate()
 {
     mpl::for_each<all_graph_views, add_ptr>
         ([](auto g)

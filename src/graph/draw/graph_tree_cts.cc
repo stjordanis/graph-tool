@@ -32,7 +32,7 @@ using namespace graph_tool;
 
 typedef pair<double, double> point_t;
 
-point_t interpolate(const point_t& p1, const point_t& p2, double r = 0.5)
+static point_t interpolate(const point_t& p1, const point_t& p2, double r = 0.5)
 {
     point_t ret;
     ret.first = (1 - r) * p1.first + p2.first * r;
@@ -40,7 +40,7 @@ point_t interpolate(const point_t& p1, const point_t& p2, double r = 0.5)
     return ret;
 }
 
-void to_bezier(const vector<point_t> &x, vector<point_t>& ncp)
+static void to_bezier(const vector<point_t> &x, vector<point_t>& ncp)
 {
     vector<point_t> cp(x.size() + 6);
     for (size_t i = 0; i < 3; ++i)
@@ -71,7 +71,7 @@ void to_bezier(const vector<point_t> &x, vector<point_t>& ncp)
     }
 }
 
-void transform(vector<point_t>& cp)
+static void transform(vector<point_t>& cp)
 {
     point_t origin = cp[0];
     for (auto& xy : cp)
@@ -187,7 +187,7 @@ void graph_path(Graph& g, size_t s, size_t t, vector<size_t>& path)
 }
 
 template<class T>
-void pack(vector<point_t>& cp, vector<T>& ncp)
+static void pack(vector<point_t>& cp, vector<T>& ncp)
 {
     ncp.resize(cp.size() * 2);
     for (size_t i = 0; i < cp.size(); ++i)

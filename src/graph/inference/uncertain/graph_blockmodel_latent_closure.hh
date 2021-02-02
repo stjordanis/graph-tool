@@ -62,7 +62,7 @@ void iter_out_neighbors(size_t v, Graphs& gs, size_t l,
 }
 
 template <class V>
-bool cmp_m(const V& m1, const V& m2)
+static bool cmp_m(const V& m1, const V& m2)
 {
     set<int> s1(m1.begin(), m1.end());
     set<int> s2(m2.begin(), m2.end());

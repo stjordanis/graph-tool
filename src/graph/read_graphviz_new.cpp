@@ -102,7 +102,7 @@ namespace read_graphviz_detail {
     }
   };
 
-  bad_graphviz_syntax lex_error(const std::string& errmsg, char bad_char) {
+  static bad_graphviz_syntax lex_error(const std::string& errmsg, char bad_char) {
     if (bad_char == '\0') {
       return bad_graphviz_syntax(errmsg + " (at end of input)");
     } else {
