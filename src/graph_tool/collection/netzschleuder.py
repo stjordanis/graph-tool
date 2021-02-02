@@ -14,6 +14,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import urllib.request
+import urllib.parse
 import base64
 import contextlib
 import json
@@ -55,11 +56,13 @@ def get_ns_network(k, token=None):
     if isinstance(k, str):
         net = k.split("/")
         if len(net) == 1:
-            url = f"{url_prefix}/net/{k}/files/network.gt.zst"
+            url = f"net/{k}/files/network.gt.zst"
         else:
-            url = f"{url_prefix}/net/{net[0]}/files/{net[1]}.gt.zst"
+            url = f"net/{net[0]}/files/{net[1]}.gt.zst"
     else:
-        url = f"{url_prefix}/net/{k[0]}/files/{k[1]}.gt.zst"
+        url = f"net/{k[0]}/files/{k[1]}.gt.zst"
+
+    url = f"{url_prefix}/{urllib.parse.quote(url)}"
 
     with open_ns_file(url, token) as f:
         try:
@@ -72,13 +75,9 @@ def get_ns_network(k, token=None):
     return g
 
 def get_ns_info(k):
-
-    url = f"{url_prefix}/api/net/{k}"
-
+    url = f"{url_prefix}/api/net/{urllib.parse.quote(k)}"
     with open_ns_file(url) as f:
         return json.load(f)
-
-
 
 class LazyNSDataDict(dict):
 
