@@ -31,7 +31,7 @@ using namespace boost;
 // we need a min() function with arguments of different types
 
 template <class T1, class T2>
-typename boost::mpl::if_<
+static typename boost::mpl::if_<
     typename boost::mpl::or_<typename std::is_floating_point<T1>::type,
                              typename std::is_floating_point<T2>::type>::type,
     double, int>::type

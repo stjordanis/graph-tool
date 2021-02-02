@@ -121,7 +121,7 @@ struct add_ptr
 };
 
 template <class State>
-void export_state()
+static void export_state()
 {
     mpl::for_each<all_graph_views, add_ptr>
         ([](auto g)
@@ -132,7 +132,7 @@ void export_state()
 }
 
 template <template <bool...> class Base, bool... As>
-void export_SI_state()
+static void export_SI_state()
 {
     export_state<Base<As..., false, false>>();
     export_state<Base<As..., true, false>>();

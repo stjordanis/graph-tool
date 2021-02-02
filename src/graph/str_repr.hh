@@ -64,23 +64,23 @@ std::string print_float(Val val)
     return s.str();
 }
 
-int scan_float_dispatch(const char* str, float& val)
+static int scan_float_dispatch(const char* str, float& val)
 {
     return sscanf(str, "%a", &val);
 }
 
-int scan_float_dispatch(const char* str, double& val)
+static int scan_float_dispatch(const char* str, double& val)
 {
     return sscanf(str, "%la", &val);
 }
 
-int scan_float_dispatch(const char* str, long double& val)
+static int scan_float_dispatch(const char* str, long double& val)
 {
     return sscanf(str, "%La", &val);
 }
 
 template <class Val>
-int scan_float(const char* str, Val& val)
+static int scan_float(const char* str, Val& val)
 {
     char* locale = setlocale(LC_NUMERIC, NULL);
     setlocale(LC_NUMERIC, "C");

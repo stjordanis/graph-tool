@@ -226,7 +226,7 @@ protected:
 
 
 template <class T>
-double l2sinha(T x) // log((exp(x) - exp(-x))/x)
+static double l2sinha(T x) // log((exp(x) - exp(-x))/x)
 {
     x = abs(x);
     if (x < 1e-8)

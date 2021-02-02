@@ -34,7 +34,7 @@ using namespace boost;
 using namespace graph_tool;
 
 template <class T>
-python::object operator |(const python::object& a, const T& b)
+static python::object operator |(const python::object& a, const T& b)
 {
     return a / b;
 }

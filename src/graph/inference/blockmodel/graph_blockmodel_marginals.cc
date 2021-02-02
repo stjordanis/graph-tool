@@ -263,7 +263,7 @@ public:
 
 };
 
-double log_n_permutations(const vector<int32_t>& b)
+static double log_n_permutations(const vector<int32_t>& b)
 {
     std::vector<int32_t> count(b.size());
     for (auto bi : b)
@@ -274,7 +274,7 @@ double log_n_permutations(const vector<int32_t>& b)
     return n;
 }
 
-vector<int32_t> unlabel_partition(vector<int32_t> b)
+static vector<int32_t> unlabel_partition(vector<int32_t> b)
 {
     std::vector<int32_t> map(b.size(), -1);
     size_t pos = 0;

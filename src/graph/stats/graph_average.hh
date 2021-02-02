@@ -27,7 +27,7 @@ using namespace boost;
 
 
 template <class Val1, class Val2>
-void operator+=(std::vector<Val1>& a, const std::vector<Val2>& b)
+static void operator+=(std::vector<Val1>& a, const std::vector<Val2>& b)
 {
     a.resize(std::max(a.size(), b.size()));
     for (size_t i = 0; i < std::min(a.size(), b.size()); ++i)
@@ -35,7 +35,7 @@ void operator+=(std::vector<Val1>& a, const std::vector<Val2>& b)
 }
 
 template <class Val1, class Val2>
-std::vector<Val1> operator*(const std::vector<Val1>& a, const std::vector<Val2>& b)
+static std::vector<Val1> operator*(const std::vector<Val1>& a, const std::vector<Val2>& b)
 {
     std::vector<Val1> c(std::max(a.size(), b.size()));
     for (size_t i = 0; i < std::min(a.size(), b.size()); ++i)
@@ -44,7 +44,7 @@ std::vector<Val1> operator*(const std::vector<Val1>& a, const std::vector<Val2>&
 }
 
 template <class Val1, class Val2>
-std::vector<Val1> operator-(const std::vector<Val1>& a, const std::vector<Val2>& b)
+static std::vector<Val1> operator-(const std::vector<Val1>& a, const std::vector<Val2>& b)
 {
     std::vector<Val1> c(std::max(a.size(), b.size()));
     for (size_t i = 0; i < std::min(a.size(), b.size()); ++i)
@@ -106,13 +106,13 @@ public:
 
 // explicit special initialization to get around python::object
 template <class Val>
-void init_avg(Val& v)
+static void init_avg(Val& v)
 {
     v = Val(0.);
 };
 
 template <class Val>
-void init_avg(std::vector<Val>&)
+static void init_avg(std::vector<Val>&)
 {
 };
 

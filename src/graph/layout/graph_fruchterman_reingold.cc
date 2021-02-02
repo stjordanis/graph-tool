@@ -25,7 +25,7 @@
 using __gnu_cxx::power;
 #else
 template <class Value>
-Value power(Value value, int n)
+static Value power(Value value, int n)
 {
     return pow(value, n);
 }

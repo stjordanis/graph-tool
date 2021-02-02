@@ -231,7 +231,7 @@ void infect_vertex_property(GraphInterface& gi, boost::any prop,
 }
 
 template <class Value>
-vector<Value> operator-(const vector<Value>& a, const vector<Value>& b)
+static vector<Value> operator-(const vector<Value>& a, const vector<Value>& b)
 {
     vector<Value> c(a);
     c.resize(max(a.size(), b.size()), Value(0));

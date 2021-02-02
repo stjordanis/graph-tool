@@ -148,7 +148,7 @@ private:
 };
 
 template <class Pos>
-inline double dist(const Pos& p1, const Pos& p2)
+static double dist(const Pos& p1, const Pos& p2)
 {
     double r = 0;
     for (size_t i = 0; i < 2; ++i)
@@ -157,7 +157,7 @@ inline double dist(const Pos& p1, const Pos& p2)
 }
 
 template <class Pos>
-inline double f_r(double C, double K, double p, const Pos& p1, const Pos& p2)
+static double f_r(double C, double K, double p, const Pos& p1, const Pos& p2)
 {
     double d = dist(p1, p2);
     if (d == 0)
@@ -169,13 +169,13 @@ inline double f_r(double C, double K, double p, const Pos& p1, const Pos& p2)
 }
 
 template <class Pos>
-inline double f_a(double K, const Pos& p1, const Pos& p2)
+static double f_a(double K, const Pos& p1, const Pos& p2)
 {
     return power(dist(p1, p2), 2) / K;
 }
 
 template <class Pos>
-inline double get_diff(const Pos& p1, const Pos& p2, Pos& r)
+static double get_diff(const Pos& p1, const Pos& p2, Pos& r)
 {
     double abs = 0;
     for (size_t i = 0; i < 2; ++i)
@@ -192,7 +192,7 @@ inline double get_diff(const Pos& p1, const Pos& p2, Pos& r)
 }
 
 template <class Pos>
-inline double norm(Pos& x)
+static double norm(Pos& x)
 {
     double abs = 0;
     for (size_t i = 0; i < 2; ++i)

@@ -45,7 +45,7 @@ typedef PartitionModeState::bv_t bv_t;
 GEN_STATE_BASE(ModeClusterStateBase, BLOCK_STATE_params)
 
 template <class T>
-std::vector<T> vrange(size_t N)
+static std::vector<T> vrange(size_t N)
 {
     std::vector<T> vs(N);
     std::iota(vs.begin(), vs.end(), 0);
