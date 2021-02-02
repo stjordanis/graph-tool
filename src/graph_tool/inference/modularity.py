@@ -178,7 +178,7 @@ class ModularityState(object):
         w = np.array(np.bincount(self.b.fa), dtype="double")
         w = w[w>0]
         w /= w.sum()
-        return numpy.exp(-(w*log(w)).sum())
+        return np.exp(-(w*log(w)).sum())
 
     def entropy(self, gamma=1., **kwargs):
         r"""Return the unnormalized negative generalized modularity.
@@ -340,8 +340,8 @@ class ModularityState(object):
         if accept_stats is not None:
             for key in ["proposal", "acceptance"]:
                 if key not in accept_stats:
-                    accept_stats[key] = numpy.zeros(len(nproposal),
-                                                    dtype="uint64")
+                    accept_stats[key] = np.zeros(len(nproposal),
+                                                 dtype="uint64")
             accept_stats["proposal"] += nproposal.a
             accept_stats["acceptance"] += nacceptance.a
 
