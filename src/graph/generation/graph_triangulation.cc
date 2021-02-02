@@ -48,7 +48,7 @@ bool operator==(const SimpleTriangulation::Vertex& a,
 }
 
 // periodic triangulation is only available in more recent versions of CGAL
-#if (CGAL_VERSION_NR >= 1030500000)
+#if (CGAL_VERSION_NR >= 1040700000)
 #include <CGAL/Periodic_3_Delaunay_triangulation_traits_3.h>
 #include <CGAL/Periodic_3_Delaunay_triangulation_3.h>
 typedef CGAL::Periodic_3_Delaunay_triangulation_traits_3<Kernel> GT;
@@ -107,13 +107,13 @@ void triangulation(GraphInterface& gi, boost::python::object points,
         }
         else
         {
-#if (CGAL_VERSION_NR >= 1030500000)
+#if (CGAL_VERSION_NR >= 1040700000)
             get_triangulation<PeriodicDelaunayTriangulation, std::true_type>()
                 (g, points_array, pos_map);
 #else
             throw ValueException("Periodic Delaunay triangulation is only "
                                  "available with versions of CGAL newer than "
-                                 "3.5.0.");
+                                 "4.7.0.");
 #endif
         }
     }
