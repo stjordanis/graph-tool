@@ -71,9 +71,6 @@ dnl set default visibility
 dnl set default optimizations
 [CXXFLAGS="-O3 ${CXXFLAGS}"]
 
-dnl Python 2 compatibility
-[CXXFLAGS="${CXXFLAGS} -Wno-register"]
-
 
 dnl OpenMP
 AC_DEFINE([OPENMP_MIN_THRESH], 300, [default minimum number of vertices for parallel loops])
@@ -123,7 +120,7 @@ dnl expat
 PKG_CHECK_MODULES([EXPAT], [expat])
 
 dnl python
-AM_PATH_PYTHON([2.7])
+AM_PATH_PYTHON([3.6])
 AC_SUBST(PYTHON_VERSION)
 PYTHON_FULL_VERSION=[`${PYTHON} -c "import sys; print(sys.version.split()[0])"`]
 AC_SUBST(PYTHON_FULL_VERSION)
@@ -234,11 +231,7 @@ if test "$USING_CAIRO" = "yes"; then
    PYCAIRO_INCLUDE=-I`${PYTHON} -c 'import cairo; print(cairo.get_include())'`
    PYTHON_CPPFLAGS="${PYCAIRO_INCLUDE} ${PYTHON_CPPFLAGS}"
    PYTHON_VERSION_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
-   if test "$PYTHON_VERSION_MAJOR" = "3"; then
-      [PYCAIRO_HEADER=py3cairo.h]
-   else
-      [PYCAIRO_HEADER=pycairo.h]
-   fi
+   [PYCAIRO_HEADER=py3cairo.h]
    [CPPFLAGS_TEMP="${CPPFLAGS}"]
    [CPPFLAGS="${CAIROMM_CPPFLAGS} ${CAIROMM_CFLAGS} ${PYTHON_CPPFLAGS} ${CPPFLAGS}"]
    AC_DEFINE_UNQUOTED([PYCAIRO_HEADER], <${PYCAIRO_HEADER}>, [pycairo header file])
