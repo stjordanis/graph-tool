@@ -21,6 +21,7 @@
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
 
+#include <boost/mpl/insert_range.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/python.hpp>
 
