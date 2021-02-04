@@ -42,11 +42,6 @@ struct dvertex_t
     bool operator==(const dvertex_t& other) const {return other.index == index;}
 };
 
-size_t hash_value(const dvertex_t& v)
-{
-    return v.index;
-}
-
 
 // used for verbose display
 void print_progress(size_t current, size_t total, stringstream& str)

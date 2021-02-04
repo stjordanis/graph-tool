@@ -515,16 +515,6 @@ void draw_pie(double radius, const vector<double>& f,
 }
 
 
-void move_radially(pos_t& pos, const pos_t& origin, double dr)
-{
-    double angle = atan2(pos.second - origin.second,
-                         pos.first - origin.first);
-    if (angle < 0)
-        angle += 2 * M_PI;
-    pos.first += dr * cos(angle);
-    pos.second += dr * sin(angle);
-}
-
 double get_user_dist(Cairo::Context& cr, double norm = 1.)
 {
     double x = norm / sqrt(2.), y = norm / sqrt(2.);
