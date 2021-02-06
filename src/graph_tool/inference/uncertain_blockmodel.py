@@ -28,7 +28,7 @@ from . blockmodel import *
 from . nested_blockmodel import *
 from . blockmodel import _bm_test
 
-import collections
+import collections.abc
 
 def get_uentropy_args(kargs):
     ea = get_entropy_args(kargs, ignore=["latent_edges", "density"])
@@ -846,7 +846,7 @@ class DynamicsBlockStateBase(UncertainBaseState):
             v = kwargs[k]
             if isinstance(v, PropertyMap):
                 kwargs[k] = g.own_property(v)
-            elif (isinstance(v, collections.Iterable) and len(v) > 0 and
+            elif (isinstance(v, collections.abc.Iterable) and len(v) > 0 and
                   isinstance(v[0], PropertyMap)):
                 kwargs[k] = [g.own_property(x) for x in v]
         self.params = kwargs
@@ -880,7 +880,7 @@ class DynamicsBlockStateBase(UncertainBaseState):
     def _move_proposal(self, name, beta, step, rg, transform, entropy_args):
         x = x_orig = self.params[name]
 
-        if isinstance(x, collections.Iterable):
+        if isinstance(x, collections.abc.Iterable):
             idx = numpy.random.randint(len(x))
             x = x[idx]
         else:

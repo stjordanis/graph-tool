@@ -78,7 +78,7 @@ from .. import _prop, Vector_int32_t, Vector_size_t, _check_prop_writable, \
      _check_prop_scalar, _check_prop_vector, Graph, VertexPropertyMap, \
      PropertyMap, GraphView, libcore, _get_rng, perfect_prop_hash, _limit_args
 from .. stats import label_self_loops
-import numpy, collections
+import numpy, collections.abc
 
 __all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph",
            "max_cliques", "max_cardinality_matching",
@@ -1947,7 +1947,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
     """
 
     tgtlist = False
-    if isinstance(target, collections.Iterable):
+    if isinstance(target, collections.abc.Iterable):
         tgtlist = True
         target = numpy.asarray(target, dtype="int64")
     elif target is None:
