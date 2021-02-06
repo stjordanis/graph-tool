@@ -10,7 +10,6 @@ if not verbose:
     out = open(os.devnull, 'w')
 else:
     out = sys.stdout
-from collections import OrderedDict
 import itertools
 from graph_tool.all import *
 import numpy.random
@@ -77,16 +76,14 @@ def gen_nested_state(*args):
                             sampling=True)
 
 
-pranges = [("directed", [False, True]),
-           ("overlap", [False, True]),
-           ("layered", [False, "covariates", True]),
-           ("rec", [None, "real-exponential", "real-normal"]),
-           ("deg_corr", [False, True]),
-           ("dl", [False, True]),
-           ("degree_dl_kind", ["uniform", "distributed", "entropy"]),
-           ("dense_bg", [True, False])]
-
-pranges = OrderedDict(pranges)
+pranges = {"directed": [False, True],
+           "overlap": [False, True],
+           "layered": [False, "covariates", True],
+           "rec": [None, "real-exponential", "real-normal"],
+           "deg_corr": [False, True],
+           "dl": [False, True],
+           "degree_dl_kind": ["uniform", "distributed", "entropy"],
+           "dense_bg": [True, False]}
 
 def iter_ranges(ranges):
     for vals in itertools.product(*[v for k, v in ranges.items()]):
@@ -94,7 +91,7 @@ def iter_ranges(ranges):
 
 
 for pvals in iter_ranges(pranges):
-    params = OrderedDict(pvals)
+    params = dict(pvals)
 
     locals().update(params)
 
@@ -231,14 +228,12 @@ pranges = [("directed", [False, True]),
            ("degree_dl_kind", ["distributed"]),
            ("dense_bg", [True, False])]
 
-pranges = OrderedDict(pranges)
-
 def iter_ranges(ranges):
     for vals in itertools.product(*[v for k, v in ranges.items()]):
         yield zip(ranges.keys(), vals)
 
 for pvals in iter_ranges(pranges):
-    params = OrderedDict(pvals)
+    params = dict(pvals)
 
     locals().update(params)
 
@@ -273,18 +268,16 @@ for pvals in iter_ranges(pranges):
                                                            beta_dl=0.95)),
               [s.get_nonempty_B() for s in state.levels], file=out)
 
-pranges = [("directed", [False, True]),
-           ("overlap", [False, True]),
-           ("layered", [False, "covariates", True]),
-           ("rec", [None, "real-exponential", "real-normal"]),
-           ("deg_corr", [False, True]),
-           ("degree_dl_kind", ["uniform", "distributed", "entropy"]),
-           ("dense_bg", [True, False])]
-
-pranges = OrderedDict(pranges)
+pranges = {"directed": [False, True],
+           "overlap": [False, True],
+           "layered": [False, "covariates", True],
+           "rec": [None, "real-exponential", "real-normal"],
+           "deg_corr": [False, True],
+           "degree_dl_kind": ["uniform", "distributed", "entropy"],
+           "dense_bg": [True, False]}
 
 for pvals in iter_ranges(pranges):
-    params = OrderedDict(pvals)
+    params = dict(pvals)
 
     locals().update(params)
 

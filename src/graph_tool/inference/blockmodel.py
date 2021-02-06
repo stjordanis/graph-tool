@@ -31,7 +31,6 @@ import math
 import numpy
 import copy
 import collections
-from collections import OrderedDict
 import itertools
 import warnings
 
@@ -513,42 +512,42 @@ class BlockState(object):
         for i, rt in enumerate(self.rec_types):
             ps = Vector_double()
             if rt == libinference.rec_type.count:
-                defaults = OrderedDict()
+                defaults = {}
             elif rt in [libinference.rec_type.real_exponential,
                         libinference.rec_type.discrete_poisson]:
                 if rec_params[i] != "microcanonical":
-                    defaults = OrderedDict([("alpha", 1),
-                                            ("beta", self.rec[i].fa.mean())])
+                    defaults = {"alpha": 1,
+                                "beta": self.rec[i].fa.mean()}
                 else:
-                    defaults = OrderedDict([("alpha", numpy.nan),
-                                            ("beta", numpy.nan)])
+                    defaults = {"alpha": numpy.nan,
+                                "beta": numpy.nan}
             elif rt == libinference.rec_type.real_normal:
                 if rec_params[i] != "microcanonical":
-                    defaults = OrderedDict([("m0", self.rec[i].fa.mean()),
-                                            ("k0", 1),
-                                            ("v0", self.rec[i].fa.std() ** 2),
-                                            ("nu0", 3)])
+                    defaults = {"m0": self.rec[i].fa.mean(),
+                                "k0": 1,
+                                "v0": self.rec[i].fa.std() ** 2,
+                                "nu0": 3}
                 else:
-                    defaults = OrderedDict([("m0", numpy.nan),
-                                            ("k0", numpy.nan),
-                                            ("v0", numpy.nan),
-                                            ("nu0", numpy.nan)])
+                    defaults = {"m0": numpy.nan,
+                                "k0": numpy.nan,
+                                "v0": numpy.nan,
+                                "nu0": numpy.nan}
             elif rt == libinference.rec_type.discrete_geometric:
                 if rec_params[i] != "microcanonical":
-                    defaults = OrderedDict([("alpha", 1),
-                                            ("beta", 1)])
+                    defaults = {"alpha": 1,
+                                "beta": 1}
                 else:
-                    defaults = OrderedDict([("alpha", numpy.nan),
-                                            ("beta", numpy.nan)])
+                    defaults = {"alpha": numpy.nan,
+                                "beta": numpy.nan}
             elif rt == libinference.rec_type.discrete_binomial:
                 if rec_params[i] != "microcanonical":
-                    defaults = OrderedDict([("N", self.rec[i].fa.max()),
-                                            ("alpha", 1),
-                                            ("beta", 1)])
+                    defaults = {"N": self.rec[i].fa.max(),
+                                "alpha": 1,
+                                "beta": 1}
                 else:
-                    defaults = OrderedDict([("N", self.rec[i].fa.max()),
-                                            ("alpha", numpy.nan),
-                                            ("beta", numpy.nan)])
+                    defaults = {"N": self.rec[i].fa.max(),
+                                "alpha": numpy.nan,
+                                "beta": numpy.nan}
 
             ks = list(defaults.keys())
             if rec_params[i] != "microcanonical":
