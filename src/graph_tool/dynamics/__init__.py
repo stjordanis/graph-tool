@@ -72,7 +72,7 @@ from .. import _degree, _prop, Graph, GraphView, _get_rng, PropertyMap, \
 from .. stats import label_self_loops
 import numpy
 import numpy.random
-import collections
+import collections.abc
 
 import scipy.integrate
 
@@ -1246,7 +1246,7 @@ class PottsGlauberState(DiscreteStateBase):
             if h.value_type() != "vector<double>":
                 h = h.copy("vector<double>")
         else:
-            if not isinstance(h, collections.Iterable):
+            if not isinstance(h, collections.abc.Iterable):
                 h = [h] * q
             h = g.new_vp("vector<double>", val=h)
         if s is None:
@@ -1351,7 +1351,7 @@ class PottsMetropolisState(DiscreteStateBase):
             if h.value_type() != "vector<double>":
                 h = h.copy("vector<double>")
         else:
-            if not isinstance(h, collections.Iterable):
+            if not isinstance(h, collections.abc.Iterable):
                 h = [h] * q
             h = g.new_vp("vector<double>", val=h)
         if s is None:

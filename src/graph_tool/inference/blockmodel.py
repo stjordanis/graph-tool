@@ -30,7 +30,7 @@ from numpy import *
 import math
 import numpy
 import copy
-import collections
+import collections.abc
 import itertools
 import warnings
 
@@ -1182,7 +1182,7 @@ class BlockState(object):
         This optionally accepts a list of vertices and blocks to move
         simultaneously.
         """
-        if not isinstance(v, collections.Iterable):
+        if not isinstance(v, collections.abc.Iterable):
             self._state.move_vertex(int(v), s)
         else:
             self._state.move_vertices(numpy.asarray(v, dtype="uint64"),
@@ -1199,7 +1199,7 @@ class BlockState(object):
            is returned to some other group, or if the same vertex is removed
            twice.
         """
-        if isinstance(v, collections.Iterable):
+        if isinstance(v, collections.abc.Iterable):
             if not isinstance(v, numpy.ndarray):
                 v = list(v)
             self._state.remove_vertices(numpy.asarray(v, dtype="uint64"))
@@ -1216,7 +1216,7 @@ class BlockState(object):
            This can leave the state in an inconsistent state if a vertex is
            added twice to the same group.
         """
-        if isinstance(v, collections.Iterable):
+        if isinstance(v, collections.abc.Iterable):
             if not isinstance(v, numpy.ndarray):
                 v = list(v)
             if not isinstance(r, numpy.ndarray):

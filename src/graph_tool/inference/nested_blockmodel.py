@@ -821,7 +821,7 @@ class NestedBlockState(object):
         """
 
         c = kwargs.pop("c", 1)
-        if not isinstance(c, collections.Iterable):
+        if not isinstance(c, collections.abc.Iterable):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
@@ -873,7 +873,7 @@ class NestedBlockState(object):
         kwargs["psingle"] = psingle
 
         c = kwargs.pop("c", 1)
-        if not isinstance(c, collections.Iterable):
+        if not isinstance(c, collections.abc.Iterable):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
