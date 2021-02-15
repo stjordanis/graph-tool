@@ -184,7 +184,7 @@ public:
         if (!is_directed_::apply<BGraph>::type::value && r > s)
             std::swap(r, s);
         auto& map = _hash[r];
-        const auto& iter = map.find(s);
+        auto iter = map.find(s);
         if (iter == map.end())
             return _null_edge;
         return iter->second;
