@@ -24,11 +24,11 @@ little-endian, ``0x01``: big-endian):
     00000000  e2 9b be 20 67 74 01 00                           |... gt..|
     00000008
 
-It is followed by a comment string. Strings are stored by a length (8
+This is followed by a comment string. Strings are stored by a length (8
 bytes, ``uint64_t``) and the corresponding sequence of bytes, not
 null-terminated. The comment may be empty, but graph-tool outputs a
 human readable summary of the file, which can be inspected with tools
-like ``less`` or ``hexdump``:
+like ``hexdump``:
 
 .. code-block:: none
 
