@@ -162,15 +162,39 @@ public:
     [[gnu::always_inline]] [[gnu::flatten]] inline
     size_t& get_field_rnr(size_t s, size_t t)
     {
-        auto& out_field = First ? _r_out_field : _nr_out_field;
+        auto get_out_field =
+            [&]() -> auto&
+            {
+                if constexpr (First)
+                    return _r_out_field;
+                else
+                    return _nr_out_field;
+            };
+
+        auto get_in_field =
+            [&]() -> auto&
+            {
+                if constexpr (First)
+                    return _r_in_field;
+                else
+                    return _nr_in_field;
+            };
+
+        auto& out_field = get_out_field();
+
         if constexpr (is_directed_::apply<Graph>::type::value)
         {
-            auto& in_field = (First ? _r_in_field : _nr_in_field);
-            return (Source || s == t) ? out_field[t] : in_field[s];
+            auto& in_field = get_in_field();
+            if constexpr (Source)
+                return out_field[t];
+            return (s == t) ? out_field[t] : in_field[s];
         }
         else
         {
-            return (Source) ? out_field[t] : out_field[s];
+            if constexpr (Source)
+                return out_field[t];
+            else
+                return out_field[s];
         }
     }
 
