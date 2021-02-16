@@ -91,12 +91,12 @@ except OSError:
 def htmlize(elem, val):
     if len(val) >= 2 and val[0] == "<" and val[-1] == ">":
         g = libgv.agraphof(elem)
-        return ctypes.string_at(libgv.agstrdup_html(g, str(val[1:-1]).encode("utf8")))
+        return ctypes.string_at(libgv.agstrdup_html(g, str(val[1:-1]).encode("utf8"))).decode("utf8")
     return val
 
 
 def aset(elem, attr, value):
-    v = htmlize(elem, str(value))
+    v = htmlize(elem, str(value)).encode("utf8")
     libgv.agsafeset(elem, str(attr).encode("utf8"), v, v)
 
 
