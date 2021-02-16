@@ -28,8 +28,7 @@ using namespace graph_tool;
 
 GEN_DISPATCH(block_state, BlockState, BLOCK_STATE_params)
 
-python::object make_block_state(boost::python::object ostate,
-                                rng_t& rng);
+python::object make_block_state(boost::python::object ostate);
 
 degs_map_t get_block_degs(GraphInterface& gi, boost::any ab, boost::any aweight,
                           size_t B)

@@ -253,7 +253,7 @@ class OverlapBlockState(BlockState):
         self.Bfield = Vector_double()
 
         self._abg = self.bg._get_any()
-        self._state = libinference.make_overlap_block_state(self, _get_rng())
+        self._state = libinference.make_overlap_block_state(self)
 
         if deg_corr:
             init_q_cache(max(self.get_E(), self.get_N()) + 1)

@@ -461,7 +461,7 @@ class BlockState(object):
         self._avweight = self.vweight._get_any()
         self._aeweight = self.eweight._get_any()
         self._adegs = self.degs._get_any()
-        self._state = libinference.make_block_state(self, _get_rng())
+        self._state = libinference.make_block_state(self)
         self.bg.properties.clear()
 
         assert all(self.recdx.a >= 0), self.recdx.a
@@ -2115,7 +2115,7 @@ class BlockState(object):
            ...     ret = state.mcmc_sweep(niter=10)
            ...     pe = state.collect_edge_marginals(pe)
            >>> gt.bethe_entropy(g, pe)[0]
-           1.7733496...
+           -3.075472...
         """
 
         if p is None:
@@ -2175,7 +2175,7 @@ class BlockState(object):
            ...     ret = state.mcmc_sweep(niter=10)
            ...     pv = state.collect_vertex_marginals(pv)
            >>> gt.mf_entropy(g, pv)
-           22.237735...
+           16.057089...
            >>> gt.graph_draw(g, pos=g.vp["pos"], vertex_shape="pie",
            ...               vertex_pie_fractions=pv, output="polbooks_blocks_soft_B4.svg")
            <...>
@@ -2239,7 +2239,7 @@ class BlockState(object):
            ...     ret = state.mcmc_sweep(niter=10)
            ...     ph = state.collect_partition_histogram(ph)
            >>> gt.microstate_entropy(ph)
-           132.254124...
+           137.303039...
         """
 
         if h is None:

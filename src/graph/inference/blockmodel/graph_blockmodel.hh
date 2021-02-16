@@ -119,16 +119,16 @@ public:
 
     typedef partition_stats<use_rmap_t::value> partition_stats_t;
 
-    template <class RNG, class... ATs,
+    template <class... ATs,
               typename std::enable_if_t<sizeof...(ATs) == sizeof...(Ts)>* = nullptr>
-    BlockState(RNG& rng, ATs&&... args)
+    BlockState(ATs&&... args)
         : BlockStateBase<Ts...>(std::forward<ATs>(args)...),
           _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
           _c_mrs(_mrs.get_checked()),
           _vweight(uncheck(__avweight, typename std::add_pointer<vweight_t>::type())),
           _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
           _degs(uncheck(__adegs, typename std::add_pointer<degs_t>::type())),
-          _emat(_g, _bg, rng),
+          _emat(_g, _bg),
           _neighbor_sampler(_g, _eweight),
           _m_entries(num_vertices(_bg))
     {

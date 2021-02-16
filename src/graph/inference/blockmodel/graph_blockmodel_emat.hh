@@ -31,8 +31,8 @@ template <class BGraph>
 class EMat
 {
 public:
-    template <class Graph, class RNG>
-    EMat(Graph&, BGraph& bg, RNG&)
+    template <class Graph>
+    EMat(Graph&, BGraph& bg)
     {
         sync(bg);
     }
@@ -94,33 +94,6 @@ template <class BGraph>
 const typename EMat<BGraph>::edge_t EMat<BGraph>::_null_edge;
 
 
-template <class Key>
-class perfect_hash_t
-{
-public:
-    template <class RNG>
-    perfect_hash_t(size_t N, std::vector<size_t>& index, RNG& rng)
-        : _index(&index)
-    {
-        index.reserve(N);
-        for (size_t i = 0; i < N; ++i)
-            index.push_back(i);
-        std::shuffle(index.begin(), index.end(), rng);
-    }
-    perfect_hash_t(std::vector<size_t>& index)
-        : _index(&index) {}
-    perfect_hash_t() {}
-    size_t operator()(const Key& k) const { return (*_index)[k]; }
-    void resize(size_t N)
-    {
-        auto& index = *_index;
-        for (size_t i = index.size(); i < N; ++i)
-            index.push_back(i);
-    }
-private:
-    std::vector<size_t>* _index;
-};
-
 // this structure speeds up the access to the edges between given blocks, since
 // we're using an adjacency list to store the block structure (this is like
 // EMat above, but takes less space and is slower)
@@ -130,32 +103,21 @@ class EHash
 {
 public:
 
-    template <class Graph, class RNG>
-    EHash(Graph& g, BGraph& bg, RNG& rng)
-        : _hash_function(num_vertices(g), _index, rng),
-          _hash(num_vertices(bg), ehash_t(0, _hash_function))
+    template <class Graph>
+    EHash(Graph& g, BGraph& bg)
+        : _hash(num_vertices(bg), ehash_t(0))
     {
         sync(bg);
     }
 
     EHash(const EHash& other)
-        : _index(other._index),
-          _hash_function(_index),
-          _hash(other._hash.size(), ehash_t(0, _hash_function))
-    {
-        for (size_t r = 0; r < other._hash.size(); ++r)
-        {
-            auto& h = _hash[r];
-            for (const auto& x : other._hash[r])
-                h[x.first] = x.second;
-        }
-    }
+        : _hash(other._hash)
+    {}
 
     void sync(BGraph& bg)
     {
-        _hash_function.resize(num_vertices(bg));
         _hash.clear();
-        _hash.resize(num_vertices(bg), ehash_t(0, _hash_function));
+        _hash.resize(num_vertices(bg), ehash_t(0));
         for (auto& h : _hash)
             h.max_load_factor(.3);
 
@@ -169,8 +131,7 @@ public:
     void add_block(BGraph& bg)
     {
         size_t N = _hash.size();
-        _hash_function.resize(num_vertices(bg));
-        _hash.resize(num_vertices(bg), ehash_t(0, _hash_function));
+        _hash.resize(num_vertices(bg), ehash_t(0));
         for (size_t i = N; i < _hash.size(); ++i)
             _hash[i].max_load_factor(.3);
     }
@@ -216,9 +177,7 @@ public:
     const edge_t& get_null_edge() const { return _null_edge; }
 
 private:
-    std::vector<size_t> _index;
-    perfect_hash_t<vertex_t> _hash_function;
-    typedef gt_hash_map<vertex_t, edge_t, perfect_hash_t<vertex_t>> ehash_t;
+    typedef gt_hash_map<vertex_t, edge_t> ehash_t;
     std::vector<ehash_t> _hash;
     static const edge_t _null_edge;
 };

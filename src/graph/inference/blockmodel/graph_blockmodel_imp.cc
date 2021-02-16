@@ -32,12 +32,10 @@ using namespace graph_tool;
 
 GEN_DISPATCH(block_state, BlockState, BLOCK_STATE_params)
 
-python::object make_block_state(boost::python::object ostate,
-                                rng_t& rng)
+python::object make_block_state(boost::python::object ostate)
 {
     python::object state;
     block_state::make_dispatch(ostate,
-                               [&](auto& s){state = python::object(s);},
-                               rng);
+                               [&](auto& s){state = python::object(s);});
     return state;
 }

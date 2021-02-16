@@ -31,13 +31,11 @@ constexpr size_t overlap_stats_t::_null;
 
 GEN_DISPATCH(overlap_block_state, OverlapBlockState, OVERLAP_BLOCK_STATE_params)
 
-python::object make_overlap_block_state(boost::python::object ostate,
-                                        rng_t& rng)
+python::object make_overlap_block_state(boost::python::object ostate)
 {
     python::object state;
     overlap_block_state::make_dispatch(ostate,
-                                       [&](auto& s){state = python::object(s);},
-                                       rng);
+                                       [&](auto& s){state = python::object(s);});
     return state;
 }
 

@@ -81,13 +81,13 @@ public:
     GET_PARAMS_USING(OverlapBlockStateVirtualBase<Ts...>, OVERLAP_BLOCK_STATE_params)
     GET_PARAMS_TYPEDEF(Ts, OVERLAP_BLOCK_STATE_params)
 
-    template <class RNG, class... ATs,
+    template <class... ATs,
               typename std::enable_if_t<sizeof...(ATs) == sizeof...(Ts)>* = nullptr>
-    OverlapBlockState(RNG& rng, ATs&&... args)
+    OverlapBlockState(ATs&&... args)
         : OverlapBlockStateVirtualBase<Ts...>(std::forward<ATs>(args)...),
           _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
           _c_mrs(_mrs.get_checked()),
-          _emat(_g, _bg, rng),
+          _emat(_g, _bg),
           _egroups_update(true),
           _overlap_stats(_g, _b, _half_edges, _node_index, num_vertices(_bg)),
           _coupled_state(nullptr)
