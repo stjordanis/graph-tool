@@ -855,9 +855,11 @@ def prop_to_size(prop, mi=0, ma=5, log=False, power=0.5):
 
     .. math::
 
-        y = mi + (ma - mi) \left(\frac{x_i - \min(x)} {\max(x) - \min(x)}\right)^\text{power}
+        y_i = mi + (ma - mi) \left(\frac{x_i - \min(x)} {\max(x) - \min(x)}\right)^\text{power}
 
-    If ``log=True``, the natural logarithm of the property values is used instead.
+    If ``log=True``, :math:`x_i` is replaced with :math:`\ln(x_i)`.
+
+    If :math:`\max(x) - \min(x)` is zero, :math:`y_i = mi`.
 
     """
     prop = prop.copy(value_type="double")
