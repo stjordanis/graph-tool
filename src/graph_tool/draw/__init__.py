@@ -863,6 +863,9 @@ def prop_to_size(prop, mi=0, ma=5, log=False, power=0.5):
 
     """
     prop = prop.copy(value_type="double")
+    if len(prop.fa) == 0:
+        return prop
+
     if log:
         vals = numpy.log(prop.fa)
     else:
