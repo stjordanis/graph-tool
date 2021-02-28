@@ -519,7 +519,7 @@ struct MCMC
             std::array<size_t, 2> rt = {null_group, null_group};
 
             std::uniform_int_distribution<int> stage_sample(0,2);
-            switch (stage_sample(rng))
+            switch (!std::isinf(_beta) ? stage_sample(rng) : 2)
             {
             case 0:
                 std::tie(dS, rt[0], rt[1]) = stage_split_random<forward>(vs, r, s, rng);
@@ -540,6 +540,9 @@ struct MCMC
                                        (i < _gibbs_sweeps / 2) ? 1 : _beta,
                                        rng);
                 dS += get<0>(ret);
+
+                if (std::isinf(_beta) && abs(get<0>(ret)) < 1e-6)
+                    break;
             }
 
             double lp = 0;
