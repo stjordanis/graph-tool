@@ -220,13 +220,13 @@ for pvals in iter_ranges(pranges):
                                                 beta_dl=0.95))
     print("\t\t", state.B, "\n", file=out)
 
-pranges = [("directed", [False, True]),
-           ("overlap", [False]),
-           ("layered", [False, "covariates", True]),
-           ("rec", [None, "real-exponential", "real-normal"]),
-           ("deg_corr", [True, False]),
-           ("degree_dl_kind", ["distributed"]),
-           ("dense_bg", [True, False])]
+pranges = {"directed": [False, True],
+           "overlap": [False],
+           "layered": [False, "covariates", True],
+           "rec": [None, "real-exponential", "real-normal"],
+           "deg_corr": [True, False],
+           "degree_dl_kind": ["distributed"],
+           "dense_bg": [True, False]}
 
 def iter_ranges(ranges):
     for vals in itertools.product(*[v for k, v in ranges.items()]):
