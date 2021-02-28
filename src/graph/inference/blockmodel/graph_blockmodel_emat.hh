@@ -119,7 +119,10 @@ public:
         _hash.clear();
         _hash.resize(num_vertices(bg), ehash_t(0));
         for (auto& h : _hash)
-            h.max_load_factor(.3);
+        {
+            h.max_load_factor(.5);
+            h.min_load_factor(.25);
+        }
 
         for (auto e : edges_range(bg))
         {
@@ -133,7 +136,10 @@ public:
         size_t N = _hash.size();
         _hash.resize(num_vertices(bg), ehash_t(0));
         for (size_t i = N; i < _hash.size(); ++i)
-            _hash[i].max_load_factor(.3);
+        {
+             _hash[i].max_load_factor(.5);
+             _hash[i].min_load_factor(.25);
+        }
     }
 
     typedef typename graph_traits<BGraph>::vertex_descriptor vertex_t;
