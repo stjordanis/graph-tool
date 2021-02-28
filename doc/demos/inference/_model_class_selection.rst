@@ -59,7 +59,7 @@ are forced to perform approximations. One possibility is to employ the
 method described in [peixoto-revealing-2020]_, based on fitting a
 mixture "random label" model to the posterior distribution, which allows
 us to compute its entropy. In graph-tool this is done by using
-:class:`~graph_tool.inference.partition_modes.PartitionModeState`, as we
+:class:`~graph_tool.inference.partition_modes.ModeClusterState`, as we
 show in the example below.
 
 .. testcode:: model-evidence

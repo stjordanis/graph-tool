@@ -1036,7 +1036,7 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
         t : ``list`` of :class:`~graph_tool.VertexPropertyMap` (optional, default: ``[]``)
             If nonempty, this allows for a compressed representation of the
             time-series parameter ``s``, corresponding only to points in time
-            where the state of each node changes. Each each entry in this list
+            where the state of each node changes. Each entry in this list
             must be a :class:`~graph_tool.VertexPropertyMap` with type
             ``vector<int>`` containing the points in time where the state of
             each node change. The corresponding state of the nodes at these
@@ -1235,7 +1235,7 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
         t : ``list`` of :class:`~graph_tool.VertexPropertyMap` (optional, default: ``[]``)
             If nonempty, this allows for a compressed representation of the
             time-series parameter ``s``, corresponding only to points in time
-            where the state of each node changes. Each each entry in this list
+            where the state of each node changes. Each entry in this list
             must be a :class:`~graph_tool.VertexPropertyMap` with type
             ``vector<int>`` containing the points in time where the state of
             each node change. The corresponding state of the nodes at these

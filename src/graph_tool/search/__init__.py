@@ -295,7 +295,7 @@ def bfs_iterator(g, source=None, array=False):
         iterating over starting vertices according to their index in increasing
         order.
     array : ``bool`` (optional, default: ``False``)
-        If ``True``, a :class:`numpy.ndarray` will the edge endpoints be
+        If ``True``, a :class:`numpy.ndarray` with the edge endpoints be
         returned instead.
 
     Returns
@@ -599,7 +599,7 @@ def dfs_iterator(g, source=None, array=False):
         iterating over starting vertices according to their index in increasing
         order.
     array : ``bool`` (optional, default: ``False``)
-        If ``True``, a :class:`numpy.ndarray` will the edge endpoints be
+        If ``True``, a :class:`numpy.ndarray` with the edge endpoints be
         returned instead.
 
     Returns
@@ -990,7 +990,7 @@ def dijkstra_iterator(g, weight, source=None, dist_map=None, combine=None,
          Value assumed to correspond to a distance of infinity by the combine
          and compare functions.
     array : ``bool`` (optional, default: ``False``)
-        If ``True``, a :class:`numpy.ndarray` will the edge endpoints be
+        If ``True``, a :class:`numpy.ndarray` with the edge endpoints be
         returned instead.
 
     Returns
@@ -1848,7 +1848,7 @@ def astar_iterator(g, source, weight, heuristic=lambda v: 1, dist_map=None,
          Value assumed to correspond to a distance of infinity by the combine
          and compare functions.
     array : ``bool`` (optional, default: ``False``)
-        If ``True``, a :class:`numpy.ndarray` will the edge endpoints be
+        If ``True``, a :class:`numpy.ndarray` with the edge endpoints be
         returned instead.
 
     Returns
