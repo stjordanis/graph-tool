@@ -21,7 +21,6 @@
 #include <iostream>
 
 #include "graph_tool.hh"
-#include "hash_map_wrap.hh"
 
 namespace graph_tool
 {
