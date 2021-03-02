@@ -142,7 +142,7 @@ class PPBlockState(object):
         w = np.array(np.bincount(self.b.fa), dtype="double")
         w = w[w>0]
         w /= w.sum()
-        return numpy.exp(-(w*log(w)).sum())
+        return np.exp(-(w*log(w)).sum())
 
     def virtual_vertex_move(self, v, s, **kwargs):
         r"""Computes the entropy difference if vertex ``v`` is moved to block ``s``. The
