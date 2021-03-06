@@ -80,7 +80,9 @@ template <class T>
 [[gnu::const]]
 inline T log_sum_exp(T a, T b)
 {
-    if (a >= b)
+    if (a == b)  // handles infinity
+        return a + std::log(2);
+    else if (a > b)
         return a + std::log1p(exp(b-a));
     else
         return b + std::log1p(exp(a-b));
