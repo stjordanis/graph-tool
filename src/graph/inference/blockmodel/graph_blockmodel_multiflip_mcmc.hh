@@ -519,7 +519,7 @@ struct MCMC
             std::array<size_t, 2> rt = {null_group, null_group};
 
             std::uniform_int_distribution<int> stage_sample(0,2);
-            switch (!std::isinf(_beta) ? stage_sample(rng) : 2)
+            switch (stage_sample(rng))
             {
             case 0:
                 std::tie(dS, rt[0], rt[1]) = stage_split_random<forward>(vs, r, s, rng);
