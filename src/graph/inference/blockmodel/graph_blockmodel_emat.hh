@@ -105,24 +105,25 @@ public:
 
     template <class Graph>
     EHash(Graph& g, BGraph& bg)
-        : _hash(num_vertices(bg), ehash_t(0))
+        : _L(num_vertices(g) * 10)
     {
         sync(bg);
     }
 
     EHash(const EHash& other)
-        : _hash(other._hash)
+        : _h(other._h),
+          _L(other._L)
     {}
 
     void sync(BGraph& bg)
     {
-        _hash.clear();
-        _hash.resize(num_vertices(bg), ehash_t(0));
-        for (auto& h : _hash)
-        {
-            h.max_load_factor(.5);
-            h.min_load_factor(.25);
-        }
+        if (num_vertices(bg) > _L)
+            _L = num_vertices(bg) * 10;
+
+        _h.clear();
+        _h.resize(0);
+        _h.max_load_factor(.5);
+        _h.min_load_factor(.25);
 
         for (auto e : edges_range(bg))
         {
@@ -133,12 +134,10 @@ public:
 
     void add_block(BGraph& bg)
     {
-        size_t N = _hash.size();
-        _hash.resize(num_vertices(bg), ehash_t(0));
-        for (size_t i = N; i < _hash.size(); ++i)
+        if (num_vertices(bg) > _L)
         {
-             _hash[i].max_load_factor(.5);
-             _hash[i].min_load_factor(.25);
+            _L = num_vertices(bg) * 10;
+            sync(bg);
         }
     }
 
@@ -150,9 +149,8 @@ public:
     {
         if (!is_directed_::apply<BGraph>::type::value && r > s)
             std::swap(r, s);
-        auto& map = _hash[r];
-        auto iter = map.find(s);
-        if (iter == map.end())
+        auto iter = _h.find(r + s * _L);
+        if (iter == _h.end())
             return _null_edge;
         return iter->second;
     }
@@ -161,9 +159,8 @@ public:
     {
         if (!is_directed_::apply<BGraph>::type::value && r > s)
             std::swap(r, s);
-        assert(r < _hash.size());
         assert(e != _null_edge);
-        _hash[r][s] = e;
+        _h[r + s * _L] = e;
     }
 
     void remove_me(const edge_t& me, BGraph& bg)
@@ -172,19 +169,15 @@ public:
         auto s = target(me, bg);
         if (!is_directed_::apply<BGraph>::type::value && r > s)
             std::swap(r, s);
-        assert(r < _hash.size());
-        auto& r_hash = _hash[r];
-        r_hash.erase(s);
-        if (r_hash.empty())
-            r_hash.resize(0);
-        //remove_edge(me, bg);
+        _h.erase(r + s * _L);
     }
 
     const edge_t& get_null_edge() const { return _null_edge; }
 
 private:
-    typedef gt_hash_map<vertex_t, edge_t> ehash_t;
-    std::vector<ehash_t> _hash;
+    typedef gt_hash_map<size_t, edge_t> ehash_t;
+    ehash_t _h;
+    size_t _L;
     static const edge_t _null_edge;
 };
 
