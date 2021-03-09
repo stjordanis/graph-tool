@@ -161,7 +161,7 @@ struct MCMC
             //     size_t r = _state._b[v];
             //     double pf = _state.get_move_prob(v, r, nr, _c, false); // forward
             //     double pb = _state.get_move_prob(v, nr, r, _c, true);  // backward
-            //     a = log(pb) - log(pf);
+            //     a = pb - pf;
             // }
 
             for (auto v : _bundles[i])

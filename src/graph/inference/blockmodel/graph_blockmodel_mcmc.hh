@@ -115,7 +115,7 @@ struct MCMC
                                                  _m_entries);
                 double pb = _state.get_move_prob(v, nr, r, _c, _d, true,
                                                  _m_entries);
-                a = log(pb) - log(pf);
+                a = pb - pf;
             }
             return std::make_tuple(dS, a);
         }

@@ -29,6 +29,7 @@ except ImportError:
     def put_cache(name, params, val):
         pass
 
+openmp_set_num_threads(1)
 numpy.random.seed(43)
 seed_rng(43)
 
@@ -75,7 +76,7 @@ for directed in [True, False]:
         # computed probabilities
         mp = zeros(state.B)
         for s in range(state.B):
-            mp[s] = state.get_move_prob(v, s, c)
+            mp[s] = exp(state.get_move_prob(v, s, c))
 
         n_samples = min(int(200 / mp.min()), 1000000)
 
@@ -190,7 +191,6 @@ for wait in [50000, 100000, 250000, 500000, 1000000]:
 
                         params = dict(name=name, directed=directed, nested=nested,
                                       wait=wait, init=init, c=c)
-
 
                         with get_lock("mcmc_test", params) as lock:
                             if lock is None:

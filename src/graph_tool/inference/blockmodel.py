@@ -1246,7 +1246,7 @@ class BlockState(object):
         return self._state.sample_block(int(v), c, d, _get_rng())
 
     def get_move_prob(self, v, s, c=1., d=.1, reverse=False):
-        r"""Compute the probability of a move proposal for vertex ``v`` to block ``s``
+        r"""Compute the log-probability of a move proposal for vertex ``v`` to block ``s``
         according to sampling parameters ``c`` and ``d``, as obtained with
         :meth:`graph_tool.inference.blockmodel.BlockState.sample_vertex_move`. If ``reverse
         == True``, the reverse probability of moving the node back from block

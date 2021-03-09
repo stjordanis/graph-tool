@@ -263,14 +263,14 @@ public:
         if (reverse)
         {
             if (_wr[s] == 1)
-                return d;
+                return log(d);
             if (_wr[r] == 0)
                 B++;
         }
         else
         {
             if (_wr[s] == 0)
-                return d;
+                return log(d);
         }
 
         size_t k_r = 0;
@@ -290,7 +290,7 @@ public:
         if (B == _N)
             d = 0;
 
-        return (1. - d) * (c * p + (1 - c)/B);
+        return log(1. - d) + log(c * p + (1 - c)/B);
     }
 
     template <class MEntries>

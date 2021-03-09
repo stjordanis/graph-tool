@@ -658,21 +658,21 @@ public:
         if (reverse)
         {
             if (_overlap_stats.virtual_remove_size(v, s) == 0)
-                return d;
+                return log(d);
             if (_wr[r] == 0)
                 B++;
         }
         else
         {
             if (_wr[s] == 0)
-                return d;
+                return log(d);
         }
 
         if (B == num_vertices(_g))
             d = 0;
 
         if (std::isinf(c))
-            return (1. - d) / B;
+            return log(1. - d) - safelog_fast(B);
 
 
         typedef typename graph_traits<g_t>::vertex_descriptor vertex_t;
@@ -753,9 +753,9 @@ public:
             }
         }
         if (w > 0)
-            return (1. - d) * p / w;
+            return log(1. - d) + log(p) - log(w);
         else
-            return (1. - d) / B;
+            return log(1. - d) - safelog_fast(B);
     }
 
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,

@@ -1831,21 +1831,22 @@ public:
         if (reverse)
         {
             if (_wr[s] == _vweight[v])
-                return d;
+                return log(d);
+
             if (_wr[r] == 0)
                 B++;
         }
         else
         {
             if (_wr[s] == 0)
-                return d;
+                return log(d);
         }
 
         if (B == _N)
             d = 0;
 
         if (std::isinf(c))
-            return (1. - d) / B;
+            return log(1. - d) - safelog_fast(B);
 
         double p = 0;
         size_t w = 0;
@@ -1942,9 +1943,9 @@ public:
         }
 
         if (w > 0)
-            return (1. - d) * p / w;
+            return log(1. - d) + log(p) - log(w);
         else
-            return (1. - d) / B;
+            return log(1. - d) - safelog_fast(B);
     }
 
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,

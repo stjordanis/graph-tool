@@ -35,8 +35,6 @@ inline double lbinom(T1 N, T2 k)
 {
     if (N == 0 || k == 0 || k >= N)
         return 0;
-    assert(N > 0);
-    assert(k > 0);
     return ((std::lgamma(N + 1) - std::lgamma(k + 1)) - std::lgamma(N - k + 1));
 }
 
