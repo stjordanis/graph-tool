@@ -423,6 +423,18 @@ for wait in [50000, 100000, 250000, 500000, 1000000]:
                                 output = f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-kde-res-wait{wait}.pdf"
                                 if not os.path.exists(output):
                                     figure(figsize=(10 * 4/3, 10))
+
+                                    vals = []
+                                    for c in cs:
+                                        for init in inits:
+                                            hist_i = hists[(c,init)]
+                                            vals_i = list(zip(*hist_i))
+                                            if Be:
+                                                vals += vals_i[-1]
+                                            else:
+                                                vals += vals_i[2]
+                                    x = linspace(min(vals), max(vals), 1000)
+
                                     ymean = zeros(len(x))
                                     count = 0
                                     for c in cs:
