@@ -22,7 +22,7 @@
 #include <utility>
 #include <limits>
 
-template <class Key, class T>
+template <class Key, class T, bool shared_pos=false>
 class idx_map
 {
 public:
@@ -32,13 +32,30 @@ public:
     typedef typename std::vector<std::pair<Key,T>>::iterator iterator;
     typedef typename std::vector<std::pair<Key,T>>::const_iterator const_iterator;
 
+    idx_map()
+    {
+        if constexpr (shared_pos)
+            _pos = nullptr;
+    }
+
+    idx_map(std::vector<size_t>& pos) : _pos(&pos) {}
+
+    auto& get_pos()
+    {
+        if constexpr (shared_pos)
+            return *_pos;
+        else
+            return _pos;
+    }
+
     template <class P>
     std::pair<iterator,bool> insert(P&& value)
     {
-        if (_pos.size() <= size_t(value.first))
-            _pos.resize(value.first + 1, _null);
-        size_t& idx = _pos[value.first];
-        if (idx == _null)
+        auto& pos = get_pos();
+        if (pos.size() <= size_t(value.first))
+            pos.resize(value.first + 1, _null);
+        size_t& idx = pos[value.first];
+        if (idx == _null || shared_pos)
         {
             idx = _items.size();
             _items.push_back(value);
@@ -53,13 +70,16 @@ public:
 
     size_t erase(const Key& k)
     {
-        size_t& idx = _pos[k];
-        if (idx == _null)
+        auto& pos = get_pos();
+        size_t& idx = pos[k];
+        if (idx == _null && !shared_pos)
             return 0;
-        _pos[_items.back().first] = idx;
-        std::swap(_items[idx], _items.back());
+        auto& back = _items.back();
+        pos[back.first] = idx;
+        _items[idx] = back;
         _items.pop_back();
-        idx = _null;
+        if constexpr (!shared_pos)
+            idx = _null;
         return 1;
     }
 
@@ -70,7 +90,7 @@ public:
         return begin() + idx;
     }
 
-    T& operator[](const Key& key)
+    auto& operator[](const Key& key)
     {
         auto iter = find(key);
         if (iter == end())
@@ -80,37 +100,43 @@ public:
 
     iterator find(const Key& key)
     {
-        if (size_t(key) >= _pos.size())
+        auto& pos = get_pos();
+        if (size_t(key) >= pos.size())
             return end();
-        size_t idx = _pos[key];
-        if (idx == _null)
-            return end();
+        size_t idx = pos[key];
+        if constexpr (shared_pos)
+        {
+            if (idx >= _items.size() || _items[pos].first != key)
+                return end();
+        }
+        else
+        {
+            if (idx == _null)
+                return end();
+        }
         return begin() + idx;
     }
 
-    const iterator find(const Key& key) const
+    const_iterator find(const Key& key) const
     {
-        if (size_t(key) >= _pos.size())
-            return end();
-        size_t idx = _pos[key];
-        if (idx == _null)
-            return end();
-        return begin() + idx;
+        return const_cast<decltype(this)>(this)->find(key);
     }
 
     void clear()
     {
+        auto& pos = get_pos();
         for (auto k : _items)
-            _pos[k.first] = _null;
+            pos[k.first] = _null;
         _items.clear();
     }
 
     void shrink_to_fit()
     {
+        auto& pos = get_pos();
         _items.shrink_to_fit();
         if (_items.empty())
-            _pos.clear();
-        _pos.shrink_to_fit();
+            pos.clear();
+        pos.shrink_to_fit();
     }
 
     iterator begin() { return _items.begin(); }
@@ -123,14 +149,16 @@ public:
 
 private:
     std::vector<std::pair<Key,T>> _items;
-    std::vector<size_t> _pos;
+    std::conditional_t<shared_pos,
+                       std::vector<size_t>*,
+                       std::vector<size_t>> _pos;
     static constexpr size_t _null = std::numeric_limits<size_t>::max();
 };
 
-template <class Key, class T>
-constexpr size_t idx_map<Key, T>::_null;
+template <class Key, class T, bool shared_pos>
+constexpr size_t idx_map<Key, T, shared_pos>::_null;
 
-template <class Key>
+template <class Key, bool shared_pos=false>
 class idx_set
 {
 public:
@@ -139,12 +167,29 @@ public:
     typedef typename std::vector<Key>::iterator iterator;
     typedef typename std::vector<Key>::const_iterator const_iterator;
 
+    idx_set()
+    {
+        if constexpr (shared_pos)
+            _pos = nullptr;
+    }
+
+    idx_set(std::vector<size_t>& pos) : _pos(&pos) {}
+
+    auto& get_pos()
+    {
+        if constexpr (shared_pos)
+            return *_pos;
+        else
+            return _pos;
+    }
+
     std::pair<iterator,bool> insert(const Key& k)
     {
-        if (_pos.size() <= size_t(k))
-            _pos.resize(k + 1, _null);
-        size_t& idx = _pos[k];
-        if (idx == _null)
+        auto& pos = get_pos();
+        if (pos.size() <= size_t(k))
+            pos.resize(k + 1, _null);
+        size_t& idx = pos[k];
+        if (idx == _null || shared_pos)
         {
             idx = _items.size();
             _items.push_back(k);
@@ -158,13 +203,16 @@ public:
 
     size_t erase(const Key& k)
     {
-        size_t& idx = _pos[k];
-        if (idx == _null)
+        auto& pos = get_pos();
+        size_t& idx = pos[k];
+        if (idx == _null && !shared_pos)
             return 0;
-        _pos[_items.back()] = idx;
-        std::swap(_items[idx], _items.back());
+        auto& back = _items.back();
+        pos[back] = idx;
+        _items[idx] = back;
         _items.pop_back();
-        idx = _null;
+        if constexpr (!shared_pos)
+            idx = _null;
         return 1;
     }
 
@@ -177,37 +225,35 @@ public:
 
     iterator find(const Key& key)
     {
-        if (size_t(key) >= _pos.size())
+        auto& pos = get_pos();
+        if (size_t(key) >= pos.size())
             return end();
-        size_t idx = _pos[key];
+        size_t idx = pos[key];
         if (idx == _null)
             return end();
         return begin() + idx;
     }
 
-    const iterator find(const Key& key) const
+    const_iterator find(const Key& key) const
     {
-        if (size_t(key) >= _pos.size())
-            return end();
-        size_t idx = _pos[key];
-        if (idx == _null)
-            return end();
-        return begin() + idx;
+        return const_cast<decltype(this)>(this)->find(key);
     }
 
     void clear()
     {
+        auto& pos = get_pos();
         for (auto k : _items)
-            _pos[k] = _null;
+            pos[k] = _null;
         _items.clear();
     }
 
     void shrink_to_fit()
     {
+        auto& pos = get_pos();
         _items.shrink_to_fit();
         if (_items.empty())
-            _pos.clear();
-        _pos.shrink_to_fit();
+            pos.clear();
+        pos.shrink_to_fit();
     }
 
     iterator begin() { return _items.begin(); }
@@ -220,11 +266,13 @@ public:
 
 private:
     std::vector<Key> _items;
-    std::vector<size_t> _pos;
+    std::conditional_t<shared_pos,
+                       std::vector<size_t>*,
+                       std::vector<size_t>> _pos;
     static constexpr size_t _null = std::numeric_limits<size_t>::max();
 };
 
-template <class Key>
-constexpr size_t idx_set<Key>::_null;
+template <class Key, bool shared_pos>
+constexpr size_t idx_set<Key, shared_pos>::_null;
 
 #endif // IDX_MAP_HH

@@ -85,10 +85,8 @@ struct overlap_partition_stats_t
 
     template <class Graph, class Vprop, class Eprop, class Vlist>
     overlap_partition_stats_t(Graph& g, Vprop& b, Vlist& vlist, size_t E,
-                              size_t B, Eprop& eweight, overlap_stats_t& ostats,
-                              std::vector<size_t>& bmap,
-                              std::vector<size_t>& vmap)
-        : _overlap_stats(ostats), _bmap(bmap), _vmap(vmap),
+                              size_t B, Eprop& eweight, overlap_stats_t& ostats)
+        : _overlap_stats(ostats),
           _directed(graph_tool::is_directed(g))
 
     {
@@ -1024,8 +1022,8 @@ struct overlap_partition_stats_t
 
 private:
     overlap_stats_t& _overlap_stats;
-    vector<size_t>& _bmap;
-    vector<size_t>& _vmap;
+    vector<size_t> _bmap;
+    vector<size_t> _vmap;
     size_t _N;
     size_t _E;
     size_t _actual_B;

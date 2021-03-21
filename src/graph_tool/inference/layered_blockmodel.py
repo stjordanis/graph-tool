@@ -266,10 +266,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         self.epsilon = agg_state.epsilon
         self._entropy_args = agg_state._entropy_args
         self.recdx = agg_state.recdx
-        self.candidate_blocks = agg_state.candidate_blocks
-        self.candidate_pos = agg_state.candidate_pos
-        self.empty_blocks = agg_state.empty_blocks
-        self.empty_pos = agg_state.empty_pos
 
         self._coupled_state = None
 

@@ -25,6 +25,8 @@
 #include "../blockmodel/graph_blockmodel_util.hh"
 #include "../support/graph_state.hh"
 
+#include "idx_map.hh"
+
 #include "openmp_lock.hh"
 
 namespace graph_tool
@@ -110,8 +112,6 @@ public:
         _nr(_bs.shape()[0]),
         _N(_bs.shape()[1]),
         _wr(_N),
-        _empty_pos(_N),
-        _candidate_pos(_N),
         _bclabel(_N),
         _pclabel(_N)
     {
@@ -121,9 +121,9 @@ public:
         for (size_t r = 0; r < _N; ++r)
         {
             if (_wr[r] == 0)
-                add_element(_empty_blocks, _empty_pos, r);
+                _empty_groups.insert(r);
             else
-                add_element(_candidate_blocks, _candidate_pos, r);
+                _candidate_groups.insert(r);
         }
 
         for (size_t i = 0; i < _mrs.size(); ++i)
@@ -152,10 +152,8 @@ public:
 
     std::vector<size_t> _wr;
 
-    std::vector<size_t> _empty_blocks;
-    std::vector<size_t> _empty_pos;
-    std::vector<size_t> _candidate_blocks;
-    std::vector<size_t> _candidate_pos;
+    idx_set<size_t> _candidate_groups;
+    idx_set<size_t> _empty_groups;
 
     std::vector<size_t> _bclabel;
     std::vector<size_t> _pclabel;
@@ -197,14 +195,14 @@ public:
 
         if (_wr[r] == 0)
         {
-            add_element(_empty_blocks, _empty_pos, r);
-            remove_element(_candidate_blocks, _candidate_pos, r);
+            _empty_groups.insert(r);
+            _candidate_groups.erase(r);
         }
 
         if (_wr[nr] == 1)
         {
-            remove_element(_empty_blocks, _empty_pos, nr);
-            add_element(_candidate_blocks, _candidate_pos, nr);
+            _empty_groups.erase(nr);
+            _candidate_groups.insert(nr);
         }
 
         _b[v] = nr;
@@ -234,22 +232,22 @@ public:
 
     size_t get_empty_block(size_t, bool)
     {
-        return _empty_blocks.back();
+        return *(_empty_groups.end() - 1);
     }
 
     size_t sample_block(size_t, double, double d, rng_t& rng)
     {
         std::bernoulli_distribution new_r(d);
-        if (d > 0 && !_empty_blocks.empty() && new_r(rng))
-            return uniform_sample(_empty_blocks, rng);
-        return uniform_sample(_candidate_blocks, rng);
+        if (d > 0 && !_empty_groups.empty() && new_r(rng))
+            return uniform_sample(_empty_groups, rng);
+        return uniform_sample(_candidate_groups, rng);
     }
 
     // Computes the move proposal probability
     double get_move_prob(size_t, size_t r, size_t s, double, double d,
                          bool reverse)
     {
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_groups.size();
         if (reverse)
         {
             if (_wr[s] == 1)
@@ -292,7 +290,7 @@ public:
     {
         double S = 0, S_n = 0;
         gt_hash_map<int, int> wr;
-        for (auto r : _candidate_blocks)
+        for (auto r : _candidate_groups)
         {
             if (_wr[r] == 0)
                 continue;

@@ -27,6 +27,8 @@
 #include "../support/graph_state.hh"
 #include "graph_partition_mode.hh"
 
+#include "idx_map.hh"
+
 namespace graph_tool
 {
 using namespace boost;
@@ -69,12 +71,10 @@ public:
         _pos(_M),
         _modes(_M),
         _wr(_M),
-        _empty_pos(_M),
-        _candidate_pos(_M),
         _bclabel(_M),
         _pclabel(_M),
         _vs(vrange<size_t>(_M)),
-        _partition_stats(_g, _b, _vs, 0, _M, _vweight, _eweight, _degs, _bmap),
+        _partition_stats(_g, _b, _vs, 0, _M, _vweight, _eweight, _degs),
         _next_state(_M)
     {
         for (int i = 0; i < python::len(_obs); ++i)
@@ -95,9 +95,9 @@ public:
         for (size_t r = 0; r < _M; ++r)
         {
             if (_wr[r] == 0)
-                add_element(_empty_blocks, _empty_pos, r);
+                _empty_groups.insert(r);
             else
-                add_element(_candidate_blocks, _candidate_pos, r);
+                _candidate_groups.insert(r);
         }
 
         for (size_t i = 0; i < _M; ++i)
@@ -123,10 +123,8 @@ public:
 
     std::vector<size_t> _wr;
 
-    std::vector<size_t> _empty_blocks;
-    std::vector<size_t> _empty_pos;
-    std::vector<size_t> _candidate_blocks;
-    std::vector<size_t> _candidate_pos;
+    idx_set<size_t> _empty_groups;
+    idx_set<size_t> _candidate_groups;
 
     std::vector<size_t> _bclabel;
     std::vector<size_t> _pclabel;
@@ -134,7 +132,6 @@ public:
     UnityPropertyMap<int,GraphInterface::vertex_t> _vweight;
     UnityPropertyMap<int,GraphInterface::edge_t> _eweight;
     simple_degs_t _degs;
-    std::vector<size_t> _bmap;
     std::vector<size_t> _vs;
 
     partition_stats<false> _partition_stats;
@@ -195,14 +192,14 @@ public:
 
         if (_wr[r] == 0)
         {
-            add_element(_empty_blocks, _empty_pos, r);
-            remove_element(_candidate_blocks, _candidate_pos, r);
+            _empty_groups.insert(r);
+            _candidate_groups.erase(r);
         }
 
         if (_wr[nr] == 1)
         {
-            remove_element(_empty_blocks, _empty_pos, nr);
-            add_element(_candidate_blocks, _candidate_pos, nr);
+            _empty_groups.erase(nr);
+            _candidate_groups.insert(nr);
         }
 
         _b[v] = nr;
@@ -284,21 +281,21 @@ public:
 
     size_t get_empty_block(size_t, bool)
     {
-        return _empty_blocks.back();
+        return *(_empty_groups.end() - 1);
     }
 
     size_t sample_block(size_t, double, double d, rng_t& rng)
     {
         std::bernoulli_distribution new_r(d);
-        if (d > 0 && !_empty_blocks.empty() && new_r(rng))
-            return uniform_sample(_empty_blocks, rng);
-        return uniform_sample(_candidate_blocks, rng);
+        if (d > 0 && !_empty_groups.empty() && new_r(rng))
+            return uniform_sample(_empty_groups, rng);
+        return uniform_sample(_candidate_groups, rng);
     }
 
     // Computes the move proposal probability
     double get_move_prob(size_t, size_t r, size_t s, double, double d, bool reverse)
     {
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_groups.size();
         if (reverse)
         {
             if (_wr[s] == 1)
@@ -355,8 +352,6 @@ public:
 
         _modes.emplace_back();
         _wr.push_back(0);
-        _empty_pos.push_back(0);
-        _candidate_pos.push_back(0);
         _bclabel.push_back(0);
         _pclabel.push_back(0);
         _vs.push_back(_M);
@@ -389,7 +384,7 @@ public:
     double entropy()
     {
         double S = 0;
-        for (auto r: _candidate_blocks)
+        for (auto r: _candidate_groups)
             S += _modes[r].entropy();
         S += _partition_stats.get_partition_dl();
         return S;

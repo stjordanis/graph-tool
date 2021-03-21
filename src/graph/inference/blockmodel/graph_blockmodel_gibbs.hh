@@ -75,11 +75,16 @@ struct Gibbs
 
         double _c = numeric_limits<double>::infinity();
 
-        std::vector<size_t> _candidate_blocks;
+        std::vector<size_t> _candidate_groups;
 
         auto& get_moves(size_t)
         {
-            return _state._candidate_blocks;
+            _candidate_groups.clear();
+            _candidate_groups.insert(_candidate_groups.end(),
+                                     _state._candidate_groups.begin(),
+                                     _state._candidate_groups.end());
+            _candidate_groups.push_back(null_group);
+            return _candidate_groups;
         }
 
         size_t node_state(size_t v)
@@ -101,11 +106,11 @@ struct Gibbs
             if (nr == null_group)
             {
                 if (!_allow_new_group ||
-                    _state._candidate_blocks.size() - 1 == num_vertices(_state._g) ||
+                    _state._candidate_groups.size() == num_vertices(_state._g) ||
                     _state.virtual_remove_size(v) == 0)
                     return numeric_limits<double>::infinity();
                 _state.get_empty_block(v);
-                _nr = nr = uniform_sample(_state._empty_blocks, rng);
+                _nr = nr = uniform_sample(_state._empty_groups, rng);
                 if (_state._coupled_state != nullptr)
                     _state._coupled_state->sample_branch(nr, r, rng);
                 _state._bclabel[nr] = _state._bclabel[r];

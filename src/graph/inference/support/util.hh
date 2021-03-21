@@ -86,32 +86,6 @@ inline T log_sum_exp(T a, T b)
         return b + std::log1p(exp(a-b));
 }
 
-template <class Vec, class PosMap, class Val>
-void remove_element(Vec& vec, PosMap& pos, Val&& val)
-{
-    auto& back = vec.back();
-    auto& j = pos[back];
-    auto i = pos[val];
-    vec[i] = back;
-    j = i;
-    vec.pop_back();
-}
-
-template <class Vec, class PosMap, class Val>
-void add_element(Vec& vec, PosMap& pos, Val&& val)
-{
-    pos[val] = vec.size();
-    vec.push_back(val);
-}
-
-template <class Vec, class PosMap, class Val>
-bool has_element(Vec& vec, PosMap& pos, Val&& val)
-{
-    size_t i = pos[val];
-    return (i < vec.size() && vec[i] == val);
-}
-
-
 } // namespace graph_tool
 
 

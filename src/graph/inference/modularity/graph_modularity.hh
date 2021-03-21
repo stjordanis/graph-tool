@@ -22,6 +22,8 @@
 
 #include <vector>
 
+#include "idx_map.hh"
+
 #include "../blockmodel/graph_blockmodel_util.hh"
 #include "../support/graph_state.hh"
 
@@ -66,8 +68,6 @@ public:
         _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
         _N(HardNumVertices()(_g)),
         _E(HardNumEdges()(_g)),
-        _empty_pos(_N),
-        _candidate_pos(_N),
         _bclabel(_N),
         _pclabel(_N),
         _wr(_N)
@@ -86,9 +86,9 @@ public:
         for (size_t r = 0; r < _N; ++r)
         {
             if (_wr[r] == 0)
-                add_element(_empty_blocks, _empty_pos, r);
+                _empty_groups.insert(r);
             else
-                add_element(_candidate_blocks, _candidate_pos, r);
+                _candidate_groups.insert(r);
         }
 
         for (auto e : edges_range(_g))
@@ -110,10 +110,8 @@ public:
     size_t _N;
     size_t _E;
 
-    std::vector<size_t> _empty_blocks;
-    std::vector<size_t> _empty_pos;
-    std::vector<size_t> _candidate_blocks;
-    std::vector<size_t> _candidate_pos;
+    idx_set<size_t> _empty_groups;
+    idx_set<size_t> _candidate_groups;
 
     std::vector<size_t> _bclabel;
     std::vector<size_t> _pclabel;
@@ -126,7 +124,6 @@ public:
     UnityPropertyMap<int,GraphInterface::vertex_t> _vweight;
     UnityPropertyMap<int,GraphInterface::edge_t> _eweight;
     simple_degs_t _degs;
-    std::vector<size_t> _bmap;
 
     typedef modularity_entropy_args_t _entropy_args_t;
 
@@ -171,14 +168,14 @@ public:
 
         if (_wr[r] == 0)
         {
-            add_element(_empty_blocks, _empty_pos, r);
-            remove_element(_candidate_blocks, _candidate_pos, r);
+            _empty_groups.insert(r);
+            _candidate_groups.erase(r);
         }
 
         if (_wr[nr] == 1)
         {
-            remove_element(_empty_blocks, _empty_pos, nr);
-            add_element(_candidate_blocks, _candidate_pos, nr);
+            _empty_groups.erase(nr);
+            _candidate_groups.insert(nr);
         }
 
         _b[v] = nr;
@@ -237,14 +234,14 @@ public:
 
     size_t get_empty_block(size_t, bool)
     {
-        return _empty_blocks.back();
+        return *(_empty_groups.end() - 1);
     }
 
     size_t sample_block(size_t v, double c, double d, rng_t& rng)
     {
         std::bernoulli_distribution new_r(d);
-        if (d > 0 && !_empty_blocks.empty() && new_r(rng))
-            return uniform_sample(_empty_blocks, rng);
+        if (d > 0 && !_empty_groups.empty() && new_r(rng))
+            return uniform_sample(_empty_groups, rng);
         std::bernoulli_distribution adj(c);
         auto iter = out_neighbors(v, _g);
         if (c > 0 && iter.first != iter.second && adj(rng))
@@ -252,14 +249,14 @@ public:
             auto w = uniform_sample(iter.first, iter.second, rng);
             return _b[w];
         }
-        return uniform_sample(_candidate_blocks, rng);
+        return uniform_sample(_candidate_groups, rng);
     }
 
     // Computes the move proposal probability
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                          bool reverse)
     {
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_groups.size();
         if (reverse)
         {
             if (_wr[s] == 1)
@@ -310,7 +307,7 @@ public:
     {
         double Q = 0;
         double M = 2 * _E;
-        for (auto r : _candidate_blocks)
+        for (auto r : _candidate_groups)
             Q += _err[r] - ea.gamma * _er[r] * (_er[r] / M);
         return -Q;
     }

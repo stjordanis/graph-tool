@@ -74,9 +74,8 @@ public:
     template <class Graph, class Vprop, class VWprop, class Eprop, class Degs,
               class Vlist>
     partition_stats(Graph& g, Vprop& b, Vlist&& vlist, size_t E, size_t B,
-                    VWprop& vweight, Eprop& eweight, Degs& degs,
-                    std::vector<size_t>& bmap)
-        : _bmap(bmap), _N(0), _E(E), _total_B(B)
+                    VWprop& vweight, Eprop& eweight, Degs& degs)
+        : _N(0), _E(E), _total_B(B)
     {
         if constexpr (!use_rmap)
         {
@@ -644,7 +643,7 @@ public:
     }
 
 private:
-    vector<size_t>& _bmap;
+    vector<size_t> _bmap;
     size_t _N;
     size_t _E;
     size_t _actual_B;

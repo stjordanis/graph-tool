@@ -115,7 +115,7 @@ struct Layers
 
             using BaseState::_bg;
             using BaseState::_wr;
-            using BaseState::_empty_blocks;
+            using BaseState::_empty_groups;
             using BaseState::add_block;
 
             size_t get_block_map(size_t r, bool put_new=true)
@@ -125,7 +125,7 @@ struct Layers
                 if (iter == _block_map.end())
                 {
                     r_u = null_group;
-                    for (auto s : _empty_blocks)
+                    for (auto s : _empty_groups)
                     {
                         if (_block_rmap[s] != -1)
                             continue;

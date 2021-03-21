@@ -27,6 +27,8 @@
 
 #include "openmp_lock.hh"
 
+#include "idx_map.hh"
+
 namespace graph_tool
 {
 using namespace boost;
@@ -69,13 +71,10 @@ public:
         _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
         _N(HardNumVertices()(_g)),
         _E(HardNumEdges()(_g)),
-        _empty_pos(_N),
-        _candidate_pos(_N),
         _bclabel(_N),
         _pclabel(_N),
         _partition_stats(_g, _b, vertices_range(_g), _E,
-                         num_vertices(_g), _vweight, _eweight, _degs,
-                         _bmap)
+                         num_vertices(_g), _vweight, _eweight, _degs)
     {
         _wr.resize(num_vertices(_g), 0);
         _er.resize(num_vertices(_g), 0);
@@ -92,9 +91,9 @@ public:
         for (size_t r = 0; r < _N; ++r)
         {
             if (_wr[r] == 0)
-                add_element(_empty_blocks, _empty_pos, r);
+                _empty_groups.insert(r);
             else
-                add_element(_candidate_blocks, _candidate_pos, r);
+                _candidate_groups.insert(r);
         }
 
         for (auto e : edges_range(_g))
@@ -123,10 +122,8 @@ public:
     size_t _N;
     size_t _E;
 
-    std::vector<size_t> _empty_blocks;
-    std::vector<size_t> _empty_pos;
-    std::vector<size_t> _candidate_blocks;
-    std::vector<size_t> _candidate_pos;
+    idx_set<size_t> _empty_groups;
+    idx_set<size_t> _candidate_groups;
 
     std::vector<size_t> _bclabel;
     std::vector<size_t> _pclabel;
@@ -138,7 +135,6 @@ public:
     UnityPropertyMap<int,GraphInterface::vertex_t> _vweight;
     UnityPropertyMap<int,GraphInterface::edge_t> _eweight;
     simple_degs_t _degs;
-    std::vector<size_t> _bmap;
 
     partition_stats_t _partition_stats;
 
@@ -204,14 +200,14 @@ public:
                                     _degs);
         if (_wr[r] == 0)
         {
-            add_element(_empty_blocks, _empty_pos, r);
-            remove_element(_candidate_blocks, _candidate_pos, r);
+            _empty_groups.insert(r);
+            _candidate_groups.erase(r);
         }
 
         if (_wr[nr] == 1)
         {
-            remove_element(_empty_blocks, _empty_pos, nr);
-            add_element(_candidate_blocks, _candidate_pos, nr);
+            _empty_groups.erase(nr);
+            _candidate_groups.insert(nr);
         }
 
         _b[v] = nr;
@@ -270,7 +266,7 @@ public:
         derr[0] -= m;
         derr[1] += m;
 
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_groups.size();
         int dB = 0;
         if (_wr[r] == 1)
             dB--;
@@ -333,14 +329,14 @@ public:
 
     size_t get_empty_block(size_t, bool)
     {
-        return _empty_blocks.back();
+        return *(_empty_groups.end() - 1);
     }
 
     size_t sample_block(size_t v, double c, double d, rng_t& rng)
     {
         std::bernoulli_distribution new_r(d);
-        if (d > 0 && !_empty_blocks.empty() && new_r(rng))
-            return uniform_sample(_empty_blocks, rng);
+        if (d > 0 && !_empty_groups.empty() && new_r(rng))
+            return uniform_sample(_empty_groups, rng);
         std::bernoulli_distribution adj(c);
         auto iter = out_neighbors(v, _g);
         if (c > 0 && iter.first != iter.second && adj(rng))
@@ -348,14 +344,14 @@ public:
             auto w = uniform_sample(iter.first, iter.second, rng);
             return _b[w];
         }
-        return uniform_sample(_candidate_blocks, rng);
+        return uniform_sample(_candidate_groups, rng);
     }
 
     // Computes the move proposal probability
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                          bool reverse)
     {
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_groups.size();
         if (reverse)
         {
             if (_wr[s] == 1)
@@ -406,13 +402,13 @@ public:
     {
         double S = 0;
 
-        size_t B = _candidate_blocks.size();
+        size_t B = _candidate_groups.size();
 
         if (ea.uniform)
         {
             S -= lgamma_fast(_eio[0] + 1);
             S -= lgamma_fast(_eio[1] + 1);
-            for (auto r : _candidate_blocks)
+            for (auto r : _candidate_groups)
                 S += lgamma_fast(_er[r] + 1);
             S += (safelog_fast(B) - log(2)) * _eio[0];
             S += lbinom_fast(B, size_t(2)) * _eio[1];
@@ -423,7 +419,7 @@ public:
         {
             S -= lgamma_fast(_eio[1] + 1);
             S += (_eio[1]) * lbinom_fast(B, size_t(2));
-            for (auto r : _candidate_blocks)
+            for (auto r : _candidate_groups)
             {
                 S += lgamma_fast(_er[r] + 1);
                 S -= (_err[r]/2) * log(2) + lgamma_fast(_err[r]/2 + 1);

@@ -21,6 +21,8 @@
 #include "config.h"
 #include <tuple>
 
+#include "idx_map.hh"
+
 #include "../support/graph_state.hh"
 #include "../blockmodel/graph_blockmodel_util.hh"
 #include "graph_blockmodel_overlap_util.hh"
@@ -50,10 +52,6 @@ typedef mpl::vector2<std::true_type, std::false_type> use_hash_tr;
     ((mrm,, vmap_t, 0))                                                        \
     ((wr,, vmap_t, 0))                                                         \
     ((b,, vmap_t, 0))                                                          \
-    ((empty_blocks, & ,std::vector<size_t>&, 0))                               \
-    ((empty_pos,, vmap_t, 0))                                                  \
-    ((candidate_blocks, &, std::vector<size_t>&, 0))                           \
-    ((candidate_pos,, vmap_t, 0))                                              \
     ((bclabel,, vmap_t, 0))                                                    \
     ((pclabel,, vmap_t, 0))                                                    \
     ((bfield,, vprop_map_t<std::vector<double>>::type, 0))                     \
@@ -92,16 +90,13 @@ public:
           _overlap_stats(_g, _b, _half_edges, _node_index, num_vertices(_bg)),
           _coupled_state(nullptr)
     {
-        _empty_blocks.clear();
-        _candidate_blocks.clear();
-        _candidate_blocks.push_back(null_group);
         for (auto r : vertices_range(_bg))
         {
             _wr[r] = _overlap_stats.get_block_size(r);
             if (_wr[r] == 0)
-                add_element(_empty_blocks, _empty_pos, r);
+                _empty_groups.insert(r);
             else
-                add_element(_candidate_blocks, _candidate_pos, r);
+                _candidate_groups.insert(r);
         }
 
         for (auto& p : _brec)
@@ -155,6 +150,8 @@ public:
         : OverlapBlockStateVirtualBase<Ts...>
              (static_cast<const OverlapBlockStateVirtualBase<Ts...>&>(other)),
           _bg(other._bg),
+          _candidate_groups(other._candidate_groups),
+          _empty_groups(other._empty_groups),
           _c_mrs(other._c_mrs),
           _c_brec(other._c_brec),
           _c_bdrec(other._c_bdrec),
@@ -179,18 +176,18 @@ public:
     {
         if (Add && _wr[r] == 0)
         {
-            remove_element(_empty_blocks, _empty_pos, r);
-            add_element(_candidate_blocks, _candidate_pos, r);
+            _empty_groups.erase(r);
+            _candidate_groups.insert(r);
         }
 
-        if (Add)
+        if constexpr (Add)
             get_move_entries(v, null_group, r, _m_entries);
         else
             get_move_entries(v, r, null_group, _m_entries);
 
         apply_delta<Add,!Add>(*this, _m_entries);
 
-        if (Add)
+        if constexpr (Add)
         {
             _overlap_stats.add_half_edge(v, r, _b, _g);
             _b[v] = r;
@@ -208,8 +205,8 @@ public:
 
         if (!Add && _wr[r] == 0)
         {
-            remove_element(_candidate_blocks, _candidate_pos, r);
-            add_element(_empty_blocks, _empty_pos, r);
+            _candidate_groups.erase(r);
+            _empty_groups.insert(r);
         }
     }
 
@@ -550,10 +547,10 @@ public:
 
     size_t get_empty_block(size_t v, bool force_add = true)
     {
-        if (_empty_blocks.empty() || force_add)
+        if (_empty_groups.empty() || force_add)
         {
             add_block();
-            auto s = _empty_blocks.back();
+            auto s = *(_empty_groups.end() - 1);
             auto r = _b[v];
             _bclabel[s] = _bclabel[r];
             if (_coupled_state != nullptr)
@@ -562,7 +559,7 @@ public:
                 hb[s] = hb[r];
             }
         }
-        return _empty_blocks.back();
+        return *(_empty_groups.end() - 1);
     }
 
     // Sample node placement
@@ -571,10 +568,10 @@ public:
     {
         // attempt new block
         std::bernoulli_distribution new_r(d);
-        if (d > 0 && new_r(rng) && (_candidate_blocks.size() - 1 < num_vertices(_g)))
+        if (d > 0 && new_r(rng) && (_candidate_groups.size() < num_vertices(_g)))
         {
             get_empty_block(v);
-            auto s = uniform_sample(_empty_blocks, rng);
+            auto s = uniform_sample(_empty_groups, rng);
             auto r = _b[v];
             if (_coupled_state != nullptr)
                 _coupled_state->sample_branch(s, r, rng);
@@ -583,8 +580,7 @@ public:
         }
 
         // attempt random block
-        size_t s = uniform_sample(_candidate_blocks.begin() + 1,
-                                  _candidate_blocks.end(), rng);
+        size_t s = uniform_sample(_candidate_groups, rng);
 
         if (!std::isinf(c))
         {
@@ -598,7 +594,7 @@ public:
             double p_rand = 0;
             if (c > 0)
             {
-                size_t B = _candidate_blocks.size() - 1;
+                size_t B = _candidate_groups.size();
                 if (graph_tool::is_directed(_g))
                     p_rand = c * B / double(_mrp[t] + _mrm[t] + c * B);
                 else
@@ -653,7 +649,7 @@ public:
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                          bool reverse, MEntries& m_entries)
     {
-        size_t B = _candidate_blocks.size() - 1;
+        size_t B = _candidate_groups.size();
 
         if (reverse)
         {
@@ -972,8 +968,7 @@ public:
 
             for (size_t c = 0; c < C; ++c)
                 _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
-                                              _eweight, _overlap_stats,
-                                              _bmap, _vmap);
+                                              _eweight, _overlap_stats);
 
             for (size_t r = 0; r < num_vertices(_bg); ++r)
                 _partition_stats[rc[r]].get_r(r);
@@ -1143,14 +1138,12 @@ public:
         _mrm.resize(num_vertices(_bg) + n);
         _mrp.resize(num_vertices(_bg) + n);
         _bclabel.resize(num_vertices(_bg) + n);
-        _empty_pos.resize(num_vertices(_bg) + n);
-        _candidate_pos.resize(num_vertices(_bg) + n);
         size_t r = null_group;
         for (size_t i = 0; i < n; ++i)
         {
             r = boost::add_vertex(_bg);
             _wr[r] = _mrm[r] = _mrp[r] = 0;
-            add_element(_empty_blocks, _empty_pos, r);
+            _empty_groups.insert(r);
             _overlap_stats.add_block();
             for (auto& p : _partition_stats)
                 p.add_block();
@@ -1286,6 +1279,9 @@ public:
         bg_t;
     bg_t& _bg;
 
+    idx_set<size_t> _candidate_groups;
+    idx_set<size_t> _empty_groups;
+
     typename mrs_t::checked_t _c_mrs;
     std::vector<typename brec_t::value_type::checked_t> _c_brec;
     std::vector<typename brec_t::value_type::checked_t> _c_bdrec;
@@ -1309,8 +1305,6 @@ public:
 
     overlap_stats_t _overlap_stats;
     std::vector<overlap_partition_stats_t> _partition_stats;
-    std::vector<size_t> _bmap;
-    std::vector<size_t> _vmap;
 
     typedef SingleEntrySet<g_t, bg_t, std::vector<double>,
                            std::vector<double>> m_entries_t;

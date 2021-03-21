@@ -26,6 +26,8 @@
 #include <boost/algorithm/minmax_element.hpp>
 #endif
 
+#include "idx_map.hh"
+
 #include "../support/graph_state.hh"
 #include "graph_blockmodel_util.hh"
 
@@ -86,10 +88,6 @@ typedef mpl::vector1<std::false_type> rmap_tr;
     ((mrm,, vmap_t, 0))                                                        \
     ((wr,, vmap_t, 0))                                                         \
     ((b,, vmap_t, 0))                                                          \
-    ((empty_blocks, &, std::vector<size_t>&, 0))                               \
-    ((empty_pos,, vmap_t, 0))                                                  \
-    ((candidate_blocks, &, std::vector<size_t>&, 0))                           \
-    ((candidate_pos,, vmap_t, 0))                                              \
     ((bclabel,, vmap_t, 0))                                                    \
     ((pclabel,, vmap_t, 0))                                                    \
     ((bfield,, vprop_map_t<std::vector<double>>::type, 0))                     \
@@ -132,16 +130,14 @@ public:
           _neighbor_sampler(_g, _eweight),
           _m_entries(num_vertices(_bg))
     {
-        _empty_blocks.clear();
-        _candidate_blocks.clear();
-        _candidate_blocks.push_back(null_group);
         for (auto r : vertices_range(_bg))
         {
             if (_wr[r] == 0)
-                add_element(_empty_blocks, _empty_pos, r);
+                _empty_groups.insert(r);
             else
-                add_element(_candidate_blocks, _candidate_pos, r);
+                _candidate_groups.insert(r);
         }
+
         for (auto& p : _rec)
             _c_rec.push_back(p.get_checked());
         for (auto& p : _drec)
@@ -196,34 +192,6 @@ public:
         _N = 0;
         for (auto v : vertices_range(_g))
             _N += _vweight[v];
-    }
-
-    BlockState(const BlockState& other)
-        : BlockStateBase<Ts...>(static_cast<const BlockStateBase<Ts...>&>(other)),
-          _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
-          _c_mrs(_mrs.get_checked()),
-          _c_rec(other._c_rec),
-          _c_drec(other._c_drec),
-          _c_brec(other._c_brec),
-          _c_bdrec(other._c_bdrec),
-          _recsum(other._recsum),
-          _recx2(other._recx2),
-          _dBdx(other._dBdx),
-          _LdBdx(other._LdBdx),
-          _B_E(other._B_E),
-          _B_E_D(other._B_E_D),
-          _rt(other._rt),
-          _N(other._N),
-          _vweight(uncheck(__avweight, typename std::add_pointer<vweight_t>::type())),
-          _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
-          _degs(uncheck(__adegs, typename std::add_pointer<degs_t>::type())),
-          _emat(other._emat),
-          _egroups_update(other._egroups_update),
-          _neighbor_sampler(other._neighbor_sampler),
-          _m_entries(num_vertices(_bg))
-    {
-        if (other.is_partition_stats_enabled())
-            enable_partition_stats();
     }
 
     // =========================================================================
@@ -431,8 +399,8 @@ public:
 
         if (_vweight[v] > 0 && _wr[r] == _vweight[v])
         {
-            remove_element(_candidate_blocks, _candidate_pos, r);
-            add_element(_empty_blocks, _empty_pos, r);
+            _candidate_groups.erase(r);
+            _empty_groups.insert(r);
 
             if (_coupled_state != nullptr)
             {
@@ -468,8 +436,8 @@ public:
 
         if (_vweight[v] > 0 && _wr[r] == _vweight[v])
         {
-            remove_element(_empty_blocks, _empty_pos, r);
-            add_element(_candidate_blocks, _candidate_pos, r);
+            _empty_groups.erase(r);
+            _candidate_groups.insert(r);
 
             if (_coupled_state != nullptr)
             {
@@ -1111,14 +1079,12 @@ public:
         _mrp.resize(num_vertices(_bg) + n);
         _bclabel.resize(num_vertices(_bg) + n);
         _brecsum.resize(num_vertices(_bg) + n);
-        _empty_pos.resize(num_vertices(_bg) + n);
-        _candidate_pos.resize(num_vertices(_bg) + n);
         size_t r = null_group;
         for (size_t i = 0; i < n; ++i)
         {
             r = boost::add_vertex(_bg);
             _wr[r] = _mrm[r] = _mrp[r] = 0;
-            add_element(_empty_blocks, _empty_pos, r);
+            _empty_groups.insert(r);
             for (auto& p : _partition_stats)
                 p.add_block();
             if (!_egroups.empty())
@@ -1709,10 +1675,10 @@ public:
 
     size_t get_empty_block(size_t v, bool force_add = false)
     {
-        if (_empty_blocks.empty() || force_add)
+        if (_empty_groups.empty() || force_add)
         {
             add_block();
-            auto s = _empty_blocks.back();
+            auto s = *(_empty_groups.end()-1);
             auto r = _b[v];
             _bclabel[s] = _bclabel[r];
             if (_coupled_state != nullptr)
@@ -1721,7 +1687,7 @@ public:
                 hb[s] = hb[r];
             }
         }
-        return _empty_blocks.back();
+        return *(_empty_groups.end()-1);
     }
 
     void sample_branch(size_t v, size_t u, rng_t& rng)
@@ -1729,11 +1695,11 @@ public:
         size_t s;
         auto r = _b[u];
 
-        std::bernoulli_distribution new_r(1./_candidate_blocks.size());
-        if (_candidate_blocks.size() <= num_vertices(_g) && new_r(rng))
+        std::bernoulli_distribution new_r(1./(_candidate_groups.size()+1));
+        if (_candidate_groups.size() < num_vertices(_g) && new_r(rng))
         {
             get_empty_block(v);
-            s = uniform_sample(_empty_blocks, rng);
+            s = uniform_sample(_empty_groups, rng);
             if (_coupled_state != nullptr)
             {
                 _coupled_state->sample_branch(s, r, rng);
@@ -1744,8 +1710,7 @@ public:
         }
         else
         {
-            s = uniform_sample(_candidate_blocks.begin() + 1,
-                               _candidate_blocks.end(), rng);
+            s = uniform_sample(_candidate_groups, rng);
         }
         _b[v] = s;
     }
@@ -1753,14 +1718,14 @@ public:
     // Sample node placement
     size_t sample_block(size_t v, double c, double d, rng_t& rng)
     {
-        size_t B = _candidate_blocks.size() - 1;
+        size_t B = _candidate_groups.size();
 
         // attempt new block
         std::bernoulli_distribution new_r(d);
         if (d > 0 && B < _N && new_r(rng))
         {
             get_empty_block(v);
-            auto s = uniform_sample(_empty_blocks, rng);
+            auto s = uniform_sample(_empty_groups, rng);
             auto r = _b[v];
             if (_coupled_state != nullptr)
             {
@@ -1800,14 +1765,12 @@ public:
             }
             else
             {
-                s = uniform_sample(_candidate_blocks.begin() + 1,
-                                   _candidate_blocks.end(), rng);
+                s = uniform_sample(_candidate_groups, rng);
             }
         }
         else
         {
-            s = uniform_sample(_candidate_blocks.begin() + 1,
-                               _candidate_blocks.end(), rng);
+            s = uniform_sample(_candidate_groups, rng);
         }
 
         return s;
@@ -1826,7 +1789,7 @@ public:
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                          bool reverse, MEntries& m_entries)
     {
-        size_t B = _candidate_blocks.size() - 1;
+        size_t B = _candidate_groups.size();
 
         if (reverse)
         {
@@ -2416,8 +2379,7 @@ public:
 
             for (size_t c = 0; c < C; ++c)
                 _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
-                                              _vweight, _eweight, _degs,
-                                              _bmap);
+                                              _vweight, _eweight, _degs);
 
             for (auto r : vertices_range(_bg))
                 _partition_stats[rc[r]].get_r(r);
@@ -2612,6 +2574,9 @@ public:
         bg_t;
     bg_t& _bg;
 
+    idx_set<size_t> _candidate_groups;
+    idx_set<size_t> _empty_groups;
+
     typename mrs_t::checked_t _c_mrs;
     std::vector<typename rec_t::value_type::checked_t> _c_rec;
     std::vector<typename drec_t::value_type::checked_t> _c_drec;
@@ -2654,7 +2619,6 @@ public:
 
     neighbor_sampler_t _neighbor_sampler;
     std::vector<partition_stats_t> _partition_stats;
-    std::vector<size_t> _bmap;
 
     typedef EntrySet<g_t, bg_t, std::vector<double>,
                      std::vector<double>> m_entries_t;

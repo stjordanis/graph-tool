@@ -427,11 +427,6 @@ class BlockState(object):
                                     self.g.vertex_index.copy("int"))
         self.merge_map = self.g.own_property(self.merge_map)
 
-        self.candidate_blocks = Vector_size_t()
-        self.candidate_pos = self.bg.new_vp("int")
-        self.empty_blocks = Vector_size_t()
-        self.empty_pos = self.bg.new_vp("int")
-
         self._init_recs(self.rec, rec_types, rec_params)
         self.recdx = libcore.Vector_double(len(self.rec))
         self.Lrecdx = kwargs.pop("Lrecdx", None)

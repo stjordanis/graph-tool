@@ -203,11 +203,6 @@ class OverlapBlockState(BlockState):
 
         self.B = B
 
-        self.candidate_blocks = Vector_size_t()
-        self.candidate_pos = self.bg.new_vp("int")
-        self.empty_blocks = Vector_size_t()
-        self.empty_pos = self.bg.new_vp("int")
-
         if pclabel is not None:
             if isinstance(pclabel, PropertyMap):
                 self.pclabel = self.g.own_property(pclabel).copy("int")

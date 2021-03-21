@@ -118,11 +118,11 @@ struct MCMC
         template <bool sample_branch=true, class RNG, class VS = std::array<size_t,0>>
         size_t sample_new_group(size_t v, RNG& rng, VS&& except = VS())
         {
-            _state.get_empty_block(v, except.size() >= _state._empty_blocks.size());
+            _state.get_empty_block(v, except.size() >= _state._empty_groups.size());
             size_t t;
             do
             {
-                t = uniform_sample(_state._empty_blocks, rng);
+                t = uniform_sample(_state._empty_groups, rng);
             } while (!except.empty() &&
                      std::find(except.begin(), except.end(), t) != except.end());
 
@@ -157,8 +157,8 @@ struct MCMC
 
         void reserve_empty_groups(size_t nB)
         {
-            if (_state._empty_blocks.size() < nB)
-                _state.add_block(nB - _state._empty_blocks.size());
+            if (_state._empty_groups.size() < nB)
+                _state.add_block(nB - _state._empty_groups.size());
         }
 
         bool allow_move(size_t r, size_t s)
