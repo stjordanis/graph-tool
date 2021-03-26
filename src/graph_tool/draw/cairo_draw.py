@@ -1572,8 +1572,8 @@ class GraphArtist(matplotlib.artist.Artist):
 
             x = np.ones(3)
             for v in self.g.vertices():
-                x[:2] = pos[v].a
-                pos[v].a = np.dot(m, x)[:2]
+                x[:2] = pos[v].a[:2]
+                pos[v].a[:2] = np.dot(m, x)[:2]
 
             cp = eprops.get("control_points", None)
             if isinstance(cp, PropertyMap):
