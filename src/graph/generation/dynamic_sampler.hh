@@ -47,7 +47,7 @@ public:
     size_t get_parent(size_t i) const { return i > 0 ? (i - 1) / 2 : 0; }
 
     template <class RNG>
-    const Value& sample(RNG& rng) const
+    size_t sample_idx(RNG& rng) const
     {
         uniform_real_distribution<> sample(0, _tree[0]);
         double u = sample(rng), c = 0;
@@ -67,8 +67,13 @@ public:
                 c += a;
             }
         }
-        size_t i = _idx[pos];
-        return _items[i];
+        return _idx[pos];
+    }
+
+    template <class RNG>
+    const Value& sample(RNG& rng) const
+    {
+        return _items[sample_idx(rng)];
     }
 
     size_t insert(const Value& v, double w)
