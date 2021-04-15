@@ -1525,7 +1525,10 @@ class PropertyDict(object):
         return repr(temp)
 
     def __getattr__(self, attr):
-        return self.__getitem__(attr)
+        try:
+            return self.__getitem__(attr)
+        except KeyError:
+            return super(PropertyDict, self).__getattr__(attr)
 
     def __setattr__(self, attr, val):
         return self.__setitem__(attr, val)
