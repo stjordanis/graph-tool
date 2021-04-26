@@ -1528,7 +1528,7 @@ class PropertyDict(object):
         try:
             return self.__getitem__(attr)
         except KeyError:
-            return super(PropertyDict, self).__getattr__(attr)
+            return getattr(super(PropertyDict, self), attr)
 
     def __setattr__(self, attr, val):
         return self.__setitem__(attr, val)
@@ -1675,7 +1675,7 @@ class Graph(object):
                                                       vprops,
                                                       eprops,
                                                       _prop("v", gv, vorder))
-                # internal index maps
+                # Internal index maps
                 self.__vertex_index = \
                          VertexPropertyMap(libcore.get_vertex_index(self.__graph), self)
                 self.__edge_index = \
