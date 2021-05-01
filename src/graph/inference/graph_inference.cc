@@ -141,6 +141,7 @@ extern void export_mode_cluster_state();
 extern void export_mode_cluster_mcmc();
 extern void export_mode_cluster_multiflip_mcmc();
 extern void export_mode_cluster_multilevel_mcmc();
+extern void export_pp_gibbs();
 extern void export_pp_state();
 extern void export_pp_mcmc();
 extern void export_pp_multiflip_mcmc();
@@ -228,6 +229,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     export_mode_cluster_mcmc();
     export_mode_cluster_multiflip_mcmc();
     export_pp_state();
+    export_pp_gibbs();
     export_pp_mcmc();
     export_pp_multiflip_mcmc();
     export_pp_multilevel_mcmc();

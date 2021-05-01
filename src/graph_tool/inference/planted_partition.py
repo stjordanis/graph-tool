@@ -410,3 +410,83 @@ class PPBlockState(object):
                              str(list(kwargs.keys())))
 
         return dS, nattempts, nmoves
+
+    def gibbs_sweep(self, beta=1., niter=1, entropy_args={},
+                    allow_new_group=True, sequential=True, deterministic=False,
+                    vertices=None, verbose=False, **kwargs):
+        r"""Perform ``niter`` sweeps of a rejection-free Gibbs sampling MCMC
+        to sample network partitions.
+
+        Parameters
+        ----------
+        beta : ``float`` (optional, default: ``1.``)
+            Inverse temperature.
+        niter : ``int`` (optional, default: ``1``)
+            Number of sweeps to perform. During each sweep, a move attempt is
+            made for each node.
+        entropy_args : ``dict`` (optional, default: ``{}``)
+            Entropy arguments, with the same meaning and defaults as in
+            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+        allow_new_group : ``bool`` (optional, default: ``True``)
+            Allow the number of groups to increase and decrease.
+        sequential : ``bool`` (optional, default: ``True``)
+            If ``sequential == True`` each vertex move attempt is made
+            sequentially, where vertices are visited in random order. Otherwise
+            the moves are attempted by sampling vertices randomly, so that the
+            same vertex can be moved more than once, before other vertices had
+            the chance to move.
+        deterministic : ``bool`` (optional, default: ``False``)
+            If ``sequential == True`` and ``deterministic == True`` the
+            vertices will be visited in deterministic order.
+        vertices : ``list`` of ints (optional, default: ``None``)
+            If provided, this should be a list of vertices which will be
+            moved. Otherwise, all vertices will.
+        verbose : ``bool`` (optional, default: ``False``)
+            If ``verbose == True``, detailed information will be displayed.
+
+        Returns
+        -------
+        dS : ``float``
+            Entropy difference after the sweeps.
+        nattempts : ``int``
+            Number of vertex moves attempted.
+        nmoves : ``int``
+            Number of vertices moved.
+
+        Notes
+        -----
+        This algorithm has an :math:`O(E\times B)` complexity, where :math:`B`
+        is the number of blocks, and :math:`E` is the number of edges.
+
+        """
+
+        gibbs_state = DictState(locals())
+        entropy_args = dict(self._entropy_args, **entropy_args)
+        gibbs_state.oentropy_args = get_pp_entropy_args(entropy_args)
+        gibbs_state.vlist = Vector_size_t()
+        if vertices is None:
+            vertices = self.g.get_vertices()
+        gibbs_state.vlist.resize(len(vertices))
+        gibbs_state.vlist.a = vertices
+        gibbs_state.E = self.g.num_edges()
+        gibbs_state.state = self._state
+
+        test = kwargs.pop("test", True)
+        if _bm_test() and test:
+            Si = self.entropy(**entropy_args)
+
+        dS, nattempts, nmoves = \
+            libinference.pp_gibbs_sweep(gibbs_state, self._state,
+                                        _get_rng())
+
+        if _bm_test() and test:
+            Sf = self.entropy(**entropy_args)
+            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
+                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
+                                                            str(entropy_args))
+
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized keyword arguments: " +
+                             str(list(kwargs.keys())))
+
+        return dS, nattempts, nmoves

@@ -47,6 +47,7 @@ libgraph_tool_inference_la_SOURCES = \
     partition_modes/graph_partition_mode_clustering_multiflip_mcmc.cc \
     partition_modes/graph_partition_mode_clustering_multilevel_mcmc.cc \
     planted_partition/graph_planted_partition.cc \
+    planted_partition/graph_planted_partition_gibbs.cc \
     planted_partition/graph_planted_partition_mcmc.cc \
     planted_partition/graph_planted_partition_multiflip_mcmc.cc \
     planted_partition/graph_planted_partition_multilevel_mcmc.cc \
