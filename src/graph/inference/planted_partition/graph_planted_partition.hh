@@ -327,7 +327,7 @@ public:
         return dS;
     }
 
-    size_t get_empty_block(size_t, bool)
+    size_t get_empty_block(size_t, bool=false)
     {
         return *(_empty_groups.end() - 1);
     }
@@ -337,7 +337,7 @@ public:
         std::bernoulli_distribution new_r(d);
         if (d > 0 && !_empty_groups.empty() && new_r(rng))
             return uniform_sample(_empty_groups, rng);
-        std::bernoulli_distribution adj(c);
+        std::bernoulli_distribution adj(std::min(c, 1.));
         auto iter = out_neighbors(v, _g);
         if (c > 0 && iter.first != iter.second && adj(rng))
         {
@@ -365,24 +365,28 @@ public:
                 return log(d);
         }
 
-        size_t k_r = 0;
         size_t k_s = 0;
         size_t k = 0;
         for (auto w : out_neighbors_range(v, _g))
         {
-            if (size_t(_b[w]) == r)
-                k_r++;
             if (size_t(_b[w]) == s)
                 k_s++;
             k++;
         }
 
-        double p = ((reverse) ? k_r : k_s) / double(k);
-
         if (B == _N)
             d = 0;
 
-        return log(1. - d) + log(c * p + (1 - c)/B);
+        if (k > 0)
+        {
+            double p = k_s / double(k);
+            c = std::min(c, 1.);
+            return log1p(-d) + log(c * p + (1. - c)/B);
+        }
+        else
+        {
+            return log1p(-d) - log(B);
+        }
     }
 
     template <class MEntries>
