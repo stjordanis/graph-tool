@@ -136,6 +136,15 @@ for pvals in iter_ranges(pranges):
                                                        beta_dl=0.95)),
           state.get_nonempty_B(), file=out)
 
+    print("\t mcmc (unweighted, multilevel)", file=out)
+    state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
+    print("\t\t",
+          state.multilevel_mcmc_sweep(beta=0, M=3,
+                                      entropy_args=dict(dl=dl,
+                                                        degree_dl_kind=degree_dl_kind,
+                                                        beta_dl=0.95)),
+          state.get_nonempty_B(), file=out)
+
     print("\t gibbs (unweighted)", file=out)
     state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
 
@@ -173,52 +182,6 @@ for pvals in iter_ranges(pranges):
                                                    beta_dl=0.95)),
               bstate.get_nonempty_B(), file=out)
 
-    print("\t merge", file=out)
-
-    state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
-
-    if not overlap:
-        bstate = state.get_block_state(vweight=True, deg_corr=deg_corr)
-
-        print("\t\t",
-              bstate.merge_sweep(50,
-                                 entropy_args=dict(dl=dl,
-                                                   degree_dl_kind=degree_dl_kind,
-                                                   multigraph=False,
-                                                   beta_dl=0.95)),
-              file=out)
-
-        bstate = bstate.copy()
-
-        print("\t\t",
-              bstate.mcmc_sweep(beta=0,
-                                entropy_args=dict(dl=dl,
-                                                  degree_dl_kind=degree_dl_kind,
-                                                  beta_dl=0.95)),
-              file=out)
-        print("\t\t",
-              bstate.gibbs_sweep(beta=0,
-                                 entropy_args=dict(dl=dl,
-                                                   degree_dl_kind=degree_dl_kind,
-                                                   beta_dl=0.95)),
-              file=out)
-    else:
-        print("\t\t",
-              state.merge_sweep(50,
-                                entropy_args=dict(dl=dl,
-                                                  degree_dl_kind=degree_dl_kind,
-                                                  multigraph=False,
-                                                  beta_dl=0.95)),
-              file=out)
-
-    print("\t shrink", file=out)
-
-    state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
-    state = state.shrink(B=5, entropy_args=dict(dl=dl,
-                                                degree_dl_kind=degree_dl_kind,
-                                                multigraph=False,
-                                                beta_dl=0.95))
-    print("\t\t", state.B, "\n", file=out)
 
 pranges = {"directed": [False, True],
            "overlap": [False],
@@ -300,35 +263,39 @@ for pvals in iter_ranges(pranges):
         rec = []
 
     if layered != False:
+        state_t = LayeredBlockState
         state_args = dict(ec=ec, layers=(layered == True), recs=rec_,
-                          rec_types=rec)
+                          rec_types=rec, deg_corr=deg_corr, overlap=overlap)
     else:
-        state_args = dict(recs=rec_, rec_types=rec)
+        if overlap:
+            state_t = OverlapBlockState
+        else:
+            state_t = BlockState
+        state_args = dict(recs=rec_, rec_types=rec, deg_corr=deg_corr)
 
     entropy_args = dict(beta_dl=0.95)
 
     state = minimize_blockmodel_dl(GraphView(g, directed=directed),
-                                   verbose=(1, "\t") if verbose else False,
-                                   deg_corr=deg_corr,
-                                   overlap=overlap,
-                                   layers=layered != False,
+                                   state=state_t,
                                    state_args=state_args,
-                                   mcmc_args=dict(entropy_args=entropy_args))
+                                   multilevel_mcmc_args=dict(entropy_args=entropy_args))
 
-    print(state.B, state.entropy(), file=out)
+    print(state.get_B(), state.entropy(), file=out)
+
+    state_args = dict(state_args=state_args)
+    if layered != False:
+        state_args["base_state"] = LayeredBlockState
+        state_args["overlap"] = overlap
+    elif overlap:
+            state_args["base_state"] = OverlapBlockState
+
 
     state = minimize_nested_blockmodel_dl(GraphView(g, directed=directed),
-                                          verbose=(2, "\t") if verbose else False,
-                                          deg_corr=deg_corr,
-                                          overlap=overlap,
-                                          layers=layered != False,
                                           state_args=state_args,
-                                          mcmc_args=dict(entropy_args=entropy_args))
+                                          multilevel_mcmc_args=dict(entropy_args=entropy_args))
     if verbose:
         state.print_summary()
 
     print(state.entropy(), "\n", file=out)
-
-graph_tool.inference.set_test(False)
 
 print("OK")

@@ -9,6 +9,8 @@ from numpy.random import randint
 from collections import defaultdict
 import scipy.stats
 import os.path
+from multiprocessing import Pool
+from tqdm import tqdm
 
 try:
     from data_cache import FSDataCache
@@ -29,6 +31,8 @@ except ImportError:
     def put_cache(name, params, val):
         pass
 
+
+#graph_tool.inference.blockmodel.set_test(True)
 openmp_set_num_threads(1)
 numpy.random.seed(43)
 seed_rng(43)
@@ -42,14 +46,16 @@ for directed in [True, False]:
     clf()
     g.set_directed(directed)
 
-    state = minimize_blockmodel_dl(g, deg_corr=False, B_min=B, B_max=B)
+    state = minimize_blockmodel_dl(g, state_args=dict(deg_corr=False),
+                                   multilevel_mcmc_args=dict(B_min=B, B_max=B))
+    state = state.copy(b=order_partition_labels(state.b.a))
     state = state.copy(B=B+1)
 
     c = 0.01
     for v in g.vertices():
         r = state.b[v]
-        res = zeros(state.B)
-        for s in range(state.B):
+        res = zeros(state.get_B())
+        for s in range(state.get_B()):
             pf = state.get_move_prob(v, s, c=c, reverse=True)
             state.move_vertex(v, s)
             pb = state.get_move_prob(v, r, c=c)
@@ -63,22 +69,27 @@ for directed in [True, False]:
 
     savefig("test_mcmc/test_mcmc_reverse_prob_directed%s.pdf" % directed)
 
-for directed in [True, False]:
+for directed in [False, True]:
     clf()
     g.set_directed(directed)
 
-    state = minimize_blockmodel_dl(g, deg_corr=False, B_min=B, B_max=B)
-    state = state.copy(B=B+1)
+    state = minimize_blockmodel_dl(g, state_args=dict(deg_corr=False),
+                                   multilevel_mcmc_args=dict(B_min=B, B_max=B))
+    state = state.copy(b=order_partition_labels(state.b.a))
+    state = state.copy(B=state.get_B()+1)
 
     c = 0.1
     for v in g.vertices():
 
         # computed probabilities
-        mp = zeros(state.B)
-        for s in range(state.B):
+        mp = zeros(state.get_B())
+        n_empty = sum(state.wr.a == 0)
+        for s in range(state.get_B()):
             mp[s] = exp(state.get_move_prob(v, s, c))
+            if state.wr[s] == 0:
+                mp[s] /= n_empty
 
-        n_samples = min(int(200 / mp.min()), 1000000)
+        n_samples = min(int(200 / mp[mp > 0].min()), 1000000)
 
         # actual samples
         samples = [state.sample_vertex_move(v, c) for i in range(n_samples)]
@@ -170,306 +181,394 @@ else:
     g_small = g
     g.save("g_small.gt")
 
-for wait in [50000, 100000, 250000, 500000, 1000000]:
+
+def run_mcmc(state, algo, params={}):
+    if algo == "single-flip-metropolis":
+        return state.mcmc_sweep(**params)
+    elif algo == "single-flip-gibbs":
+        return state.gibbs_sweep(**params)
+    elif algo == "multiflip":
+        return state.multiflip_mcmc_sweep(**params)
+    elif algo == "multilevel":
+        return state.multilevel_mcmc_sweep(**params)
+
+alist = [("single-flip-metropolis", [dict(c=0.1),
+                                     dict(c=numpy.inf)]),
+         ("single-flip-gibbs", [dict()]),
+         ("multiflip", [dict(c=0.1, gibbs_sweeps=3),
+                        dict(c=numpy.inf, gibbs_sweeps=3)]),
+         #("multilevel", [dict(c=0.1, mh_sweeps=3, M=2, gibbs=False)])
+         ]
+
+
+def get_hist(params, pos=0, check_only=False):
+
+    params = params.copy()
+    g = params.get("g", None)
+
+    name = params["name"]
+    directed = params["directed"]
+    model = params["model"]
+    wait = params["wait"]
+    init = params["init"]
+    algo = params["algo"]
+    aparams = params["aparams"]
+
+    params = dict(params, **aparams)
+    if g is not None:
+        del params["g"]
+
+    try:
+        h = get_cache("hists", params)
+        if check_only:
+            return True
+    except KeyError:
+        if check_only:
+            return False
+
+        g = g.copy()
+        g.set_directed(directed)
+
+        if model == "nsbm":
+            state = minimize_nested_blockmodel_dl(g, state_args=dict(deg_corr=True))
+        if model == "sbm":
+            state = minimize_blockmodel_dl(g, state_args=dict(deg_corr=True))
+        if model == "pp":
+            state = minimize_blockmodel_dl(g, state=PPBlockState)
+        if model == "modularity":
+            state = minimize_blockmodel_dl(g, state=ModularityState)
+
+        if model == "nsbm":
+            bs = [g.get_vertices()] if init == "N" else [zeros(1)]
+            state = state.copy(bs=bs + [zeros(1)] * 6, sampling=True)
+        else:
+            b = g.get_vertices() if init == "N" else zeros(g.num_vertices())
+            state = state.copy(b=b)
+
+        if model in ["nsbm", "sbm"]:
+            state = state.copy(dense_bg=True)
+
+        aparams = dict(**aparams)
+        aparams["beta"] = .3
+
+        if name in ["lesmis", "karate", "football", "polbooks"]:
+            aparams["beta"] = .9
+
+        if model == "nsbm":
+            get_B = lambda s: s.levels[0].get_Be()
+        else:
+            get_B = lambda s: s.get_Be()
+
+        istep = 5
+        aparams["niter"] = istep
+
+        if algo == "multilevel":
+            aparams["niter"] = istep * g.num_vertices()
+
+        h = [[],[]]
+
+        desc=f"{pos}: {name} {algo}"
+        for t in tqdm(range(wait), position=pos, desc=desc + " " * max(35 - len(desc), 0)):
+            ret = run_mcmc(state, algo, aparams)
+            S, B = state.entropy(), get_B(state)
+            h[0].append(S)
+            h[1].append(B)
+            #print(name, directed, model, algo, aparams, wait, t, S, B)
+
+        put_cache("hists", params, h)
+    return h
+
+all_params = []
+done = []
+
+for wait in [50000, 500000,
+             #5000000
+             ]:
     for g, name in [(g_small, "small"),
                     (collection.data["lesmis"], "lesmis"),
-                    (collection.data["karate"], "karate")]:
+                    (collection.data["karate"], "karate")
+                    ]:
+
         for directed in [False, True]:
-            g.set_directed(directed)
-            for nested in [False, True]:
+            for model in ["sbm", "nsbm",
+                          "pp", "modularity"
+                          ]:
+                for algo, aparam_list in alist:
+                    for aparams in aparam_list:
+                        inits = ["N"]
+                        state = None
+                        hists = {}
 
-                cs = list(reversed([numpy.inf, 0.01, "gibbs", -numpy.inf, -0.1]))
-                inits = ["N"]
-                state = None
-                hists = {}
+                        for init in inits:
+                            params = dict(g=g, name=name, directed=directed,
+                                          model=model, wait=wait, init=init,
+                                          algo=algo, aparams=aparams)
+                            all_params.append(params)
+                            done.append(get_hist(params, check_only=True))
 
-                for init in inits:
+# pos = 0
+# for params, done in zip(all_params, done):
+#     print(params)
+#     get_hist(params, pos)
+#     pos += 1
 
-                    istep = 50
+with Pool(12) as p:
+    rets = []
+    pos = 0
+    for params, done in zip(all_params, done):
+        if done:
+            continue
+        ret = p.apply_async(get_hist, (params, pos))
+        rets.append(ret)
+        pos += 1
+    for ret in rets:
+        ret.get()
 
-                    for i, c in enumerate(cs):
+for params in all_params:
 
-                        params = dict(name=name, directed=directed, nested=nested,
-                                      wait=wait, init=init, c=c)
+    g = params["g"]
+    del params["g"]
 
-                        with get_lock("mcmc_test", params) as lock:
-                            if lock is None:
-                                continue
+    name = params["name"]
+    directed = params["directed"]
+    model = params["model"]
+    wait = params["wait"]
+    init = params["init"]
+    algo = params["algo"]
+    aparams = params["aparams"]
+    for Be in [True, False]:
+        output = f"test_mcmc/test_mcmc_{name}_model{model}_directed{directed}_Be{Be}_wait{wait}-KS.pdf"
+        if not os.path.exists(output):
+            figure(figsize=(10 * 4/3, 10))
 
-                            try:
-                                h = get_cache("hists", params)
-                            except KeyError:
-                                if state is None:
-                                    if nested:
-                                        state = minimize_nested_blockmodel_dl(g, deg_corr=True)
+            for m_algo, m_aparam_list in alist:
+                for m_aparams in m_aparam_list:
+                    for m_init in inits:
+
+                        hist_m = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=m_init, algo=m_algo,
+                                               aparams=m_aparams))
+
+                        if Be:
+                            S1 = hist_m[1]
+                        else:
+                            S1 = hist_m[0]
+
+                        hc = []
+                        for algo, aparam_list in alist:
+                            for aparams in aparam_list:
+                                if algo == m_algo and aparams == m_aparams:
+                                    continue
+                                for init in inits:
+                                    hist_i = get_hist(dict(name=name,
+                                                           directed=directed,
+                                                           model=model, wait=wait,
+                                                           init=init, algo=algo,
+                                                           aparams=aparams))
+
+                                    if Be:
+                                        hc.append(hist_i[1])
                                     else:
-                                        state = minimize_blockmodel_dl(g, deg_corr=True)
-                                if nested:
-                                    bs = [g.get_vertices()] if init == "N" else [zeros(1)]
-                                    state = state.copy(bs=bs + [zeros(1)] * 6, sampling=True)
-                                else:
-                                    b = g.get_vertices() if init == "N" else zeros(g.num_vertices())
-                                    state = state.copy(b=b)
+                                        hc.append(hist_i[0])
 
-                                state = state.copy(dense_bg=True)
+                        ts = logspace(1, log10(len(S1)), 100, dtype="int")
 
-                                if c != "gibbs":
-                                    mcmc_args=dict(beta=.3, c=abs(c), niter=istep)
-                                    if c < 0:
-                                        mcmc_args = dict(mcmc_args, gibbs_sweeps=3)
-                                else:
-                                    mcmc_args=dict(beta=.3, niter=istep)
+                        Ds = []
+                        Dcs = []
 
-                                if name in ["lesmis", "karate", "football", "polbooks"]:
-                                    mcmc_args["beta"] = .9
+                        for t in ts:
+                            S = S1[:t]
+                            Sa = []
+                            for Sm in hc:
+                                Sa += Sm[:t]
+                            D, p = scipy.stats.ks_2samp(S, Sa)
+                            Ds.append(D)
+                            D_c = 1.63 * sqrt((len(S) + len(Sa)) / (len(S) * len(Sa)))
+                            Dcs.append(D_c)
+                        loglog(ts, Ds, label="%s, p=%s, init=%s" % (str(m_algo), str(m_aparams), m_init))
 
-                                if nested:
-                                    get_B = lambda s: [s.levels[0].get_Be()]
-                                else:
-                                    get_B = lambda s: [s.get_Be()]
-
-                                h = mcmc_equilibrate(state,
-                                                     mcmc_args=mcmc_args,
-                                                     gibbs=c=="gibbs",
-                                                     multiflip = c != "gibbs" and c < 0,
-                                                     force_niter=wait,
-                                                     callback=get_B,
-                                                     verbose=(1, "c = %s " % str(c)) if verbose else False,
-                                                     history=True)
-                                put_cache("hists", params, h)
+            plot(ts, Dcs, "--", label="D_c")
+            legend(loc="best")
+            ylabel("KS statistics")
+            xlabel("Time")
+            savefig(output)
 
 
-                    skip = False
+        output = f"test_mcmc/test_mcmc_{name}_model{model}_directed{directed}-Be{Be}-wait{wait}-res.pdf"
+        if not os.path.exists(output):
+            figure(figsize=(10 * 4/3, 10))
+            hc = []
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
                     for init in inits:
-                        for i, c in enumerate(cs):
-                            params = dict(name=name, directed=directed,
-                                          nested=nested, wait=wait,
-                                          init=init, c=c)
-                            try:
-                                hists[(c, init)] = get_cache("hists", params)
-                            except KeyError:
-                                skip = True
-                    if skip:
-                        continue
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
 
-                    output = open(f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-wait{wait}-output", "w")
-                    for c1 in cs:
-                        for init1 in inits:
-                            for c2 in cs:
-                                for init2 in inits:
-                                    try:
-                                        if (c2, init2) < (c1, init1):
-                                            continue
-                                    except TypeError:
-                                        pass
-                                    Ss1 = array(list(zip(*hists[(c1, init1)]))[2])
-                                    Ss2 = array(list(zip(*hists[(c2, init2)]))[2])
-                                    # add very small normal noise, to solve discreteness issue
-                                    Ss1 += numpy.random.normal(0, 1e-2, len(Ss1))
-                                    Ss2 += numpy.random.normal(0, 1e-2, len(Ss2))
-                                    D, p = scipy.stats.ks_2samp(Ss1, Ss2)
-                                    D_c = 1.63 * sqrt((len(Ss1) + len(Ss2)) / (len(Ss1) * len(Ss2)))
-                                    print("nested:", nested, "directed:", directed, "c1:", c1,
-                                          "init1:", init1, "c2:", c2, "init2:", init2, "D:",
-                                          D, "D_c:", D_c, "p-value:", p,
-                                          file=output)
-                                    if p < .001:
-                                        print(("Warning, distributions for directed=%s (c1, c2) = " +
-                                               "(%s, %s) are not the same, with a p-value: %g (D=%g, D_c=%g)") %
-                                              (str(directed), str((c1, init1)),
-                                               str((c2, init2)), p, D, D_c),
-                                              file=output)
-                                    output.flush()
+                        if Be:
+                            hc += hist_i[1]
+                        else:
+                            hc += hist_i[0]
 
-                    for cum in [True, False]:
-                        for Be in [True, False]:
-                            output = f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-cum{cum}-wait{wait}.pdf"
-                            if not os.path.exists(output) and False:
-                                figure(figsize=(10 * 4/3, 10))
-                                hc = []
-                                for c in cs:
-                                    for init in inits:
-                                        hist_i = hists[(c,init)]
-                                        vals = list(zip(*hist_i))
-                                        if Be:
-                                            hc += vals[-1]
-                                        else:
-                                            hc += vals[2]
-                                bins = linspace(min(hc), max(hc), 60)
-                                for c in cs:
-                                    for init in inits:
-                                        hist_i = hists[(c,init)]
-                                        vals = list(zip(*hist_i))
-                                        if Be:
-                                            vals = vals[-1]
-                                        else:
-                                            vals = vals[2]
+            bins = linspace(min(hc), max(hc), 60)
+            h_mean = zeros(len(bins) - 1)
+            count = 0
+            ymax = 0
 
-                                        if cum:
-                                            h = histogram(vals, 1000000, density=True)
-                                            y = numpy.cumsum(h[0])
-                                            y /= y[-1]
-                                            plot(h[-1][:-1], y, "-", lw=.5,
-                                                 label="c=%s, init=%s" % (str(c), init))
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
 
-                                            if c != numpy.inf:
-                                                hist_i = hists[(numpy.inf, 1)]
-                                                h2 = histogram(list(zip(*hist_i))[2],
-                                                               bins=h[-1],
-                                                               density=True)
-                                                y2 = numpy.cumsum(h2[0])
-                                                y2 /= y2[-1]
-                                                res = abs(y - y2)
-                                                i = res.argmax()
-                                                axvline(h[-1][i], color="grey")
-                                        else:
-                                            hist(vals, bins=bins, density=True, #log=True,
-                                                 histtype="step", label="c=%s, init=%s" % (str(c), init))
-                                if cum:
-                                    legend(loc="lower right")
-                                else:
-                                    legend(loc="best")
-                                ylabel("Prob. density")
-                                xlabel("Entropy" if not Be else r"$B_e$")
-                                savefig(output)
+                        if Be:
+                            vals = hist_i[1]
+                        else:
+                            vals = hist_i[0]
 
-                            if not cum:
-                                output = f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-res-wait{wait}.pdf"
-                                if not os.path.exists(output):
-                                    figure(figsize=(10 * 4/3, 10))
-                                    hc = []
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals = list(zip(*hist_i))
-                                            if Be:
-                                                hc += vals[-1]
-                                            else:
-                                                hc += vals[2]
-                                    bins = linspace(min(hc), max(hc), 60)
-                                    h_mean = zeros(len(bins) - 1)
-                                    count = 0
-                                    ymax = 0
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals = list(zip(*hist_i))
-                                            if Be:
-                                                vals = vals[-1]
-                                            else:
-                                                vals = vals[2]
+                        h = histogram(vals, bins=bins, density=True)
+                        ymax = max(ymax, h[0].max())
+                        h_mean += h[0]
+                        count += 1
+            h_mean /= count
 
-                                            h = histogram(vals, bins=bins, density=True)
-                                            ymax = max(ymax, h[0].max())
-                                            h_mean += h[0]
-                                            count += 1
-                                    h_mean /= count
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
 
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals = list(zip(*hist_i))
-                                            if Be:
-                                                vals = vals[-1]
-                                            else:
-                                                vals = vals[2]
+                        if Be:
+                            vals = hist_i[1]
+                        else:
+                            vals = hist_i[0]
 
-                                            h = histogram(vals, bins=bins, density=True)
-                                            h = list(h)
-                                            h[0] -= h_mean
+                        h = histogram(vals, bins=bins, density=True)
+                        h = list(h)
+                        h[0] -= h_mean
 
-                                            step(bins[:-1], h[0], label="c=%s, init=%s" % (str(c), init))
-                                    if cum:
-                                        legend(loc="lower right")
-                                    else:
-                                        legend(loc="best")
-                                    ylim(-ymax/10, ymax/10)
-                                    ylabel("Prob. density residue")
-                                    xlabel("Entropy" if not Be else r"$B_e$")
-                                    savefig(output)
+                        step(bins[:-1], h[0], label="%s, p=%s, init=%s" % (str(algo), str(aparams), init))
+            legend(loc="best")
+            ylim(-ymax/10, ymax/10)
+            ylabel("Prob. density residue")
+            xlabel("Entropy" if not Be else r"$B_e$")
+            savefig(output)
 
-                                output = f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-kde-wait{wait}.pdf"
-                                if not os.path.exists(output):
-                                    figure(figsize=(10 * 4/3, 10))
+        output = f"test_mcmc/test_mcmc_{name}_model{model}_directed{directed}-Be{Be}-wait{wait}-kde.pdf"
+        if not os.path.exists(output):
+            figure(figsize=(10 * 4/3, 10))
 
-                                    vals = []
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals_i = list(zip(*hist_i))
-                                            if Be:
-                                                vals += vals_i[-1]
-                                            else:
-                                                vals += vals_i[2]
-                                    x = linspace(min(vals), max(vals), 1000)
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals = list(zip(*hist_i))
-                                            if Be:
-                                                vals = vals[-1]
-                                            else:
-                                                vals = vals[2]
+            vals = []
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
+                        if Be:
+                            vals += hist_i[1]
+                        else:
+                            vals += hist_i[0]
 
-                                            kernel = scipy.stats.gaussian_kde(vals)
-                                            y = kernel(x)
-                                            plot(x, y, "-", linewidth=.8,
-                                                 label="c=%s, init=%s" % (str(c), init))
-                                    legend(loc="best")
-                                    ylabel("Prob. density")
-                                    xlabel("Entropy" if not Be else r"$B_e$")
-                                    savefig(output)
+            x = linspace(min(vals), max(vals), 1000)
 
-                                output = f"test_mcmc/test_mcmc_{name}_nested{nested}_directed{directed}-Be{Be}-kde-res-wait{wait}.pdf"
-                                if not os.path.exists(output):
-                                    figure(figsize=(10 * 4/3, 10))
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
+                        if Be:
+                            vals = hist_i[1]
+                        else:
+                            vals = hist_i[0]
 
-                                    vals = []
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals_i = list(zip(*hist_i))
-                                            if Be:
-                                                vals += vals_i[-1]
-                                            else:
-                                                vals += vals_i[2]
-                                    x = linspace(min(vals), max(vals), 1000)
+                        kernel = scipy.stats.gaussian_kde(vals)
+                        y = kernel(x)
+                        plot(x, y, "-", linewidth=.8,
+                             label="%s, p=%s, init=%s" % (str(algo), str(aparams), init))
+            legend(loc="best")
+            ylabel("Prob. density")
+            xlabel("Entropy" if not Be else r"$B_e$")
+            savefig(output)
 
-                                    ymean = zeros(len(x))
-                                    count = 0
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals = list(zip(*hist_i))
-                                            if Be:
-                                                vals = vals[-1]
-                                            else:
-                                                vals = vals[2]
+        output = f"test_mcmc/test_mcmc_{name}_model{model}_directed{directed}-Be{Be}-wait{wait}-kde-res.pdf"
+        if not os.path.exists(output):
+            figure(figsize=(10 * 4/3, 10))
 
-                                            kernel = scipy.stats.gaussian_kde(vals)
-                                            ymean += kernel(x)
-                                            count += 1
-                                    ymean /= count
+            vals = []
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
+                        if Be:
+                            vals += hist_i[1]
+                        else:
+                            vals += hist_i[0]
 
-                                    ymax = 0
-                                    for c in cs:
-                                        for init in inits:
-                                            hist_i = hists[(c,init)]
-                                            vals = list(zip(*hist_i))
-                                            if Be:
-                                                vals = vals[-1]
-                                            else:
-                                                vals = vals[2]
+            x = linspace(min(vals), max(vals), 1000)
 
-                                            kernel = scipy.stats.gaussian_kde(vals)
-                                            y = kernel(x)
-                                            ymax = max(y.max(), ymax)
-                                            y -= ymean
-                                            plot(x, y, "-", linewidth=1.5,
-                                                 label="c=%s, init=%s" % (str(c), init))
-                                    ylim(-ymax/10, ymax/10)
-                                    legend(loc="best")
-                                    ylabel("Prob. density residue")
-                                    xlabel("Entropy" if not Be else r"$B_e$")
-                                    savefig(output)
-print("OK")
+            ymean = zeros(len(x))
+            count = 0
+
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
+                        if Be:
+                            vals = hist_i[1]
+                        else:
+                            vals = hist_i[0]
+
+                        kernel = scipy.stats.gaussian_kde(vals)
+                        ymean += kernel(x)
+                        count += 1
+            ymean /= count
+
+            ymax = 0
+            for algo, aparam_list in alist:
+                for aparams in aparam_list:
+                    for init in inits:
+                        hist_i = get_hist(dict(name=name,
+                                               directed=directed,
+                                               model=model, wait=wait,
+                                               init=init, algo=algo,
+                                               aparams=aparams))
+                        if Be:
+                            vals = hist_i[1]
+                        else:
+                            vals = hist_i[0]
+
+                        kernel = scipy.stats.gaussian_kde(vals)
+                        y = kernel(x)
+                        ymax = max(y.max(), ymax)
+                        y -= ymean
+                        plot(x, y, "-", linewidth=1.5,
+                             label="%s, p=%s, init=%s" % (str(algo), str(aparams), init))
+            ylim(-ymax/10, ymax/10)
+            legend(loc="best")
+            ylabel("Prob. density residue")
+            xlabel("Entropy" if not Be else r"$B_e$")
+            savefig(output)
