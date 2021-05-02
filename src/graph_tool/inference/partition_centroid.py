@@ -397,7 +397,8 @@ def reduced_mutual_information(x, y, norm=False):
     y : iterable of ``int`` values
         Second partition.
     norm : (optional, default: ``True``)
-        If ``True``, the result will be normalized in the range :math:`[0,1]`.
+        If ``True``, the result will be normalized such that the maximum
+        possible value is one.
 
     Returns
     -------
@@ -407,7 +408,7 @@ def reduced_mutual_information(x, y, norm=False):
     Notes
     -----
 
-    The reduced mutual information [newman_improved_2020]_ is defined as
+    The reduced mutual information (RMI) [newman_improved_2020]_ is defined as
 
     .. math::
 
@@ -432,6 +433,8 @@ def reduced_mutual_information(x, y, norm=False):
          -\ln\Omega(\boldsymbol n', \boldsymbol n')}
 
     which can take a maximum value of one.
+
+    Note that both the normalized and unormalized RMI values can be negative.
 
     This algorithm runs in time :math:`O(N)` where :math:`N` is
     the length of :math:`\boldsymbol x` and :math:`\boldsymbol y`.
