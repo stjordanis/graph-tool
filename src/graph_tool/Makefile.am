@@ -69,6 +69,7 @@ graph_tool_inference_PYTHON = \
     inference/bisection.py \
     inference/blockmodel.py \
     inference/blockmodel_em.py \
+    inference/histogram.py \
     inference/layered_blockmodel.py \
     inference/nested_blockmodel.py \
     inference/overlap_blockmodel.py \

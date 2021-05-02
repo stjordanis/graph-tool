@@ -205,6 +205,7 @@ __all__ = ["minimize_blockmodel_dl",
            "LatentLayerBaseState",
            "LatentClosureBlockState",
            "MeasuredClosureBlockState",
+           "HistState",
            "mcmc_equilibrate",
            "mcmc_anneal",
            "mcmc_multilevel",
@@ -263,3 +264,4 @@ from . partition_centroid import *
 from . partition_modes import *
 from . planted_partition import *
 from . latent_layers import *
+from . histogram import *
