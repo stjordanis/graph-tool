@@ -26,8 +26,15 @@
 using namespace boost;
 using namespace graph_tool;
 
-template <class VT>
+template <template <class T> class VT>
 GEN_DISPATCH(hist_state, HistD<VT>::template HistState, HIST_STATE_params)
+
+template <size_t n>
+struct va_t
+{
+    template <class T>
+    using type = std::array<T, n>;
+};
 
 python::object make_hist_state(boost::python::object ostate, size_t D)
 {
@@ -36,30 +43,32 @@ python::object make_hist_state(boost::python::object ostate, size_t D)
     {
     case 1:
         {
-            typedef std::array<double, 1> v_t;
-            hist_state<v_t>::make_dispatch(ostate,
-                                           [&](auto& s){state = python::object(s);});
+            hist_state<va_t<1>::type>::make_dispatch(ostate,
+                                                     [&](auto& s){state = python::object(s);});
         }
         break;
     case 2:
         {
-            typedef std::array<double, 2> v_t;
-            hist_state<v_t>::make_dispatch(ostate,
-                                           [&](auto& s){state = python::object(s);});
+            hist_state<va_t<2>::type>::make_dispatch(ostate,
+                                                     [&](auto& s){state = python::object(s);});
         }
         break;
     case 3:
         {
-            typedef std::array<double, 3> v_t;
-            hist_state<v_t>::make_dispatch(ostate,
-                                           [&](auto& s){state = python::object(s);});
+            hist_state<va_t<3>::type>::make_dispatch(ostate,
+                                                     [&](auto& s){state = python::object(s);});
+        }
+        break;
+    case 4:
+        {
+            hist_state<va_t<4>::type>::make_dispatch(ostate,
+                                                     [&](auto& s){state = python::object(s);});
         }
         break;
     default:
         {
-            typedef std::vector<double> v_t;
-            hist_state<v_t>::make_dispatch(ostate,
-                                           [&](auto& s){state = python::object(s);});
+            hist_state<std::vector>::make_dispatch(ostate,
+                                                   [&](auto& s){state = python::object(s);});
         }
     }
     return state;
@@ -77,13 +86,14 @@ void dispatch_state_def(State*)
         .def("get_mle_lpdf",
              +[](State& state, python::object xo)
              {
-                 auto x = get_array<double, 1>(xo);
+                 auto x = get_array<typename State::value_t, 1>(xo);
                  return state.get_mle_lpdf(x);
              })
         .def("sample",
-             +[](State& state, size_t n, rng_t& rng)
+             +[](State& state, size_t n, python::object cxo, rng_t& rng)
              {
-                 auto x = state.sample(n, rng);
+                 auto cx = get_array<typename State::value_t, 1>(cxo);
+                 auto x = state.sample(n, cx, rng);
                  return wrap_multi_array_owned(x);
              });
 }
@@ -95,23 +105,23 @@ void export_hist_state()
     def("make_hist_state", &make_hist_state);
 
     {
-        typedef std::array<double, 1> v_t;
-        hist_state<v_t>::dispatch
+        hist_state<va_t<1>::type>::dispatch
             ([&](auto* s){ dispatch_state_def(s);});
     }
     {
-        typedef std::array<double, 2> v_t;
-        hist_state<v_t>::dispatch
+        hist_state<va_t<2>::type>::dispatch
             ([&](auto* s){ dispatch_state_def(s);});
     }
     {
-        typedef std::array<double, 3> v_t;
-        hist_state<v_t>::dispatch
+        hist_state<va_t<3>::type>::dispatch
             ([&](auto* s){ dispatch_state_def(s);});
     }
     {
-        typedef std::vector<double> v_t;
-        hist_state<v_t>::dispatch
+        hist_state<va_t<4>::type>::dispatch
+            ([&](auto* s){ dispatch_state_def(s);});
+    }
+    {
+        hist_state<std::vector>::dispatch
             ([&](auto* s){ dispatch_state_def(s);});
     }
 }

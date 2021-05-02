@@ -27,12 +27,19 @@
 using namespace boost;
 using namespace graph_tool;
 
-template <class VT>
+template <template <class T> class VT>
 GEN_DISPATCH(hist_state, HistD<VT>::template HistState, HIST_STATE_params)
 
 template <class State>
 GEN_DISPATCH(mcmc_hist_state, MCMC<State>::template MCMCHistState,
              MCMC_HIST_STATE_params(State))
+
+template <size_t n>
+struct va_t
+{
+    template <class T>
+    using type = std::array<T, n>;
+};
 
 python::object hist_mcmc_sweep(python::object omcmc_state,
                                python::object ohist_state,
@@ -59,26 +66,27 @@ python::object hist_mcmc_sweep(python::object omcmc_state,
     {
     case 1:
         {
-            typedef std::array<double, 1> v_t;
-            hist_state<v_t>::dispatch(ohist_state, dispatch);
+            hist_state<va_t<1>::type>::dispatch(ohist_state, dispatch);
         }
         break;
     case 2:
         {
-            typedef std::array<double, 2> v_t;
-            hist_state<v_t>::dispatch(ohist_state, dispatch);
+            hist_state<va_t<2>::type>::dispatch(ohist_state, dispatch);
         }
         break;
     case 3:
         {
-            typedef std::array<double, 3> v_t;
-            hist_state<v_t>::dispatch(ohist_state, dispatch);
+            hist_state<va_t<3>::type>::dispatch(ohist_state, dispatch);
+        }
+        break;
+    case 4:
+        {
+            hist_state<va_t<4>::type>::dispatch(ohist_state, dispatch);
         }
         break;
     default:
         {
-            typedef std::vector<double> v_t;
-            hist_state<v_t>::dispatch(ohist_state, dispatch);
+            hist_state<std::vector>::dispatch(ohist_state, dispatch);
         }
     }
 

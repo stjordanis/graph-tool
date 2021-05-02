@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from .. import _get_rng, Vector_double
+from .. import _get_rng, Vector_double, Vector_int64_t
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
@@ -30,9 +30,13 @@ from collections.abc import Iterable
 import numpy as np
 
 class HistState(object):
-    def __init__(self, x, bins = None, alpha=1., bounded=None, discrete=None):
+    def __init__(self, x, bins = None, alpha=1., bounded=None, discrete=None,
+                 conditional=None):
 
-        self.x = np.asarray(x, dtype="double")
+        if discrete is not None and all(discrete):
+            self.x = np.asarray(x, dtype="int64")
+        else:
+            self.x = np.asarray(x, dtype="double")
         self.D = self.x.shape[1]
         self.alpha = alpha
 
@@ -42,6 +46,9 @@ class HistState(object):
             discrete = [False] * self.D
         self.bounded = self.obounded = [(bool(x), bool(y)) for x, y in bounded]
         self.discrete = self.odiscrete = [bool(x) for x in discrete]
+        if conditional is None:
+            conditional = self.D
+        self.conditional = conditional
 
         if bins is None:
             bins = [1] * self.D
@@ -56,8 +63,11 @@ class HistState(object):
                     b[-1] += 1e-8
             else:
                 b = bins[j]
-            self.bins.append(Vector_double(len(b), b))
-
+            if all(self.discrete):
+                b = Vector_int64_t(len(b), b)
+            else:
+                b = Vector_double(len(b), b)
+            self.bins.append(b)
 
         self.obins = self.bins
         self._state = libinference.make_hist_state(self, self.D)
@@ -65,19 +75,24 @@ class HistState(object):
     def __copy__(self):
         return self.copy()
 
-    def copy(self, b=None, n=None):
+    def copy(self, **kwargs):
         r"""Copies the state. The parameters override the state properties, and
          have the same meaning as in the constructor."""
 
-        return HistState(x=self.x, bins=self.bins, alpha=self.alpha,
-                         bounded=self.bounded, discrete=self.discrete)
+        return HistState(**dict(self.__getstate__(), **kwargs))
 
     def __getstate__(self):
-        return dict(x=self.x, bins=[b.a for b in self.bins], alpha=self.alpha,
-                    bounded=self.bounded, discrete=self.discrete)
+        return dict(x=self.x, bins=[b.a.copy() for b in self.bins],
+                    alpha=self.alpha, bounded=self.bounded,
+                    discrete=self.discrete, conditional=self.conditional)
 
     def __setstate__(self, state):
         self.__init__(**state)
+
+    def __repr__(self):
+        return "<HistState object with data shape %s, bin shape %s, discrete %s, bounded %s at 0x%x>" % \
+            (self.x.shape, tuple(len(s) for s in self.bins), self.discrete,
+             self.bounded, id(self))
 
     def entropy(self, **kwargs):
 
@@ -97,10 +112,22 @@ class HistState(object):
         return S
 
     def get_lpdf(self, x):
-        return self._state.get_mle_lpdf(np.asarray(x, dtype="double"))
+        if all(self.discrete):
+            dtype = "int64"
+        else:
+            dtype = "double"
+        return self._state.get_mle_lpdf(np.asarray(x, dtype=dtype))
 
-    def predictive_sample(self, n=1):
-        return self._state.sample(n, _get_rng())
+    def predictive_sample(self, x=None, n=1):
+        if all(self.discrete):
+            dtype = "int64"
+        else:
+            dtype = "double"
+        if self.conditional < self.D:
+            x = np.asarray(x, dtype=dtype)
+        else:
+            x = np.zeros(1, dtype=dtype)
+        return self._state.sample(n, x, _get_rng())
 
     def mcmc_sweep(self, beta=1., niter=1, verbose=False,
                    **kwargs):

@@ -62,6 +62,7 @@ struct MCMC
         MCMCHistState(ATs&&... as)
            : MCMCHistStateBase<Ts...>(as...)
         {
+            _state.update_bounds();
         }
 
         constexpr static move_t _null_move = move_t::null;
@@ -79,6 +80,8 @@ struct MCMC
         size_t _i;
         size_t _j;
         double _x;
+
+        constexpr static double _epsilon = 1e-8;
 
         template <class RNG>
         move_t move_proposal(size_t, RNG& rng)
@@ -122,20 +125,21 @@ struct MCMC
                         }
                         else
                         {
-                            double w = _state._bounds[_j].first - *_state._bins[_j]->begin();
+                            auto w = _state._bounds[_j].first - *_state._bins[_j]->begin();
                             if (_state._discrete[_j])
                             {
-                                std::geometric_distribution<int> d(1./(2 * w + 1));
+                                w++;
+                                std::geometric_distribution<int64_t> d(1./(2 * w));
                                 _x = _state._bounds[_j].first - d(rng) - 1;
                             }
                             else
                             {
-                                w = std::max(w, 1e-8);
+                                w = std::max(double(w), _epsilon);
                                 std::exponential_distribution<double> d(1./(2 * w));
                                 _x = _state._bounds[_j].first - d(rng);
-                                if (_x > _state._bounds[_j].first ||
-                                    _x >= *(_state._bins[_j]->begin() + 1))
-                                    move = move_t::null;
+                                // if (_x > _state._bounds[_j].first ||
+                                //     _x >= *(_state._bins[_j]->begin() + 1))
+                                //     move = move_t::null;
                             }
 
                             assert(_x <= _state._bounds[_j].first);
@@ -149,22 +153,23 @@ struct MCMC
                         }
                         else
                         {
-                            double w = *_state._bins[_j]->rbegin() - _state._bounds[_j].second;
+                            auto w = *_state._bins[_j]->rbegin() - _state._bounds[_j].second;
                             if (_state._discrete[_j])
                             {
-                                std::geometric_distribution<int> d(1./(2 * w + 1));
+                                w++;
+                                std::geometric_distribution<int64_t> d(1./(2 * w));
                                 _x = _state._bounds[_j].second + d(rng) + 1;
                             }
                             else
                             {
-                                w = std::max(w, 1e-8);
+                                w = std::max(double(w), _epsilon);
                                 std::exponential_distribution<double> d(1./(2 * w));
                                 _x = _state._bounds[_j].second + d(rng);
                                 if (_x == _state._bounds[_j].second)
                                     move = move_t::null;
-                                if (_x <= _state._bounds[_j].second ||
-                                    _x <= *(_state._bins[_j]->end() - 2))
-                                    move = move_t::null;
+                                // if (_x <= _state._bounds[_j].second ||
+                                //     _x <= *(_state._bins[_j]->end() - 2))
+                                //     move = move_t::null;
                             }
                             assert(_x > _state._bounds[_j].second);
                         }
@@ -173,11 +178,10 @@ struct MCMC
                     {
                         if (_state._discrete[_j])
                         {
-                            std::uniform_int_distribution<int>
+                            std::uniform_int_distribution<int64_t>
                                 random_x((*_state._bins[_j])[_i-1]+1,
                                          (*_state._bins[_j])[_i+1]-1);
                             _x = random_x(rng);
-
                         }
                         else
                         {
@@ -197,15 +201,15 @@ struct MCMC
                 {
                     if (_state._discrete[_j])
                     {
-                        int a = (*_state._bins[_j])[_i] + 1;
-                        int b = (*_state._bins[_j])[_i+1] - 1;
+                        auto a = (*_state._bins[_j])[_i] + 1;
+                        auto b = (*_state._bins[_j])[_i+1] - 1;
                         if (b < a)
                         {
                             move = move_t::null;
                         }
                         else
                         {
-                            std::uniform_int_distribution<int> random_x(a, b);
+                            std::uniform_int_distribution<int64_t> random_x(a, b);
                             _x = random_x(rng);
                         }
                     }
@@ -245,55 +249,67 @@ struct MCMC
 
                 if (_i == 0)
                 {
-                    double w = _state._bounds[_j].first - *_state._bins[_j]->begin();
-                    double nw = _state._bounds[_j].first - _x;
+                    auto w = _state._bounds[_j].first - *_state._bins[_j]->begin();
+                    auto nw = _state._bounds[_j].first - _x;
                     if (_state._discrete[_j])
                     {
-                        w -= 1;
-                        nw -= 1;
-                        double p = 1./(2 * w + 1);
-                        pf = log1p(-p) * nw + log(p);
-                        std::swap(w, nw);
-                        p = 1./(2 * w + 1);
-                        pb = log1p(-p) * nw + log(p);
+                        auto delta_f = nw - 1;
+                        auto delta_b = w - 1;
+                        w++;
+                        nw++;
+                        double p = 1./(2 * w);
+                        pf = log1p(-p) * delta_f + log(p);
+                        p = 1./(2 * nw);
+                        pb = log1p(-p) * delta_b + log(p);
                     }
                     else
                     {
-                        pf = -nw/(2 * std::max(w, 1e-8)) - log(2 * std::max(w, 1e-8));
-                        std::swap(w, nw);
-                        pb = -nw/(2 * std::max(w, 1e-8)) - log(2 * std::max(w, 1e-8));
+                        w = std::max(double(w), 1e-8);
+                        nw = std::max(double(nw), 1e-8);
+                        double lf = 1./(2 * w);
+                        double lb = 1./(2 * nw);
+                        double delta_f = nw;
+                        double delta_b = w;
+                        pf = -lf * delta_f - log(lf);
+                        pb = -lb * delta_b - log(lb);
                     }
                 }
                 else if (_i == _state._bins[_j]->size()-1)
                 {
-                    double w = *_state._bins[_j]->rbegin() - _state._bounds[_j].second;
-                    double nw = _x - _state._bounds[_j].second;
+                    auto w = *_state._bins[_j]->rbegin() - _state._bounds[_j].second;
+                    auto nw = _x - _state._bounds[_j].second;
                     if (_state._discrete[_j])
                     {
-                        w -= 1;
-                        nw -= 1;
-                        double p = 1./(2 * w + 1);
-                        pf = log1p(-p) * nw + log(p);
-                        std::swap(w, nw);
-                        p = 1./(2 * w + 1);
-                        pb = log1p(-p) * nw + log(p);
+                        auto delta_f = nw - 1;
+                        auto delta_b = w - 1;
+                        w++;
+                        nw++;
+                        double p = 1./(2 * w);
+                        pf = log1p(-p) * delta_f + log(p);
+                        p = 1./(2 * nw);
+                        pb = log1p(-p) * delta_b + log(p);
                     }
                     else
                     {
-                        pf = -nw/(2 * std::max(w, 1e-8)) - log(2 * std::max(w, 1e-8));
-                        std::swap(w, nw);
-                        pb = -nw/(2 * std::max(w, 1e-8)) - log(2 * std::max(w, 1e-8));
+                        w = std::max(double(w), 1e-8);
+                        nw = std::max(double(nw), 1e-8);
+                        double lf = 1./(2 * w);
+                        double lb = 1./(2 * nw);
+                        double delta_f = nw;
+                        double delta_b = w;
+                        pf = -lf * delta_f - log(lf);
+                        pb = -lb * delta_b - log(lb);
                     }
                 }
 
                 break;
             case move_t::add:
-                dS = _state.virtual_add_edge(_j, _i, _x);
+                dS = _state.template virtual_change_edge<true>(_j, _i, _x);
                 pf = -safelog_fast(_state._bins[_j]->size() - 2);
                 pb = -safelog_fast(_state._bins[_j]->size() - 1);
                 break;
             case move_t::remove:
-                dS = _state.virtual_remove_edge(_j, _i);
+                dS = _state.template virtual_change_edge<false>(_j, _i, 0.);
                 pf = -safelog_fast(_state._bins[_j]->size() - 2);
                 pb = -safelog_fast(_state._bins[_j]->size() - 3);
                 break;
