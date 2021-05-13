@@ -26,6 +26,7 @@
 
 #include "hash_map_wrap.hh"
 #include "parallel_rng.hh"
+#include "graph_python_interface.hh"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -59,6 +60,8 @@ bool metropolis_accept(double dS, double mP, double beta, RNG& rng)
 template <class MCMCState, class RNG>
 auto mcmc_sweep(MCMCState state, RNG& rng)
 {
+    GILRelease gil;
+
     auto& vlist = state.get_vlist();
     auto beta = state.get_beta();
 

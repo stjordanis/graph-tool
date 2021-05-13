@@ -24,6 +24,7 @@
 
 #include "hash_map_wrap.hh"
 #include "parallel_rng.hh"
+#include "graph_python_interface.hh"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -34,6 +35,8 @@ namespace graph_tool
 template <class GibbsState, class RNG>
 auto gibbs_sweep(GibbsState state, RNG& rng)
 {
+    GILRelease gil;
+
     auto& vlist = state._vlist;
     auto beta = state._beta;
 

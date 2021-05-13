@@ -19,6 +19,7 @@
 #define EXHAUSTIVE_LOOP_HH
 
 #include "config.h"
+#include "graph_python_interface.hh"
 
 namespace graph_tool
 {
@@ -26,6 +27,8 @@ namespace graph_tool
 template <class ExhaustiveState, class Callback>
 void exhaustive_sweep(ExhaustiveState& state, Callback&& callback)
 {
+    GILRelease gil;
+
     auto& vlist = state._vlist;
 
     double& S = state._S;

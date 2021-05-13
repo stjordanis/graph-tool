@@ -27,6 +27,8 @@
 
 #include "hash_map_wrap.hh"
 #include "parallel_rng.hh"
+#include "graph_python_interface.hh"
+
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -37,6 +39,8 @@ namespace graph_tool
 template <class MergeState, class RNG>
 auto merge_sweep(MergeState state, RNG& rng_)
 {
+    GILRelease gil;
+
     if (state._parallel)
     {
         parallel_rng<RNG>::init(rng_);
