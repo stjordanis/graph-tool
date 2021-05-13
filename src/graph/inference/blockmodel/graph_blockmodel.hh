@@ -1677,8 +1677,7 @@ public:
     {
         if (_empty_groups.empty() || force_add)
         {
-            add_block();
-            auto s = *(_empty_groups.end()-1);
+            size_t s = add_block();
             auto r = _b[v];
             _bclabel[s] = _bclabel[r];
             if (_coupled_state != nullptr)
@@ -1686,6 +1685,7 @@ public:
                 auto& hb = _coupled_state->get_b();
                 hb[s] = hb[r];
             }
+            return s;
         }
         return *(_empty_groups.end()-1);
     }
