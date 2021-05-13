@@ -732,6 +732,33 @@ private:
 
 bool hasattr(boost::python::object obj, std::string const& attrName);
 
+class GILRelease
+{
+public:
+    GILRelease(bool release=true)
+    {
+        if (release)
+            _state = PyEval_SaveThread();
+    }
+
+    void restore()
+    {
+        if (_state != nullptr)
+        {
+            PyEval_RestoreThread(_state);
+            _state = nullptr;
+        }
+    }
+
+    ~GILRelease()
+    {
+        restore();
+    }
+
+private:
+    PyThreadState *_state = nullptr;
+};
+
 } //graph_tool namespace
 
 #endif
