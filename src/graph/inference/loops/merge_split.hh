@@ -750,7 +750,7 @@ struct MergeSplit: public State
                 auto v = uniform_sample(_nodes, rng);
                 auto r = State::get_group(v);
                 auto s = State::sample_group(v, true, rng);
-                if (r == s || !State::allow_move(r, s))
+                if (r == s)
                 {
                     move = move_t::null;
                     break;
