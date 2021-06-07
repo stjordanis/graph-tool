@@ -1426,7 +1426,7 @@ def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
     -----
 
     The approximate version of this algorithm is based on
-    [[dong-efficient-2020]_, and has an (empirical) run-time of
+    [dong-efficient-2020]_, and has an (empirical) run-time of
     :math:`O(N^{1.14})`. The exact version has a complexity of :math:`O(N^2)`.
 
     If enabled during compilation, this algorithm runs in parallel.
