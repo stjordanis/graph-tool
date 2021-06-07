@@ -230,7 +230,7 @@ public:
         return (Sa - Sb);
     }
 
-    size_t get_empty_block(size_t, bool)
+    size_t get_empty_block(size_t, bool=false)
     {
         return *(_empty_groups.end() - 1);
     }

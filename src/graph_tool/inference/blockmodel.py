@@ -1597,6 +1597,70 @@ class BlockState(object):
 
         return dS, nattempts, nmoves
 
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.multilevel_mcmc_sweep(mcmc_state, self._state,
+                                                 _get_rng())
+
+    def _multilevel_mcmc_sweep_parallel_dispatch(states, mcmc_states):
+        return libinference.multilevel_mcmc_sweep_parallel(mcmc_states,
+                                                           [s._state for s in states],
+                                                           _get_rng())
+
+
+    def multilevel_mcmc_sweep(self, niter=1, beta=1., c=1., psingle=None,
+                              pmultilevel=1, d=0.01, r=1.1, M=None,
+                              random_bisect=True, merge_sweeps=10, mh_sweeps=10,
+                              gibbs=False, global_moves=True, B_min=0,
+                              B_max=numpy.iinfo(numpy.int64).max, b_min=None,
+                              b_max=None, entropy_args={}, verbose=False,
+                              **kwargs):
+        if psingle is None:
+            psingle = self.g.num_vertices()
+        merge_sweeps = max(merge_sweeps, 1)
+        if M is None:
+            M = self.g.num_vertices()
+        if b_min is None:
+            b_min = self.g.new_vp("int")
+        if b_max is None:
+            b_max = self.g.new_vp("int")
+        mcmc_state = DictState(locals())
+        entropy_args = dict(self._entropy_args, **entropy_args)
+        if (_bm_test() and entropy_args["multigraph"] and
+            not entropy_args["dense"] and
+            hasattr(self, "degs") and
+            not isinstance(self.degs, libinference.simple_degs_t)):
+            entropy_args["multigraph"] = False
+        mcmc_state.oentropy_args = get_entropy_args(entropy_args)
+        mcmc_state.state = self._state
+
+        dispatch = kwargs.pop("dispatch", True)
+        test = kwargs.pop("test", True)
+        if dispatch:
+            if _bm_test() and test:
+                assert self._check_clabel(), "invalid clabel before sweep"
+                Si = self.entropy(**entropy_args)
+
+            try:
+                dS, nattempts, nmoves = self._multilevel_mcmc_sweep_dispatch(mcmc_state)
+            finally:
+                self.B = self.bg.num_vertices()
+
+            if _bm_test() and test:
+                assert self._check_clabel(), "invalid clabel after sweep"
+                Sf = self.entropy(**entropy_args)
+                assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
+                    "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
+                                                                str(entropy_args))
+
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized keyword arguments: " +
+                             str(list(kwargs.keys())))
+
+        if not dispatch:
+            return mcmc_state
+
+        return dS, nattempts, nmoves
+
     def _gibbs_sweep_dispatch(self, gibbs_state):
         return libinference.gibbs_sweep(gibbs_state, self._state,
                                         _get_rng())

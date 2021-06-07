@@ -97,7 +97,7 @@ class PartitionCentroidState(object):
         w = np.array(np.bincount(self.b), dtype="double")
         w = w[w>0]
         w /= w.sum()
-        return numpy.exp(-(w*log(w)).sum())
+        return np.exp(-(w*log(w)).sum())
 
     def entropy(self):
         return self._state.entropy()
@@ -186,13 +186,67 @@ class PartitionCentroidState(object):
         if accept_stats is not None:
             for key in ["proposal", "acceptance"]:
                 if key not in accept_stats:
-                    accept_stats[key] = numpy.zeros(len(nproposal),
-                                                    dtype="uint64")
+                    accept_stats[key] = np.zeros(len(nproposal),
+                                                 dtype="uint64")
             accept_stats["proposal"] += nproposal.a
             accept_stats["acceptance"] += nacceptance.a
 
         return dS, nattempts, nmoves
 
+    def multilevel_mcmc_sweep(self, niter=1, beta=1., psingle=None,
+                              pmultilevel=1, d=0.01, r=1.5, M=None,
+                              random_bisect=True, merge_sweeps=10, mh_sweeps=10,
+                              gibbs=False, global_moves=True, B_min=0,
+                              B_max=np.iinfo(np.int64).max, b_min=None,
+                              b_max=None, entropy_args={}, verbose=False,
+                              **kwargs):
+        if psingle is None:
+            psingle = len(self.b)
+        merge_sweeps = max(merge_sweeps, 1)
+        if M is None:
+            M = self.g.num_vertices()
+        if b_min is None:
+            b_min = self.g.new_vp("int")
+        if b_max is None:
+            b_max = self.g.new_vp("int")
+        mcmc_state = DictState(locals())
+        entropy_args = dict(self._entropy_args, **entropy_args)
+        if (_bm_test() and entropy_args["multigraph"] and
+            not entropy_args["dense"] and
+            hasattr(self, "degs") and
+            not isinstance(self.degs, libinference.simple_degs_t)):
+            entropy_args["multigraph"] = False
+        mcmc_state.oentropy_args = get_entropy_args(entropy_args)
+        mcmc_state.state = self._state
+        mcmc_state.c = 0
+
+        dispatch = kwargs.pop("dispatch", True)
+        test = kwargs.pop("test", True)
+
+        if _bm_test() and test:
+            assert self._check_clabel(), "invalid clabel before sweep"
+            Si = self.entropy(**entropy_args)
+
+        if self.RMI:
+            dS, nattempts, nmoves = \
+                libinference.rmi_multilevel_mcmc_sweep(mcmc_state, self._state,
+                                                       _get_rng())
+        else:
+            dS, nattempts, nmoves = \
+                libinference.vi_multilevel_mcmc_sweep(mcmc_state, self._state,
+                                                      _get_rng())
+        if _bm_test() and test:
+            assert self._check_clabel(), "invalid clabel after sweep"
+            Sf = self.entropy(**entropy_args)
+            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
+                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
+                                                            str(entropy_args))
+
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized keyword arguments: " +
+                             str(list(kwargs.keys())))
+
+        return dS, nattempts, nmoves
 
 def variation_information(x, y, norm=False):
     r"""Returns the variation of information between two partitions.

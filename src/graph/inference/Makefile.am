@@ -28,22 +28,28 @@ libgraph_tool_inference_la_SOURCES = \
     blockmodel/graph_blockmodel_multicanonical.cc \
     blockmodel/graph_blockmodel_multicanonical_multiflip.cc \
     blockmodel/graph_blockmodel_multiflip_mcmc.cc \
+    blockmodel/graph_blockmodel_multilevel_mcmc.cc \
     modularity/graph_modularity.cc \
     modularity/graph_modularity_mcmc.cc \
     modularity/graph_modularity_multiflip_mcmc.cc \
+    modularity/graph_modularity_multilevel_mcmc.cc \
     partition_centroid/graph_partition_centroid.cc \
     partition_centroid/graph_partition_centroid_mcmc.cc \
     partition_centroid/graph_partition_centroid_multiflip_mcmc.cc \
+    partition_centroid/graph_partition_centroid_multilevel_mcmc.cc \
     partition_centroid/graph_partition_centroid_rmi.cc \
     partition_centroid/graph_partition_centroid_rmi_mcmc.cc \
     partition_centroid/graph_partition_centroid_rmi_multiflip_mcmc.cc \
+    partition_centroid/graph_partition_centroid_rmi_multilevel_mcmc.cc \
     partition_modes/graph_partition_mode.cc \
     partition_modes/graph_partition_mode_clustering.cc \
     partition_modes/graph_partition_mode_clustering_mcmc.cc \
     partition_modes/graph_partition_mode_clustering_multiflip_mcmc.cc \
+    partition_modes/graph_partition_mode_clustering_multilevel_mcmc.cc \
     planted_partition/graph_planted_partition.cc \
     planted_partition/graph_planted_partition_mcmc.cc \
     planted_partition/graph_planted_partition_multiflip_mcmc.cc \
+    planted_partition/graph_planted_partition_multilevel_mcmc.cc \
     overlap/graph_blockmodel_overlap.cc \
     overlap/graph_blockmodel_overlap_exhaustive.cc \
     overlap/graph_blockmodel_overlap_gibbs.cc \
@@ -52,6 +58,7 @@ libgraph_tool_inference_la_SOURCES = \
     overlap/graph_blockmodel_overlap_multicanonical.cc \
     overlap/graph_blockmodel_overlap_multicanonical_multiflip.cc \
     overlap/graph_blockmodel_overlap_multiflip_mcmc.cc \
+    overlap/graph_blockmodel_overlap_multilevel_mcmc.cc \
     overlap/graph_blockmodel_overlap_vacate.cc \
     layers/graph_blockmodel_layers.cc \
     layers/graph_blockmodel_layers_exhaustive.cc \
@@ -62,6 +69,7 @@ libgraph_tool_inference_la_SOURCES = \
     layers/graph_blockmodel_layers_multicanonical.cc \
     layers/graph_blockmodel_layers_multicanonical_multiflip.cc \
     layers/graph_blockmodel_layers_multiflip_mcmc.cc \
+    layers/graph_blockmodel_layers_multilevel_mcmc.cc \
     layers/graph_blockmodel_layers_overlap.cc \
     layers/graph_blockmodel_layers_overlap_exhaustive.cc \
     layers/graph_blockmodel_layers_overlap_gibbs.cc \
@@ -70,6 +78,7 @@ libgraph_tool_inference_la_SOURCES = \
     layers/graph_blockmodel_layers_overlap_multicanonical.cc \
     layers/graph_blockmodel_layers_overlap_multicanonical_multiflip.cc \
     layers/graph_blockmodel_layers_overlap_multiflip_mcmc.cc \
+    layers/graph_blockmodel_layers_overlap_multilevel_mcmc.cc \
     layers/graph_blockmodel_layers_overlap_vacate.cc \
     uncertain/graph_blockmodel_dynamics_epidemics.cc \
     uncertain/graph_blockmodel_dynamics_epidemics_mcmc.cc \
@@ -111,6 +120,7 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     blockmodel/graph_blockmodel_merge.hh \
     blockmodel/graph_blockmodel_multicanonical.hh \
     blockmodel/graph_blockmodel_multiflip_mcmc.hh \
+    blockmodel/graph_blockmodel_multilevel_mcmc.hh \
     blockmodel/graph_blockmodel_partition.hh \
     blockmodel/graph_blockmodel_util.hh \
     blockmodel/graph_blockmodel_weights.hh \
@@ -148,6 +158,7 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     loops/mcmc_loop.hh \
     loops/merge_loop.hh \
     loops/merge_split.hh \
+    loops/multilevel.hh \
     support/cache.hh \
     support/graph_neighbor_sampler.hh \
     support/graph_state.hh \

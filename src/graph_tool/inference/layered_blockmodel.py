@@ -996,6 +996,26 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                                                               [s._state for s in states],
                                                                               _get_rng())
 
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
+        if not self.overlap:
+            return libinference.multilevel_mcmc_layered_sweep(mcmc_state,
+                                                             self._state,
+                                                             _get_rng())
+        else:
+            return libinference.multilevel_mcmc_layered_overlap_sweep(mcmc_state,
+                                                                     self._state,
+                                                                     _get_rng())
+
+    def _multilevel_mcmc_sweep_parallel_dispatch(states, mcmc_states):
+        if not states[0].overlap:
+            return libinference.multilevel_mcmc_layered_sweep_parallel(mcmc_states,
+                                                                      [s._state for s in states],
+                                                                      _get_rng())
+        else:
+            return libinference.multilevel_mcmc_layered_overlap_sweep_parallel(mcmc_states,
+                                                                              [s._state for s in states],
+                                                                              _get_rng())
+
     def _gibbs_sweep_dispatch(self, mcmc_state):
         if not self.overlap:
             return libinference.gibbs_layered_sweep(mcmc_state, self._state,

@@ -536,6 +536,46 @@ class ModeClusterState(object):
 
         return dS, nattempts, nmoves
 
+    def multilevel_mcmc_sweep(self, niter=1, beta=1., psingle=None,
+                              pmultilevel=1, d=0.01, r=1.5, M=None,
+                              random_bisect=True, merge_sweeps=10, mh_sweeps=10,
+                              gibbs=False, global_moves=True, B_min=0,
+                              B_max=np.iinfo(np.int64).max, b_min=None,
+                              b_max=None, entropy_args={}, verbose=False,
+                              **kwargs):
+        if psingle is None:
+            psingle = len(self.bs)
+        merge_sweeps = max(merge_sweeps, 1)
+        if M is None:
+            M = self.g.num_vertices()
+        if b_min is None:
+            b_min = self.g.new_vp("int")
+        if b_max is None:
+            b_max = self.g.new_vp("int")
+        oentropy_args = "."
+        mcmc_state = DictState(locals())
+        mcmc_state.state = self._state
+        mcmc_state.c = 0
+
+        test = kwargs.pop("test", True)
+        if _bm_test() and test:
+            Si = self.entropy()
+
+        dS, nattempts, nmoves = \
+            libinference.mode_clustering_multilevel_mcmc_sweep(mcmc_state,
+                                                               self._state,
+                                                               _get_rng())
+        if _bm_test() and test:
+            Sf = self.entropy()
+            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
+                "inconsistent entropy delta %g (%g)" % (dS, Sf - Si)
+
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized keyword arguments: " +
+                             str(list(kwargs.keys())))
+
+        return dS, nattempts, nmoves
+
 
 def partition_overlap(x, y, norm=True):
     r"""Returns the maximum overlap between partitions, according to an optimal

@@ -200,10 +200,9 @@ def bisection_minimize(init_states, random_bisection=False,
         if f_x < f_mid:
             if max_B - mid_B > mid_B - min_B:
                 min_B = mid_B
-                mid_B = x
             else:
                 max_B = mid_B
-                mid_B = x
+            mid_B = x
         else:
             if max_B - mid_B > mid_B - min_B:
                 max_B = x

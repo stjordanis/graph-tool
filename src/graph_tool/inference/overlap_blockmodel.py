@@ -621,6 +621,15 @@ class OverlapBlockState(BlockState):
                                                                   [s._state for s in states],
                                                                   _get_rng())
 
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.overlap_multilevel_mcmc_sweep(mcmc_state, self._state,
+                                                          _get_rng())
+
+    def _multilevel_mcmc_sweep_parallel_dispatch(states, mcmc_states):
+        return libinference.overlap_multilevel_mcmc_sweep_parallel(mcmc_states,
+                                                                   [s._state for s in states],
+                                                                   _get_rng())
+
     def _multicanonical_sweep_dispatch(self, multicanonical_state):
         if multicanonical_state.multiflip:
             return libinference.overlap_multicanonical_sweep(multicanonical_state,

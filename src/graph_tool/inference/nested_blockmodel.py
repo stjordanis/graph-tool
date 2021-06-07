@@ -869,8 +869,7 @@ class NestedBlockState(object):
 
         """
 
-        psingle = kwargs.get("psingle", self.g.num_vertices())
-        kwargs["psingle"] = psingle
+        kwargs["psingle"] = kwargs.get("psingle", self.g.num_vertices())
 
         c = kwargs.pop("c", 1)
         if not isinstance(c, collections.abc.Iterable):
@@ -897,6 +896,36 @@ class NestedBlockState(object):
 
     def _multiflip_mcmc_sweep_parallel_dispatch(states, sweeps):
         algo = lambda s, lstates, lsweep_states: s._multiflip_mcmc_sweep_parallel_dispatch(lstates, lsweep_states)
+        return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
+
+    def multilevel_mcmc_sweep(self, **kwargs):
+        kwargs["psingle"] = kwargs.get("psingle", self.g.num_vertices())
+
+        c = kwargs.pop("c", 1)
+        if not isinstance(c, collections.abc.Iterable):
+            c = [c * 2 ** l for l in range(0, len(self.levels))]
+
+        if kwargs.pop("dispatch", True):
+            test = kwargs.get("test", True)
+            if _bm_test() and test:
+                kwargs = dict(kwargs, test=False)
+                entropy_args = kwargs.get("entropy_args", {})
+                Si = self.entropy(**entropy_args)
+
+            dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.multilevel_mcmc_sweep(**a),
+                                                  c=c, **kwargs)
+            if _bm_test() and test:
+                Sf = self.entropy(**entropy_args)
+                assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
+                    r"inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
+                                                                 str(entropy_args))
+            return dS, nattempts, nmoves
+        else:
+            return self._h_sweep_states(lambda s, **a: s.multilevel_mcmc_sweep(**a),
+                                        c=c, **kwargs)
+
+    def _multilevel_mcmc_sweep_parallel_dispatch(states, sweeps):
+        algo = lambda s, lstates, lsweep_states: s._multilevel_mcmc_sweep_parallel_dispatch(lstates, lsweep_states)
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
     def gibbs_sweep(self, **kwargs):
