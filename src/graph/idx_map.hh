@@ -166,6 +166,7 @@ public:
     typedef Key value_type;
     typedef typename std::vector<Key>::iterator iterator;
     typedef typename std::vector<Key>::const_iterator const_iterator;
+    typedef std::vector<size_t> pos_t;
 
     idx_set()
     {
@@ -175,7 +176,7 @@ public:
 
     idx_set(std::vector<size_t>& pos) : _pos(&pos) {}
 
-    auto& get_pos()
+    const pos_t& get_pos() const
     {
         if constexpr (shared_pos)
             return *_pos;
@@ -183,9 +184,9 @@ public:
             return _pos;
     }
 
-    std::pair<iterator,bool> insert(const Key& k)
+    std::pair<const_iterator,bool> insert(const Key& k)
     {
-        auto& pos = get_pos();
+        pos_t& pos = const_cast<pos_t&>(get_pos());
         if (pos.size() <= size_t(k))
             pos.resize(k + 1, _null);
         size_t& idx = pos[k];
@@ -203,7 +204,7 @@ public:
 
     size_t erase(const Key& k)
     {
-        auto& pos = get_pos();
+        pos_t& pos = const_cast<pos_t&>(get_pos());
         size_t& idx = pos[k];
         if (idx == _null && !shared_pos)
             return 0;
@@ -216,16 +217,16 @@ public:
         return 1;
     }
 
-    iterator erase(const_iterator pos)
+    const_iterator erase(const_iterator pos)
     {
         size_t idx = pos - begin();
         erase(pos->first);
         return begin() + idx;
     }
 
-    iterator find(const Key& key)
+    const_iterator find(const Key& key) const
     {
-        auto& pos = get_pos();
+        const auto& pos = get_pos();
         if (size_t(key) >= pos.size())
             return end();
         size_t idx = pos[key];
@@ -234,14 +235,9 @@ public:
         return begin() + idx;
     }
 
-    const_iterator find(const Key& key) const
-    {
-        return const_cast<decltype(this)>(this)->find(key);
-    }
-
     void clear()
     {
-        auto& pos = get_pos();
+        auto& pos = const_cast<pos_t&>(get_pos());
         for (auto k : _items)
             pos[k] = _null;
         _items.clear();
@@ -249,15 +245,13 @@ public:
 
     void shrink_to_fit()
     {
-        auto& pos = get_pos();
+        auto& pos = const_cast<pos_t&>(get_pos());
         _items.shrink_to_fit();
         if (_items.empty())
             pos.clear();
         pos.shrink_to_fit();
     }
 
-    iterator begin() { return _items.begin(); }
-    iterator end() { return _items.end(); }
     const_iterator begin() const { return _items.begin(); }
     const_iterator end() const { return _items.end(); }
 
@@ -266,9 +260,7 @@ public:
 
 private:
     std::vector<Key> _items;
-    std::conditional_t<shared_pos,
-                       std::vector<size_t>*,
-                       std::vector<size_t>> _pos;
+    std::conditional_t<shared_pos, pos_t*, pos_t> _pos;
     static constexpr size_t _null = std::numeric_limits<size_t>::max();
 };
 
