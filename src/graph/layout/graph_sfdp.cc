@@ -23,6 +23,9 @@
 #include "graph_sfdp.hh"
 #include "random.hh"
 #include "hash_map_wrap.hh"
+#include "numpy_bind.hh"
+
+#include <boost/multi_array/multi_array_ref.hpp>
 
 using namespace std;
 using namespace boost;
@@ -41,16 +44,21 @@ void sfdp_layout(GraphInterface& g, boost::any pos, boost::any vweight,
     typedef mpl::push_back<edge_scalar_properties, eweight_map_t>::type
         edge_props_t;
 
-    typedef vprop_map_t<int32_t>::type group_map_t;
-
     double C = python::extract<double>(spring_parms[0]);
     double K = python::extract<double>(spring_parms[1]);
     double p = python::extract<double>(spring_parms[2]);
     double gamma = python::extract<double>(spring_parms[3]);
     double mu = python::extract<double>(spring_parms[4]);
-    double mu_p = python::extract<double>(spring_parms[5]);
-    group_map_t groups =
-        any_cast<group_map_t>(python::extract<any>(spring_parms[6])());
+    double kappa = python::extract<double>(spring_parms[5]);
+
+    typedef multi_array_ref<int32_t,1> group_map_t;
+    std::vector<group_map_t> groups;
+    for (int i = 0; i < python::len(spring_parms[6]); ++i)
+        groups.push_back(get_array<int32_t,1>(spring_parms[6][i]));
+
+    double r = python::extract<double>(spring_parms[7]);
+    typedef vprop_map_t<int32_t>::type c_map_t;
+    c_map_t c_map = boost::any_cast<c_map_t>(python::extract<any&>(spring_parms[8])());
 
     if(vweight.empty())
         vweight = vweight_map_t();
@@ -58,21 +66,19 @@ void sfdp_layout(GraphInterface& g, boost::any pos, boost::any vweight,
         eweight = eweight_map_t();
 
     typedef vprop_map_t<uint8_t>::type pin_map_t;
-    pin_map_t pin_map = any_cast<pin_map_t>(pin);
+    pin_map_t pin_map = boost::any_cast<pin_map_t>(pin);
 
     run_action<graph_tool::detail::never_directed>()
         (g,
-         [&](auto&& graph, auto&& a2, auto&& a3, auto&& a4)
+         [&](auto&& graph, auto&& pos, auto&& vweight, auto&& eweight)
          {
-             return get_sfdp_layout(C, K, p, theta, gamma, mu, mu_p, init_step,
+             return get_sfdp_layout(graph, pos, vweight, eweight,
+                                    pin_map.get_unchecked(num_vertices(g.get_graph())),
+                                    groups, C, K, p, theta, gamma, mu, kappa, r,
+                                    c_map.get_unchecked(num_vertices(g.get_graph())),
+                                    init_step,
                                     step_schedule, max_level, epsilon, max_iter,
-                                    adaptive)(
-                 std::forward<decltype(graph)>(graph),
-                 std::forward<decltype(a2)>(a2), std::forward<decltype(a3)>(a3),
-                 std::forward<decltype(a4)>(a4),
-                 pin_map.get_unchecked(num_vertices(g.get_graph())),
-                 groups.get_unchecked(num_vertices(g.get_graph())), verbose,
-                 rng);
+                                    adaptive, verbose, rng);
          },
          vertex_floating_vector_properties(), vertex_props_t(),
          edge_props_t())(pos, vweight, eweight);
@@ -87,9 +93,9 @@ struct do_propagate_pos
                     double delta, RNG& rng) const
     {
         typename PosMap::checked_t cpos =
-            any_cast<typename PosMap::checked_t>(acpos);
+            boost::any_cast<typename PosMap::checked_t>(acpos);
         typename VertexMap::checked_t cvmap =
-            any_cast<typename VertexMap::checked_t>(acvmap);
+            boost::any_cast<typename VertexMap::checked_t>(acvmap);
         typedef typename property_traits<VertexMap>::value_type c_t;
         typedef typename property_traits<PosMap>::value_type pos_t;
         typedef typename pos_t::value_type val_t;

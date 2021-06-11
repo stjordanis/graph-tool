@@ -68,10 +68,11 @@ Contents
 
 from .. import Graph, GraphView, _check_prop_vector, _check_prop_scalar, \
     group_vector_property, ungroup_vector_property, infect_vertex_property, \
-    _prop, _get_rng
+    _prop, _get_rng, VertexPropertyMap
 from .. topology import max_cardinality_matching, max_independent_vertex_set, \
     label_components, shortest_distance, make_maximal_planar, is_planar
 from .. generation import predecessor_tree, condensation_graph
+from .. inference import nested_contiguous_map
 import numpy.random
 from numpy import sqrt
 
@@ -419,7 +420,7 @@ def _coarse_graph(g, vweight, eweight, mivs=False, groups=None):
             u = GraphView(g, directed=False)
     else:
         mivs = None
-        c = groups
+        c = g.new_vp("int", vals=groups)
     cg, cc, vcount, ecount = condensation_graph(g, c, vweight, eweight)[:4]
     return cg, cc, vcount, ecount, c, mivs
 
@@ -467,8 +468,11 @@ def coarse_graphs(g, method="hybrid", mivs_thres=0.9, ec_thres=0.75,
         cg[-1][2], cg[-1][3] = vweight, eweight
     mivs = not (method in ["hybrid", "ec"])
     while True:
-        u = _coarse_graph(cg[-1][0], cg[-1][2], cg[-1][3], mivs, groups)
-        groups = None
+        if groups is None or len(groups) < len(cg):
+            b = None
+        else:
+            b = groups[len(cg)-1]
+        u = _coarse_graph(cg[-1][0], cg[-1][2], cg[-1][3], mivs, b)
         thres = mivs_thres if mivs else ec_thres
         if u[0].num_vertices() >= thres * cg[-1][0].num_vertices():
             if method == "hybrid" and not mivs:
@@ -496,17 +500,16 @@ def coarse_graphs(g, method="hybrid", mivs_thres=0.9, ec_thres=0.75,
         if weighted_coarse:
             gamma = 1.
         else:
-            #u = cg[i - 1][0]
-            #w = cg[i][0]
-            #du = pseudo_diameter(u)[0]
-            #dw = pseudo_diameter(w)[0]
-            #gamma = du / float(max(dw, du))
             gamma = 0.75
         Ks.append(Ks[-1] * gamma)
 
     for i in range(len(cg)):
         u, cc, vcount, ecount, c, mivs = cg[i]
-        yield u, pos, Ks[i], vcount, ecount
+        if groups is None or len(cg) - i > len(groups):
+            b = None
+        else:
+            b = groups[len(cg) - 1 - i:]
+        yield u, pos, Ks[i], vcount, ecount, b
 
         if verbose:
             print("avg edge distance:", _avg_edge_distance(u, pos))
@@ -518,62 +521,13 @@ def coarse_graphs(g, method="hybrid", mivs_thres=0.9, ec_thres=0.75,
             pos = _propagate_pos(cg[i + 1][0], u, c, cc, pos,
                                  Ks[i] / 1000., mivs)
 
-def coarse_graph_stack(g, c, coarse_stack, eweight=None, vweight=None,
-                       weighted_coarse=True, verbose=False):
-    cg = [[g, c, None, None]]
-    if weighted_coarse:
-        cg[-1][2], cg[-1][3] = vweight, eweight
-    for u in coarse_stack:
-        c = u.vp["b"]
-        vcount = u.vp["count"]
-        ecount = u.ep["count"]
-        cg.append((u, c, vcount, ecount))
-        if verbose:
-            print("Coarse level:", end=' ')
-            print(len(cg), " num vertices:", end=' ')
-            print(u.num_vertices())
-    cg.reverse()
-    Ks = []
-    pos = random_layout(cg[0][0], dim=2)
-    for i in range(len(cg)):
-        if i == 0:
-            u = cg[i][0]
-            K = _avg_edge_distance(u, pos)
-            if K == 0:
-                K = 1.
-            Ks.append(K)
-            continue
-        if weighted_coarse:
-            gamma = 1.
-        else:
-            #u = cg[i - 1][0]
-            #w = cg[i][0]
-            #du = pseudo_diameter(u)[0]
-            #dw = pseudo_diameter(w)[0]
-            #gamma = du / float(max(dw, du))
-            gamma = 0.75
-        Ks.append(Ks[-1] * gamma)
-
-    for i in range(len(cg)):
-        u, c, vcount, ecount = cg[i]
-        yield u, pos, Ks[i], vcount, ecount
-
-        if verbose:
-            print("avg edge distance:", _avg_edge_distance(u, pos))
-
-        if i < len(cg) - 1:
-            if verbose:
-                print("propagating...")
-            pos = _propagate_pos(cg[i + 1][0], u, c, u.vertex_index.copy("int"),
-                                 pos, Ks[i] / 1000., None)
-
 
 def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
-                K=None, p=2., theta=0.6, max_level=15, gamma=1., mu=0., mu_p=1.,
-                init_step=None, cooling_step=0.95, adaptive_cooling=True,
-                epsilon=1e-2, max_iter=0, pos=None, multilevel=None,
-                coarse_method="hybrid", mivs_thres=0.9, ec_thres=0.75,
-                coarse_stack=None, weighted_coarse=False, verbose=False):
+                K=None, p=2., theta=0.6, max_level=15, r=1., gamma=.3, mu=2.,
+                kappa=1., init_step=None, cooling_step=0.95,
+                adaptive_cooling=True, epsilon=1e-2, max_iter=0, pos=None,
+                multilevel=None, coarse_method="hybrid", mivs_thres=0.9,
+                ec_thres=0.75, weighted_coarse=False, verbose=False):
     r"""Obtain the SFDP spring-block layout of the graph.
 
     Parameters
@@ -601,15 +555,14 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
         Quadtree opening parameter, a.k.a. Barnes-Hut opening criterion.
     max_level : int (optional, default: ``15``)
         Maximum quadtree level.
-    gamma : float (optional, default: ``1.0``)
-        Strength of the attractive force between connected components, or group
-        assignments.
-    mu : float (optional, default: ``0.0``)
-        Strength of the attractive force between vertices of the same connected
-        component, or group assignment.
-    mu_p : float (optional, default: ``1.0``)
-        Scaling exponent of the attractive force between vertices of the same
-        connected component, or group assignment.
+    r : float (optional, default: ``1.``)
+        Strength of attractive force between connected components.
+    gamma : float (optional, default: ``.3``)
+        Strength of the repulsive force between different groups.
+    mu : float (optional, default: ``3.0``)
+        Exponent of the strength of the repulsive force between different groups.
+    kappa : float (optional, default: ``1.0``)
+        Multiplicative factor on the attracttive force between nodes of the same group.
     init_step : float (optional, default: ``None``)
         Initial update step. If not provided, it will be chosen automatically.
     cooling_step : float (optional, default: ``0.95``)
@@ -684,8 +637,11 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
     if pos is None:
         pos = random_layout(g, dim=2)
     _check_prop_vector(pos, name="pos", floating=True)
-    if groups is not None:
-        _check_prop_scalar(groups, name="groups", floating=False)
+
+    if isinstance(groups, VertexPropertyMap):
+        groups = [numpy.asarray(groups.a, dtype="int32")]
+    elif groups is not None:
+        groups = nested_contiguous_map(groups)
 
     g_ = g
     g = GraphView(g, directed=False)
@@ -708,20 +664,15 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
     if multilevel:
         if eweight is not None or vweight is not None:
             weighted_coarse = True
-        if coarse_stack is None:
-            cgs = coarse_graphs(g, method=coarse_method,
-                                mivs_thres=mivs_thres,
-                                ec_thres=ec_thres,
-                                weighted_coarse=weighted_coarse,
-                                eweight=eweight,
-                                vweight=vweight,
-                                groups=groups,
-                                verbose=verbose)
-        else:
-            cgs = coarse_graph_stack(g, coarse_stack[0], coarse_stack[1],
-                                     eweight=eweight, vweight=vweight,
-                                     verbose=verbose)
-        for count, (u, pos, K, vcount, ecount) in enumerate(cgs):
+        cgs = coarse_graphs(g, method=coarse_method,
+                            mivs_thres=mivs_thres,
+                            ec_thres=ec_thres,
+                            weighted_coarse=weighted_coarse,
+                            eweight=eweight,
+                            vweight=vweight,
+                            groups=groups,
+                            verbose=verbose)
+        for count, (u, pos, K, vcount, ecount, groups) in enumerate(cgs):
             if verbose:
                 print("Positioning level:", count, u.num_vertices(), end=' ')
                 print("with K =", K, "...")
@@ -729,9 +680,9 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
             pos = sfdp_layout(u, pos=pos,
                               vweight=vcount if weighted_coarse else None,
                               eweight=ecount if weighted_coarse else None,
-                              groups=None if u.num_vertices() < g.num_vertices() else groups,
+                              groups=groups,
                               C=C, K=K, p=p,
-                              theta=theta, gamma=gamma, mu=mu, mu_p=mu_p,
+                              theta=theta, gamma=gamma, mu=mu,
                               epsilon=epsilon,
                               max_iter=max_iter,
                               cooling_step=cooling_step,
@@ -752,16 +703,19 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
         return pos
     if g.num_vertices() <= 50:
         max_level = 0
+
     if groups is None:
-        groups = label_components(g)[0]
-    elif groups.value_type() != "int32_t":
-        raise ValueError("'groups' property must be of type 'int32_t'.")
+        groups = [numpy.zeros(g.num_vertices(True), dtype="int32")]
+
+    c = label_components(g)[0]
+
     libgraph_tool_layout.sanitize_pos(g._Graph__graph, _prop("v", g, pos))
     libgraph_tool_layout.sfdp_layout(g._Graph__graph, _prop("v", g, pos),
                                      _prop("v", g, vweight),
                                      _prop("e", g, eweight),
                                      _prop("v", g, pin),
-                                     (C, K, p, gamma, mu, mu_p, _prop("v", g, groups)),
+                                     (C, K, p, gamma, mu, kappa, groups, r,
+                                      _prop("v", g, c)),
                                      theta, init_step, cooling_step, max_level,
                                      epsilon, max_iter, not adaptive_cooling,
                                      verbose, _get_rng())
