@@ -39,6 +39,24 @@ python::object make_overlap_block_state(boost::python::object ostate)
     return state;
 }
 
+template <class Edge, class Graph>
+inline typename graph_traits<Graph>::vertex_descriptor
+get_source(const Edge& e, const Graph &g)
+{
+    if constexpr (is_directed_::apply<Graph>::type::value)
+        return source(e, g);
+    return std::min(source(e, g), target(e, g));
+}
+
+template <class Edge, class Graph>
+inline typename graph_traits<Graph>::vertex_descriptor
+get_target(const Edge& e, const Graph &g)
+{
+    if constexpr (is_directed_::apply<Graph>::type::value)
+        return target(e, g);
+    return std::max(source(e, g), target(e, g));
+}
+
 void get_eg_overlap(GraphInterface& gi, GraphInterface& egi, boost::any obe,
                     boost::any ob, boost::any onode_index,
                     boost::any ohalf_edges, boost::any oeindex, boost::any orec,

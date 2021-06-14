@@ -201,33 +201,22 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                  bfield=None, Bfield=None, deg_corr=True, dense_bg=False, **kwargs):
         kwargs = kwargs.copy()
 
-        # initialize weights to unity, if necessary
-        if eweight == "unity":
+        if eweight is None:
             eweight = g.new_ep("int", 1)
-        elif eweight is None or isinstance(eweight, libinference.unity_eprop_t):
-            eweight = libinference.unity_eprop_t()
         elif eweight.value_type() != "int32_t":
             eweight = g.own_property(eweight.copy(value_type="int32_t"))
         else:
             eweight = g.own_property(eweight)
-        if vweight == "unity":
+
+        if vweight is None:
             vweight = g.new_vp("int", 1)
-        elif vweight is None or isinstance(vweight, libinference.unity_vprop_t):
-            vweight = libinference.unity_vprop_t()
         elif vweight.value_type() != "int32_t":
             vweight = g.own_property(vweight.copy(value_type="int32_t"))
         else:
             vweight = g.own_property(vweight)
         self.eweight = eweight
         self.vweight = vweight
-
-        is_edge_weighted = not isinstance(eweight, libinference.unity_eprop_t)
-        is_vertex_weighted = not isinstance(vweight, libinference.unity_vprop_t)
-        if not is_edge_weighted and is_vertex_weighted:
-            self.eweight = g.new_ep("int", 1)
-        if not is_vertex_weighted and is_edge_weighted:
-            self.vweight = g.new_vp("int", 1)
-        self.is_weighted = is_edge_weighted or is_vertex_weighted
+        self.is_weighted = True
 
         # configure the main graph and block model parameters
         self.g = g

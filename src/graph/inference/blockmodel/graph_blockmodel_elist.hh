@@ -28,54 +28,35 @@ namespace graph_tool
 // Construct and manage half-edge lists
 // ====================================
 
-//the following guarantees a stable (source, target) ordering even for
-//undirected graphs
-template <class Edge, class Graph>
-inline typename graph_traits<Graph>::vertex_descriptor
-get_source(const Edge& e, const Graph &g)
-{
-    if constexpr (is_directed_::apply<Graph>::type::value)
-        return source(e, g);
-    return std::min(source(e, g), target(e, g));
-}
-
-template <class Edge, class Graph>
-inline typename graph_traits<Graph>::vertex_descriptor
-get_target(const Edge& e, const Graph &g)
-{
-    if constexpr (is_directed_::apply<Graph>::type::value)
-        return target(e, g);
-    return std::max(source(e, g), target(e, g));
-}
-
-
-template <class Graph, class Weighted>
 class EGroups
 {
 public:
-    template <class Vprop, class Eprop, class BGraph>
-    void init(Vprop b, Eprop& eweight, Graph& g, BGraph& bg)
+    template <class Eprop, class BGraph>
+    void init(BGraph& bg, Eprop& mrs)
     {
         clear();
         _egroups.resize(num_vertices(bg));
+        _pos.resize(num_vertices(bg));
 
-        for (auto e : edges_range(g))
+        for (auto e : edges_range(bg))
         {
-            _epos[e] = {numeric_limits<size_t>::max(),
-                        numeric_limits<size_t>::max()};
-            insert_edge(e, eweight[e], b, g);
+            insert_edge(source(e, bg), target(e, bg), mrs[e]);
+            insert_edge(target(e, bg), source(e, bg), mrs[e]);
         }
     }
 
     void add_block()
     {
         _egroups.emplace_back();
+        _pos.emplace_back();
     }
 
     void clear()
     {
         _egroups.clear();
         _egroups.shrink_to_fit();
+        _pos.clear();
+        _pos.shrink_to_fit();
     }
 
     bool empty()
@@ -83,202 +64,84 @@ public:
         return _egroups.empty();
     }
 
-    template <class Vprop, class Eprop>
-    bool check(Vprop b, Eprop& eweight, Graph& g) const
+    void insert_edge(size_t s, size_t t, int weight)
     {
-        for (auto e : edges_range(g))
+        auto& pos = _pos[s];
+        auto iter = pos.find(t);
+        if (iter == pos.end())
+            iter = pos.insert({t, _null_pos}).first;
+        insert_edge(t, weight, _egroups[s], iter->second);
+        if (iter->second == _null_pos)
+            pos.erase(iter);
+    }
+
+    template <class EV>
+    void insert_edge(size_t t, int weight, EV& elist, size_t& pos)
+    {
+        if (pos != _null_pos)
         {
-            if (eweight[e] == 0)
-                continue;
-            auto r = b[get_source(e, g)];
-            auto s = b[get_target(e, g)];
-            const auto& pos = _epos[e];
-            if (!(pos.first < _egroups[r].size() &&
-                  is_valid(pos.first, _egroups[r]) &&
-                  get<0>(_egroups[r][pos.first]) == e &&
-                  pos.second < _egroups[s].size() &&
-                  is_valid(pos.second, _egroups[s]) &&
-                  get<0>(_egroups[s][pos.second]) == e))
+            assert(elist.is_valid(pos) && elist[pos] == t);
+            elist.update(pos, weight, true);
+            if (elist.get_prob(pos) == 0)
             {
-                assert(false);
-                return false;
+                elist.remove(pos);
+                pos = _null_pos;
             }
         }
-
-        for (size_t r = 0; r < _egroups.size(); ++r)
+        else
         {
-            const auto& edges = _egroups[r];
-            for (size_t i = 0; i < edges.size(); ++i)
-            {
-                const auto& e = edges[i];
-                if (!is_valid(i, edges))
-                    continue;
-                if (size_t(b[source(get<0>(e), g)]) != r &&
-                    size_t(b[target(get<0>(e), g)]) != r)
-                {
-                    assert(false);
-                    return false;
-                }
-            }
+            if (weight > 0)
+                pos = elist.insert(t, weight);
+            else
+                pos = _null_pos;
         }
-        return true;
     }
 
-    template <class Edge>
-    bool is_valid(size_t i, const DynamicSampler<Edge>& elist) const
+    template <bool Add, class Vertex, class Eprop, class Vprop, class Graph>
+    void modify_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
     {
-        return elist.is_valid(i);
-    }
+        auto iter_edges = [&](auto&& range)
+        {
+            for (auto e : range)
+            {
+                auto ew = (Add) ?  eweight[e] : -eweight[e];
+                auto s = b[source(e, g)];
+                auto t = b[target(e, g)];
+                insert_edge(s, t, ew);
+                if (source(e, g) != target(e, g))
+                    insert_edge(t, s, ew);
+            }
+        };
 
-    template <class Edge>
-    bool is_valid(size_t, const vector<Edge>&) const
-    {
-        return true;
-    }
-
-    template <class Edge, class Vprop>
-    void insert_edge(const Edge& e, size_t weight, Vprop& b, Graph& g)
-    {
-        assert(e != Edge());
-        size_t r = b[get_source(e, g)];
-        auto& r_elist = _egroups[r];
-        insert_edge(std::make_tuple(e, true), r_elist, weight, _epos[e].first);
-
-        size_t s = b[get_target(e, g)];
-        auto& s_elist = _egroups[s];
-        insert_edge(std::make_tuple(e, false), s_elist, weight, _epos[e].second);
-    }
-
-    template <class Edge, class EV>
-    void insert_edge(const Edge& e, EV& elist, size_t, size_t& pos)
-    {
-        if (pos < elist.size() && elist[pos] == e)
-            return;
-        assert(pos >= elist.size() || elist[pos] != e);
-        elist.push_back(e);
-        pos = elist.size() - 1;
-    }
-
-    template <class Edge>
-    void insert_edge(const Edge& e, DynamicSampler<Edge>& elist,
-                     size_t weight, size_t& pos)
-    {
-        if ((pos < elist.size() && elist.is_valid(pos) && elist[pos] == e) ||
-            weight == 0)
-            return;
-        assert(pos >= elist.size() || !elist.is_valid(pos) || elist[pos] != e);
-        pos = elist.insert(e, weight);
-    }
-
-    template <class Edge, class Vprop>
-    void remove_edge(const Edge& e, Vprop& b, Graph& g)
-    {
-        auto& pos = _epos[e];
-
-        size_t r = b[get_source(e, g)];
-        remove_edge(std::make_tuple(e, true), pos.first, _egroups[r]);
-
-        size_t s = b[get_target(e, g)];
-        remove_edge(std::make_tuple(e, false), pos.second, _egroups[s]);
-    }
-
-    template <class Edge>
-    void remove_edge(const Edge& e, size_t pos, vector<Edge>& elist)
-    {
-        if (pos >= elist.size() || elist[pos] != e)
-            return;
-        auto& back = elist.back();
-        if (get<1>(back))
-            _epos[get<0>(back)].first = pos;
-        else
-            _epos[get<0>(back)].second = pos;
-        auto& epos = elist[pos];
-        if (get<1>(epos))
-            _epos[get<0>(epos)].first = numeric_limits<size_t>::max();
-        else
-            _epos[get<0>(epos)].second = numeric_limits<size_t>::max();
-        epos = back;
-        elist.pop_back();
-
-        if (elist.empty())
-            elist.shrink_to_fit();
-    }
-
-    template <class Edge>
-    void remove_edge(const Edge& e, size_t pos, DynamicSampler<Edge>& elist)
-    {
-        if (pos >= elist.size() || elist[pos] != e)
-            return;
-        auto& epos = elist[pos];
-        if (get<1>(epos))
-            _epos[get<0>(epos)].first = numeric_limits<size_t>::max();
-        else
-            _epos[get<0>(epos)].second = numeric_limits<size_t>::max();
-        elist.remove(pos);
-
-        if (elist.empty())
-            elist.clear(true);
-    }
-
-    template <class Vertex, class VProp>
-    [[gnu::hot]]
-    void remove_vertex(Vertex v, VProp& b, Graph& g)
-    {
-        if (_egroups.empty())
-            return;
-        // update the half-edge lists
-        for (auto e : out_edges_range(v, g))
-            remove_edge(e, b, g);
+        iter_edges(out_edges_range(v, g));
         if constexpr (is_directed_::apply<Graph>::type::value)
-        {
-            for (auto e : in_edges_range(v, g))
-                remove_edge(e, b, g);
-        }
+            iter_edges(in_edges_range(v, g));
     }
 
-    template <class Vertex, class Vprop, class Eprop>
-    [[gnu::hot]]
+    template <class Vertex, class Vprop, class Eprop, class Graph>
     void add_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
     {
-        if (_egroups.empty())
-            return;
-        //update the half-edge lists
-        for (auto e : out_edges_range(v, g))
-            insert_edge(e, eweight[e], b, g);
-        if constexpr (is_directed_::apply<Graph>::type::value)
-        {
-            for (auto e : in_edges_range(v, g))
-                insert_edge(e, eweight[e], b, g);
-        }
+        modify_vertex<true>(v, b, eweight, g);
     }
 
-    template <class Edge, class RNG>
-    const auto& sample_edge(const DynamicSampler<Edge>& elist, RNG& rng)
+    template <class Vertex, class Vprop, class Eprop, class Graph>
+    void remove_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
     {
-        return get<0>(elist.sample(rng));
+        modify_vertex<false>(v, b, eweight, g);
     }
 
-    template <class Edge, class RNG>
-    const auto& sample_edge(const vector<Edge>& elist, RNG& rng)
+    template <class RNG>
+    size_t sample_edge(size_t r, RNG& rng)
     {
-        return get<0>(uniform_sample(elist, rng));
-    }
-
-    template <class Vertex, class RNG>
-    const auto& sample_edge(Vertex r, RNG& rng)
-    {
-        return sample_edge(_egroups[r], rng);
+        auto s = _egroups[r].sample(rng);
+        assert(s != numeric_limits<size_t>::max());
+        return s;
     }
 
 private:
-    typedef typename std::conditional<Weighted::value,
-                                      DynamicSampler<std::tuple<typename graph_traits<Graph>::edge_descriptor, bool>>,
-                                      vector<std::tuple<typename graph_traits<Graph>::edge_descriptor, bool>>>::type
-        sampler_t;
-    vector<sampler_t> _egroups;
-
-    typedef typename eprop_map_t<pair<size_t, size_t>>::type epos_t;
-    epos_t _epos;
+    vector<DynamicSampler<size_t>> _egroups;
+    vector<gt_hash_map<size_t, size_t>> _pos;
+    static constexpr size_t _null_pos = numeric_limits<size_t>::max();
 };
 
 } // namespace graph_tool

@@ -198,7 +198,7 @@ public:
         {
             _overlap_stats.remove_half_edge(v, r, _b, _g);
             if (!_egroups.empty() && _egroups_update)
-                _egroups.remove_vertex(v, _b, _g);
+                _egroups.remove_vertex(v, _b, _eweight, _g);
         }
 
         _wr[r] = _overlap_stats.get_block_size(r);
@@ -605,11 +605,8 @@ public:
             if (c == 0 || rdist_t()(rng) >= p_rand)
             {
                 if (_egroups.empty())
-                    _egroups.init(_b, _eweight, _g, _bg);
-                const auto& e = _egroups.sample_edge(t, rng);
-                s = _b[target(e, _g)];
-                if (s == t)
-                    s = _b[source(e, _g)];
+                    _egroups.init(_bg, _mrs);
+                s = _egroups.sample_edge(t, rng);
             }
         }
 
@@ -1197,7 +1194,7 @@ public:
         if (!std::isinf(c))
         {
             if (_egroups.empty())
-                _egroups.init(_b, _eweight, _g, _bg);
+                _egroups.init(_bg, _mrs);
         }
         else
         {
@@ -1299,7 +1296,7 @@ public:
         emat_t;
     emat_t _emat;
 
-    EGroups<g_t, mpl::false_> _egroups;
+    EGroups _egroups;
     bool _egroups_update;
 
     overlap_stats_t _overlap_stats;

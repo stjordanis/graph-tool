@@ -74,7 +74,7 @@ typedef mpl::vector1<std::false_type> rmap_tr;
 
 #define BLOCK_STATE_params                                                     \
     ((g, &, all_graph_views, 1))                                               \
-    ((is_weighted,, bool_tr, 1))                                               \
+    ((is_weighted,, mpl::vector1<std::true_type>, 1))                                               \
     ((use_hash,, bool_tr, 1))                                                  \
     ((use_rmap,, rmap_tr, 1))                                                  \
     ((_abg, &, boost::any&, 0))                                                \
@@ -419,7 +419,7 @@ public:
         _wr[r] -= _vweight[v];
 
         if (!_egroups.empty() && _egroups_update)
-            _egroups.remove_vertex(v, _b, _g);
+            _egroups.remove_vertex(v, _b, _eweight, _g);
 
         if (is_partition_stats_enabled())
             get_partition_stats(v).remove_vertex(v, r, _deg_corr, _g,
@@ -1268,8 +1268,6 @@ public:
                                 const entropy_args_t& ea, std::vector<double>& dBdx,
                                 int dL)
     {
-        openmp_scoped_lock lock(_lock);
-
         size_t r = _b[u];
         size_t s = _b[v];
 
@@ -1569,17 +1567,12 @@ public:
                     p_rand = c * B / double(_mrp[t] + c * B);
             }
 
-            std::uniform_real_distribution<> rdist;
-            if (c == 0 || rdist(rng) >= p_rand)
+            std::bernoulli_distribution rand(p_rand);
+            if (c == 0 || !rand(rng))
             {
                 if (_egroups.empty())
-                    _egroups.init(_b, _eweight, _g, _bg);
-                const auto& e = _egroups.sample_edge(t, rng);
-                s = _b[target(e, _g)];
-                if (s == t)
-                    s = _b[source(e, _g)];
-                else
-                    assert(size_t(_b[source(e, _g)]) == t);
+                    _egroups.init(_bg, _mrs);
+                s = _egroups.sample_edge(t, rng);
             }
             else
             {
@@ -2202,6 +2195,7 @@ public:
     void disable_partition_stats()
     {
         _partition_stats.clear();
+        _partition_stats.shrink_to_fit();
     }
 
     bool is_partition_stats_enabled() const
@@ -2232,7 +2226,7 @@ public:
         if (!std::isinf(c))
         {
             _egroups.clear();
-            _egroups.init(_b, _eweight, _g, _bg);
+            _egroups.init(_bg, _mrs);
             rebuild_neighbor_sampler();
         }
         else
@@ -2424,7 +2418,7 @@ public:
         emat_t;
     emat_t _emat;
 
-    EGroups<g_t, is_weighted_t> _egroups;
+    EGroups _egroups;
     bool _egroups_update = true;
 
     typedef NeighborSampler<g_t, is_weighted_t, mpl::false_>
