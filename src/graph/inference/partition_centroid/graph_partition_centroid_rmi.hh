@@ -27,8 +27,6 @@
 
 #include "idx_map.hh"
 
-#include "openmp_lock.hh"
-
 namespace graph_tool
 {
 using namespace boost;

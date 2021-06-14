@@ -946,7 +946,6 @@ public:
 
     void enable_partition_stats()
     {
-        openmp_scoped_lock lock(_partition_lock);
         if (_partition_stats.empty())
         {
 
@@ -1319,9 +1318,6 @@ public:
     typedef entropy_args_t _entropy_args_t;
     BlockStateVirtualBase* _coupled_state;
     entropy_args_t _coupled_entropy_args;
-
-    openmp_mutex _lock;
-    openmp_mutex _partition_lock;
 };
 
 } // namespace graph_tool

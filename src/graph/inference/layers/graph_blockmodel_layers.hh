@@ -247,7 +247,6 @@ struct Layers
         LayeredBlockStateVirtualBase* _lcoupled_state = nullptr;
         typename vc_t::checked_t _vc_c;
         typename vmap_t::checked_t _vmap_c;
-        openmp_mutex _llock;
 
         void move_vertex(size_t v, size_t s)
         {
@@ -540,8 +539,6 @@ struct Layers
 
             if (ea.adjacency || ea.recs || ea.edges_dl || _lcoupled_state != nullptr)
             {
-                openmp_scoped_lock lck(_llock);
-
                 entropy_args_t lea(ea);
                 lea.partition_dl = false;
 
@@ -1057,7 +1054,6 @@ struct Layers
 
         bool check_layers()
         {
-            openmp_scoped_lock lck(_llock);
             for (auto v : vertices_range(_g))
             {
                 auto r = _b[v];

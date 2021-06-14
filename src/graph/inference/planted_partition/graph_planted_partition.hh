@@ -25,8 +25,6 @@
 #include "../blockmodel/graph_blockmodel_util.hh"
 #include "../support/graph_state.hh"
 
-#include "openmp_lock.hh"
-
 #include "idx_map.hh"
 
 namespace graph_tool

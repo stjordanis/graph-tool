@@ -27,8 +27,6 @@
 #include "../blockmodel/graph_blockmodel_util.hh"
 #include "../support/graph_state.hh"
 
-#include "openmp_lock.hh"
-
 namespace graph_tool
 {
 using namespace boost;

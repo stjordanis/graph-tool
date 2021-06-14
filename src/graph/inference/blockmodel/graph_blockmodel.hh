@@ -31,8 +31,6 @@
 #include "../support/graph_state.hh"
 #include "graph_blockmodel_util.hh"
 
-#include "openmp_lock.hh"
-
 namespace graph_tool
 {
 using namespace boost;
@@ -2163,7 +2161,6 @@ public:
 
     void enable_partition_stats()
     {
-        openmp_scoped_lock lock(_partition_lock);
         if (_partition_stats.empty())
         {
             size_t E = 0;
@@ -2447,8 +2444,6 @@ public:
     BlockStateVirtualBase* _coupled_state = nullptr;
     entropy_args_t _coupled_entropy_args;
 
-    openmp_mutex _lock;
-    openmp_mutex _partition_lock;
 };
 
 } // graph_tool namespace

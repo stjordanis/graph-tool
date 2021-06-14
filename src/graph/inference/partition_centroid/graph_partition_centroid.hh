@@ -27,7 +27,6 @@
 #include "../support/graph_state.hh"
 
 #include "idx_map.hh"
-#include "openmp_lock.hh"
 
 namespace graph_tool
 {
