@@ -53,7 +53,7 @@ public:
         double u = sample(rng), c = 0;
 
         size_t pos = 0;
-        while (_idx[pos] == numeric_limits<size_t>::max())
+        while (_idx[pos] == _null_idx)
         {
             size_t l = get_left(pos);
             double a = _tree[l];
@@ -89,7 +89,7 @@ public:
                 _idx[l] = _idx[pos];
                 _ipos[_idx[l]] = l;
                 _tree[l] = _tree[pos];
-                _idx[pos] = numeric_limits<size_t>::max();
+                _idx[pos] = _null_idx;
 
                 // position new item to the right
                 _back = get_right(pos);
@@ -118,6 +118,7 @@ public:
 
         insert_leaf_prob(pos);
         _n_items++;
+
         return _idx[pos];
     }
 
@@ -125,10 +126,24 @@ public:
     {
         size_t pos = _ipos[i];
         remove_leaf_prob(pos);
+        _tree[pos] = 0;
         _free.push_back(pos);
         _items[i] = Value();
         _valid[i] = false;
         _n_items--;
+    }
+
+    void update(size_t i, double w, bool delta)
+    {
+        size_t pos = _ipos[i];
+        assert(_tree[pos] > 0 || w > 0);
+        remove_leaf_prob(pos);
+        if (delta)
+            _tree[pos] += w;
+        else
+            _tree[pos] = w;
+        insert_leaf_prob(pos);
+        assert(_tree[pos] >= 0);
     }
 
     void clear(bool shrink=false)
@@ -159,7 +174,7 @@ public:
 
         for (size_t i = 0; i < _tree.size(); ++i)
         {
-            if (_idx[i] == numeric_limits<size_t>::max())
+            if (_idx[i] == _null_idx)
                 continue;
             size_t j = _idx[i];
             if (!_valid[j])
@@ -177,6 +192,11 @@ public:
     const Value& operator[](size_t i) const
     {
         return _items[i];
+    }
+
+    double get_prob(size_t i) const
+    {
+        return _tree[_ipos[i]];
     }
 
     bool is_valid(size_t i) const
@@ -210,12 +230,11 @@ public:
     }
 
 private:
-
     void check_size(size_t i)
     {
         if (i >= _tree.size())
         {
-            _idx.resize(i + 1, numeric_limits<size_t>::max());
+            _idx.resize(i + 1, _null_idx);
             _tree.resize(i + 1, 0);
         }
     }
@@ -224,12 +243,13 @@ private:
     {
         size_t parent = i;
         double w = _tree[i];
+
         while (parent > 0)
         {
             parent = get_parent(parent);
             _tree[parent] -= w;
+            assert(_tree[parent] >= 0);
         }
-        _tree[i] = 0;
     }
 
     void insert_leaf_prob(size_t i)
@@ -244,6 +264,16 @@ private:
         }
     }
 
+    bool check_probs()
+    {
+        for (size_t i = 0; i < _tree.size(); ++i)
+        {
+            if (_idx[i] != _null_idx)
+                continue;
+            assert(get_right(i) >= _tree.size() || _tree[i] == _tree[get_left(i)] + _tree[get_right(i)]);
+        }
+        return true;
+    }
 
     vector<Value>  _items;
     vector<size_t> _ipos;  // position of the item in the tree
@@ -255,6 +285,8 @@ private:
     vector<size_t> _free;  // empty leafs
     vector<bool> _valid;   // non-removed items
     size_t _n_items;
+
+    constexpr static size_t _null_idx = numeric_limits<size_t>::max();
 };
 
 
