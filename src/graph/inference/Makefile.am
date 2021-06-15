@@ -31,6 +31,7 @@ libgraph_tool_inference_la_SOURCES = \
     histogram/graph_histogram.cc \
     histogram/graph_histogram_mcmc.cc \
     modularity/graph_modularity.cc \
+    modularity/graph_modularity_gibbs.cc \
     modularity/graph_modularity_mcmc.cc \
     modularity/graph_modularity_multiflip_mcmc.cc \
     modularity/graph_modularity_multilevel_mcmc.cc \

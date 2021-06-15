@@ -145,6 +145,7 @@ extern void export_pp_mcmc();
 extern void export_pp_multiflip_mcmc();
 extern void export_pp_multilevel_mcmc();
 extern void export_modularity_state();
+extern void export_modularity_gibbs();
 extern void export_modularity_mcmc();
 extern void export_modularity_multiflip_mcmc();
 extern void export_modularity_multilevel_mcmc();
@@ -233,6 +234,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     export_pp_multiflip_mcmc();
     export_pp_multilevel_mcmc();
     export_modularity_state();
+    export_modularity_gibbs();
     export_modularity_mcmc();
     export_modularity_multiflip_mcmc();
     export_modularity_multilevel_mcmc();

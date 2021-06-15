@@ -89,7 +89,8 @@ def modularity(g, b, gamma=1., weight=None):
     return Q
 
 
-class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState):
+class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
+                      GibbsMCMCState):
     r"""Obtain the partition of a network according to Newman's modularity.
 
     .. warning::
@@ -257,4 +258,7 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState):
         return libinference.modularity_multilevel_mcmc_sweep(mcmc_state,
                                                              self._state,
                                                              _get_rng())
+    def _gibbs_sweep_dispatch(self, gibbs_state):
+        return libinference.modularity_gibbs_sweep(gibbs_state, self._state,
+                                                   _get_rng())
 

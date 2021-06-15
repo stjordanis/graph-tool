@@ -944,10 +944,16 @@ public:
 
         double dS = entries_dS<exact>(m_entries, _mrs, _emat, _bg);
 
-        size_t kout = out_degreeS()(v, _g, _eweight);
-        size_t kin = kout;
-        if constexpr (is_directed_::apply<g_t>::type::value)
-            kin = in_degreeS()(v, _g, _eweight);
+        size_t kout = 0, kin = 0;
+        degs_op(v, _vweight, _eweight, _degs, _g,
+                [&] ([[maybe_unused]] size_t din, size_t dout, auto count)
+                {
+                    kout += dout * count;
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                        kin += din * count;
+                });
+        if constexpr (!is_directed_::apply<g_t>::type::value)
+            kin = kout;
 
         int dwr = _vweight[v];
         int dwnr = dwr;
