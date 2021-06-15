@@ -76,17 +76,9 @@ public:
                 _v_out_sampler.resize(r+1);
             }
 
-            size_t kin = 0, kout = 0;
-            if (state._deg_corr)
-            {
-                degs_op(v, state._vweight, state._eweight, state._degs,
-                        state._g,
-                        [&] (size_t din, size_t dout, auto c)
-                        {
-                            kin += din * c;
-                            kout += dout * c;
-                        });
-            }
+            auto [kin, kout] = (state._deg_corr) ?
+                get_deg(v, state._eweight, state._degs, state._g) :
+                std::make_tuple(size_t(0), size_t(0));
 
             if (graph_tool::is_directed(state._g))
                 _v_in_pos[v] = _v_in_sampler[r].insert(v, kin + 1);
@@ -157,20 +149,10 @@ public:
 
         if (_state._deg_corr)
         {
-            size_t ku = 0, kv = 0;
-            degs_op(u, _state._vweight, _state._eweight, _state._degs, _state._g,
-                    [&] (size_t, size_t dout, auto c)
-                    {
-                        ku += dout * c;
-                    });
-            degs_op(v, _state._vweight, _state._eweight, _state._degs, _state._g,
-                    [&] (size_t din, size_t dout, auto c)
-                    {
-                        if (graph_tool::is_directed(_state._g))
-                            kv += din * c;
-                        else
-                            kv += dout * c;
-                    });
+            size_t ku = get<1>(get_deg(u, _state._eweight, _state._degs, _state._g));
+            size_t kv = (graph_tool::is_directed(_state._g)) ?
+                get<0>(get_deg(v, _state._eweight, _state._degs, _state._g)) :
+                get<1>(get_deg(v, _state._eweight, _state._degs, _state._g));
 
             if (u != v || graph_tool::is_directed(_state._g))
             {
@@ -259,19 +241,10 @@ public:
         size_t ku = 0, kv = 0;
         if (_state._deg_corr)
         {
-            degs_op(u, _state._vweight, _state._eweight, _state._degs, g,
-                    [&] (size_t, size_t dout, auto c)
-                    {
-                        ku += dout * c;
-                    });
-            degs_op(v, _state._vweight, _state._eweight, _state._degs, g,
-                    [&] (size_t din, size_t dout, auto c)
-                    {
-                        if (graph_tool::is_directed(g))
-                            kv += din * c;
-                        else
-                            kv += dout * c;
-                    });
+            ku = get<1>(get_deg(u, _state._eweight, _state._degs, _state._g));
+            kv = (graph_tool::is_directed(_state._g)) ?
+                get<0>(get_deg(v, _state._eweight, _state._degs, _state._g)) :
+                get<1>(get_deg(v, _state._eweight, _state._degs, _state._g));
         }
 
         auto&& me = _state._emat.get_me(r, s);

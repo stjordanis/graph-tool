@@ -38,21 +38,21 @@ typedef vprop_map_t<std::tuple<size_t, size_t>>::type degs_map_t;
 
 struct simple_degs_t {};
 
-template <class Graph, class Vprop, class Eprop, class F>
+template <class Graph, class Eprop>
 [[gnu::always_inline]] [[gnu::flatten]] inline
-void degs_op(size_t v, Vprop& vweight, Eprop& eweight, const simple_degs_t&,
-             Graph& g, F&& f)
+std::tuple<size_t, size_t> get_deg(size_t v, Eprop& eweight,
+                                   const simple_degs_t&, Graph& g)
 {
-    f(in_degreeS()(v, g, eweight), out_degreeS()(v, g, eweight), vweight[v]);
+    return {in_degreeS()(v, g, eweight), out_degreeS()(v, g, eweight)};
 }
 
-template <class Graph, class Vprop, class Eprop, class F>
+template <class Graph, class Eprop>
 [[gnu::always_inline]] [[gnu::flatten]] inline
-void degs_op(size_t v, Vprop& vweight, Eprop&,
-             const typename degs_map_t::unchecked_t& degs, Graph&, F&& f)
+std::tuple<size_t, size_t>& get_deg(size_t v, Eprop&,
+                                    const typename degs_map_t::unchecked_t& degs,
+                                    Graph&)
 {
-    auto& k = degs[v];
-    f(get<0>(k), get<1>(k), vweight[v]);
+    return degs[v];
 }
 
 template <bool use_rmap>
@@ -83,15 +83,13 @@ public:
 
             auto r = get_r(b[v]);
 
-            degs_op(v, vweight, eweight, degs, g,
-                    [&](auto kin, auto kout, auto n)
-                    {
-                        get_hist(r)[make_pair(kin, kout)] += n;
-                        _em[r] += kin * n;
-                        _ep[r] += kout * n;
-                        _total[r] += n;
-                        _N += n;
-                    });
+            auto [kin, kout] = get_deg(v, eweight, degs, g);
+            auto n = vweight[v];
+            get_hist(r)[make_pair(kin, kout)] += n;
+            _em[r] += kin * n;
+            _ep[r] += kout * n;
+            _total[r] += n;
+            _N += n;
         }
 
         _actual_B = 0;
@@ -128,11 +126,16 @@ public:
         }
     }
 
+    template <bool create=true>
     auto& get_hist(size_t r)
     {
         auto& h = _hist[r];
         if (h == nullptr)
+        {
+            if constexpr (!create)
+                return _dummy;
             h = new map_t();
+        }
         return *h;
     };
 
@@ -180,7 +183,7 @@ public:
             size_t total = 0;
             if (ks.empty())
             {
-                for (auto& k_c : get_hist(r))
+                for (auto& k_c : get_hist<false>(r))
                 {
                     S -= xlogx_fast(k_c.second);
                     total += k_c.second;
@@ -188,7 +191,7 @@ public:
             }
             else
             {
-                auto& h = get_hist(r);
+                auto& h = get_hist<false>(r);
                 for (auto& k : ks)
                 {
                     auto iter = h.find(k);
@@ -228,7 +231,7 @@ public:
             size_t total = 0;
             if (ks.empty())
             {
-                for (auto& k_c : get_hist(r))
+                for (auto& k_c : get_hist<false>(r))
                 {
                     S -= lgamma_fast(k_c.second + 1);
                     total += k_c.second;
@@ -236,7 +239,7 @@ public:
             }
             else
             {
-                auto& h = get_hist(r);
+                auto& h = get_hist<false>(r);
                 for (auto& k : ks)
                 {
                     auto iter = h.find(k);
@@ -397,8 +400,8 @@ public:
         auto dop =
             [&](auto&& f)
             {
-                degs_op(v, vweight, eweight, degs, g,
-                        [&](auto... k) { f(k...); });
+                auto [kin, kout] = get_deg(v, eweight, degs, g);
+                f(kin, kout, vweight[v]);
             };
 
         double dS = 0;
@@ -566,24 +569,22 @@ public:
     void change_vertex_degs(size_t v, size_t r, Graph& g, VWeight& vweight,
                             EWeight& eweight, Degs& degs, int diff)
     {
-        degs_op(v, vweight, eweight, degs, g,
-                [&](auto kin, auto kout, int n)
-                {
-                    int dk = diff * n;
-                    auto& h = get_hist(r);
-                    auto deg = make_pair(kin, kout);
-                    auto iter = h.insert({deg, 0}).first;
-                    iter->second += dk;
-                    if (iter->second == 0)
-                        h.erase(iter);
-                    if (h.empty())
-                    {
-                        delete _hist[r];
-                        _hist[r] = nullptr;
-                    }
-                    _em[r] += dk * deg.first;
-                    _ep[r] += dk * deg.second;
-                });
+        auto [kin, kout] = get_deg(v, eweight, degs, g);
+        auto n = vweight[v];
+        int dk = diff * n;
+        auto& h = get_hist(r);
+        auto deg = make_pair(kin, kout);
+        auto iter = h.insert({deg, 0}).first;
+        iter->second += dk;
+        if (iter->second == 0)
+            h.erase(iter);
+        if (h.empty())
+        {
+            delete _hist[r];
+            _hist[r] = nullptr;
+        }
+        _em[r] += dk * deg.first;
+        _ep[r] += dk * deg.second;
     }
 
     template <class Graph, class VWeight, class EWeight, class Degs>
@@ -648,14 +649,12 @@ public:
         vector<map_t> dhist;
         for (auto v : vertices_range(g))
         {
-            degs_op(v, vweight, eweight, degs, g,
-                    [&](auto kin, auto kout, auto n)
-                    {
-                        auto r = get_r(b[v]);
-                        if (r >= dhist.size())
-                            dhist.resize(r + 1);
-                        dhist[r][{kin, kout}] += n;
-                    });
+            auto [kin, kout] = get_deg(v, eweight, degs, g);
+            auto n = vweight[v];
+            auto r = get_r(b[v]);
+            if (r >= dhist.size())
+                dhist.resize(r + 1);
+            dhist[r][{kin, kout}] += n;
         }
 
         for (size_t r = 0; r < dhist.size(); ++r)
@@ -673,7 +672,7 @@ public:
 
         for (size_t r = 0; r < _hist.size(); ++r)
         {
-            for (auto& kn : get_hist(r))
+            for (auto& kn : get_hist<false>(r))
             {
                 auto count = (r >= dhist.size()) ? 0 : dhist[r][kn.first];
                 if (kn.second != count)
@@ -697,6 +696,7 @@ private:
     vector<int> _total;
     vector<int> _ep;
     vector<int> _em;
+    map_t _dummy;
 };
 
 } //namespace graph_tool
