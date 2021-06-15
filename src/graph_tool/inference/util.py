@@ -129,8 +129,8 @@ def reverse_map(prop, value_map):
     if isinstance(value_map, PropertyMap):
         value_map.fa = a
 
-def continuous_map(prop):
-    """Remap the values of ``prop`` in the continuous range :math:`[0, N-1]`."""
+def contiguous_map(prop):
+    """Remap the values of ``prop`` in the contiguous range :math:`[0, N-1]`."""
     if isinstance(prop, PropertyMap):
         a = prop.fa
     else:
@@ -143,8 +143,8 @@ def continuous_map(prop):
             libinference.vector_map(a, rmap)
     else:
         if a.dtype == "int64":
-            libinference.vector_continuous_map64(a)
+            libinference.vector_contiguous_map64(a)
         else:
-            libinference.vector_continuous_map(a)
+            libinference.vector_contiguous_map(a)
     if isinstance(prop, PropertyMap):
         prop.fa = a

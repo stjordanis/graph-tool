@@ -729,8 +729,8 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         joint = perfect_prop_hash([joint])[0]
         joint = b.fa.copy()
         b = b.fa.copy()
-        continuous_map(joint)
-        continuous_map(b)
+        contiguous_map(joint)
+        contiguous_map(b)
         if not (b == joint).all():
             return False
         return True
