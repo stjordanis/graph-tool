@@ -251,6 +251,11 @@ public:
         return uniform_sample(_candidate_groups, rng);
     }
 
+    size_t sample_block_local(size_t v, rng_t& rng)
+    {
+        return sample_block(v, 0, 0, rng);
+    }
+
     // Computes the move proposal probability
     double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                          bool reverse)

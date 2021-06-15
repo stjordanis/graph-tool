@@ -115,7 +115,7 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
        012804 (2014), :doi:`10.1103/PhysRevE.89.012804`, :arxiv:`1310.4378`.
     """
 
-    state = state(g, b=g.vertex_index.copy(), **state_args)
+    state = state(g, **state_args)
 
     args = dict(niter=1, psingle=0, beta=numpy.inf)
     args.update(multilevel_mcmc_args)
@@ -224,7 +224,7 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
 
     L = int(numpy.ceil(numpy.log2(g.num_vertices())))
     if init_bs is None:
-        bs = [g.vertex_index.copy()] + [numpy.zeros(1)] * L
+        bs = [numpy.zeros(1)] * (L + 1)
     else:
         bs = init_bs
     state = state(g, bs=bs, **state_args)

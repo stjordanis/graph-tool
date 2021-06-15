@@ -161,7 +161,6 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     loops/merge_split.hh \
     loops/multilevel.hh \
     support/cache.hh \
-    support/graph_neighbor_sampler.hh \
     support/graph_state.hh \
     support/int_part.hh \
     support/util.hh \

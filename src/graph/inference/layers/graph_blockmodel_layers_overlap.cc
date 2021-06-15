@@ -123,8 +123,6 @@ void export_layered_overlap_blockmodel_state()
                                &state_t::is_partition_stats_enabled)
                           .def("clear_egroups",
                                &state_t::clear_egroups)
-                          .def("rebuild_neighbor_sampler",
-                               &state_t::rebuild_neighbor_sampler)
                           .def("sync_emat",
                                &state_t::sync_emat)
                           .def("sync_bclabel",

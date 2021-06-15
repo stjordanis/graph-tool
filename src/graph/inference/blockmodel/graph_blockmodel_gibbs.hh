@@ -109,8 +109,9 @@ struct Gibbs
                     return numeric_limits<double>::infinity();
                 _state.get_empty_block(v);
                 _nr = nr = uniform_sample(_state._empty_groups, rng);
-                if (_state._coupled_state != nullptr)
-                    _state._coupled_state->sample_branch(nr, r, rng);
+                auto cstate = _state._coupled_state;
+                if (cstate != nullptr)
+                    cstate->sample_branch(nr, r, rng);
                 _state._bclabel[nr] = _state._bclabel[r];
 
             }

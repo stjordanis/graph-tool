@@ -616,6 +616,11 @@ struct Layers
             return BaseState::sample_block(v, c, d, rng);
         }
 
+        size_t sample_block_local(size_t v, rng_t& rng)
+        {
+            return BaseState::sample_block_local(v, rng);
+        }
+
         void sample_branch(size_t v, size_t u, rng_t& rng)
         {
             BaseState::sample_branch(v, u, rng);
@@ -998,11 +1003,6 @@ struct Layers
         void clear_egroups()
         {
             BaseState::clear_egroups();
-        }
-
-        void rebuild_neighbor_sampler()
-        {
-            BaseState::rebuild_neighbor_sampler();
         }
 
         vprop_map_t<int32_t>::type::unchecked_t& get_b()

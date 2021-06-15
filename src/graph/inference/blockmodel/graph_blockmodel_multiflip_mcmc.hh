@@ -128,22 +128,24 @@ struct MCMC
 
             auto r = _state._b[v];
             _state._bclabel[t] = _state._bclabel[r];
-            if (_state._coupled_state != nullptr)
+
+            auto cstate = _state._coupled_state;
+            if (cstate != nullptr)
             {
                 if constexpr (sample_branch)
                 {
                     do
                     {
-                        _state._coupled_state->sample_branch(t, r, rng);
+                        cstate->sample_branch(t, r, rng);
                     }
                     while(!_state.allow_move(r, t));
                 }
                 else
                 {
-                    auto& bh = _state._coupled_state->get_b();
+                    auto& bh = cstate->get_b();
                     bh[t] = bh[r];
                 }
-                auto& hpclabel = _state._coupled_state->get_pclabel();
+                auto& hpclabel = cstate->get_pclabel();
                 hpclabel[t] = _state._pclabel[v];
             }
             assert(_state._wr[t] == 0);
@@ -185,9 +187,10 @@ struct MCMC
 
         bool can_swap(size_t r, size_t s)
         {
-            if (_state._coupled_state == nullptr)
+            auto cstate = _state._coupled_state;
+            if (cstate == nullptr)
                 return _state._bclabel[r] == _state._bclabel[s];
-            auto& hb = _state._coupled_state->get_b();
+            auto& hb = cstate->get_b();
             auto rr = hb[r];
             auto ss = hb[s];
             return (rr == ss) && (_state._bclabel[r] == _state._bclabel[s]);

@@ -166,8 +166,8 @@ random_out_neighbor(typename boost::graph_traits<Graph>::vertex_descriptor v,
                     const Graph& g,
                     RNG& rng)
 {
-    auto iter = out_edges(v, g);
-    return target(*uniform_sample_iter(iter.first, iter.second, rng), g);
+    auto iter = out_neighbors(v, g);
+    return *uniform_sample_iter(iter.first, iter.second, rng);
 }
 
 template <class Graph, class RNG>
@@ -176,8 +176,18 @@ random_in_neighbor(typename boost::graph_traits<Graph>::vertex_descriptor v,
                    const Graph& g,
                    RNG& rng)
 {
-    auto iter = in_edge_iteratorS<Graph>::get_edges(v, g);
-    return source(*uniform_sample_iter(iter.first, iter.second, rng), g);
+    auto iter = in_neighbors(v, g);
+    return *uniform_sample_iter(iter.first, iter.second, rng);
+}
+
+template <class Graph, class RNG>
+typename boost::graph_traits<Graph>::vertex_descriptor
+random_neighbor(typename boost::graph_traits<Graph>::vertex_descriptor v,
+                const Graph& g,
+                RNG& rng)
+{
+    auto iter = all_neighbors(v, g);
+    return *uniform_sample_iter(iter.first, iter.second, rng);
 }
 
 } // namespace graph_tool

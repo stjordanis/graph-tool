@@ -122,7 +122,6 @@ public:
           _vweight(uncheck(__avweight, typename std::add_pointer<vweight_t>::type())),
           _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
           _emat(_g, _bg),
-          _neighbor_sampler(_g, _eweight),
           _m_entries(num_vertices(_bg))
     {
         for (auto r : vertices_range(_bg))
@@ -921,7 +920,6 @@ public:
         init_vertex_weight(v);
         _pclabel.resize(num_vertices(_g));
         resize_degs(_degs);
-        _neighbor_sampler.resize(num_vertices(_g));
     }
 
     void resize_degs(const simple_degs_t&) {}
@@ -1554,9 +1552,9 @@ public:
         }
 
         size_t s;
-        if (!std::isinf(c) && !_neighbor_sampler.empty(v))
+        if (!std::isinf(c) && total_degreeS()(v, _g) > 0)
         {
-            auto u = _neighbor_sampler.sample(v, rng);
+            auto u = graph_tool::random_neighbor(v, _g, rng);
             size_t t = _b[u];
             double p_rand = 0;
             if (c > 0)
@@ -1589,11 +1587,24 @@ public:
 
     size_t random_neighbor(size_t v, rng_t& rng)
     {
-        if (_neighbor_sampler.empty(v))
+        if (total_degreeS()(v, _g) == 0)
             return v;
-        return _neighbor_sampler.sample(v, rng);
+        return graph_tool::random_neighbor(v, _g, rng);
     }
 
+    size_t sample_block_local(size_t v, rng_t& rng)
+    {
+        if (total_degreeS()(v, _g) > 0)
+        {
+            auto u = graph_tool::random_neighbor(v, _g, rng);
+            auto w = graph_tool::random_neighbor(u, _g, rng);
+            return _b[w];
+        }
+        else
+        {
+            return uniform_sample(_candidate_groups, rng);
+        }
+    }
 
     // Computes the move proposal probability
     template <class MEntries>
@@ -1638,83 +1649,72 @@ public:
 
         m_entries.get_mes(_emat);
 
-        auto sum_prob = [&](auto& e, auto u)
+        auto sum_prob = [&](auto&& range)
             {
-                size_t t = _b[u];
-                if (u == v)
-                    t = r;
-                size_t ew = _eweight[e];
-                w += ew;
-
-                int mts = 0;
-                const auto& me = m_entries.get_me(t, s, _emat);
-                if (me != _emat.get_null_edge())
-                    mts = _mrs[me];
-                int mtp = _mrp[t];
-                int mst = mts;
-                int mtm = mtp;
-
-                if constexpr (is_directed_::apply<g_t>::type::value)
+                for (auto u : range)
                 {
-                    mst = 0;
-                    const auto& me = m_entries.get_me(s, t, _emat);
+                    size_t t = _b[u];
+                    if (u == v)
+                        t = r;
+                    w++;
+
+                    int mts = 0;
+                    const auto& me = m_entries.get_me(t, s, _emat);
                     if (me != _emat.get_null_edge())
-                        mst = _mrs[me];
-                    mtm = _mrm[t];
-                }
+                        mts = _mrs[me];
+                    int mtp = _mrp[t];
+                    int mst = mts;
+                    int mtm = mtp;
 
-                if (reverse)
-                {
-                    int dts = m_entries.get_delta(t, s);
-                    int dst = dts;
                     if constexpr (is_directed_::apply<g_t>::type::value)
-                        dst = m_entries.get_delta(s, t);
-
-                    mts += dts;
-                    mst += dst;
-
-                    if (t == s)
                     {
-                        mtp -= kout;
-                        mtm -= kin;
+                        mst = 0;
+                        const auto& me = m_entries.get_me(s, t, _emat);
+                        if (me != _emat.get_null_edge())
+                            mst = _mrs[me];
+                        mtm = _mrm[t];
                     }
 
-                    if (t == r)
+                    if (reverse)
                     {
-                        mtp += kout;
-                        mtm += kin;
-                    }
-                }
+                        int dts = m_entries.get_delta(t, s);
+                        int dst = dts;
+                        if constexpr (is_directed_::apply<g_t>::type::value)
+                            dst = m_entries.get_delta(s, t);
 
-                if constexpr (is_directed_::apply<g_t>::type::value)
-                {
-                    p += ew * ((mts + mst + c) / (mtp + mtm + c * B));
-                }
-                else
-                {
-                    if (t == s)
-                        mts *= 2;
-                    p += ew * (mts + c) / (mtp + c * B);
+                        mts += dts;
+                        mst += dst;
+
+                        if (t == s)
+                        {
+                            mtp -= kout;
+                            mtm -= kin;
+                        }
+
+                        if (t == r)
+                        {
+                            mtp += kout;
+                            mtm += kin;
+                        }
+                    }
+
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                    {
+                        p += (mts + mst + c) / (mtp + mtm + c * B);
+                    }
+                    else
+                    {
+                        if (t == s)
+                            mts *= 2;
+                        p += (mts + c) / (mtp + c * B);
+                    }
                 }
             };
 
-        // self-loops are always ignored when sampling neighbors
-        for (auto e : out_edges_range(v, _g))
-        {
-            if (target(e, _g) == v)
-                continue;
-            sum_prob(e, target(e, _g));
-        }
+        sum_prob(out_neighbors_range(v, _g));
 
         if constexpr (is_directed_::apply<g_t>::type::value)
-        {
-            for (auto e : in_edges_range(v, _g))
-            {
-                if (source(e, _g) == v)
-                    continue;
-                sum_prob(e, source(e, _g));
-            }
-        }
+            sum_prob(in_neighbors_range(v, _g));
 
         if (w > 0)
             return log(1. - d) + log(p) - log(w);
@@ -2227,7 +2227,6 @@ public:
         {
             _egroups.clear();
             _egroups.init(_bg, _mrs);
-            rebuild_neighbor_sampler();
         }
         else
         {
@@ -2254,11 +2253,6 @@ public:
     void clear_egroups()
     {
         _egroups.clear();
-    }
-
-    void rebuild_neighbor_sampler()
-    {
-        _neighbor_sampler.init(_eweight);
     }
 
     void sync_emat()
@@ -2421,10 +2415,6 @@ public:
     EGroups _egroups;
     bool _egroups_update = true;
 
-    typedef NeighborSampler<g_t, is_weighted_t, mpl::false_>
-        neighbor_sampler_t;
-
-    neighbor_sampler_t _neighbor_sampler;
     std::vector<partition_stats_t> _partition_stats;
 
     typedef EntrySet<g_t, bg_t, std::vector<double>,

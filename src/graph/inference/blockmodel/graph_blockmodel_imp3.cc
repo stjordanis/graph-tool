@@ -96,8 +96,6 @@ void export_sbm_state_rmap()
              //          &state_t::get_B_E_D)
              //     .def("clear_egroups",
              //          &state_t::clear_egroups)
-             //     .def("rebuild_neighbor_sampler",
-             //          &state_t::rebuild_neighbor_sampler)
              //     .def("sync_emat",
              //          &state_t::sync_emat);
          });

@@ -70,10 +70,10 @@ public:
     {
         if constexpr (!use_rmap)
         {
-            _hist.resize(num_vertices(g));
-            _total.resize(num_vertices(g));
-            _ep.resize(num_vertices(g));
-            _em.resize(num_vertices(g));
+            _hist.resize(B, nullptr);
+            _total.resize(B);
+            _ep.resize(B);
+            _em.resize(B);
         }
 
         for (auto v : vlist)
@@ -86,7 +86,7 @@ public:
             degs_op(v, vweight, eweight, degs, g,
                     [&](auto kin, auto kout, auto n)
                     {
-                        _hist[r][make_pair(kin, kout)] += n;
+                        get_hist(r)[make_pair(kin, kout)] += n;
                         _em[r] += kin * n;
                         _ep[r] += kout * n;
                         _total[r] += n;
@@ -101,6 +101,40 @@ public:
                 _actual_B++;
         }
     }
+
+    partition_stats(const partition_stats& o)
+        : _bmap(o._bmap),
+          _N(o._N),
+          _actual_B(o._actual_B),
+          _total_B(o._total_B),
+          _hist(o._hist),
+          _total(o._total),
+          _ep(o._ep),
+          _em(o._em)
+    {
+        for (size_t r = 0; r < _hist.size(); ++r)
+        {
+            if (_hist[r] != nullptr)
+                _hist[r] = new map_t(*_hist[r]);
+        }
+    }
+
+    ~partition_stats()
+    {
+        for (auto* h : _hist)
+        {
+            if (h != nullptr)
+                delete h;
+        }
+    }
+
+    auto& get_hist(size_t r)
+    {
+        auto& h = _hist[r];
+        if (h == nullptr)
+            h = new map_t();
+        return *h;
+    };
 
     size_t get_r(size_t r)
     {
@@ -117,7 +151,7 @@ public:
         }
         if (r >= _hist.size())
         {
-            _hist.resize(r + 1);
+            _hist.resize(r + 1, nullptr);
             _total.resize(r + 1);
             _ep.resize(r + 1);
             _em.resize(r + 1);
@@ -146,7 +180,7 @@ public:
             size_t total = 0;
             if (ks.empty())
             {
-                for (auto& k_c : _hist[r])
+                for (auto& k_c : get_hist(r))
                 {
                     S -= xlogx_fast(k_c.second);
                     total += k_c.second;
@@ -154,7 +188,7 @@ public:
             }
             else
             {
-                auto& h = _hist[r];
+                auto& h = get_hist(r);
                 for (auto& k : ks)
                 {
                     auto iter = h.find(k);
@@ -194,7 +228,7 @@ public:
             size_t total = 0;
             if (ks.empty())
             {
-                for (auto& k_c : _hist[r])
+                for (auto& k_c : get_hist(r))
                 {
                     S -= lgamma_fast(k_c.second + 1);
                     total += k_c.second;
@@ -202,7 +236,7 @@ public:
             }
             else
             {
-                auto& h = _hist[r];
+                auto& h = get_hist(r);
                 for (auto& k : ks)
                 {
                     auto iter = h.find(k);
@@ -401,9 +435,13 @@ public:
         auto get_Sk = [&](size_t s, pair<size_t, size_t>& deg, int delta)
             {
                 int nd = 0;
-                auto iter = _hist[s].find(deg);
-                if (iter != _hist[s].end())
-                    nd = iter->second;
+                if (_hist[s] != nullptr)
+                {
+                    auto& h = *_hist[s];
+                    auto iter = h.find(deg);
+                    if (iter != h.end())
+                        nd = iter->second;
+                }
                 assert(nd + delta >= 0);
                 return -xlogx_fast(nd + delta);
             };
@@ -473,9 +511,13 @@ public:
         auto get_Sk = [&](pair<size_t, size_t>& deg, int delta)
             {
                 int nd = 0;
-                auto iter = _hist[r].find(deg);
-                if (iter != _hist[r].end())
-                    nd = iter->second;
+                if (_hist[r] != nullptr)
+                {
+                    auto& h = *_hist[r];
+                    auto iter = h.find(deg);
+                    if (iter != h.end())
+                        nd = iter->second;
+                }
                 assert(nd + delta >= 0);
                 return -lgamma_fast(nd + delta + 1);
             };
@@ -525,15 +567,20 @@ public:
                             EWeight& eweight, Degs& degs, int diff)
     {
         degs_op(v, vweight, eweight, degs, g,
-                [&](auto kin, auto kout, auto n)
+                [&](auto kin, auto kout, int n)
                 {
                     int dk = diff * n;
-                    auto& h = _hist[r];
+                    auto& h = get_hist(r);
                     auto deg = make_pair(kin, kout);
                     auto iter = h.insert({deg, 0}).first;
                     iter->second += dk;
                     if (iter->second == 0)
                         h.erase(iter);
+                    if (h.empty())
+                    {
+                        delete _hist[r];
+                        _hist[r] = nullptr;
+                    }
                     _em[r] += dk * deg.first;
                     _ep[r] += dk * deg.second;
                 });
@@ -586,6 +633,13 @@ public:
     void add_block()
     {
         _total_B++;
+        if constexpr (!use_rmap)
+        {
+            _hist.resize(_total_B);
+            _total.resize(_total_B);
+            _ep.resize(_total_B);
+            _em.resize(_total_B);
+        }
     }
 
     template <class Graph, class VProp, class VWeight, class EWeight, class Degs>
@@ -608,7 +662,7 @@ public:
         {
             for (auto& kn : dhist[r])
             {
-                auto count = (r >= _hist.size()) ? 0 : _hist[r][kn.first];
+                auto count = (r >= _hist.size()) ? 0 : get_hist(r)[kn.first];
                 if (kn.second != count)
                 {
                     assert(false);
@@ -619,7 +673,7 @@ public:
 
         for (size_t r = 0; r < _hist.size(); ++r)
         {
-            for (auto& kn : _hist[r])
+            for (auto& kn : get_hist(r))
             {
                 auto count = (r >= dhist.size()) ? 0 : dhist[r][kn.first];
                 if (kn.second != count)
@@ -639,7 +693,7 @@ private:
     size_t _E;
     size_t _actual_B;
     size_t _total_B;
-    vector<map_t> _hist;
+    vector<map_t*> _hist;
     vector<int> _total;
     vector<int> _ep;
     vector<int> _em;

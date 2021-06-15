@@ -215,8 +215,6 @@ void export_overlap_blockmodel_state()
                       &state_t::decouple_state)
                  .def("clear_egroups",
                       &state_t::clear_egroups)
-                 .def("rebuild_neighbor_sampler",
-                      &state_t::rebuild_neighbor_sampler)
                  .def("sync_emat",
                       &state_t::sync_emat)
                  .def("get_be_overlap",

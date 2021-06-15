@@ -99,10 +99,11 @@ struct MCMC
                 _has_b_max = rs_max.size() == _B_max;
             }
 
-            if (_state._coupled_state != nullptr)
+            auto cstate = _state._coupled_state;
+            if (cstate != nullptr)
             {
-                _bh = _state._coupled_state->get_b();
-                _hpclabel = _state._coupled_state->get_pclabel();
+                _bh = cstate->get_b();
+                _hpclabel = cstate->get_pclabel();
             }
         }
 
@@ -198,11 +199,15 @@ struct MCMC
         }
 
         template <class RNG>
-        size_t sample_group(size_t v, bool allow_random, bool allow_empty, RNG& rng)
+        size_t sample_group(size_t v, bool allow_random, bool allow_empty,
+                            bool init_heuristic, RNG& rng)
         {
-            return _state.sample_block(v,
-                                       allow_random ? _c : 0,
-                                       allow_empty ? _d : 0, rng);
+            if (!init_heuristic)
+                return _state.sample_block(v,
+                                           allow_random ? _c : 0,
+                                           allow_empty ? _d : 0, rng);
+            else
+                return _state.sample_block_local(v, rng);
         }
 
         double get_move_prob(size_t v, size_t r, size_t s, bool allow_random,

@@ -42,7 +42,7 @@ void vector_map(boost::python::object ovals, boost::python::object omap)
 }
 
 template <class Value>
-void vector_continuous_map(boost::python::object ovals)
+void vector_contiguous_map(boost::python::object ovals)
 {
     multi_array_ref<Value,1> vals = get_array<Value,1>(ovals);
     gt_hash_map<Value, size_t> map;
@@ -245,6 +245,6 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     def("vector_map64", vector_map<int64_t>);
     def("vector_rmap", vector_rmap<int32_t>);
     def("vector_rmap64", vector_rmap<int64_t>);
-    def("vector_continuous_map", vector_continuous_map<int32_t>);
-    def("vector_continuous_map64", vector_continuous_map<int64_t>);
+    def("vector_contiguous_map", vector_contiguous_map<int32_t>);
+    def("vector_contiguous_map64", vector_contiguous_map<int64_t>);
 }

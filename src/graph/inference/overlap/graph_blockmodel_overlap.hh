@@ -618,6 +618,16 @@ public:
         return sample_block<rng_t>(v, c, d, rng);
     }
 
+    size_t sample_block_local(size_t v, rng_t& rng)
+    {
+        v = get_lateral_half_edge(v, rng);
+        auto u = graph_tool::random_neighbor(v, _g, rng);
+        u = get_lateral_half_edge(u, rng);
+        auto w = graph_tool::random_neighbor(u, _g, rng);
+        w = get_lateral_half_edge(w, rng);
+        return _b[w];
+    }
+
     void sample_branch(size_t, size_t, rng_t&)
     {
     }
@@ -690,8 +700,7 @@ public:
                 vertex_t t = _b[u];
                 if (u == v)
                     t = r;
-                size_t ew = _eweight[e];
-                w += ew;
+                w++;
 
                 int mts = 0;
                 const auto& me = m_entries.get_me(t, s, _emat);
@@ -735,13 +744,13 @@ public:
 
                 if (graph_tool::is_directed(_g))
                 {
-                    p += ew * ((mts + mst + c) / (mtp + mtm + c * B));
+                    p += (mts + mst + c) / (mtp + mtm + c * B);
                 }
                 else
                 {
                     if (t == s)
                         mts *= 2;
-                    p += ew * (mts + c) / (mtp + c * B);
+                    p += (mts + c) / (mtp + c * B);
                 }
             }
         }
@@ -1000,10 +1009,6 @@ public:
     void clear_egroups()
     {
         _egroups.clear();
-    }
-
-    void rebuild_neighbor_sampler()
-    {
     }
 
     void sync_emat()

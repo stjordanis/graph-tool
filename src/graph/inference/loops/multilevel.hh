@@ -179,7 +179,8 @@ struct Multilevel: public State
     template <bool smart, class RNG>
     std::pair<double, double>
     mh_sweep(std::vector<Node>& vs, GSet<Group>& rs, double beta, RNG& rng,
-             size_t B_min = std::numeric_limits<size_t>::max())
+             size_t B_min = std::numeric_limits<size_t>::max(),
+             bool init_heuristic = false)
     {
         if (rs.size() == 1 || (rs.size() == vs.size() && B_min == rs.size()))
             return {0, 0};
@@ -199,7 +200,7 @@ struct Multilevel: public State
 
             if constexpr (smart)
             {
-                s = State::sample_group(v, false, false, rng); // c == 0!
+                s = State::sample_group(v, false, false, init_heuristic, rng); // c == 0!
                 if (rs.find(s) == rs.end())
                     continue;
             }
@@ -273,8 +274,6 @@ struct Multilevel: public State
             }
         }
 
-        //lp += -lgamma_fast(rs.size() + 1);
-
         return {S, lp};
     }
 
@@ -294,7 +293,7 @@ struct Multilevel: public State
         if constexpr (!labelled)
             mu = relabel_rs(vs, _bprev);
 
-        double lp = 0; //-lgamma_fast(rs.size() + 1);
+        double lp = 0;
 
         for (auto& v : vs)
             _btemp[v] = State::get_group(v);
@@ -387,7 +386,7 @@ struct Multilevel: public State
             mu = relabel_rs(vs, _bprev);
 
         double S = 0;
-        double lp = 0; //-lgamma_fast(rs.size() + 1);
+        double lp = 0;
 
         std::vector<double> dS(rs.size());
         std::vector<double> probs(rs.size());
@@ -593,7 +592,7 @@ struct Multilevel: public State
                     for (size_t i = 0; i < niter; ++i)
                     {
                         auto v = uniform_sample(_groups[r], rng);
-                        auto s = State::sample_group(v, allow_random, false, rng);
+                        auto s = State::sample_group(v, allow_random, false, false, rng);
                         if (s != r &&
                             rs.find(s) != rs.end() &&
                             _past_merges.find(s) == _past_merges.end())
@@ -765,6 +764,7 @@ struct Multilevel: public State
                 move_node(vs[i], s);
                 rs.insert(s);
             }
+            assert(rs.size() == B);
             return c.first;
         };
 
@@ -778,14 +778,6 @@ struct Multilevel: public State
                 else
                     ++iter;
             }
-            // std::vector<size_t> removed;
-            // for (const auto& [B, b] : cache)
-            // {
-            //     if ((B < Bmin || B > Bmax) && (!keep_best || b.first > S_best))
-            //         removed.push_back(B);
-            // }
-            // for (auto B : removed)
-            //     cache.erase(B);
         };
 
         auto get_S = [&](size_t B, bool keep_cache=true)
@@ -859,7 +851,7 @@ struct Multilevel: public State
                 auto t = State::get_group(u);
                 for (auto& v : vs)
                 {
-                    auto r = State::get_group(u);
+                    auto r = State::get_group(v);
                     if (r == t)
                         continue;
                     S += State::virtual_move(v, r, t);
@@ -874,6 +866,8 @@ struct Multilevel: public State
         {
             double S = 0;
             rs.clear();
+            push_b(vs);
+            State::relax_update(true);
             for (auto& v : vs)
             {
                 auto s = State::get_group(v);
@@ -888,6 +882,8 @@ struct Multilevel: public State
                 rs.insert(t);
             }
 
+            // single-node sweep initialization with B = N. This is faster than
+            // using merges!
             if (std::isinf(_beta) && _init_r < 1.)
             {
                 size_t Bprev;
@@ -896,7 +892,7 @@ struct Multilevel: public State
                 {
                     Bprev = rs.size();
                     double dS = mh_sweep<true>(vs, rs, (i++ == 0) ? _init_beta : _beta,
-                                               rng, B_min).first;
+                                               rng, B_min, true).first;
                     S += dS;
                     if (_verbose)
                         cout << i - 1 << " " << ((i - 1 == 0) ? _init_beta : _beta)
@@ -909,6 +905,10 @@ struct Multilevel: public State
             }
 
             put_cache(rs.size(), S);
+
+            State::relax_update(false);
+            pop_b();
+            get_cache(rs.size(), rs);
         }
         else
         {
@@ -1151,7 +1151,7 @@ struct Multilevel: public State
             {
                 auto v = uniform_sample(_nodes, rng);
                 auto r = State::get_group(v);
-                auto s = State::sample_group(v, true, true, rng);
+                auto s = State::sample_group(v, true, true, false, rng);
                 if (r == s)
                 {
                     move = move_t::null;
