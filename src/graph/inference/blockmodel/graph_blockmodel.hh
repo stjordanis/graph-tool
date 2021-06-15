@@ -82,7 +82,6 @@ typedef mpl::vector1<std::false_type> rmap_tr;
     ((_abg, &, boost::any&, 0))                                                \
     ((_aeweight, &, boost::any&, 0))                                           \
     ((_avweight, &, boost::any&, 0))                                           \
-    ((_adegs, &, boost::any&, 0))                                              \
     ((mrs,, emap_t, 0))                                                        \
     ((mrp,, vmap_t, 0))                                                        \
     ((mrm,, vmap_t, 0))                                                        \
@@ -92,7 +91,6 @@ typedef mpl::vector1<std::false_type> rmap_tr;
     ((pclabel,, vmap_t, 0))                                                    \
     ((bfield,, vprop_map_t<std::vector<double>>::type, 0))                     \
     ((Bfield, &, std::vector<double>&, 0))                                     \
-    ((merge_map,, vmap_t, 0))                                                  \
     ((deg_corr,, bool, 0))                                                     \
     ((rec_types,, std::vector<int32_t>, 0))                                    \
     ((rec,, std::vector<eprop_map_t<double>::type>, 0))                        \
@@ -125,7 +123,6 @@ public:
           _c_mrs(_mrs.get_checked()),
           _vweight(uncheck(__avweight, typename std::add_pointer<vweight_t>::type())),
           _eweight(uncheck(__aeweight, typename std::add_pointer<eweight_t>::type())),
-          _degs(uncheck(__adegs, typename std::add_pointer<degs_t>::type())),
           _emat(_g, _bg),
           _neighbor_sampler(_g, _eweight),
           _m_entries(num_vertices(_bg))
@@ -190,8 +187,19 @@ public:
         _LdBdx.resize(_rec_types.size());
 
         _N = 0;
+
+        if constexpr (std::is_same_v<degs_t, degs_map_t::unchecked_t>)
+            _degs.resize(num_vertices(_g));
+
         for (auto v : vertices_range(_g))
+        {
             _N += _vweight[v];
+            if constexpr (std::is_same_v<degs_t, degs_map_t::unchecked_t>)
+            {
+                _degs[v] = {in_degreeS()(v, _g, _eweight),
+                            out_degreeS()(v, _g, _eweight)};
+            }
+        }
     }
 
     // =========================================================================
@@ -746,13 +754,14 @@ public:
             {
                 _eweight[e]++;
             }
+
             if (_deg_corr)
             {
-                get<1>(_degs[u].front())++;
+                get<1>(_degs[u])++;
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v].front())++;
+                    get<0>(_degs[v])++;
                 else
-                    get<1>(_degs[v].front())++;
+                    get<1>(_degs[v])++;
             }
         }
         else
@@ -763,13 +772,14 @@ public:
                 boost::remove_edge(e, _g);
                 e = GraphInterface::edge_t();
             }
+
             if (_deg_corr)
             {
-                get<1>(_degs[u].front())--;
+                get<1>(_degs[u])--;
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v].front())--;
+                    get<0>(_degs[v])--;
                 else
-                    get<1>(_degs[v].front())--;
+                    get<1>(_degs[v])--;
             }
         }
     }
@@ -839,11 +849,21 @@ public:
     template <class VMap>
     void set_partition(VMap&& b)
     {
+        vmap_t::unchecked_t hb;
+        if (_coupled_state != nullptr)
+            hb = _coupled_state->get_b();
+
         for (auto v : vertices_range(_g))
         {
             size_t r = b[v];
             while (r >= num_vertices(_bg))
                 add_block();
+            if (_wr[r] == 0)
+            {
+                if (_coupled_state != nullptr)
+                    hb[r] = hb[_b[v]];
+                _bclabel[r] = _bclabel[_b[v]];
+            }
             move_vertex(v, r);
         }
     }
@@ -859,190 +879,6 @@ public:
         return _wr[_b[v]] - _vweight[v];
     }
 
-    // merge vertex u into v
-    void merge_vertices(size_t u, size_t v)
-    {
-        typedef typename graph_traits<g_t>::edge_descriptor edge_t;
-        UnityPropertyMap<int, edge_t> dummy;
-        merge_vertices(u, v, dummy);
-    }
-
-    template <class Emap>
-    void merge_vertices(size_t u, size_t v, Emap&& ec)
-    {
-        merge_vertices(u, v, ec, _is_weighted);
-    }
-
-    template <class Emap>
-    void merge_vertices(size_t, size_t, Emap&&, std::false_type)
-    {
-        throw ValueException("cannot merge vertices of unweighted graph");
-    }
-
-    template <class Emap>
-    void merge_vertices(size_t u, size_t v, Emap&& ec, std::true_type)
-    {
-        if (u == v)
-            return;
-
-        auto eweight_c = _eweight.get_checked();
-        std::vector<typename rec_t::value_type::checked_t> c_rec;
-        std::vector<typename brec_t::value_type::checked_t> c_drec;
-        for (auto& p : _rec)
-            c_rec.push_back(p.get_checked());
-        for (auto& p : _drec)
-            c_drec.push_back(p.get_checked());
-
-        typedef typename graph_traits<g_t>::vertex_descriptor vertex_t;
-        typedef typename graph_traits<g_t>::edge_descriptor edge_t;
-
-        gt_hash_map<std::tuple<vertex_t, int>, vector<edge_t>> ns_u, ns_v;
-        for(auto e : out_edges_range(u, _g))
-            ns_u[std::make_tuple(target(e, _g), ec[e])].push_back(e);
-        for(auto e : out_edges_range(v, _g))
-            ns_v[std::make_tuple(target(e, _g), ec[e])].push_back(e);
-
-        size_t nrec = this->_rec_types.size();
-        std::vector<double> ecc(nrec), decc(nrec);
-
-        for(auto& kv : ns_u)
-        {
-            vertex_t t = get<0>(kv.first);
-            int l = get<1>(kv.first);
-            auto& es = kv.second;
-
-            size_t w = 0;
-
-            std::fill(ecc.begin(), ecc.end(), 0);
-            std::fill(decc.begin(), decc.end(), 0);
-            for (auto& e : es)
-            {
-                w += _eweight[e];
-                for (size_t i = 0; i < nrec; ++i)
-                {
-                    ecc[i] += _rec[i][e];
-                    decc[i] += _drec[i][e];
-                }
-            }
-
-            if (t == u)
-            {
-                t = v;
-                if constexpr (!is_directed_::apply<g_t>::type::value)
-                {
-                    assert(w % 2 == 0);
-                    w /= 2;
-                    for (size_t i = 0; i < nrec; ++i)
-                    {
-                        ecc[i] /= 2;
-                        decc[i] /= 2;
-                    }
-                }
-            }
-
-            auto iter = ns_v.find(std::make_tuple(t, l));
-            if (iter != ns_v.end())
-            {
-                auto& e = iter->second.front();
-                _eweight[e] += w;
-                for (size_t i = 0; i < nrec; ++i)
-                {
-                    _rec[i][e] += ecc[i];
-                    _drec[i][e] += decc[i];
-                }
-                assert(ec[e] == l);
-            }
-            else
-            {
-                auto e = boost::add_edge(v, t, _g).first;
-                ns_v[std::make_tuple(t, l)].push_back(e);
-                eweight_c[e] = w;
-                for (size_t i = 0; i < nrec; ++i)
-                {
-                    c_rec[i][e] = ecc[i];
-                    c_drec[i][e] = decc[i];
-                }
-                set_prop(ec, e, l);
-                assert(ec[e] == l);
-            }
-        }
-
-        if constexpr (is_directed_::apply<g_t>::type::value)
-        {
-            ns_u.clear();
-            ns_v.clear();
-
-            for(auto e : in_edges_range(v, _g))
-                ns_v[std::make_tuple(source(e, _g), ec[e])].push_back(e);
-            for(auto e : in_edges_range(u, _g))
-                ns_u[std::make_tuple(source(e, _g), ec[e])].push_back(e);
-
-            for(auto& kv : ns_u)
-            {
-                vertex_t s = get<0>(kv.first);
-                int l = get<1>(kv.first);
-                auto& es = kv.second;
-
-                if (s == u)
-                    continue;
-
-                size_t w = 0;
-                std::fill(ecc.begin(), ecc.end(), 0);
-                std::fill(decc.begin(), decc.end(), 0);
-                for (auto& e : es)
-                {
-                    w += _eweight[e];
-                    for (size_t i = 0; i < nrec; ++i)
-                    {
-                        ecc[i] += _rec[i][e];
-                        decc[i] += _drec[i][e];
-                    }
-                }
-
-                auto iter = ns_v.find(std::make_tuple(s, l));
-                if (iter != ns_v.end())
-                {
-                    auto& e = iter->second.front();
-                    _eweight[e] += w;
-                    for (size_t i = 0; i < nrec; ++i)
-                    {
-                        _rec[i][e] += ecc[i];
-                        _drec[i][e] += decc[i];
-                    }
-                    assert(ec[e] == l);
-                }
-                else
-                {
-                    auto e = boost::add_edge(s, v, _g).first;
-                    ns_v[std::make_tuple(s, l)].push_back(e);
-                    eweight_c[e] = w;
-                    for (size_t i = 0; i < nrec; ++i)
-                    {
-                        c_rec[i][e] = ecc[i];
-                        c_drec[i][e] = decc[i];
-                    }
-                    set_prop(ec, e, l);
-                    assert(ec[e] == l);
-                }
-            }
-        }
-
-        _vweight[v] +=_vweight[u];
-        _vweight[u] = 0;
-        for (auto e : all_edges_range(u, _g))
-        {
-            _eweight[e] = 0;
-            set_prop(ec, e, 0);
-            for (size_t i = 0; i < nrec; ++i)
-            {
-                _rec[i][e] = 0;
-                _drec[i][e] = 0;
-            }
-        }
-        clear_vertex(u, _g);
-        _merge_map[u] = v;
-        merge_degs(u, v, _degs);
-    }
 
     template <class EMap, class Edge, class Val>
     void set_prop(EMap& ec, Edge& e, Val&& val)
@@ -1054,22 +890,6 @@ public:
     void set_prop(UnityPropertyMap<typename std::remove_reference<Val>::type, Edge>&,
                   Edge&, Val&&)
     {
-    }
-
-    void merge_degs(size_t, size_t, const simple_degs_t&) {}
-
-    void merge_degs(size_t u, size_t v, typename degs_map_t::unchecked_t& degs)
-    {
-        gt_hash_map<std::tuple<size_t, size_t>, size_t> hist;
-        for (auto& kn : degs[u])
-            hist[make_tuple(get<0>(kn), get<1>(kn))] += get<2>(kn);
-        for (auto& kn : degs[v])
-            hist[make_tuple(get<0>(kn), get<1>(kn))] += get<2>(kn);
-        degs[u].clear();
-        degs[v].clear();
-        auto& d = degs[v];
-        for (auto& kn : hist)
-            d.emplace_back(get<0>(kn.first), get<1>(kn.first), kn.second);
     }
 
     size_t add_block(size_t n = 1)
@@ -1953,15 +1773,11 @@ public:
 
     double get_deg_entropy(size_t v, const typename degs_map_t::unchecked_t& degs)
     {
-        double S = 0;
-        for (auto& ks : degs[v])
-        {
-            auto kin = get<0>(ks);
-            auto kout = get<1>(ks);
-            int n = get<2>(ks);
-            S -= n * (lgamma_fast(kin + 1) + lgamma_fast(kout + 1));
-        }
-        return S;
+        auto& ks = degs[v];
+        auto kin = get<0>(ks);
+        auto kout = get<1>(ks);
+        double S = -lgamma_fast(kin + 1) - lgamma_fast(kout + 1);
+        return S * _vweight[v];
     }
 
     double sparse_entropy(bool multigraph, bool deg_entropy, bool exact)

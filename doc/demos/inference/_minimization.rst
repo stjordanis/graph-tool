@@ -231,37 +231,46 @@ This means that we can inspect the hierarchical partition just as before:
    2
    0
 
-Trade-off between memory usage and computation time
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+Refinements using merge-split MCMC
+++++++++++++++++++++++++++++++++++
 
 The agglomerative algorithm behind
 :func:`~graph_tool.inference.minimize.minimize_blockmodel_dl` and
 :func:`~graph_tool.inference.minimize.minimize_nested_blockmodel_dl` has
-a log-linear complexity on the size of the network, but it makes several
-copies of the internal blockmodel state, which can become a problem for
-very large networks (i.e. tens of millions of edges or more). An
-alternative is to use a greedy algorithm based on a merge-split MCMC
-with zero temperature [peixoto-merge-split-2020]_, which requires a
-single global state, and thus can reduce memory usage. This is achieved
-by following the instructions in Sec. :ref:`sampling`, while setting the
-inverse temperature parameter ``beta`` to infinity. For example, an
-equivalent to the above minimization for the `C. elegans` network is the
-following:
+a log-linear complexity on the size of the network, and it usually works
+very well in finding a good estimate of the optimum
+partition. Nevertheless, it's often still possible to find refinements
+without starting the whole algorithm from scratch using a greedy
+algorithm based on a merge-split MCMC with zero temperature
+[peixoto-merge-split-2020]_. This is achieved by following the
+instructions in Sec. :ref:`sampling`, while setting the inverse
+temperature parameter ``beta`` to infinity. For example, an equivalent
+to the above minimization for the `C. elegans` network is the following:
 
 .. testcode:: celegans-mcmc
 
    g = gt.collection.data["celegansneural"]
 
-   state = gt.NestedBlockState(g)
+   state = gt.minimize_nested_blockmodel_dl(g)
 
+   S1 = state.entropy()
+   
    for i in range(1000): # this should be sufficiently large
        state.multiflip_mcmc_sweep(beta=np.inf, niter=10)
 
+   S2 = state.entropy()
+
+   print("Improvement:", S2 - S1)
+
+.. testoutput:: celegans-mcmc
+
+   Improvement: -82.616161...
+      
 Whenever possible, this procedure should be repeated several times, and
 the result with the smallest description length (obtained via the
 :meth:`~graph_tool.inference.blockmodel.BlockState.entropy` method)
-should be chosen. Better results still can be obtained, at the expense
-of a longer computation time, by using the
+should be chosen. In more demanding situations, better results still can
+be obtained, at the expense of a longer computation time, by using the
 :meth:`~graph_tool.inference.mcmc.mcmc_anneal` function, which
 implements `simulated annealing
 <https://en.wikipedia.org/wiki/Simulated_annealing>`_:
@@ -270,48 +279,6 @@ implements `simulated annealing
 
    g = gt.collection.data["celegansneural"]
 
-   state = gt.NestedBlockState(g)
+   state = gt.minimize_nested_blockmodel_dl(g)
 
    gt.mcmc_anneal(state, beta_range=(1, 10), niter=1000, mcmc_equilibrate_args=dict(force_niter=10))
-
-Any of the above methods should give similar results to the previous
-algorithms, while requiring less memory. In terms of quality of the
-results, it will vary depending on the data, thus experimentation is
-recommended.
-
-.. note::
-
-   Note that both approaches above can be combined, where the
-   agglomerative algorithm of
-   :func:`~graph_tool.inference.minimize.minimize_blockmodel_dl` or
-   :func:`~graph_tool.inference.minimize.minimize_nested_blockmodel_dl`
-   is used to find an initial solution, which is then improved via a
-   greedy merge-split MCMC, e.g.
-
-   .. testcode:: celegans-mcmc-combine
-
-      g = gt.collection.data["celegansneural"]
-
-      state = gt.minimize_nested_blockmodel_dl(g)
-
-      S1 = state.entropy()
-         
-      # we will pad the hierarchy with another four empty levels, to
-      # give it room to potentially increase
-         
-      state = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4,
-                         sampling = True)
-
-      for i in range(100):
-         ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
-
-      S2 = state.entropy()
-
-      print("Improvement:", S2 - S1)
-
-   One run of the above code yields a modest improvement, but depending
-   on the dataset the difference can be larger:
-
-   .. testoutput:: celegans-mcmc-combine
-
-      Improvement: -82.616161...

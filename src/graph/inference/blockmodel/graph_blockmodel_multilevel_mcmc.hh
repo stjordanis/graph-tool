@@ -50,9 +50,12 @@ typedef vprop_map_t<int32_t>::type vmap_t;
     ((pmultilevel,, double, 0))                                                \
     ((merge_sweeps,, size_t, 0))                                               \
     ((mh_sweeps,, size_t, 0))                                                  \
+    ((init_r,, double, 0))                                                     \
+    ((init_beta,, double, 0))                                                  \
     ((gibbs,, bool, 0))                                                        \
     ((M,, size_t, 0))                                                          \
     ((global_moves,, bool, 0))                                                 \
+    ((cache_states,, bool, 0))                                                 \
     ((B_min,, size_t, 0))                                                      \
     ((B_max,, size_t, 0))                                                      \
     ((b_min,, vmap_t, 0))                                                      \
@@ -96,12 +99,22 @@ struct MCMC
                 _has_b_max = rs_max.size() == _B_max;
             }
 
+            if (_state._coupled_state != nullptr)
+            {
+                _bh = _state._coupled_state->get_b();
+                _hpclabel = _state._coupled_state->get_pclabel();
+            }
         }
 
         bool _has_b_max = false;
         bool _has_b_min = false;
 
         typename State::_entropy_args_t& _entropy_args;
+
+        vprop_map_t<int32_t>::type::unchecked_t _bh;
+        vprop_map_t<int32_t>::type::unchecked_t _hpclabel;
+
+        idx_set<size_t> _rs;
 
         constexpr static size_t _null_group = null_group;
 
@@ -148,10 +161,8 @@ struct MCMC
                 _state._bclabel[t] = _state._bclabel[r];
                 if (_state._coupled_state != nullptr)
                 {
-                    auto& bh = _state._coupled_state->get_b();
-                    bh[t] = bh[r];
-                    auto& hpclabel = _state._coupled_state->get_pclabel();
-                    hpclabel[t] = _state._pclabel[v];
+                    _bh[t] = _bh[r];
+                    _hpclabel[t] = _state._pclabel[v];
                 }
             }
 
@@ -165,7 +176,25 @@ struct MCMC
 
         double virtual_move(size_t v, size_t r, size_t s)
         {
+            if (std::isinf(_beta) && _state._coupled_state != nullptr)
+            {
+                if (_bh[r] != _bh[s])
+                    return numeric_limits<double>::infinity();
+            }
             return _state.virtual_move(v, r, s, _entropy_args);
+        }
+
+        template <class VS>
+        size_t get_Bmin(VS& vs)
+        {
+            if (std::isinf(_beta) && _state._coupled_state != nullptr)
+            {
+                _rs.clear();
+                for (auto& v : vs)
+                    _rs.insert(_bh[get_group(v)]);
+                return _rs.size();
+            }
+            return 1;
         }
 
         template <class RNG>
@@ -200,6 +229,7 @@ struct MCMC
         {
             _state.pop_state();
         }
+
     };
 
     class gmap_t :

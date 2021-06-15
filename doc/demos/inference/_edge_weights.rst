@@ -118,7 +118,6 @@ the weights, as follows:
                                                                rec_types=["discrete-binomial"]))
 
    # improve solution with merge-split
-   state = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4, sampling=True)
 
    for i in range(100):
        ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
@@ -178,7 +177,6 @@ follows:
                                                                rec_types=["real-exponential"]))
 
    # improve solution with merge-split
-   state = state.copy(bs=state.get_bs() + [np.zeros(1)] * 4, sampling=True)
 
    for i in range(100):
        ret = state.multiflip_mcmc_sweep(niter=10, beta=np.inf)
@@ -224,7 +222,6 @@ can fit this alternative model simply by using the transformed weights:
                                                                   rec_types=["real-normal"]))
 
    # improve solution with merge-split
-   state_ln = state_ln.copy(bs=state_ln.get_bs() + [np.zeros(1)] * 4, sampling=True)
 
    for i in range(100):
        ret = state_ln.multiflip_mcmc_sweep(niter=10, beta=np.inf)

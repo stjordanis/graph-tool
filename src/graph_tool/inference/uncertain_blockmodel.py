@@ -24,18 +24,12 @@ from .. import _prop, Graph, GraphView, _get_rng, PropertyMap, \
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
 
+from . base_states import *
+
 from . blockmodel import *
 from . nested_blockmodel import *
-from . blockmodel import _bm_test
 
 import collections.abc
-
-def get_uentropy_args(kargs):
-    ea = get_entropy_args(kargs, ignore=["latent_edges", "density"])
-    uea = libinference.uentropy_args(ea)
-    uea.latent_edges = kargs.get("latent_edges", True)
-    uea.density = kargs.get("density", True)
-    return uea
 
 class UncertainBaseState(object):
     r"""Base state for uncertain network inference."""
@@ -124,6 +118,13 @@ class UncertainBaseState(object):
     def __setstate__(self, state):
         self.__init__(**state)
 
+    def _get_entropy_args(self, kwargs):
+        ea = self.bstate._get_entropy_args(kwargs, ignore=["latent_edges", "density"])
+        uea = libinference.uentropy_args(ea)
+        uea.latent_edges = kwargs.get("latent_edges", True)
+        uea.density = kwargs.get("density", True)
+        return uea
+
     def get_block_state(self):
         """Return the underlying block state, which can be either
         :class:`~graph_tool.inference.blockmodel.BlockState` or
@@ -134,6 +135,7 @@ class UncertainBaseState(object):
         else:
             return self.nbstate
 
+    @copy_state_wrap
     def entropy(self, latent_edges=True, density=True, **kwargs):
         """Return the entropy, i.e. negative log-likelihood."""
         S = self._state.entropy(latent_edges, density)
@@ -141,28 +143,14 @@ class UncertainBaseState(object):
             S += self.bstate.entropy(**kwargs)
         else:
             S += self.nbstate.entropy(**kwargs)
-
-        if kwargs.get("test", True) and _bm_test():
-            args = kwargs.copy()
-            assert not isnan(S) and not isinf(S), \
-                "invalid entropy %g (%s) " % (S, str(args))
-            args["test"] = False
-            state_copy = self.copy()
-            Salt = state_copy.entropy(latent_edges, density, **args)
-
-            assert math.isclose(S, Salt, abs_tol=1e-8), \
-                "entropy discrepancy after copying (%g %g %g)" % (S, Salt,
-                                                                  S - Salt)
         return S
 
     def virtual_remove_edge(self, u, v, entropy_args={}):
-        dentropy_args = dict(self.bstate._entropy_args, **entropy_args)
-        entropy_args = get_uentropy_args(dentropy_args)
+        entropy_args = self._get_entropy_args(entropy_args)
         return self._state.remove_edge_dS(int(u), int(v), entropy_args)
 
     def virtual_add_edge(self, u, v, entropy_args={}):
-        dentropy_args = dict(self.bstate._entropy_args, **entropy_args)
-        entropy_args = get_uentropy_args(dentropy_args)
+        entropy_args = self._get_entropy_args(entropy_args)
         return self._state.add_edge_dS(int(u), int(v), entropy_args)
 
     def set_state(self, g, w):
@@ -178,9 +166,8 @@ class UncertainBaseState(object):
         verbose = kwargs.get("verbose", False)
         slist = self.slist
         tlist = self.tlist
-        dentropy_args = dict(self.bstate._entropy_args,
-                             **kwargs.get("entropy_args", {}))
-        entropy_args = get_uentropy_args(dentropy_args)
+        entropy_args = kwargs.get("entropy_args", {})
+        entropy_args = self._get_entropy_args(entropy_args)
         kwargs.get("entropy_args", {}).pop("latent_edges", None)
         kwargs.get("entropy_args", {}).pop("density", None)
         state = self._state
@@ -191,31 +178,21 @@ class UncertainBaseState(object):
         kwargs.pop("xstep", None)
         kwargs.pop("xdefault", None)
 
-        if _bm_test():
-            Si = self.entropy(**dentropy_args)
-
         if self.nbstate is None:
             self.bstate._clear_egroups()
         else:
             self.nbstate._clear_egroups()
         if numpy.random.random() < r:
             edges = True
-            dS, nattempts, nmoves = self._mcmc_sweep(mcmc_state)
+            return self._mcmc_sweep(mcmc_state)
         else:
             edges = False
             if self.nbstate is None:
-                dS, nattempts, nmoves = algo(self.bstate, **kwargs)
+                return algo(self.bstate, **kwargs)
             else:
-                dS, nattempts, nmoves = algo(self.nbstate, **kwargs)
+                return algo(self.nbstate, **kwargs)
 
-        if _bm_test():
-            Sf = self.entropy(**dentropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s %s" % (dS, Sf - Si, edges,
-                                                               str(dentropy_args))
-
-        return dS, nattempts, nmoves
-
+    @mcmc_sweep_wrap
     def mcmc_sweep(self, r=.5, multiflip=True, **kwargs):
         r"""Perform sweeps of a Metropolis-Hastings acceptance-rejection sampling MCMC to
         sample network partitions and latent edges. The parameter ``r`` controls
@@ -239,15 +216,13 @@ class UncertainBaseState(object):
 
     def get_edge_prob(self, u, v, entropy_args={}, epsilon=1e-8):
         r"""Return conditional posterior log-probability of edge :math:`(u,v)`."""
-        entropy_args = dict(self.bstate._entropy_args, **entropy_args)
-        ea = get_uentropy_args(entropy_args)
+        entropy_args = self._get_entropy_args(entropy_args)
         return self._state.get_edge_prob(u, v, ea, epsilon)
 
     def get_edges_prob(self, elist, entropy_args={}, epsilon=1e-8):
         r"""Return conditional posterior log-probability of an edge list, with
         shape :math:`(E,2)`."""
-        entropy_args = dict(self.bstate._entropy_args, **entropy_args)
-        ea = get_uentropy_args(entropy_args)
+        ea = self._get_entropy_args(entropy_args)
         elist = numpy.asarray(elist, dtype="uint64")
         probs = numpy.zeros(elist.shape[0])
         self._state.get_edges_prob(elist, probs, ea, epsilon)
@@ -940,7 +915,6 @@ class DynamicsBlockStateBase(UncertainBaseState):
 
     def get_edge_prob(self, u, v, x, entropy_args={}, epsilon=1e-8):
         r"""Return conditional posterior log-probability of edge :math:`(u,v)`."""
-        entropy_args = dict(self.bstate._entropy_args, **entropy_args)
         ea = get_uentropy_args(entropy_args)
         return self._state.get_edge_prob(u, v, x, ea, epsilon)
 

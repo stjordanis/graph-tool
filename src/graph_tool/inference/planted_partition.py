@@ -20,7 +20,8 @@
 
 from .. import Graph, GraphView, _get_rng, Vector_size_t, PropertyMap, \
     group_vector_property
-from . blockmodel import DictState, _bm_test, init_q_cache
+from . blockmodel import DictState, init_q_cache
+from . base_states import *
 from . util import *
 
 from .. dl_import import dl_import
@@ -29,29 +30,8 @@ dl_import("from . import libgraph_tool_inference as libinference")
 import numpy as np
 import math
 
-def get_pp_entropy_args(kargs, ignore=None):
-    kargs = kargs.copy()
-    if ignore is not None:
-        for a in ignore:
-            kargs.pop(a, None)
-    deg_dl_kind = kargs["degree_dl_kind"]
-    if deg_dl_kind == "entropy":
-        kind = libinference.deg_dl_kind.ent
-    elif deg_dl_kind == "uniform":
-        kind = libinference.deg_dl_kind.uniform
-    elif deg_dl_kind == "distributed":
-        kind = libinference.deg_dl_kind.dist
-    ea = libinference.pp_entropy_args()
-    ea.degree_dl_kind = kind
-    ea.uniform = kargs["uniform"]
-    del kargs["uniform"]
-    del kargs["degree_dl_kind"]
-    if len(kargs) > 0:
-        raise ValueError("unrecognized entropy arguments: " +
-                         str(list(kargs.keys())))
-    return ea
-
-class PPBlockState(object):
+class PPBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
+                   GibbsMCMCState):
     r"""Obtain the partition of a network according to the Bayesian planted partition
     model.
 
@@ -66,8 +46,8 @@ class PPBlockState(object):
     References
     ----------
     .. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
-       inference of assortative community structures", :arxiv:`2006.14493`
-
+       inference of assortative community structures", Phys. Rev. Research 2
+       043271 (2020), :doi:`10.1103/PhysRevResearch.2.043271`, :arxiv:`2006.14493`
     """
 
     def __init__(self, g, b=None):
@@ -156,6 +136,7 @@ class PPBlockState(object):
         r"""Move vertex ``v`` to block ``s``."""
         self._state.move_vertex(int(v), int(s))
 
+    @copy_state_wrap
     def entropy(self, uniform=False, degree_dl_kind="distributed", **kwargs):
         r"""Return the model entropy (negative log-likelihood).
 
@@ -237,38 +218,45 @@ class PPBlockState(object):
 
 
         For the partition prior :math:`P(\boldsymbol{b})` please refer to
-        :func:`~graph_tool.inference.blockmodel.model_entropy`.
+        :meth:`~graph_tool.inference.blockmodel.BlockState.entropy`.
 
         References
         ----------
         .. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
-           inference of assortative community structures", :arxiv:`2006.14493`
+           inference of assortative community structures", Phys. Rev. Research 2
+           043271 (2020), :doi:`10.1103/PhysRevResearch.2.043271`, :arxiv:`2006.14493`
         """
 
-        entropy_args = dict(self._entropy_args, **locals())
-        eargs = get_pp_entropy_args(entropy_args, ignore=["self", "kwargs"])
-
-        if _bm_test() and kwargs.get("test", True):
-            args = dict(uniform=uniform, degree_dl_kind=degree_dl_kind)
-
-        S = self._state.entropy(eargs)
-
-        if kwargs.pop("test", True) and _bm_test():
-            assert not np.isnan(S) and not np.isinf(S), \
-                "invalid entropy %g (%s) " % (S, str(args))
-
-            args["test"] = False
-            state_copy = self.copy()
-            Salt = state_copy.entropy(**args)
-
-            assert math.isclose(S, Salt, abs_tol=1e-8), \
-                "entropy discrepancy after copying (%g %g %g)" % (S, Salt,
-                                                                  S - Salt)
+        eargs = self._get_entropy_args(locals(), ignore=["self", "kwargs"])
 
         if len(kwargs) > 0:
             raise ValueError("unrecognized keyword arguments: " +
                              str(list(kwargs.keys())))
-        return S
+
+        return self._state.entropy(eargs)
+
+    def _get_entropy_args(self, kwargs, ignore=None):
+        kwargs = dict(self._entropy_args, **kwargs)
+        if ignore is not None:
+            for a in ignore:
+                kwargs.pop(a, None)
+        deg_dl_kind = kwargs["degree_dl_kind"]
+        if deg_dl_kind == "entropy":
+            kind = libinference.deg_dl_kind.ent
+        elif deg_dl_kind == "uniform":
+            kind = libinference.deg_dl_kind.uniform
+        elif deg_dl_kind == "distributed":
+            kind = libinference.deg_dl_kind.dist
+        ea = libinference.pp_entropy_args()
+        ea.degree_dl_kind = kind
+        ea.uniform = kwargs["uniform"]
+        del kwargs["uniform"]
+        del kwargs["degree_dl_kind"]
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized entropy arguments: " +
+                             str(list(kwargs.keys())))
+        return ea
+
 
     def draw(self, **kwargs):
         r"""Convenience wrapper to :func:`~graph_tool.draw.graph_draw` that
@@ -285,208 +273,18 @@ class PPBlockState(object):
                           **dmask(kwargs, ["vertex_fill_color",
                                            "vertex_color",
                                            "edge_gradient"]))
+    def _mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.pp_mcmc_sweep(mcmc_state, self._state,
+                                          _get_rng())
 
-    def mcmc_sweep(self, beta=1., c=0.5, d=.01, niter=1, entropy_args={},
-                   allow_vacate=True, sequential=True, deterministic=False,
-                   verbose=False, **kwargs):
-        r"""Perform sweeps of a Metropolis-Hastings rejection sampling MCMC to sample
-        network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation. """
-        mcmc_state = DictState(locals())
-        eargs = entropy_args
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        mcmc_state.oentropy_args = get_pp_entropy_args(entropy_args)
-        mcmc_state.vlist = Vector_size_t()
-        mcmc_state.vlist.resize(self.g.num_vertices())
-        mcmc_state.vlist.a = self.g.vertex_index.copy().fa
-        mcmc_state.state = self._state
-        mcmc_state.E = self.g.num_edges()
+    def _multiflip_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.pp_multiflip_mcmc_sweep(mcmc_state, self._state,
+                                                    _get_rng())
 
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy(**eargs)
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.pp_multilevel_mcmc_sweep(mcmc_state, self._state,
+                                                     _get_rng())
 
-        dS, nattempts, nmoves = \
-            libinference.pp_mcmc_sweep(mcmc_state, self._state,
-                                       _get_rng())
-
-        if _bm_test() and test:
-            Sf = self.entropy(**eargs)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-        return dS, nattempts, nmoves
-
-
-    def multiflip_mcmc_sweep(self, beta=1., c=0.5, psingle=None, psplit=1,
-                             pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
-                             niter=1, entropy_args={}, accept_stats=None,
-                             verbose=False, **kwargs):
-        r"""Perform sweeps of a merge-split Metropolis-Hastings rejection sampling MCMC
-        to sample network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation."""
-        if psingle is None:
-            psingle = self.g.num_vertices()
-        gibbs_sweeps = max(gibbs_sweeps, 1)
-        nproposal = Vector_size_t(4)
-        nacceptance = Vector_size_t(4)
-        force_move = kwargs.pop("force_move", False)
-        mcmc_state = DictState(locals())
-        eargs = entropy_args
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        mcmc_state.oentropy_args = get_pp_entropy_args(entropy_args)
-        mcmc_state.state = self._state
-        mcmc_state.E = self.g.num_edges()
-
-        if _bm_test():
-            Si = self.entropy(**eargs)
-
-        dS, nattempts, nmoves = \
-            libinference.pp_multiflip_mcmc_sweep(mcmc_state, self._state,
-                                                 _get_rng())
-
-        if _bm_test():
-            Sf = self.entropy(**eargs)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        if accept_stats is not None:
-            for key in ["proposal", "acceptance"]:
-                if key not in accept_stats:
-                    accept_stats[key] = np.zeros(len(nproposal),
-                                                 dtype="uint64")
-            accept_stats["proposal"] += nproposal.a
-            accept_stats["acceptance"] += nacceptance.a
-
-        return dS, nattempts, nmoves
-
-    def multilevel_mcmc_sweep(self, niter=1, beta=1., c=.5, psingle=None,
-                              pmultilevel=1, d=0.01, r=1.5, M=None,
-                              random_bisect=True, merge_sweeps=10, mh_sweeps=10,
-                              gibbs=False, global_moves=True, B_min=0,
-                              B_max=np.iinfo(np.int64).max, b_min=None,
-                              b_max=None, entropy_args={}, verbose=False,
-                              **kwargs):
-        if psingle is None:
-            psingle = self.g.num_vertices()
-        merge_sweeps = max(merge_sweeps, 1)
-        if M is None:
-            M = self.g.num_vertices()
-        if b_min is None:
-            b_min = self.g.new_vp("int")
-        if b_max is None:
-            b_max = self.g.new_vp("int")
-        mcmc_state = DictState(locals())
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        mcmc_state.oentropy_args = get_pp_entropy_args(entropy_args)
-        mcmc_state.state = self._state
-
-        if _bm_test():
-            Si = self.entropy(**entropy_args)
-
-        dS, nattempts, nmoves = \
-            libinference.pp_multilevel_mcmc_sweep(mcmc_state, self._state,
-                                                  _get_rng())
-
-        if _bm_test():
-            Sf = self.entropy(**entropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        return dS, nattempts, nmoves
-
-    def gibbs_sweep(self, beta=1., niter=1, entropy_args={},
-                    allow_new_group=True, sequential=True, deterministic=False,
-                    vertices=None, verbose=False, **kwargs):
-        r"""Perform ``niter`` sweeps of a rejection-free Gibbs sampling MCMC
-        to sample network partitions.
-
-        Parameters
-        ----------
-        beta : ``float`` (optional, default: ``1.``)
-            Inverse temperature.
-        niter : ``int`` (optional, default: ``1``)
-            Number of sweeps to perform. During each sweep, a move attempt is
-            made for each node.
-        entropy_args : ``dict`` (optional, default: ``{}``)
-            Entropy arguments, with the same meaning and defaults as in
-            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
-        allow_new_group : ``bool`` (optional, default: ``True``)
-            Allow the number of groups to increase and decrease.
-        sequential : ``bool`` (optional, default: ``True``)
-            If ``sequential == True`` each vertex move attempt is made
-            sequentially, where vertices are visited in random order. Otherwise
-            the moves are attempted by sampling vertices randomly, so that the
-            same vertex can be moved more than once, before other vertices had
-            the chance to move.
-        deterministic : ``bool`` (optional, default: ``False``)
-            If ``sequential == True`` and ``deterministic == True`` the
-            vertices will be visited in deterministic order.
-        vertices : ``list`` of ints (optional, default: ``None``)
-            If provided, this should be a list of vertices which will be
-            moved. Otherwise, all vertices will.
-        verbose : ``bool`` (optional, default: ``False``)
-            If ``verbose == True``, detailed information will be displayed.
-
-        Returns
-        -------
-        dS : ``float``
-            Entropy difference after the sweeps.
-        nattempts : ``int``
-            Number of vertex moves attempted.
-        nmoves : ``int``
-            Number of vertices moved.
-
-        Notes
-        -----
-        This algorithm has an :math:`O(E\times B)` complexity, where :math:`B`
-        is the number of blocks, and :math:`E` is the number of edges.
-
-        """
-
-        gibbs_state = DictState(locals())
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        gibbs_state.oentropy_args = get_pp_entropy_args(entropy_args)
-        gibbs_state.vlist = Vector_size_t()
-        if vertices is None:
-            vertices = self.g.get_vertices()
-        gibbs_state.vlist.resize(len(vertices))
-        gibbs_state.vlist.a = vertices
-        gibbs_state.E = self.g.num_edges()
-        gibbs_state.state = self._state
-
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy(**entropy_args)
-
-        dS, nattempts, nmoves = \
-            libinference.pp_gibbs_sweep(gibbs_state, self._state,
-                                        _get_rng())
-
-        if _bm_test() and test:
-            Sf = self.entropy(**entropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        return dS, nattempts, nmoves
+    def _gibbs_sweep_dispatch(self, gibbs_state):
+        return libinference.pp_gibbs_sweep(gibbs_state, self._state,
+                                           _get_rng())

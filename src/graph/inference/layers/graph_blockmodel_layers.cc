@@ -418,86 +418,7 @@ size_t bmap_size(const vbmap_t& bmap)
 }
 
 typedef gt_hash_map<std::tuple<int, int>,
-                    gt_hash_map<std::tuple<size_t, size_t>, size_t>>
-    ldegs_map_t;
-
-ldegs_map_t get_layered_block_degs(GraphInterface& gi, boost::any aeweight,
-                                   boost::any avweight, boost::any aec,
-                                   boost::any ab)
-{
-    ldegs_map_t degs;
-    vmap_t b = boost::any_cast<vmap_t>(ab);
-    emap_t eweight = boost::any_cast<emap_t>(aeweight);
-    vmap_t vweight = boost::any_cast<vmap_t>(avweight);
-    emap_t ec = boost::any_cast<emap_t>(aec);
-    run_action<>()(gi,
-                   [&](auto& g)
-                   {
-                       for (auto v : vertices_range(g))
-                       {
-                           gt_hash_map<size_t, size_t> kin, kout;
-                           gt_hash_set<size_t> ls;
-
-                           for (auto e : out_edges_range(v, g))
-                           {
-                               auto w = eweight[e];
-                               auto l = ec[e];
-                               kout[l] += w;
-                               ls.insert(l);
-                           }
-
-                           if (graph_tool::is_directed(g))
-                           {
-                               for (auto e : in_edges_range(v, g))
-                               {
-                                   auto w = eweight[e];
-                                   auto l = ec[e];
-                                   kin[l] += w;
-                                   ls.insert(l);
-                               }
-                           }
-
-                           for (auto l : ls)
-                           {
-                               size_t skin = 0, skout = 0;
-                               auto iter = kin.find(l);
-                               if (iter != kin.end())
-                                   skin = iter->second;
-                               iter = kout.find(l);
-                               if (iter != kout.end())
-                                   skout = iter->second;
-                               auto& h = degs[std::make_tuple(l + 1, b[v])];
-                               h[std::make_tuple(skin, skout)] += vweight[v];
-                           }
-
-                           size_t skin = in_degreeS()(v, g, eweight);
-                           size_t skout = out_degreeS()(v, g, eweight);
-                           auto& h = degs[std::make_tuple(0, b[v])];
-                           h[std::make_tuple(skin, skout)] += vweight[v];
-                       }
-                   })();
-    return degs;
-}
-
-degs_map_t get_mapped_block_degs(GraphInterface& gi, ldegs_map_t& ldegs,
-                                 int l, boost::any avmap)
-{
-    degs_map_t ndegs;
-    vmap_t vmap = boost::any_cast<vmap_t>(avmap);
-    run_action<>()(gi,
-                   [&](auto& g)
-                   {
-                       for (auto u : vertices_range(g))
-                       {
-                           int v = vmap[u];
-                           auto& d = ndegs[u];
-                           for (auto& ks : ldegs[std::make_tuple(l, v)])
-                               d.emplace_back(get<0>(ks.first), get<1>(ks.first),
-                                              ks.second);
-                       }
-                   })();
-    return ndegs;
-}
+                    gt_hash_map<std::tuple<size_t, size_t>, size_t>> ldegs_map_t;
 
 ldegs_map_t get_ldegs(GraphInterface& gi, boost::any& avc, boost::any& avmap,
                       boost::python::object& oudegs)
@@ -517,9 +438,7 @@ ldegs_map_t get_ldegs(GraphInterface& gi, boost::any& avc, boost::any& avmap,
                        {
                            auto& d = udegs[0].get()[v];
                            auto& h = ndegs[std::make_tuple(0, v)];
-                           for (auto& kn : d)
-                               h[std::make_tuple(get<0>(kn), get<1>(kn))] =
-                                   get<2>(kn);
+                           h[std::make_tuple(get<0>(d), get<1>(d))] = 1;
 
                            for (size_t i = 0; i < vc[v].size(); ++i)
                            {
@@ -527,9 +446,7 @@ ldegs_map_t get_ldegs(GraphInterface& gi, boost::any& avc, boost::any& avmap,
                                auto u = vmap[v][i];
                                auto& d = udegs[l + 1].get()[u];
                                auto& h = ndegs[std::make_tuple(l + 1, v)];
-                               for (auto& kn : d)
-                                   h[std::make_tuple(get<0>(kn), get<1>(kn))] =
-                                       get<2>(kn);
+                               h[std::make_tuple(get<0>(d), get<1>(d))] = 1;
                            }
                        }
                    })();
@@ -554,8 +471,6 @@ void export_layered_blockmodel_state()
     def("split_layers", &split_layers);
     def("split_groups", &split_groups);
     def("get_rvmap", &get_rvmap);
-    def("get_layered_block_degs", &get_layered_block_degs);
-    def("get_mapped_block_degs", &get_mapped_block_degs);
     def("get_ldegs", &get_ldegs);
     def("get_lweights", &get_lweights);
     def("get_blweights", &get_blweights);

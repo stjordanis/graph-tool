@@ -20,100 +20,11 @@
 
 import numpy
 from . util import *
-from . mcmc import *
-from . bisection import *
 from . blockmodel import *
-from . overlap_blockmodel import *
-from . layered_blockmodel import *
 from . nested_blockmodel import *
 
-def default_args(mcmc_args={}, anneal_args={}, mcmc_equilibrate_args={},
-                 shrink_args={}, mcmc_multilevel_args={}, overlap=False):
-    mcmc_args = dict(dict(beta=numpy.inf, c=0, niter=5, allow_vacate=False,
-                          entropy_args=dict(dl=True)), **mcmc_args)
-    if overlap:
-        mcmc_args = dict(mcmc_args, bundled=True)
-    mcmc_equilibrate_args = dict(dict(wait=1, nbreaks=1, epsilon=1e-4,
-                                      mcmc_args=mcmc_args),
-                                 **dmask(mcmc_equilibrate_args,
-                                         ["mcmc_args"]))
-    shrink_entropy_args = dict(dict(mcmc_args["entropy_args"]),
-                               **shrink_args.get("entropy_args", {}))
-    if not shrink_entropy_args.get("dense", False):
-         shrink_entropy_args["multigraph"] = False
-    shrink_args = dict(dict(entropy_args=shrink_entropy_args, niter=20),
-                       **dmask(shrink_args, ["entropy_args"]))
-    mcmc_multilevel_args = \
-            dict(dict(r=1.3, anneal=False,
-                      shrink_args=shrink_args,
-                      mcmc_equilibrate_args=mcmc_equilibrate_args,
-                      anneal_args=anneal_args),
-                 **dmask(mcmc_multilevel_args,
-                         ["shrink_args", "mcmc_equilibrate_args",
-                          "anneal_args"]))
-    return mcmc_multilevel_args
-
-
-def get_states(g, B_min=None, B_max=None, b_min=None, b_max=None, deg_corr=True,
-               overlap=False, nonoverlap_init=True, layers=False, clabel=None,
-               state_args={}, mcmc_multilevel_args={}):
-
-    if B_min is None:
-        if clabel is None:
-            B_min = 1
-        else:
-            B_min = len(set(clabel.fa))
-            if b_min is None:
-                b_min = clabel
-
-    _B_max = g.num_vertices()
-    if overlap and not nonoverlap_init:
-        _B_max = 2 * g.num_edges()
-
-    if B_max is None:
-        B_max = _B_max
-        if overlap and nonoverlap_init and b_max is None:
-            b_max = g.vertex_index.copy("int")
-
-    if layers:
-        State = LayeredBlockState
-        state_args = dict(state_args, overlap=overlap)
-    elif overlap:
-        State = OverlapBlockState
-    else:
-        State = BlockState
-
-    if b_max is not None:
-        max_state = State(g, b=b_max, deg_corr=deg_corr, clabel=clabel,
-                          **dmask(state_args, ["B", "b", "deg_corr", "clabel"]))
-    else:
-        max_state = State(g, B=_B_max, deg_corr=deg_corr, clabel=clabel,
-                          **dmask(state_args,["B", "b", "deg_corr", "clabel"]))
-
-    if max_state.get_nonempty_B() > B_max:
-        max_state = mcmc_multilevel(max_state, B=B_max, **mcmc_multilevel_args)
-
-    if b_min is not None:
-        min_state = State(g, B=B_min, b=b_min, deg_corr=deg_corr, clabel=clabel,
-                          **dmask(state_args, ["B", "b", "deg_corr", "clabel"]))
-    elif B_min == 1:
-        min_state = State(g, B=1, deg_corr=deg_corr, clabel=clabel,
-                          **dmask(state_args, ["B", "b", "deg_corr", "clabel"]))
-    else:
-        min_state = max_state.copy()
-
-    if min_state.get_nonempty_B() > B_min:
-        min_state = mcmc_multilevel(min_state, B=B_min, **mcmc_multilevel_args)
-
-    return min_state, max_state
-
-
-def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
-                           deg_corr=True, overlap=False, nonoverlap_init=True,
-                           layers=False, state_args={}, bisection_args={},
-                           mcmc_args={}, anneal_args={},
-                           mcmc_equilibrate_args={}, shrink_args={},
-                           mcmc_multilevel_args={}, verbose=False):
+def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
+                           multilevel_mcmc_args={}):
     r"""Fit the stochastic block model, by minimizing its description length using an
     agglomerative heuristic.
 
@@ -121,53 +32,26 @@ def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
     ----------
     g : :class:`~graph_tool.Graph`
         The graph.
-    B_min : ``int`` (optional, default: ``None``)
+    B_min : ``int`` (optional, default: ``1``)
         The minimum number of blocks.
-    B_max : ``int`` (optional, default: ``None``)
+    B_max : ``int`` (optional, default: ``numpy.iinfo(numpy.int64).max``)
         The maximum number of blocks.
     b_min : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the minimum number of blocks.
     b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the maximum number of blocks.
-    deg_corr : ``bool`` (optional, default: ``True``)
-        If ``True``, the degree-corrected version of the model will be used.
-    overlap : ``bool`` (optional, default: ``False``)
-        If ``True``, the overlapping version of the model will be used.
-    nonoverlap_init : ``bool`` (optional, default: ``True``)
-        If ``True``, and ``overlap == True`` a non-overlapping initial state
-        will be used.
-    layers : ``bool`` (optional, default: ``False``)
-        If ``True``, the layered version of the model will be used.
+    state : SBM state class (optional, default: :class:`~graph_tool.inference.blockmodel.BlockState`)
+        Type of model that will be used.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to appropriate state constructor (e.g.
-        :class:`~graph_tool.inference.blockmodel.BlockState`,
-        :class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState` or
-        :class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`)
-    bisection_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.bisection.bisection_minimize`.
-    mcmc_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep`,
-        :meth:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.mcmc_sweep` or
-        :meth:`graph_tool.inference.layered_blockmodel.LayeredBlockState.mcmc_sweep`.
-    mcmc_equilibrate_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.mcmc.mcmc_equilibrate`.
-    shrink_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :meth:`graph_tool.inference.blockmodel.BlockState.shrink`,
-        :meth:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.shrink` or
-        :meth:`graph_tool.inference.layered_blockmodel.LayeredBlockState.shrink`.
-    mcmc_multilevel_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.mcmc.mcmc_multilevel`.
-    verbose : ``bool`` or ``tuple`` (optional, default: ``False``)
-        If ``True``, progress information will be shown. Optionally, this
-        accepts arguments of the type ``tuple`` of the form ``(level, prefix)``
-        where ``level`` is a positive integer that specifies the level of
-        detail, and ``prefix`` is a string that is prepended to the all output
-        messages.
+        :class:`~graph_tool.inference.blockmodel.BlockState`)
+    multilevel_mcmc_args : ``dict`` (optional, default: ``{}``)
+        Arguments to be passed to :func:`~graph_tool.inference.BlockState.multilevel_mcmc_sweep`.
 
     Returns
     -------
-    min_state : :class:`~graph_tool.inference.blockmodel.BlockState` or  :class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState` or  :class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`
-        State with minimal description length.
+    min_state : type given by parameter ``state``
+        State with minimum description length.
 
     Notes
     -----
@@ -231,56 +115,18 @@ def minimize_blockmodel_dl(g, B_min=None, B_max=None, b_min=None, b_max=None,
        012804 (2014), :doi:`10.1103/PhysRevE.89.012804`, :arxiv:`1310.4378`.
     """
 
-    b_cache = {} # keep a global cache
+    state = state(g, b=g.vertex_index.copy(), **state_args)
 
-    mcmc_multilevel_args = \
-        default_args(mcmc_args=mcmc_args,
-                     anneal_args=anneal_args,
-                     mcmc_equilibrate_args=mcmc_equilibrate_args,
-                     shrink_args=shrink_args,
-                     mcmc_multilevel_args=dict(mcmc_multilevel_args,
-                                               b_cache=b_cache),
-                     overlap=overlap)
+    args = dict(niter=1, psingle=0, beta=numpy.inf)
+    args.update(multilevel_mcmc_args)
 
-    bisection_args = dict(dict(mcmc_multilevel_args=mcmc_multilevel_args,
-                               random_bisection=False),
-                          **bisection_args)
-
-    clabel = state_args.get("clabel", None)
-    if clabel is None:
-        clabel = state_args.get("pclabel", None)
-
-    min_state, max_state = get_states(g, B_min=B_min, B_max=B_max, b_min=b_min,
-                                      b_max=b_max, deg_corr=deg_corr,
-                                      overlap=overlap,
-                                      nonoverlap_init=nonoverlap_init,
-                                      layers=layers, clabel=clabel,
-                                      state_args=state_args,
-                                      mcmc_multilevel_args=mcmc_multilevel_args)
-
-    if B_min is None:
-        B_min = 1
-    if B_max is None:
-        B_max = numpy.inf
-
-    Bs = list(b_cache.keys())
-    for B in Bs:
-        if B > B_max or B < B_min:
-            del b_cache[B]
-
-    state = bisection_minimize([min_state, max_state], verbose=verbose,
-                               **bisection_args)
+    state.multilevel_mcmc_sweep(**args)
 
     return state
 
-def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
-                                  b_max=None, Bs=None, bs=None, deg_corr=True,
-                                  overlap=False, nonoverlap_init=True,
-                                  layers=False, hierarchy_minimize_args={},
-                                  state_args={}, bisection_args={},
-                                  mcmc_args={}, anneal_args={},
-                                  mcmc_equilibrate_args={}, shrink_args={},
-                                  mcmc_multilevel_args={}, verbose=False):
+def minimize_nested_blockmodel_dl(g, init_bs=None,
+                                  state=NestedBlockState, state_args={}, mcmc_args={},
+                                  multilevel_mcmc_args={}):
     r"""Fit the nested stochastic block model, by minimizing its description length
     using an agglomerative heuristic.
 
@@ -288,59 +134,28 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
     ----------
     g : :class:`~graph_tool.Graph`
         The graph.
-    B_min : ``int`` (optional, default: ``None``)
+    init_bs : iterable of iterable of ``int``s (optional, default: ``None``)
+        Initial hierarchical partition.
+    B_min : ``int`` (optional, default: ``1``)
         The minimum number of blocks.
-    B_max : ``int`` (optional, default: ``None``)
+    B_max : ``int`` (optional, default: ``numpy.iinfo(numpy.int64).max``)
         The maximum number of blocks.
     b_min : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the minimum number of blocks.
     b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the maximum number of blocks.
-    Bs : ``list`` of ints (optional, default: ``None``)
-        If provided, it will correspond to the sizes of the initial hierarchy.
-    bs : ``list`` of integer-valued :class:`numpy.ndarray` objects (optional, default: ``None``)
-        If provided, it will correspond to the initial hierarchical partition.
-    deg_corr : ``bool`` (optional, default: ``True``)
-        If ``True``, the degree-corrected version of the model will be used.
-    overlap : ``bool`` (optional, default: ``False``)
-        If ``True``, the overlapping version of the model will be used.
-    nonoverlap_init : ``bool`` (optional, default: ``True``)
-        If ``True``, and ``overlap == True`` a non-overlapping initial state
-        will be used.
-    layers : ``bool`` (optional, default: ``False``)
-        If ``True``, the layered version of the model will be used.
-    hierarchy_minimize_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.nested_blockmodel.hierarchy_minimize`.
+    state : SBM state class (optional, default: :class:`~graph_tool.inference.blockmodel.NestedBlockState`)
+        Type of model that will be used.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to appropriate state constructor (e.g.
-        :class:`~graph_tool.inference.blockmodel.BlockState`,
-        :class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState` or
-        :class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`)
-    bisection_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.bisection.bisection_minimize`.
-    mcmc_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep`,
-        :meth:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.mcmc_sweep` or
-        :meth:`graph_tool.inference.layered_blockmodel.LayeredBlockState.mcmc_sweep`.
-    mcmc_equilibrate_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.mcmc.mcmc_equilibrate`.
-    shrink_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :meth:`graph_tool.inference.blockmodel.BlockState.shrink`,
-        :meth:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.shrink` or
-        :meth:`graph_tool.inference.layered_blockmodel.LayeredBlockState.shrink`.
-    mcmc_multilevel_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.mcmc.mcmc_multilevel`.
-    verbose : ``bool`` or ``tuple`` (optional, default: ``False``)
-        If ``True``, progress information will be shown. Optionally, this
-        accepts arguments of the type ``tuple`` of the form ``(level, prefix)``
-        where ``level`` is a positive integer that specifies the level of
-        detail, and ``prefix`` is a string that is prepended to the all output
-        messages.
+        :class:`~graph_tool.inference.blockmodel.BlockState`)
+    multilevel_mcmc_args : ``dict`` (optional, default: ``{}``)
+        Arguments to be passed to :func:`~graph_tool.inference.BlockState.multilevel_mcmc_sweep`.
 
     Returns
     -------
-    min_state : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
-        Nested state with minimal description length.
+    min_state : type given by parameter ``state``
+        State with minimum description length.
 
     Notes
     -----
@@ -407,71 +222,28 @@ def minimize_nested_blockmodel_dl(g, B_min=None, B_max=None, b_min=None,
        :arxiv:`1310.4377`.
     """
 
-    mcmc_multilevel_args = \
-            default_args(mcmc_args=mcmc_args,
-                         anneal_args=anneal_args,
-                         mcmc_equilibrate_args=mcmc_equilibrate_args,
-                         shrink_args=shrink_args,
-                         mcmc_multilevel_args=mcmc_multilevel_args,
-                         overlap=overlap)
-
-    if bs is None:
-        clabel = state_args.get("clabel", None)
-        if clabel is None:
-            clabel = state_args.get("pclabel", None)
-        min_state, max_state = get_states(g, B_min=B_min, B_max=B_max,
-                                          b_min=b_min, b_max=b_max,
-                                          deg_corr=deg_corr, overlap=overlap,
-                                          nonoverlap_init=nonoverlap_init,
-                                          layers=layers, clabel=clabel,
-                                          state_args=dmask(state_args,
-                                                           ["hstate_args",
-                                                            "hentropy_args"]),
-                                          mcmc_multilevel_args=mcmc_multilevel_args)
-        if b_max is None:
-            b_max = max_state.b.fa
-        if b_min is None:
-            b_min = min_state.b.fa
-        if Bs is None:
-            bs = [min_state.b.fa, zeros(min_state.b.fa.max() + 1, dtype="int")]
-        else:
-            bs = []
-            bstate = max_state
-            for B in Bs:
-                bstate = mcmc_multilevel(bstate, B=B,
-                                         verbose=verbose_push(verbose,
-                                                              ("l = %d " %
-                                                               len(bs))),
-                                         **mcmc_multilevel_args)
-                bs.append(bstate.b.a)
-                bstate = bstate.get_block_state()
-        State = type(min_state)
+    L = int(numpy.ceil(numpy.log2(g.num_vertices())))
+    if init_bs is None:
+        bs = [g.vertex_index.copy()] + [numpy.zeros(1)] * L
     else:
-        if layers:
-            State = LayeredBlockState
-            state_args = dict(state_args, overlap=overlap)
-        elif overlap:
-            State = OverlapBlockState
+        bs = init_bs
+    state = state(g, bs=bs, **state_args)
+
+    args = dict(niter=1, psingle=0, beta=numpy.inf)
+    args.update(multilevel_mcmc_args)
+
+
+    l = 0
+    while l >= 0:
+
+        ret = state.multilevel_mcmc_sweep(ls=[l], **args)
+
+        if args.get("verbose", False):
+            print(l, ret, state)
+
+        if abs(ret[0]) < 1e-8:
+            l -= 1
         else:
-            State = BlockState
-
-    if layers:
-        state_args = dict(state_args, overlap=overlap)
-
-    state = NestedBlockState(g, bs=bs,
-                             base_type=State,
-                             deg_corr=deg_corr,
-                             sampling=False,
-                             **dmask(state_args, ["deg_corr"]))
-
-    bisection_args = dict(dict(mcmc_multilevel_args=mcmc_multilevel_args,
-                               random_bisection=False),
-                          **bisection_args)
-
-    hierarchy_minimize(state, B_max=B_max, B_min=B_min, b_max=b_max,
-                       b_min=b_min, bisection_args=bisection_args,
-                       verbose=verbose,
-                       **dmask(hierarchy_minimize_args,
-                               ["B_max", "B_min", "bisection_args", "verbose"]))
+            l = min(l + 1, len(state.levels) - 1)
 
     return state

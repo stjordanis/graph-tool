@@ -58,8 +58,6 @@ void export_sbm_state_rmap()
              // double (state_t::*get_move_prob)(size_t, size_t, size_t, double,
              //                                  double, bool) =
              //     &state_t::get_move_prob;
-             // void (state_t::*merge_vertices)(size_t, size_t) =
-             //     &state_t::merge_vertices;
              // void (state_t::*set_partition)(boost::any&) =
              //     &state_t::set_partition;
 
@@ -76,7 +74,6 @@ void export_sbm_state_rmap()
              //     .def("move_vertices", move_vertices)
              //     .def("set_partition", set_partition)
              //     .def("virtual_move", virtual_move)
-             //     .def("merge_vertices", merge_vertices)
              //     .def("sample_block", sample_block)
              //     .def("sample_neighbor", random_neighbor)
              //     .def("entropy", &state_t::entropy)

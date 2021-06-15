@@ -36,7 +36,6 @@ typedef vprop_map_t<int32_t>::type vmap_t;
 #define MERGE_OVERLAP_BLOCK_STATE_params(State)                                \
     ((__class__, &, mpl::vector<python::object>, 1))                           \
     ((state, &, State&, 0))                                                    \
-    ((E,, size_t, 0))                                                          \
     ((entropy_args,, entropy_args_t, 0))                                       \
     ((verbose,, bool, 0))                                                      \
     ((niter,, size_t, 0))                                                      \

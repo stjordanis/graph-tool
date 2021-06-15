@@ -624,65 +624,6 @@ struct Layers
             BaseState::sample_branch(v, u, rng);
         }
 
-        void merge_vertices(size_t u, size_t v)
-        {
-            if (u == v)
-                return;
-
-            assert(BaseState::_vweight[v] > 0);
-            assert(BaseState::_vweight[u] > 0);
-
-            std::set<size_t> ls;
-            gt_hash_map<size_t, size_t> ls_u, ls_v;
-            for (size_t i = 0; i < _vc[u].size(); ++i)
-            {
-                size_t l = _vc[u][i];
-                ls_u[l] = _vmap[u][i];
-                ls.insert(l);
-            }
-
-            for (size_t i = 0; i < _vc[v].size(); ++i)
-            {
-                size_t l = _vc[v][i];
-                ls_v[l] = _vmap[v][i];
-                ls.insert(l);
-            }
-
-            _vc[u].clear();
-            _vmap[u].clear();
-            _vc[v].clear();
-            _vmap[v].clear();
-
-            for (auto l : ls)
-            {
-                auto iter_u = ls_u.find(l);
-                auto iter_v = ls_v.find(l);
-
-                size_t uu = (iter_u != ls_u.end()) ? iter_u->second : iter_v->second;
-                size_t vv = (iter_v != ls_v.end()) ? iter_v->second : iter_u->second;
-
-                auto& state = _layers[l];
-                assert(state._vweight[vv] > 0);
-                assert(state._vweight[uu] > 0);
-
-                state.merge_vertices(uu, vv);
-
-                assert(state._b[uu] == state._b[vv]);
-                assert(size_t(state._b[vv]) == state.get_block_map(_b[v], false));
-
-                assert(state._vweight[uu] > 0 || total_degreeS()(uu, state._g, state._eweight) == 0);
-                assert(state._vweight[vv] > 0 || total_degreeS()(vv, state._g, state._eweight) == 0);
-
-                _vc[v].push_back(l);
-                _vmap[v].push_back(vv);
-            }
-
-            BaseState::merge_vertices(u, v, _ec.get_checked());
-
-            assert(check_layers());
-            // assert(check_edge_counts());
-        }
-
         double entropy(const entropy_args_t& ea, bool propagate=false)
         {
             double S = 0, S_dl = 0;

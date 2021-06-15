@@ -56,7 +56,7 @@ public:
     template <class Vprop, class Eprop, class BGraph>
     void init(Vprop b, Eprop& eweight, Graph& g, BGraph& bg)
     {
-        _egroups.clear();
+        clear();
         _egroups.resize(num_vertices(bg));
 
         for (auto e : edges_range(g))
@@ -75,6 +75,7 @@ public:
     void clear()
     {
         _egroups.clear();
+        _egroups.shrink_to_fit();
     }
 
     bool empty()

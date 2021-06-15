@@ -24,7 +24,7 @@ from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
 
 from . util import *
-from . blockmodel import _bm_test
+from . base_states import *
 
 from collections.abc import Iterable
 import numpy as np
@@ -94,22 +94,14 @@ class HistState(object):
             (self.x.shape, tuple(len(s) for s in self.bins), self.discrete,
              self.bounded, id(self))
 
+    @copy_state_wrap
     def entropy(self, **kwargs):
 
         S = self._state.entropy()
-
-        if kwargs.pop("test", True) and _bm_test():
-            assert not isnan(S) and not isinf(S), \
-                "invalid entropy %g " % S
-
-            state_copy = self.copy()
-            Salt = state_copy.entropy(test=False)
-
-            assert math.isclose(S, Salt, abs_tol=1e-8), \
-                "entropy discrepancy after copying (%g %g %g)" % (S, Salt,
-                                                                  S - Salt)
-
         return S
+
+    def _get_entropy_args(self, kwargs):
+        return None
 
     def get_lpdf(self, x):
         if all(self.discrete):
@@ -129,23 +121,15 @@ class HistState(object):
             x = np.zeros(1, dtype=dtype)
         return self._state.sample(n, x, _get_rng())
 
+    @mcmc_sweep_wrap
     def mcmc_sweep(self, beta=1., niter=1, verbose=False,
                    **kwargs):
         mcmc_state = DictState(locals())
         mcmc_state.state = self._state
 
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy(test=True)
-
         dS, nattempts, nmoves = \
             libinference.hist_mcmc_sweep(mcmc_state, self._state, self.D,
                                          _get_rng())
-
-        if _bm_test() and test:
-            Sf = self.entropy(test=True)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g)" % (dS, Sf - Si)
 
         if len(kwargs) > 0:
             raise ValueError("unrecognized keyword arguments: " +

@@ -16,8 +16,8 @@ we have
 
    g = gt.collection.data["celegansneural"]
 
-   state_ndc = gt.minimize_nested_blockmodel_dl(g, deg_corr=False)
-   state_dc  = gt.minimize_nested_blockmodel_dl(g, deg_corr=True)
+   state_ndc = gt.minimize_nested_blockmodel_dl(g, state_args=dict(deg_corr=False))
+   state_dc  = gt.minimize_nested_blockmodel_dl(g, state_args=dict(deg_corr=True))
 
    print("Non-degree-corrected DL:\t", state_ndc.entropy())
    print("Degree-corrected DL:\t", state_dc.entropy())
@@ -70,8 +70,8 @@ example, for the American football network above, we have:
 
    g = gt.collection.data["football"]
 
-   state_ndc = gt.minimize_nested_blockmodel_dl(g, deg_corr=False)
-   state_dc  = gt.minimize_nested_blockmodel_dl(g, deg_corr=True)
+   state_ndc = gt.minimize_nested_blockmodel_dl(g, state_args=dict(deg_corr=False))
+   state_dc  = gt.minimize_nested_blockmodel_dl(g, state_args=dict(deg_corr=True))
 
    print("Non-degree-corrected DL:\t", state_ndc.entropy())
    print("Degree-corrected DL:\t", state_dc.entropy())

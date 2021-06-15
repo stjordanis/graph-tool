@@ -30,97 +30,15 @@ GEN_DISPATCH(block_state, BlockState, BLOCK_STATE_params)
 
 python::object make_block_state(boost::python::object ostate);
 
-degs_map_t get_block_degs(GraphInterface& gi, boost::any ab, boost::any aweight,
-                          size_t B)
-{
-    degs_map_t degs;
-    vmap_t b = boost::any_cast<vmap_t>(ab);
-    run_action<>()(gi,
-                   [&](auto& g, auto& eweight)
-                   {
-                       std::vector<gt_hash_map<std::tuple<size_t, size_t>,
-                                               size_t>> hist(B);
-                       for (auto v : vertices_range(g))
-                       {
-                           size_t r = b[v];
-                           if (r >= hist.size())
-                               hist.resize(r + 1);
-                           size_t kin = in_degreeS()(v, g, eweight);
-                           size_t kout = out_degreeS()(v, g, eweight);
-                           hist[r][std::make_tuple(kin, kout)]++;
-                       }
-
-                       for (size_t r = 0; r < B; ++r)
-                       {
-                           auto& deg = degs[r];
-                           for (auto& kn : hist[r])
-                               deg.emplace_back(get<0>(kn.first),
-                                                get<1>(kn.first),
-                                                kn.second);
-                       }
-                   },
-                   eweight_tr())(aweight);
-    return degs;
-}
-
-degs_map_t get_weighted_block_degs(GraphInterface& gi, degs_map_t& degs,
-                                   boost::any ab, size_t B)
-{
-    degs_map_t ndegs;
-    vmap_t b = boost::any_cast<vmap_t>(ab);
-    run_action<>()(gi,
-                   [&](auto& g)
-                   {
-                       std::vector<gt_hash_map<std::tuple<size_t, size_t>,
-                                               size_t>> hist(B);
-                       for (auto v : vertices_range(g))
-                       {
-                           size_t r = b[v];
-                           if (r >= hist.size())
-                               hist.resize(r + 1);
-                           auto& h = hist[r];
-                           auto& ks = degs[v];
-                           for (auto& k : ks)
-                               h[std::make_tuple(get<0>(k), get<1>(k))] += get<2>(k);
-                       }
-
-                       for (size_t r = 0; r < B; ++r)
-                       {
-                           auto& deg = ndegs[r];
-                           for (auto& kn : hist[r])
-                               deg.emplace_back(get<0>(kn.first),
-                                                get<1>(kn.first),
-                                                kn.second);
-                       }
-                   })();
-    return ndegs;
-}
-
 degs_map_t get_empty_degs(GraphInterface& gi)
 {
     return degs_map_t(gi.get_num_vertices(false));
 }
 
-
 template <class Prop>
 boost::any get_any(Prop& p)
 {
     return boost::any(p);
-}
-
-void print_degs(degs_map_t& degs, size_t B)
-{
-    for (size_t r = 0; r < B; ++r)
-    {
-        cout << r << ":: ";
-        auto& ks = degs[r];
-        for (auto& k : ks)
-        {
-            cout << "(" << get<0>(k) << ", " << get<1>(k) << "): "
-                 << get<2>(k) << "  ";
-        }
-        cout << endl;
-    }
 }
 
 degs_map_t copy_degs(degs_map_t& degs)
@@ -179,11 +97,8 @@ void export_blockmodel_state()
 
     def("make_block_state", &make_block_state);
 
-    def("get_block_degs", &get_block_degs);
-    def("get_weighted_block_degs", &get_weighted_block_degs);
     def("get_empty_degs", &get_empty_degs);
     class_<degs_map_t>("degs_map_t")
-        .def("print", &print_degs)
         .def("copy", &copy_degs)
         .def("_get_any", &get_any<degs_map_t>);
     class_<simple_degs_t>("simple_degs_t")
@@ -191,6 +106,7 @@ void export_blockmodel_state()
         .def("_get_any", &get_any<simple_degs_t>);
 
     def("init_q_cache", init_q_cache);
+    def("clear_q_cache", clear_q_cache);
     def("log_q", log_q<size_t>);
     def("q_rec", q_rec);
     def("q_rec_memo", q_rec_memo);

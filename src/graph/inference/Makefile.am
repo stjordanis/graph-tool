@@ -24,7 +24,6 @@ libgraph_tool_inference_la_SOURCES = \
     blockmodel/graph_blockmodel_imp3.cc \
     blockmodel/graph_blockmodel_marginals.cc \
     blockmodel/graph_blockmodel_mcmc.cc \
-    blockmodel/graph_blockmodel_merge.cc \
     blockmodel/graph_blockmodel_multicanonical.cc \
     blockmodel/graph_blockmodel_multicanonical_multiflip.cc \
     blockmodel/graph_blockmodel_multiflip_mcmc.cc \
@@ -68,7 +67,6 @@ libgraph_tool_inference_la_SOURCES = \
     layers/graph_blockmodel_layers_gibbs.cc \
     layers/graph_blockmodel_layers_imp.cc \
     layers/graph_blockmodel_layers_mcmc.cc \
-    layers/graph_blockmodel_layers_merge.cc \
     layers/graph_blockmodel_layers_multicanonical.cc \
     layers/graph_blockmodel_layers_multicanonical_multiflip.cc \
     layers/graph_blockmodel_layers_multiflip_mcmc.cc \
@@ -120,7 +118,6 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     blockmodel/graph_blockmodel_exhaustive.hh \
     blockmodel/graph_blockmodel_gibbs.hh \
     blockmodel/graph_blockmodel_mcmc.hh \
-    blockmodel/graph_blockmodel_merge.hh \
     blockmodel/graph_blockmodel_multicanonical.hh \
     blockmodel/graph_blockmodel_multiflip_mcmc.hh \
     blockmodel/graph_blockmodel_multilevel_mcmc.hh \
@@ -161,7 +158,6 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     loops/exhaustive_loop.hh \
     loops/gibbs_loop.hh \
     loops/mcmc_loop.hh \
-    loops/merge_loop.hh \
     loops/merge_split.hh \
     loops/multilevel.hh \
     support/cache.hh \

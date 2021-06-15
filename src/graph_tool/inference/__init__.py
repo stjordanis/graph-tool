@@ -67,8 +67,6 @@ Sampling and minimization
    ~graph_tool.inference.mcmc.mcmc_multilevel
    ~graph_tool.inference.mcmc.multicanonical_equilibrate
    ~graph_tool.inference.mcmc.MulticanonicalState
-   ~graph_tool.inference.bisection.bisection_minimize
-   ~graph_tool.inference.nested_blockmodel.hierarchy_minimize
 
 Comparing and manipulating partitions
 =====================================
@@ -100,7 +98,6 @@ Auxiliary functions
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.blockmodel.model_entropy
    ~graph_tool.inference.blockmodel.mf_entropy
    ~graph_tool.inference.blockmodel.bethe_entropy
    ~graph_tool.inference.blockmodel.microstate_entropy
@@ -212,11 +209,8 @@ __all__ = ["minimize_blockmodel_dl",
            "TemperingState",
            "multicanonical_equilibrate",
            "MulticanonicalState",
-           "bisection_minimize",
-           "hierarchy_minimize",
            "EMBlockState",
            "em_infer",
-           "model_entropy",
            "mf_entropy",
            "bethe_entropy",
            "microstate_entropy",

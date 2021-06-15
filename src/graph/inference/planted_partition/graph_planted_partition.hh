@@ -337,9 +337,10 @@ public:
         std::bernoulli_distribution new_r(d);
         if (d > 0 && !_empty_groups.empty() && new_r(rng))
             return uniform_sample(_empty_groups, rng);
-        std::bernoulli_distribution adj(std::min(c, 1.));
+        c = std::max(std::min(c, 1.), 0.);
+        std::bernoulli_distribution adj(1-c);
         auto iter = out_neighbors(v, _g);
-        if (c > 0 && iter.first != iter.second && adj(rng))
+        if (iter.first != iter.second && adj(rng))
         {
             auto w = uniform_sample(iter.first, iter.second, rng);
             return _b[w];
@@ -380,7 +381,7 @@ public:
         if (k > 0)
         {
             double p = k_s / double(k);
-            c = std::min(c, 1.);
+            c = 1 - std::max(std::min(c, 1.), 0.);
             return log1p(-d) + log(c * p + (1. - c)/B);
         }
         else

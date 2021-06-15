@@ -45,8 +45,9 @@ separating these two types of interactions in two layers:
    # first enables the use of LayeredBlockState, and the second selects
    # the 'edge layers' version (instead of 'edge covariates').
 
-   state = gt.minimize_nested_blockmodel_dl(g, layers=True,
-                                            state_args=dict(ec=g.ep.weight, layers=True))
+   state = gt.minimize_nested_blockmodel_dl(g,                                            
+                                            state_args=dict(base_type=gt.LayeredBlockState,
+                                                            state_args=dict(ec=g.ep.weight, layers=True)))
 
    state.draw(edge_color=g.ep.weight, edge_gradient=[],
               ecmap=(matplotlib.cm.coolwarm_r, .6), edge_pen_width=5,

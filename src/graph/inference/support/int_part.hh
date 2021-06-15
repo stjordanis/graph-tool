@@ -17,6 +17,7 @@ namespace graph_tool
 using namespace boost;
 
 void init_q_cache(size_t n_max);
+void clear_q_cache();
 double q_rec(int n, int k);
 double q_rec_memo(int n, int k);
 double log_q_approx(size_t n, size_t k);

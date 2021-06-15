@@ -70,9 +70,12 @@ struct Multilevel: public State
     using State::_state;
     using State::_merge_sweeps;
     using State::_mh_sweeps;
+    using State::_init_r;
     using State::_gibbs;
     using State::_null_group;
     using State::_beta;
+    using State::_init_beta;
+    using State::_cache_states;
     using State::_verbose;
 
     using State::_B_min;
@@ -171,20 +174,23 @@ struct Multilevel: public State
         return 0;
     }
 
+    std::vector<size_t> _vis;
+
     template <bool smart, class RNG>
     std::pair<double, double>
-    mh_sweep(std::vector<Node>& vs, GSet<Group>& rs, double beta, RNG& rng)
+    mh_sweep(std::vector<Node>& vs, GSet<Group>& rs, double beta, RNG& rng,
+             size_t B_min = std::numeric_limits<size_t>::max())
     {
-        if (rs.size() == 1 || rs.size() == vs.size())
+        if (rs.size() == 1 || (rs.size() == vs.size() && B_min == rs.size()))
             return {0, 0};
 
-        std::vector<size_t> vis(vs.size());
-        std::iota(vis.begin(), vis.end(), 0);
-        std::shuffle(vis.begin(), vis.end(), rng);
+        _vis.resize(vs.size());
+        std::iota(_vis.begin(), _vis.end(), 0);
+        std::shuffle(_vis.begin(), _vis.end(), rng);
 
         double S = 0;
         double lp = 0;
-        for (size_t vi : vis)
+        for (size_t vi : _vis)
         {
             const auto& v = vs[vi];
 
@@ -205,7 +211,7 @@ struct Multilevel: public State
             }
 
             double dS;
-            if (s != r && get_wr(r) == 1)
+            if (s != r && (get_wr(r) == 1 && rs.size() <= B_min))
                 dS = std::numeric_limits<double>::infinity();
             else
                 dS = State::virtual_move(v, r, s);
@@ -215,8 +221,8 @@ struct Multilevel: public State
             {
                 if (!std::isinf(beta) && s != r)
                 {
-                    pf = State::get_move_prob(v, r, s, false, false, false);
-                    pb = State::get_move_prob(v, s, r, false, false, true);
+                    pf = State::get_move_prob(v, r, s, false, rs.size() > B_min, false);
+                    pb = State::get_move_prob(v, s, r, false, rs.size() > B_min, true);
                 }
             }
 
@@ -256,6 +262,9 @@ struct Multilevel: public State
                 if constexpr (!smart)
                     lp -= safelog_fast(rs.size() - 1);
 
+                if (get_wr(r) == 0)
+                    rs.erase(r);
+
                 assert(r != s || dS == 0);
             }
             else
@@ -277,9 +286,9 @@ struct Multilevel: public State
         if (rs.size() == 1 || rs.size() == vs.size())
             return 0;
 
-        std::vector<size_t> vis(vs.size());
-        std::iota(vis.begin(), vis.end(), 0);
-        std::shuffle(vis.begin(), vis.end(), rng);
+        _vis.resize(vs.size());
+        std::iota(_vis.begin(), _vis.end(), 0);
+        std::shuffle(_vis.begin(), _vis.end(), rng);
 
         gt_hash_map<Group, Group> mu;
         if constexpr (!labelled)
@@ -290,7 +299,7 @@ struct Multilevel: public State
         for (auto& v : vs)
             _btemp[v] = State::get_group(v);
 
-        for (size_t vi : vis)
+        for (size_t vi : _vis)
         {
             const auto& v = vs[vi];
 
@@ -368,9 +377,9 @@ struct Multilevel: public State
         if (rs.size() == 1 || rs.size() == vs.size())
             return {0, 0};
 
-        std::vector<size_t> vis(vs.size());
-        std::iota(vis.begin(), vis.end(), 0);
-        std::shuffle(vis.begin(), vis.end(), rng);
+        _vis.resize(vs.size());
+        std::iota(_vis.begin(), _vis.end(), 0);
+        std::shuffle(_vis.begin(), _vis.end(), rng);
 
         gt_hash_map<Group, Group> mu;
 
@@ -392,7 +401,7 @@ struct Multilevel: public State
                 _btemp[v] = State::get_group(v);
         }
 
-        for (size_t vi : vis)
+        for (size_t vi : _vis)
         {
             const auto& v = vs[vi];
 
@@ -530,21 +539,27 @@ struct Multilevel: public State
         }
     }
 
+    std::vector<Node> _mvs;
     double virtual_merge_dS(const Group& r, const Group& s)
     {
         assert(r != s);
 
         State::relax_update(true);
 
+        _mvs.clear();
         double dS = 0;
         for (auto& v : _groups[r])
         {
             assert(State::get_group(v) == r);
-            dS += State::virtual_move(v, r, s);
+            double ddS = State::virtual_move(v, r, s);
+            dS += ddS;
+            if (std::isinf(ddS))
+                break;
             State::move_node(v, s);
+            _mvs.push_back(v);
         }
 
-        for (auto& v : _groups[r])
+        for (auto& v : _mvs)
             State::move_node(v, r);
 
         State::relax_update(false);
@@ -556,9 +571,8 @@ struct Multilevel: public State
     {
         assert(r != s);
 
-        std::vector<Node> vs;
-        get_group_vs(r, vs);
-        for (auto& v : vs)
+        get_group_vs(r, _mvs);
+        for (auto& v : _mvs)
             move_node(v, s);
     }
 
@@ -571,10 +585,9 @@ struct Multilevel: public State
         for (const auto& r : rs)
             _best_merge[r] = std::make_pair(r, numeric_limits<double>::infinity());
 
+        _past_merges.clear();
         for (const auto& r : rs)
         {
-            _past_merges.clear();
-
             auto find_candidates = [&](bool allow_random)
                 {
                     for (size_t i = 0; i < niter; ++i)
@@ -601,6 +614,8 @@ struct Multilevel: public State
 
             if (_best_merge[r].first == r)
                 find_candidates(true);
+
+            _past_merges.clear();
         }
 
         std::vector<std::pair<Group, Group>> pairs;
@@ -702,10 +717,15 @@ struct Multilevel: public State
         if (N == 1)
             return {0, 0};
 
+        if (_verbose)
+            cout << "staging multilevel, N = " << N << endl;
+
         size_t B_max = State::_global_moves ? std::min(N, _B_max) : std::min(N, State::_M);
         size_t B_min = State::_global_moves ? std::max(size_t(1), _B_min) : 1;
 
-        assert (rs.size() <= B_max);
+        B_min = std::min(std::max(B_min, State::get_Bmin(vs)), B_max);
+
+        size_t B_mid;
 
         size_t B_max_init = B_max;
         size_t B_min_init = B_min;
@@ -717,8 +737,6 @@ struct Multilevel: public State
                 _rs_prev.insert(_bprev[v]);
         }
 
-        size_t B_mid = get_mid(B_min, B_max, rng);
-
         double S_best = std::numeric_limits<double>::infinity();
 
         map<size_t, std::pair<double, std::vector<Group>>> cache;
@@ -728,8 +746,9 @@ struct Multilevel: public State
 
             auto& c = cache[B];
             c.first = S;
-            for (const auto& v : vs)
-                c.second.push_back(State::get_group(v));
+            c.second.resize(vs.size());
+            for (size_t i = 0; i < vs.size(); ++i)
+                c.second[i] = State::get_group(vs[i]);
             if (S < S_best)
                 S_best = S;
         };
@@ -751,14 +770,22 @@ struct Multilevel: public State
 
         auto clean_cache = [&](size_t Bmin, size_t Bmax, bool keep_best=true)
         {
-            std::vector<size_t> removed;
-            for (const auto& [B, b] : cache)
+            for (auto iter = cache.begin(), last = cache.end(); iter != last;)
             {
+                const auto& [B, b] = *iter;
                 if ((B < Bmin || B > Bmax) && (!keep_best || b.first > S_best))
-                    removed.push_back(B);
+                    iter = cache.erase(iter);
+                else
+                    ++iter;
             }
-            for (auto B : removed)
-                cache.erase(B);
+            // std::vector<size_t> removed;
+            // for (const auto& [B, b] : cache)
+            // {
+            //     if ((B < Bmin || B > Bmax) && (!keep_best || b.first > S_best))
+            //         removed.push_back(B);
+            // }
+            // for (auto B : removed)
+            //     cache.erase(B);
         };
 
         auto get_S = [&](size_t B, bool keep_cache=true)
@@ -770,39 +797,118 @@ struct Multilevel: public State
 
             double S = get_cache(iter->first, rs);
 
+            if (_verbose)
+            {
+                cout << "bracket B = [ " << B_min
+                     << ", " << B_mid
+                     << ", " << B_max << " ]"
+                     << endl;
+                cout << "shrinking from: " << iter->first << " -> " << B << endl;
+            }
+
             // merge & sweep
             while (rs.size() > B)
             {
+                size_t Bprev = rs.size();
                 auto Bnext =
                     std::max(std::min(rs.size() - 1,
-                                      size_t(round(rs.size() / State::_r))),
+                                      size_t(round(rs.size() * State::_r))),
                              B);
                 while (rs.size() != Bnext)
                     S += merge_sweep(rs, Bnext, _merge_sweeps, rng);
                 for (size_t i = 0; i < _mh_sweeps; ++i)
-                    S += mh_sweep<true>(vs, rs, _beta, rng).first;
-                if (keep_cache || rs.size() == B)
+                    S += mh_sweep<true>(vs, rs, _beta, rng, B).first;
+                if ((keep_cache && _cache_states) || rs.size() == B)
                     put_cache(rs.size(), S);
+
+                if (_verbose)
+                    cout << "    " << Bprev << " -> "
+                         << rs.size() << ": " << S << endl;
             }
 
             assert(rs.size() == B);
             return S;
         };
 
-        push_b(vs);
-        if (B_max == N || !State::_has_b_max)
+        if (State::_has_b_min)
+        {
+            push_b(vs);
+            double S = 0;
+            if (rs.size() > B_min)
+            {
+                for (auto& v : vs)
+                {
+                    auto r = State::get_group(v);
+                    Group t = _b_min[v];
+                    if (r == t)
+                        continue;
+                    S += State::virtual_move(v, r, t);
+                    move_node(v, t);
+                }
+            }
+            put_cache(B_min, S);
+            pop_b();
+        }
+        else if (B_min == 1)
+        {
+            push_b(vs);
+            double S = 0;
+            if (rs.size() > B_min)
+            {
+                auto u = uniform_sample(vs, rng);
+                auto t = State::get_group(u);
+                for (auto& v : vs)
+                {
+                    auto r = State::get_group(u);
+                    if (r == t)
+                        continue;
+                    S += State::virtual_move(v, r, t);
+                    move_node(v, t);
+                }
+            }
+            put_cache(B_min, S);
+            pop_b();
+        }
+
+        if (!State::_has_b_max)
         {
             double S = 0;
+            rs.clear();
             for (auto& v : vs)
             {
                 auto s = State::get_group(v);
                 if (get_wr(s) == 1)
+                {
+                    rs.insert(s);
                     continue;
+                }
                 auto t = State::get_new_group(v, std::isinf(_beta), rng);
                 S += State::virtual_move(v, s, t);
                 move_node(v, t);
+                rs.insert(t);
             }
-            put_cache(N, S);
+
+            if (std::isinf(_beta) && _init_r < 1.)
+            {
+                size_t Bprev;
+                size_t i = 0;
+                do
+                {
+                    Bprev = rs.size();
+                    double dS = mh_sweep<true>(vs, rs, (i++ == 0) ? _init_beta : _beta,
+                                               rng, B_min).first;
+                    S += dS;
+                    if (_verbose)
+                        cout << i - 1 << " " << ((i - 1 == 0) ? _init_beta : _beta)
+                             << " " << dS << " " << rs.size() << " "
+                             << rs.size()/double(Bprev) << endl;
+                }
+                while (rs.size()/double(Bprev) < _init_r);
+
+                B_max = B_max_init = std::min(rs.size(), B_max);
+            }
+
+            put_cache(rs.size(), S);
         }
         else
         {
@@ -818,25 +924,9 @@ struct Multilevel: public State
             }
             put_cache(B_max, S);
         }
-        pop_b();
 
-        if (State::_has_b_min)
-        {
-            double S = 0;
-            if (rs.size() > B_min)
-            {
-                for (auto& v : vs)
-                {
-                    auto r = State::get_group(v);
-                    Group t = _b_min[v];
-                    if (r == t)
-                        continue;
-                    S += State::virtual_move(v, r, t);
-                    move_node(v, t);
-                }
-            }
-            put_cache(B_min, S);
-        }
+
+        B_mid = get_mid(B_min, B_max, rng);
 
         // initial bracketing
         double S_max = get_S(B_max);

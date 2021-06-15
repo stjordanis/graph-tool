@@ -1956,7 +1956,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
     vcmap = kwargs.get("vcmap", default_cm)
     ecmap = kwargs.get("ecmap", vcmap)
 
-    B = state.levels[0].B
+    B = state.levels[0].get_B()
 
     if overlap and "pie_fractions" not in vprops:
         vprops["pie_fractions"] = bc.copy("vector<double>")
@@ -2141,14 +2141,14 @@ def get_bip_hierachy_pos(state, aspect=1., node_weight=None):
         bv, bcin, bcout, bc = ostate.get_overlap_blocks()
         be = ostate.get_edge_blocks()
 
-        n_r = zeros(ostate.B)
+        n_r = zeros(ostate.get_B())
         b = g.new_vertex_property("int")
         for v in g.vertices():
             i = bc[v].a.argmax()
             b[v] = bv[v][i]
             n_r[b[v]] += 1
 
-        orphans = [r for r in range(ostate.B) if n_r[r] == 0]
+        orphans = [r for r in range(ostate.get_B()) if n_r[r] == 0]
 
         for v in g.vertices():
             for r in orphans:

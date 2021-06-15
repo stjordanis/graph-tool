@@ -34,8 +34,8 @@ GEN_DISPATCH(mcmc_block_state, MCMC<State>::template MCMCBlockState,
              MCMC_BLOCK_STATE_params(State))
 
 python::object pp_multilevel_mcmc_sweep(python::object omcmc_state,
-                                       python::object oblock_state,
-                                       rng_t& rng)
+                                        python::object oblock_state,
+                                        rng_t& rng)
 {
     python::object ret;
     auto dispatch = [&](auto& block_state)

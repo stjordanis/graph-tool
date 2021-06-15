@@ -51,6 +51,11 @@ void init_q_cache(size_t n_max)
     }
 }
 
+void clear_q_cache()
+{
+    __q_cache.resize(boost::extents[0][0]);
+}
+
 double q_rec(int n, int k)
 {
     if (n <= 0 || k < 1)

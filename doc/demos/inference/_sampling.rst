@@ -44,10 +44,10 @@ from a random partition into 20 groups
 
    g = gt.collection.data["lesmis"]
 
-   state = gt.BlockState(g, B=1)   # This automatically initializes the state with a partition
-                                   # into one group. The user could also pass a higher number
-                                   # to start with a random partition of a given size, or pass a
-                                   # specific initial partition using the 'b' parameter.
+   state = gt.BlockState(g)   # This automatically initializes the state with a partition
+                              # into one group. The user could also pass a higher number
+                              # to start with a random partition of a given size, or pass a
+                              # specific initial partition using the 'b' parameter.
 
    # Now we run 1,000 sweeps of the MCMC. Note that the number of groups
    # is allowed to change, so it will eventually move from the initial
@@ -89,7 +89,7 @@ function should accept a single parameter which will contain the actual
 :class:`~graph_tool.inference.blockmodel.BlockState` instance. We will
 use this in the example below to collect the posterior vertex marginals
 (via :class:`~graph_tool.inference.partition_modes.PartitionModeState`,
-which disambiguates group labels [peixoto-revealing-2020]_), i.e. the
+which disambiguates group labels [peixoto-revealing-2021]_), i.e. the
 posterior probability that a node belongs to a given group:
 
 .. testcode:: model-averaging
@@ -333,7 +333,7 @@ The posterior distribution of partitions can have an elaborate
 structure, containing multiple possible explanations for the data. In
 order to summarize it, we can infer the modes of the distribution using
 :class:`~graph_tool.inference.partition_modes.ModeClusterState`, as
-described in [peixoto-revealing-2020]_. This amounts to identifying
+described in [peixoto-revealing-2021]_. This amounts to identifying
 clusters of partitions that are very similar to each other, but
 sufficiently different from those that belong to other
 clusters. Collective, such "modes" represent the different stories that

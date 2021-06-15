@@ -32,10 +32,15 @@ considered previously
 
    g = gt.collection.data["football"]
 
-   state = gt.PPBlockState(g)
+   # We can use the same agglomerative heuristic as before, but we need
+   # to specify PPBlockState as the internal state.
 
-   # Now we run 1,000 sweeps of the MCMC with zero temperature.
-   state.multiflip_mcmc_sweep(beta=np.inf, niter=1000)
+   state = gt.minimize_blockmodel_dl(g, state=gt.PPBlockState)
+
+   # Now we run 100 sweeps of the MCMC with zero temperature, as a
+   # refinement. This is often not necessary.
+
+   state.multiflip_mcmc_sweep(beta=np.inf, niter=100)
 
    state.draw(pos=g.vp.pos, output="football-pp.svg")
 

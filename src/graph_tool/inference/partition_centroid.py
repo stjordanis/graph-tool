@@ -19,7 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .. import Graph, _get_rng, Vector_size_t
-from . blockmodel import DictState, _bm_test
+from . blockmodel import DictState
+from . base_states import *
 from . partition_modes import contingency_graph
 
 from .. dl_import import dl_import
@@ -29,7 +30,7 @@ import numpy as np
 import math
 from scipy.special import gammaln
 
-class PartitionCentroidState(object):
+class PartitionCentroidState(MCMCState, MultiflipMCMCState, MultilevelMCMCState):
     r"""Obtain the center of a set of partitions, according to the variation of
     information metric or reduced mutual information.
 
@@ -99,154 +100,40 @@ class PartitionCentroidState(object):
         w /= w.sum()
         return np.exp(-(w*log(w)).sum())
 
+    @copy_state_wrap
     def entropy(self):
         return self._state.entropy()
 
-    def mcmc_sweep(self, beta=1.,d=.01, niter=1, allow_vacate=True,
-                   sequential=True, deterministic=False, verbose=False,
-                   **kwargs):
-        r"""Perform sweeps of a Metropolis-Hastings rejection sampling MCMC to sample
-        network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation. """
-        oentropy_args = "."
-        mcmc_state = DictState(locals())
-        mcmc_state.vlist = Vector_size_t()
-        mcmc_state.vlist.resize(len(self.b))
-        mcmc_state.vlist.a = np.arange(len(self.b))
-        mcmc_state.state = self._state
-        mcmc_state.c = 0
-        mcmc_state.E = 0
+    def _get_entropy_args(self, kwargs):
+        return ""
 
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy()
-
+    def _mcmc_sweep_dispatch(self, mcmc_state):
         if self.RMI:
-            dS, nattempts, nmoves = \
-                libinference.rmi_mcmc_sweep(mcmc_state, self._state,
-                                            _get_rng())
+            return libinference.rmi_mcmc_sweep(mcmc_state, self._state,
+                                               _get_rng())
         else:
-            dS, nattempts, nmoves = \
-                libinference.vi_mcmc_sweep(mcmc_state, self._state,
-                                           _get_rng())
+            return libinference.vi_mcmc_sweep(mcmc_state, self._state,
+                                              _get_rng())
 
-        if _bm_test() and test:
-            Sf = self.entropy()
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si)
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-        return dS, nattempts, nmoves
-
-
-    def multiflip_mcmc_sweep(self, beta=1., psingle=None, psplit=1, pmerge=1,
-                             pmergesplit=1, d=0.01, gibbs_sweeps=10, niter=1,
-                             accept_stats=None, verbose=False, **kwargs):
-        r"""Perform sweeps of a merge-split Metropolis-Hastings rejection sampling MCMC
-        to sample network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation."""
-        if psingle is None:
-            psingle = len(self.b)
-        gibbs_sweeps = max(gibbs_sweeps, 1)
-        nproposal = Vector_size_t(4)
-        nacceptance = Vector_size_t(4)
-        force_move = kwargs.pop("force_move", False)
-        oentropy_args = "."
-        mcmc_state = DictState(locals())
-        mcmc_state.state = self._state
-        mcmc_state.c = 0
-        mcmc_state.E = 0
-
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy()
-
+    def _multiflip_mcmc_sweep_dispatch(self, mcmc_state):
         if self.RMI:
-            dS, nattempts, nmoves = \
-                libinference.rmi_multiflip_mcmc_sweep(mcmc_state, self._state,
-                                                      _get_rng())
+            return libinference.rmi_multiflip_mcmc_sweep(mcmc_state,
+                                                         self._state,
+                                                         _get_rng())
         else:
-            dS, nattempts, nmoves = \
-                libinference.vi_multiflip_mcmc_sweep(mcmc_state, self._state,
-                                                     _get_rng())
+            return libinference.vi_multiflip_mcmc_sweep(mcmc_state, self._state,
+                                                        _get_rng())
 
-        if _bm_test() and test:
-            Sf = self.entropy()
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si)
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        if accept_stats is not None:
-            for key in ["proposal", "acceptance"]:
-                if key not in accept_stats:
-                    accept_stats[key] = np.zeros(len(nproposal),
-                                                 dtype="uint64")
-            accept_stats["proposal"] += nproposal.a
-            accept_stats["acceptance"] += nacceptance.a
-
-        return dS, nattempts, nmoves
-
-    def multilevel_mcmc_sweep(self, niter=1, beta=1., psingle=None,
-                              pmultilevel=1, d=0.01, r=1.5, M=None,
-                              random_bisect=True, merge_sweeps=10, mh_sweeps=10,
-                              gibbs=False, global_moves=True, B_min=0,
-                              B_max=np.iinfo(np.int64).max, b_min=None,
-                              b_max=None, entropy_args={}, verbose=False,
-                              **kwargs):
-        if psingle is None:
-            psingle = len(self.b)
-        merge_sweeps = max(merge_sweeps, 1)
-        if M is None:
-            M = self.g.num_vertices()
-        if b_min is None:
-            b_min = self.g.new_vp("int")
-        if b_max is None:
-            b_max = self.g.new_vp("int")
-        mcmc_state = DictState(locals())
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        if (_bm_test() and entropy_args["multigraph"] and
-            not entropy_args["dense"] and
-            hasattr(self, "degs") and
-            not isinstance(self.degs, libinference.simple_degs_t)):
-            entropy_args["multigraph"] = False
-        mcmc_state.oentropy_args = get_entropy_args(entropy_args)
-        mcmc_state.state = self._state
-        mcmc_state.c = 0
-
-        dispatch = kwargs.pop("dispatch", True)
-        test = kwargs.pop("test", True)
-
-        if _bm_test() and test:
-            assert self._check_clabel(), "invalid clabel before sweep"
-            Si = self.entropy(**entropy_args)
-
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
         if self.RMI:
-            dS, nattempts, nmoves = \
-                libinference.rmi_multilevel_mcmc_sweep(mcmc_state, self._state,
-                                                       _get_rng())
+            return libinference.rmi_multilevel_mcmc_sweep(mcmc_state,
+                                                          self._state,
+                                                          _get_rng())
         else:
-            dS, nattempts, nmoves = \
-                libinference.vi_multilevel_mcmc_sweep(mcmc_state, self._state,
-                                                      _get_rng())
-        if _bm_test() and test:
-            assert self._check_clabel(), "invalid clabel after sweep"
-            Sf = self.entropy(**entropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
+            return libinference.vi_multilevel_mcmc_sweep(mcmc_state,
+                                                         self._state,
+                                                         _get_rng())
 
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        return dS, nattempts, nmoves
 
 def variation_information(x, y, norm=False):
     r"""Returns the variation of information between two partitions.

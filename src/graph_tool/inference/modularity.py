@@ -20,9 +20,11 @@
 
 from .. import Graph, GraphView, _get_rng, _prop, PropertyMap, \
     perfect_prop_hash, Vector_size_t, group_vector_property
-from . blockmodel import DictState, _bm_test
+from . blockmodel import DictState
 from . util import *
 import numpy as np
+
+from . base_states import *
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
@@ -87,20 +89,7 @@ def modularity(g, b, gamma=1., weight=None):
     return Q
 
 
-def get_modularity_entropy_args(kargs, ignore=None):
-    kargs = kargs.copy()
-    if ignore is not None:
-        for a in ignore:
-            kargs.pop(a, None)
-    ea = libinference.modularity_entropy_args()
-    ea.gamma = kargs["gamma"]
-    del kargs["gamma"]
-    if len(kargs) > 0:
-        raise ValueError("unrecognized entropy arguments: " +
-                         str(list(kargs.keys())))
-    return ea
-
-class ModularityState(object):
+class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState):
     r"""Obtain the partition of a network according to Newman's modularity.
 
     .. warning::
@@ -180,6 +169,7 @@ class ModularityState(object):
         w /= w.sum()
         return np.exp(-(w*log(w)).sum())
 
+    @copy_state_wrap
     def entropy(self, gamma=1., **kwargs):
         r"""Return the unnormalized negative generalized modularity.
 
@@ -197,32 +187,26 @@ class ModularityState(object):
 
         """
 
-        entropy_args = dict(self._entropy_args, **locals())
-        eargs = get_modularity_entropy_args(entropy_args,
-                                            ignore=["self", "kwargs"])
-
-        if _bm_test() and kwargs.get("test", True):
-            args = dict(gamma=gamma)
-
-        S = self._state.entropy(eargs)
-
-        if kwargs.pop("test", True) and _bm_test():
-            assert not np.isnan(S) and not np.isinf(S), \
-                "invalid entropy %g (%s) " % (S, str(args))
-
-            args["test"] = False
-            state_copy = self.copy()
-            Salt = state_copy.entropy(**args)
-
-            assert math.isclose(S, Salt, abs_tol=1e-8), \
-                "entropy discrepancy after copying (%g %g %g)" % (S, Salt,
-                                                                  S - Salt)
+        eargs = self._get_entropy_args(locals(), ignore=["self", "kwargs"])
 
         if len(kwargs) > 0:
             raise ValueError("unrecognized keyword arguments: " +
                              str(list(kwargs.keys())))
-        return S
 
+        return self._state.entropy(eargs)
+
+    def _get_entropy_args(self, kwargs, ignore=None):
+        kwargs = dict(self._entropy_args, **kwargs)
+        if ignore is not None:
+            for a in ignore:
+                kwargs.pop(a, None)
+        ea = libinference.modularity_entropy_args()
+        ea.gamma = kwargs["gamma"]
+        del kwargs["gamma"]
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized entropy arguments: " +
+                             str(list(kwargs.keys())))
+        return ea
 
     def modularity(self, gamma=1):
         r"""Return the generalized modularity.
@@ -260,89 +244,17 @@ class ModularityState(object):
                                            "vertex_color",
                                            "edge_gradient"]))
 
-    def mcmc_sweep(self, beta=1., c=0.5, d=.01, niter=1, entropy_args={},
-                   allow_vacate=True, sequential=True, deterministic=False,
-                   verbose=False, **kwargs):
-        r"""Perform sweeps of a Metropolis-Hastings rejection sampling MCMC to sample
-        network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation. """
-        mcmc_state = DictState(locals())
-        eargs = entropy_args
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        mcmc_state.oentropy_args = get_modularity_entropy_args(entropy_args)
-        mcmc_state.vlist = Vector_size_t()
-        mcmc_state.vlist.resize(self.g.num_vertices())
-        mcmc_state.vlist.a = self.g.vertex_index.copy().fa
-        mcmc_state.state = self._state
-        mcmc_state.E = self.g.num_edges()
+    def _mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.modularity_mcmc_sweep(mcmc_state, self._state,
+                                                  _get_rng())
 
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy(**eargs)
+    def _multiflip_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.modularity_multiflip_mcmc_sweep(mcmc_state,
+                                                            self._state,
+                                                            _get_rng())
 
-        dS, nattempts, nmoves = \
-            libinference.modularity_mcmc_sweep(mcmc_state, self._state,
-                                               _get_rng())
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.modularity_multilevel_mcmc_sweep(mcmc_state,
+                                                             self._state,
+                                                             _get_rng())
 
-        if _bm_test() and test:
-            Sf = self.entropy(**eargs)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-        return dS, nattempts, nmoves
-
-
-    def multiflip_mcmc_sweep(self, beta=1., c=0.5, psingle=None, psplit=1,
-                             pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
-                             niter=1, entropy_args={}, accept_stats=None,
-                             verbose=False, **kwargs):
-        r"""Perform sweeps of a merge-split Metropolis-Hastings rejection sampling MCMC
-        to sample network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation."""
-        if psingle is None:
-            psingle = self.g.num_vertices()
-        gibbs_sweeps = max(gibbs_sweeps, 1)
-        nproposal = Vector_size_t(4)
-        nacceptance = Vector_size_t(4)
-        force_move = kwargs.pop("force_move", False)
-        mcmc_state = DictState(locals())
-        eargs = entropy_args
-        entropy_args = dict(self._entropy_args, **entropy_args)
-        mcmc_state.oentropy_args = get_modularity_entropy_args(entropy_args)
-        mcmc_state.state = self._state
-        mcmc_state.E = self.g.num_edges()
-
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy(**eargs)
-
-        dS, nattempts, nmoves = \
-            libinference.modularity_multiflip_mcmc_sweep(mcmc_state,
-                                                         self._state,
-                                                         _get_rng())
-
-        if _bm_test() and test:
-            Sf = self.entropy(**eargs)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        if accept_stats is not None:
-            for key in ["proposal", "acceptance"]:
-                if key not in accept_stats:
-                    accept_stats[key] = np.zeros(len(nproposal),
-                                                 dtype="uint64")
-            accept_stats["proposal"] += nproposal.a
-            accept_stats["acceptance"] += nacceptance.a
-
-        return dS, nattempts, nmoves

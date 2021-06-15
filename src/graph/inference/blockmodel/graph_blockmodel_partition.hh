@@ -34,8 +34,7 @@ namespace graph_tool
 
 constexpr size_t null_group = std::numeric_limits<size_t>::max();
 
-typedef vprop_map_t<std::vector<std::tuple<size_t, size_t, size_t>>>::type
-    degs_map_t;
+typedef vprop_map_t<std::tuple<size_t, size_t>>::type degs_map_t;
 
 struct simple_degs_t {};
 
@@ -49,19 +48,11 @@ void degs_op(size_t v, Vprop& vweight, Eprop& eweight, const simple_degs_t&,
 
 template <class Graph, class Vprop, class Eprop, class F>
 [[gnu::always_inline]] [[gnu::flatten]] inline
-void degs_op(size_t v, Vprop& vweight, Eprop& eweight,
-             const typename degs_map_t::unchecked_t& degs, Graph& g, F&& f)
+void degs_op(size_t v, Vprop& vweight, Eprop&,
+             const typename degs_map_t::unchecked_t& degs, Graph&, F&& f)
 {
-    auto& ks = degs[v];
-    if (ks.empty())
-    {
-        degs_op(v, vweight, eweight, simple_degs_t(), g, std::forward<F>(f));
-    }
-    else
-    {
-        for (auto& k : ks)
-            f(get<0>(k), get<1>(k), get<2>(k));
-    }
+    auto& k = degs[v];
+    f(get<0>(k), get<1>(k), vweight[v]);
 }
 
 template <bool use_rmap>

@@ -30,7 +30,6 @@ from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
 
 from . blockmodel import *
-from . blockmodel import _bm_test
 
 class OverlapBlockState(BlockState):
     r"""The overlapping stochastic block model state of a given graph.
@@ -201,8 +200,6 @@ class OverlapBlockState(BlockState):
         else:
             self.mrm = self.mrp
 
-        self.B = B
-
         if pclabel is not None:
             if isinstance(pclabel, PropertyMap):
                 self.pclabel = self.g.own_property(pclabel).copy("int")
@@ -276,7 +273,7 @@ class OverlapBlockState(BlockState):
 
     def __repr__(self):
         return "<OverlapBlockState object with %d blocks,%s%s for graph %s, at 0x%x>" % \
-            (self.B, " degree corrected," if self.deg_corr else "",
+            (self.get_B(), " degree corrected," if self.deg_corr else "",
              ((" with %d edge covariate%s," % (len(self.rec_types) - 1,
                                                "s" if len(self.rec_types) > 2 else ""))
               if len(self.rec_types) > 0 else ""),
@@ -303,7 +300,7 @@ class OverlapBlockState(BlockState):
 
         state = OverlapBlockState(self.g if g is None else g,
                                   b=self.b if b is None else b,
-                                  B=(self.B if b is None else None) if B is None else B,
+                                  B=(self.get_B() if b is None else None) if B is None else B,
                                   clabel=self.clabel.fa if clabel is None else clabel,
                                   pclabel=self.pclabel if pclabel is None else pclabel,
                                   deg_corr=self.deg_corr if deg_corr is None else deg_corr,
@@ -334,7 +331,7 @@ class OverlapBlockState(BlockState):
     def __getstate__(self):
         state = dict(g=self.g,
                      b=self.b,
-                     B=self.B,
+                     B=self.get_B(),
                      clabel=array(self.clabel.fa),
                      deg_corr=self.deg_corr,
                      recs=self.rec,
@@ -429,6 +426,7 @@ class OverlapBlockState(BlockState):
                                      _prop("v", self.base_g, b))
         return b
 
+    @copy_state_wrap
     def entropy(self, adjacency=True, dl=True, partition_dl=True,
                 degree_dl=True, degree_dl_kind="distributed", edges_dl=True,
                 dense=False, multigraph=True, deg_entropy=True, recs=True,
@@ -506,7 +504,7 @@ class OverlapBlockState(BlockState):
         If ``dl == True``, the description length :math:`\mathcal{L} = -\ln
         P(\boldsymbol{\theta})` of the model will be returned as well. The
         edge-count prior :math:`P(\boldsymbol{e})` is described in described in
-        :func:`~graph_tool.inference.blockmodel.model_entropy`. For the
+        :meth:`~graph_tool.inference.blockmodel.BlockState.entropy`. For the
         overlapping partition :math:`P(\boldsymbol{b})`, we have
 
         .. math::
@@ -570,15 +568,15 @@ class OverlapBlockState(BlockState):
 
         """
 
-        return BlockState.entropy(self, adjacency=adjacency, dl=dl,
-                                  partition_dl=partition_dl,
-                                  degree_dl=degree_dl,
-                                  degree_dl_kind=degree_dl_kind,
-                                  edges_dl=edges_dl, dense=dense,
-                                  multigraph=multigraph,
-                                  deg_entropy=deg_entropy, recs=recs,
-                                  recs_dl=recs_dl, beta_dl=beta_dl, exact=exact,
-                                  **kwargs)
+        eargs = self._get_entropy_args(locals(), ignore=["self", "kwargs"])
+
+        S = self._state.entropy(eargs, kwargs.pop("propagate", False))
+
+        kwargs.pop("test", None)
+        if len(kwargs) > 0:
+            raise ValueError("unrecognized keyword arguments: " +
+                             str(list(kwargs.keys())))
+        return S
 
     def _clear_egroups(self):
         self._state.clear_egroups()
@@ -667,42 +665,6 @@ class OverlapBlockState(BlockState):
         return libinference.vacate_overlap_sweep(merge_state, self._state,
                                                  _get_rng())
 
-    def shrink(self, B, **kwargs):
-        """Reduces the order of current state by progressively merging groups,
-        until only ``B`` are left. All remaining keyword arguments are passed to
-        :meth:`graph_tool.inference.blockmodel.BlockState.merge_sweep`.
-
-        This function leaves the current state untouched and returns instead a
-        copy with the new partition.
-        """
-
-        b = self.b.copy()
-        continuous_map(b)
-        bstate = self.copy(b=b)
-
-        assert self.get_nonempty_B() == bstate.get_nonempty_B(), \
-            "Error: inconsistent number of groups after copying (%d, %d)" % \
-            (self.get_nonempty_B(), bstate.get_nonempty_B())
-
-        if bstate.get_nonempty_B() < B:
-            raise ValueError("cannot shrink state to a larger number" +
-                             " of groups: %d -> %d (total: %d)" %
-                             (bstate.get_nonempty_B(), B, self.B))
-
-        while bstate.get_nonempty_B() > B:
-            bstate.merge_sweep(bstate.get_nonempty_B() - B, **kwargs)
-
-        continuous_map(bstate.b)
-        bstate = self.copy(b=bstate.b.a, Lrecdx=bstate.Lrecdx)
-
-        if _bm_test():
-            assert bstate.get_nonempty_B() == B, \
-                "wrong number of groups after shrink: %d, %d" % \
-                (bstate.get_nonempty_B(), B)
-            assert bstate.wr.a.min() > 0, "empty group after shrink!"
-
-        return bstate
-
     def draw(self, **kwargs):
         r"""Convenience wrapper to :func:`~graph_tool.draw.graph_draw` that
         draws the state of the graph as colors on the vertices and edges."""
@@ -757,6 +719,7 @@ def half_edge_graph(g, b=None, B=None, rec=None):
         # If a vertex partition is given, we convert it into a
         # non-overlapping edge partition
         be = g.new_edge_property("vector<int>")
+        b = b.copy("int")
         libinference.get_be_from_b_overlap(g._Graph__graph,
                                            _prop("e", g, be),
                                            _prop("v", g, b))

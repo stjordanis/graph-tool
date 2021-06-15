@@ -78,11 +78,13 @@ References
    chain Monte Carlo for community detection", Phys. Rev. E 102, 012305
    (2020), :doi:`10.1103/PhysRevE.102.012305`, :arxiv:`2003.07070`
 
-.. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-   dissensus between network partitions", :arxiv:`2005.13977`
+.. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+   dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+   :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
 
 .. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
-   inference of assortative community structures", :arxiv:`2006.14493`
+   inference of assortative community structures", Phys. Rev. Research 2
+   043271 (2020), :doi:`10.1103/PhysRevResearch.2.043271`, :arxiv:`2006.14493`
 
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8

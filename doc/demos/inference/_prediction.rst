@@ -101,13 +101,7 @@ above).
    
    L = 10
 
-   state = gt.minimize_nested_blockmodel_dl(g, deg_corr=True)
-
-   bs = state.get_bs()                     # Get hierarchical partition.
-   bs += [np.zeros(1)] * (L - len(bs))     # Augment it to L = 10 with
-                                           # single-group levels.
-
-   state = state.copy(bs=bs, sampling=True)
+   state = gt.minimize_nested_blockmodel_dl(g)
 
    probs = ([], [])
 

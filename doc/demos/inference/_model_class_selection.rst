@@ -69,9 +69,9 @@ show in the example below.
    g = gt.collection.data["lesmis"]
 
    for deg_corr in [True, False]:
-       state = gt.minimize_blockmodel_dl(g, deg_corr=deg_corr)     # Initialize the Markov
-                                                                   # chain from the "ground
-                                                                   # state"
+       state = gt.minimize_blockmodel_dl(g, state_args=dict(deg_corr=deg_corr))  # Initialize the Markov
+                                                                                 # chain from the "ground
+                                                                                 # state"
        dls = []         # description length history
        bs = []          # partitions
 
@@ -119,7 +119,7 @@ approach for the same network, using the nested model.
    g = gt.collection.data["lesmis"]
 
    for deg_corr in [True, False]:
-       state = gt.NestedBlockState(g, deg_corr=deg_corr)
+       state = gt.NestedBlockState(g, state_args=dict(deg_corr=deg_corr))
 
        # Equilibrate
        gt.mcmc_equilibrate(state, force_niter=1000, mcmc_args=dict(niter=10))

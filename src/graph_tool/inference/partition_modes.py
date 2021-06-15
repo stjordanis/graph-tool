@@ -19,7 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .. import Graph, _get_rng, Vector_int32_t, Vector_size_t
-from . blockmodel import DictState, _bm_test
+from . blockmodel import DictState
+from . base_states import *
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_inference as libinference")
@@ -50,8 +51,9 @@ class PartitionModeState(object):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
 
     """
     def __init__(self, bs, relabel=True, nested=False, converge=False, **kwargs):
@@ -172,6 +174,7 @@ class PartitionModeState(object):
         r"""Re-order group labels according to group sizes."""
         return self._base.relabel()
 
+    @copy_state_wrap
     def entropy(self):
         r"""Return the model entropy (negative log-likelihood)."""
         return self._base.entropy()
@@ -252,7 +255,7 @@ class PartitionModeState(object):
         otherwise using posterior mean estimates."""
         return self._base.sample_nested_partition(MLE, fix_empty, _get_rng())
 
-class ModeClusterState(object):
+class ModeClusterState(MCMCState, MultiflipMCMCState, MultilevelMCMCState):
     r"""The mixed random label model state for a set of labelled partitions, which
     attempts to align them inside clusters with a common group labelling.
 
@@ -274,8 +277,9 @@ class ModeClusterState(object):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
 
     """
     def __init__(self, bs, b=None, B=1, nested=False, relabel=True):
@@ -412,9 +416,13 @@ class ModeClusterState(object):
         improvement lies below ``epsilon``."""
         return self._state.relabel_modes(epsilon, maxiter)
 
+    @copy_state_wrap
     def entropy(self):
         r"""Return the model entropy (negative log-likelihood)."""
         return self._state.entropy()
+
+    def _get_entropy_args(self, kwargs):
+        return ""
 
     def posterior_entropy(self, MLE=True):
         r"""Return the entropy of the random label model, using maximum likelihood
@@ -451,131 +459,19 @@ class ModeClusterState(object):
         """
         return self._state.sample_nested_partition(MLE, fix_empty, _get_rng())
 
-    def mcmc_sweep(self, beta=np.inf, d=.01, niter=1, allow_vacate=True,
-                   sequential=True, deterministic=False, verbose=False,
-                   **kwargs):
-        r"""Perform sweeps of a Metropolis-Hastings rejection sampling MCMC to sample
-        network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation. """
+    def _mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.mode_clustering_mcmc_sweep(mcmc_state, self._state,
+                                                       _get_rng())
 
-        oentropy_args = "."
-        mcmc_state = DictState(locals())
-        mcmc_state.vlist = Vector_size_t()
-        mcmc_state.vlist.resize(len(self.b))
-        mcmc_state.vlist.a = np.arange(len(self.b))
-        mcmc_state.state = self._state
-        mcmc_state.c = 0
-        mcmc_state.E = 0
+    def _multiflip_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.mode_clustering_multiflip_mcmc_sweep(mcmc_state,
+                                                                 self._state,
+                                                                 _get_rng())
 
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy()
-
-        dS, nattempts, nmoves = \
-            libinference.mode_clustering_mcmc_sweep(mcmc_state, self._state,
-                                                    _get_rng())
-
-        if _bm_test() and test:
-            Sf = self.entropy()
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si)
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-        return dS, nattempts, nmoves
-
-
-    def multiflip_mcmc_sweep(self, beta=np.inf, psingle=None, psplit=1,
-                             pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
-                             niter=1, accept_stats=None, verbose=False,
-                             **kwargs):
-        r"""Perform sweeps of a merge-split Metropolis-Hastings rejection sampling MCMC
-        to sample network partitions. See
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` for the
-        parameter documentation."""
-
-        if psingle is None:
-            psingle = len(self.bs)
-        gibbs_sweeps = max(gibbs_sweeps, 1)
-        nproposal = Vector_size_t(4)
-        nacceptance = Vector_size_t(4)
-        force_move = kwargs.pop("force_move", False)
-        oentropy_args = "."
-        mcmc_state = DictState(locals())
-        mcmc_state.state = self._state
-        mcmc_state.c = 0
-        mcmc_state.E = 0
-
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy()
-
-        dS, nattempts, nmoves = \
-            libinference.mode_clustering_multiflip_mcmc_sweep(mcmc_state,
-                                                              self._state,
-                                                 _get_rng())
-
-        if _bm_test() and test:
-            Sf = self.entropy()
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si)
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        if accept_stats is not None:
-            for key in ["proposal", "acceptance"]:
-                if key not in accept_stats:
-                    accept_stats[key] = np.zeros(len(nproposal),
-                                                    dtype="uint64")
-            accept_stats["proposal"] += nproposal.a
-            accept_stats["acceptance"] += nacceptance.a
-
-        return dS, nattempts, nmoves
-
-    def multilevel_mcmc_sweep(self, niter=1, beta=1., psingle=None,
-                              pmultilevel=1, d=0.01, r=1.5, M=None,
-                              random_bisect=True, merge_sweeps=10, mh_sweeps=10,
-                              gibbs=False, global_moves=True, B_min=0,
-                              B_max=np.iinfo(np.int64).max, b_min=None,
-                              b_max=None, entropy_args={}, verbose=False,
-                              **kwargs):
-        if psingle is None:
-            psingle = len(self.bs)
-        merge_sweeps = max(merge_sweeps, 1)
-        if M is None:
-            M = self.g.num_vertices()
-        if b_min is None:
-            b_min = self.g.new_vp("int")
-        if b_max is None:
-            b_max = self.g.new_vp("int")
-        oentropy_args = "."
-        mcmc_state = DictState(locals())
-        mcmc_state.state = self._state
-        mcmc_state.c = 0
-
-        test = kwargs.pop("test", True)
-        if _bm_test() and test:
-            Si = self.entropy()
-
-        dS, nattempts, nmoves = \
-            libinference.mode_clustering_multilevel_mcmc_sweep(mcmc_state,
-                                                               self._state,
-                                                               _get_rng())
-        if _bm_test() and test:
-            Sf = self.entropy()
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g)" % (dS, Sf - Si)
-
-        if len(kwargs) > 0:
-            raise ValueError("unrecognized keyword arguments: " +
-                             str(list(kwargs.keys())))
-
-        return dS, nattempts, nmoves
-
+    def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
+        return libinference.mode_clustering_multilevel_mcmc_sweep(mcmc_state,
+                                                                  self._state,
+                                                                  _get_rng())
 
 def partition_overlap(x, y, norm=True):
     r"""Returns the maximum overlap between partitions, according to an optimal
@@ -632,8 +528,9 @@ def partition_overlap(x, y, norm=True):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
     .. [kuhn_hungarian_1955] H. W. Kuhn, "The Hungarian method for the
        assignment problem," Naval Research Logistics Quarterly 2, 83–97 (1955)
        :doi:`10.1002/nav.3800020109`
@@ -712,8 +609,9 @@ def nested_partition_overlap(x, y, norm=True):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
     .. [kuhn_hungarian_1955] H. W. Kuhn, "The Hungarian method for the
        assignment problem," Naval Research Logistics Quarterly 2, 83–97 (1955)
        :doi:`10.1002/nav.3800020109`
@@ -931,9 +829,9 @@ def align_partition_labels(x, y):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
-
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
     """
 
     x = np.asarray(x, dtype="int32").copy()
@@ -1049,9 +947,9 @@ def partition_overlap_center(bs, init=None, relabel_bs=False):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
-
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
     """
 
     if relabel_bs:
@@ -1140,9 +1038,9 @@ def nested_partition_overlap_center(bs, init=None, return_bs=False):
 
     References
     ----------
-    .. [peixoto-revealing-2020] Tiago P. Peixoto, "Revealing consensus and
-       dissensus between network partitions", :arxiv:`2005.13977`
-
+    .. [peixoto-revealing-2021] Tiago P. Peixoto, "Revealing consensus and
+       dissensus between network partitions", Phys. Rev. X 11 021003 (2021)
+       :doi:`10.1103/PhysRevX.11.021003`, :arxiv:`2005.13977`
     """
 
     bs = [[np.asarray(bs[m][l], dtype="int32") for l in range(len(bs[m]))] for m in range(len(bs))]

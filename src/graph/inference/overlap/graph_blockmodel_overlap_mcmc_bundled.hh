@@ -34,7 +34,6 @@ using namespace std;
 #define BUNDLED_MCMC_OVERLAP_BLOCK_STATE_params(State)                         \
     ((__class__,&, mpl::vector<python::object>, 1))                            \
     ((state, &, State&, 0))                                                    \
-    ((E,, size_t, 0))                                                          \
     ((vlist,, std::vector<size_t>, 0))                                         \
     ((beta,, double, 0))                                                       \
     ((c,, double, 0))                                                          \

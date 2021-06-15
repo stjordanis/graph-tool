@@ -66,7 +66,7 @@ graph_tool_drawdir = $(MOD_DIR)/draw
 
 graph_tool_inference_PYTHON = \
     inference/__init__.py \
-    inference/bisection.py \
+    inference/base_states.py \
     inference/blockmodel.py \
     inference/blockmodel_em.py \
     inference/histogram.py \

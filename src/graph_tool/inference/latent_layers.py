@@ -29,13 +29,13 @@ dl_import("from . import libgraph_tool_inference as libinference")
 
 from . blockmodel import *
 from . nested_blockmodel import *
-from . blockmodel import _bm_test
-from . uncertain_blockmodel import get_uentropy_args, UncertainBaseState
+from . base_states import _bm_test
+from . uncertain_blockmodel import UncertainBaseState
 
 import numpy.random
 
 class LatentLayerBaseState(object):
-    r"""Base state for uncertain network inference."""
+    r"""Base state for uncertain latent layer network inference."""
 
     def get_ec(self, ew=None):
         """Return edge property map with layer membership."""
@@ -155,48 +155,44 @@ class LatentLayerBaseState(object):
                                                 _prop("e", g, g.ep.wcount))
         return gs
 
+    def _get_entropy_args(self, entropy_args):
+        if isinstance(self.bstates[0], NestedBlockState):
+            bstate = self.bstates[0].levels[0]
+        else:
+            bstate = self.bstates[0]
+        ea = bstate._get_entropy_args(entropy_args, ignore=["latent_edges", "density"])
+        uea = libinference.uentropy_args(ea)
+        uea.latent_edges = entropy_args.get("latent_edges", True)
+        uea.density = entropy_args.get("density", True)
+        return uea
+
     def _mcmc_sweep(self, mcmc_state):
         return libinference.mcmc_latent_layers_sweep(mcmc_state,
                                                      self._state,
                                                      _get_rng())
 
+    @mcmc_sweep_wrap
     def _algo_sweep(self, algo, r=.5, **kwargs):
         kwargs = kwargs.copy()
         beta = kwargs.get("beta", 1.)
         niter = kwargs.get("niter", 1)
         verbose = kwargs.get("verbose", False)
-        if isinstance(self.bstates[0], NestedBlockState):
-            eargs = self.bstates[0].levels[0]._entropy_args
-        else:
-            eargs = self.bstates[0]._entropy_args
-        dentropy_args = dict(eargs, **kwargs.get("entropy_args", {}))
-        entropy_args = get_uentropy_args(dentropy_args)
+        entropy_args = self._get_entropy_args(kwargs.get("entropy_args", {}))
         kwargs.get("entropy_args", {}).pop("latent_edges", None)
         kwargs.get("entropy_args", {}).pop("density", None)
         state = self._state
 
         mcmc_state = DictState(dict(kwargs, **locals()))
 
-        if _bm_test():
-            Si = self.entropy(**dentropy_args)
-
         if numpy.random.random() < r:
             for s in self.bstates:
                 s._clear_egroups()
-            dS, nattempts, nmoves = self._mcmc_sweep(mcmc_state)
+            return self._mcmc_sweep(mcmc_state)
         else:
             bstate = numpy.random.choice(self.bstates)
             bstate._clear_egroups()
-            dS, nattempts, nmoves = algo(bstate,
-                                         **dict(kwargs, test=False))
+            return algo(bstate, **dict(kwargs, test=False))
 
-        if _bm_test():
-            Sf = self.entropy(**dentropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(dentropy_args))
-
-        return dS, nattempts, nmoves
 
     def mcmc_sweep(self, r=.5, multiflip=True, **kwargs):
         r"""Perform sweeps of a Metropolis-Hastings acceptance-rejection sampling MCMC to
@@ -379,24 +375,13 @@ class LatentClosureBlockState(LatentLayerBaseState):
         return "<LatentClosureBlockState object with (%s) closure edges, and %s, at 0x%x>" % \
             (", ".join([str(w.fa.sum()) for w in self.ew[1:]]), repr(self.bstate), id(self))
 
+    @copy_state_wrap
     def entropy(self, latent_edges=True, density=True, **kwargs):
         """Return the entropy, i.e. negative log-likelihood."""
         S = self._state.entropy(latent_edges, density)
         S += self.bstates[0].entropy(**kwargs)
         for s in self._cstates[1:]:
             S += s.entropy()
-
-        if kwargs.get("test", True) and _bm_test():
-            args = kwargs.copy()
-            assert not isnan(S) and not isinf(S), \
-                "invalid entropy %g (%s) " % (S, str(args))
-            args["test"] = False
-            state_copy = self.copy()
-            Salt = state_copy.entropy(latent_edges, density, **args)
-
-            assert math.isclose(S, Salt, abs_tol=1e-8), \
-                "entropy discrepancy after copying (%g %g %g)" % (S, Salt,
-                                                                  S - Salt)
         return S
 
     def sample_graph(self, sample_sbm=True, canonical_sbm=False,
@@ -474,42 +459,28 @@ class LatentClosureBlockState(LatentLayerBaseState):
                                                       self._state,
                                                       _get_rng())
 
+    @mcmc_sweep_wrap
     def _algo_sweep(self, algo, r=.5, **kwargs):
         kwargs = kwargs.copy()
         beta = kwargs.get("beta", 1.)
         niter = kwargs.get("niter", 1)
         verbose = kwargs.get("verbose", False)
-        if isinstance(self.bstates[0], NestedBlockState):
-            eargs = self.bstates[0].levels[0]._entropy_args
-        else:
-            eargs = self.bstates[0]._entropy_args
-        dentropy_args = dict(eargs, **kwargs.get("entropy_args", {}))
-        entropy_args = get_uentropy_args(dentropy_args)
+        entropy_args = self._get_entropy_args(kwargs.get("entropy_args", {}))
         kwargs.get("entropy_args", {}).pop("latent_edges", None)
         kwargs.get("entropy_args", {}).pop("density", None)
         state = self._state
 
         mcmc_state = DictState(dict(kwargs, **locals()))
 
-        if _bm_test():
-            Si = self.entropy(**dentropy_args)
-
         if numpy.random.random() < r:
             for s in self.bstates:
                 s._clear_egroups()
             mcmc_state.niter *= len(self.us)
-            dS, nattempts, nmoves = self._mcmc_sweep(mcmc_state)
+            return self._mcmc_sweep(mcmc_state)
         else:
             bstate = self.bstates[0]
             bstate._clear_egroups()
-            dS, nattempts, nmoves = algo(bstate,
-                                         **dict(kwargs, test=False))
-
-        if _bm_test():
-            Sf = self.entropy(**dentropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(dentropy_args))
+            return algo(bstate, **dict(kwargs, test=False))
 
         return dS, nattempts, nmoves
 

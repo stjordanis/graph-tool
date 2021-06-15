@@ -19,8 +19,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .. import _prop, Graph, GraphView
+
+from . base_states import _bm_test
+from . base_states import *
+
 from . blockmodel import *
-from . blockmodel import _bm_test
 from . overlap_blockmodel import *
 from . layered_blockmodel import *
 
@@ -278,46 +281,6 @@ class NestedBlockState(object):
             assert (bstate.get_N() >= bstate.get_nonempty_B()), \
                 (l, bstate.get_N(), bstate.get_nonempty_B(), str(self))
 
-    def replace_level(self, l, b):
-        """Replace level ``l`` given the new partition ``b``"""
-
-        if l < len(self.levels) - 1:
-            clabel = self.project_partition(l + 1, l)
-        self.levels[l] = self.levels[l].copy(b=b)
-        if l < len(self.levels) - 1:
-            bclabel = self.levels[l].bg.new_vertex_property("int")
-            reverse_map(self.levels[l].b, bclabel)
-            pmap(bclabel, clabel)
-            bstate = self.levels[l].get_block_state(b=bclabel,
-                                                    **self.hstate_args)
-            self.levels[l + 1] = bstate
-
-        self._regen_Lrecdx()
-
-        if _bm_test():
-            self._consistency_check()
-
-    def delete_level(self, l):
-        """Delete level ``l``."""
-        if l == 0:
-            raise ValueError("cannot delete level l=0")
-        b = self.project_partition(l, l - 1)
-        self.replace_level(l - 1, b.fa)
-        del self.levels[l]
-
-        self._regen_Lrecdx()
-
-        if _bm_test():
-            self._consistency_check()
-
-    def duplicate_level(self, l):
-        """Duplicate level ``l``."""
-        bstate = self.levels[l].copy(b=self.levels[l].g.vertex_index.copy("int").fa)
-        self.levels.insert(l, bstate)
-        self._regen_Lrecdx()
-        if _bm_test():
-            self._consistency_check()
-
     def level_entropy(self, l, bstate=None, **kwargs):
         """Compute the entropy of level ``l``."""
 
@@ -390,7 +353,7 @@ class NestedBlockState(object):
                     S += S_D[j]
             return S
 
-
+    @copy_state_wrap
     def entropy(self, **kwargs):
         """Compute the entropy of whole hierarchy.
 
@@ -404,13 +367,6 @@ class NestedBlockState(object):
             S += self.level_entropy(l, **dict(kwargs, test=False))
 
         S += kwargs.get("beta_dl", 1.) * self._Lrecdx_entropy()
-
-        if _bm_test() and kwargs.pop("test", True):
-            state = self.copy()
-            Salt = state.entropy(test=False, **kwargs)
-            assert math.isclose(S, Salt, abs_tol=1e-8), \
-                "inconsistent entropy after copying (%g, %g, %g): %s" % \
-                (S, Salt, S-Salt, str(kwargs))
 
         return S
 
@@ -538,166 +494,6 @@ class NestedBlockState(object):
             print("l: %d, N: %d, B: %d" % (l, state.get_N(),
                                            state.get_nonempty_B()))
 
-    def find_new_level(self, l, bisection_args={}, B_min=None, B_max=None,
-                       b_min=None, b_max=None):
-        """Attempt to find a better network partition at level ``l``, using
-        :func:`~graph_tool.inference.bisection.bisection_minimize` with arguments given by
-        ``bisection_args``.
-        """
-
-        # assemble minimization arguments
-        mcmc_multilevel_args = bisection_args.get("mcmc_multilevel_args", {})
-        mcmc_equilibrate_args = mcmc_multilevel_args.get("mcmc_equilibrate_args", {})
-        mcmc_args = mcmc_equilibrate_args.get("mcmc_args", {})
-        entropy_args = mcmc_args.get("entropy_args", {})
-        if l > 0:
-            entropy_args = dict(entropy_args, **self.hentropy_args)
-        top = (l == (len(self.levels) - 1))
-        entropy_args = dict(entropy_args, edges_dl=top, recs_dl=top)
-
-        def callback(s):
-            S = 0
-            bstate = None
-            if l < len(self.levels) - 1:
-                if s._coupled_state is None:
-                    bclabel = s.get_bclabel()
-                    bstate = s.get_block_state(b=bclabel,
-                                               **dict(self.hstate_args,
-                                                      Lrecdx=s.Lrecdx))
-                    S += bstate.entropy(**dict(self.hentropy_args,
-                                               edges_dl=(l + 1 == len(self.levels) - 1),
-                                               recs_dl=(l + 1 == len(self.levels) - 1)))
-                else:
-                    bstate = s._coupled_state[0]
-                    S += bstate.entropy(**dict(s._coupled_state[1], recs=True))
-
-            if self.base_type is not LayeredBlockState:
-                if s.Lrecdx[0] >= 0:
-                    S += self._Lrecdx_entropy(s.Lrecdx)
-                    ss = s
-                    while ss is not None:
-                        B_E_D = ss._state.get_B_E_D()
-                        if B_E_D > 0:
-                            for i in range(len(s.rec)):
-                                if s.rec_types[i] != libinference.rec_type.real_normal:
-                                    continue
-                                S -= log(B_E_D)
-                        if l < len(self.levels) - 1 and ss is not bstate:
-                            ss = bstate
-                        else:
-                            ss = None
-            else:
-                if s.Lrecdx[0][0] >= 0:
-                    S += self._Lrecdx_entropy(s.Lrecdx)
-                    ss = s
-                    while ss is not None:
-                        for j in range(len(ss.layer_states)):
-                            B_E_D = ss._state.get_layer(j).get_B_E_D()
-                            if B_E_D > 0:
-                                for i in range(len(s.rec)):
-                                    if s.rec_types[i] != libinference.rec_type.real_normal:
-                                        continue
-                                    S -= log(B_E_D)
-                        if l < len(self.levels) - 1 and ss is not bstate:
-                            ss = bstate
-                        else:
-                            ss = None
-
-            assert (not _bm_test() or bstate is None or
-                    s.get_nonempty_B() == bstate.get_N()), (s.get_nonempty_B(),
-                                                            bstate.get_N())
-            return S
-
-        entropy_args = dict(entropy_args, callback=callback)
-        mcmc_args = dict(mcmc_args, entropy_args=entropy_args)
-        if l > 0:
-            mcmc_args = dmask(mcmc_args, ["bundled"])
-        mcmc_equilibrate_args = dict(mcmc_equilibrate_args,
-                                     mcmc_args=mcmc_args)
-        shrink_args = mcmc_multilevel_args.get("shrink_args", {})
-        shrink_args = dict(shrink_args,
-                           entropy_args=dict(shrink_args.get("entropy_args", {}),
-                                             **entropy_args))
-        if l > 0:
-            shrink_args["entropy_args"].update(dict(multigraph=True, dense=True))
-        elif not shrink_args["entropy_args"].get("dense", False):
-            shrink_args["entropy_args"]["multigraph"] = False
-
-        mcmc_multilevel_args = dict(mcmc_multilevel_args,
-                                    shrink_args=shrink_args,
-                                    mcmc_equilibrate_args=mcmc_equilibrate_args)
-        bisection_args = dict(bisection_args,
-                              mcmc_multilevel_args=mcmc_multilevel_args)
-
-        # construct boundary states and constraints
-        clabel = self.get_clabel(l)
-        state = self.levels[l]
-        if b_max is None:
-            b_max = state.g.vertex_index.copy("int").fa
-        else:
-            b_max = state.g.new_vp("int", b_max)
-            b_max = group_vector_property([b_max, clabel])
-            b_max = perfect_prop_hash([b_max])[0].fa
-        continuous_map(b_max)
-        max_state = state.copy(b=b_max, clabel=clabel,
-                               recs=[r.copy() for r in state.rec],
-                               drec=[r.copy() for r in state.drec])
-        max_Lrecdx = self._regen_Lrecdx(lstate=(l, max_state))
-        max_state = max_state.copy(Lrecdx=max_Lrecdx)
-        if B_max is not None and max_state.B > B_max:
-            max_state = mcmc_multilevel(max_state, B_max,
-                                        **mcmc_multilevel_args)
-
-        if l < len(self.levels) - 1:
-            if B_min is None:
-                min_state = state.copy(b=clabel.fa, clabel=clabel.fa,
-                                       recs=[r.copy() for r in state.rec],
-                                       drec=[r.copy() for r in state.drec])
-                B_min = min_state.B
-            else:
-                B_min = max(B_min, clabel.fa.max() + 1)
-                min_state = mcmc_multilevel(max_state, B_min,
-                                            **mcmc_multilevel_args)
-            if _bm_test():
-                assert (min_state.B == self.levels[l+1].B or
-                        min_state.B == B_min), (B_min, min_state.B,
-                                                self.levels[l+1].B)
-        else:
-            min_state = state.copy(b=clabel.fa, clabel=clabel.fa)
-        min_Lrecdx = self._regen_Lrecdx(lstate=(l, min_state))
-        min_state = min_state.copy(Lrecdx=min_Lrecdx)
-        if B_min is not None and  min_state.B > B_min:
-            min_state = mcmc_multilevel(min_state, B_min,
-                                        **mcmc_multilevel_args)
-
-        if l < len(self.levels) - 1:
-            eargs = dict(self.hentropy_args,
-                         edges_dl=(l + 1 == len(self.levels) - 1))
-            min_state._couple_state(min_state.get_block_state(**dict(self.hstate_args,
-                                                                     b=min_state.get_bclabel(),
-                                                                     copy_bg=False,
-                                                                     Lrecdx=min_state.Lrecdx)),
-                                    eargs)
-            max_state._couple_state(max_state.get_block_state(**dict(self.hstate_args,
-                                                                     b=max_state.get_bclabel(),
-                                                                     copy_bg=False,
-                                                                     Lrecdx=max_state.Lrecdx)),
-                                    eargs)
-
-        if _bm_test():
-            assert min_state._check_clabel(), "invalid clabel %s" % str((l, self))
-            assert max_state._check_clabel(), "invalid clabel %s" % str((l, self))
-
-        # find new state
-        state = bisection_minimize([min_state, max_state], **bisection_args)
-
-        if _bm_test():
-            assert state.B >= min_state.B, (l, state.B, min_state.B, str(self))
-            assert state._check_clabel(), "invalid clabel %s" % str((l, self))
-
-        state._couple_state(None, None)
-        return state
-
     def _couple_levels(self, hentropy_args, hentropy_args_top):
         if hentropy_args_top is None:
             hentropy_args_top = dict(hentropy_args, edges_dl=True, recs_dl=True)
@@ -763,7 +559,7 @@ class NestedBlockState(object):
         try:
             for l, lstate, args in self._h_sweep_gen(**kwargs):
 
-                ret = algo(self.levels[l], **args)
+                ret = algo(self.levels[l], **dict(args, test=False))
 
                 if l > 0 and "beta_dl" in entropy_args:
                     dS += ret[0] * entropy_args["beta_dl"]
@@ -799,6 +595,7 @@ class NestedBlockState(object):
                         ret[i][2] + lret[i][2]) for i in range(len(lret))]
         return ret
 
+    @mcmc_sweep_wrap
     def mcmc_sweep(self, **kwargs):
         r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection
         MCMC to sample hierarchical network partitions.
@@ -825,21 +622,8 @@ class NestedBlockState(object):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
-            test = kwargs.get("test", True)
-            if _bm_test() and test:
-                kwargs = dict(kwargs, test=False)
-                entropy_args = kwargs.get("entropy_args", {})
-                Si = self.entropy(**entropy_args)
-
-            dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.mcmc_sweep(**a),
-                                                  c=c, **kwargs)
-
-            if _bm_test() and test:
-                Sf = self.entropy(**entropy_args)
-                assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                    "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                                str(entropy_args))
-            return dS, nattempts, nmoves
+            return self._h_sweep(lambda s, **a: s.mcmc_sweep(**a), c=c,
+                                 **kwargs)
         else:
             return self._h_sweep_states(lambda s, **a: s.mcmc_sweep(**a),
                                         c=c, **kwargs)
@@ -848,6 +632,7 @@ class NestedBlockState(object):
         algo = lambda s, lstates, lsweep_states: s._mcmc_sweep_parallel_dispatch(lstates, lsweep_states)
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
+    @mcmc_sweep_wrap
     def multiflip_mcmc_sweep(self, **kwargs):
         r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection MCMC
         with multiple moves to sample hierarchical network partitions.
@@ -876,20 +661,16 @@ class NestedBlockState(object):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
-            test = kwargs.get("test", True)
-            if _bm_test() and test:
-                kwargs = dict(kwargs, test=False)
-                entropy_args = kwargs.get("entropy_args", {})
-                Si = self.entropy(**entropy_args)
+            def dispatch_level(s, **a):
+                if s is not self.levels[0]:
+                    a = dict(**a)
+                    a.pop("B_min", None)
+                    a.pop("B_max", None)
+                    a.pop("b_min", None)
+                    a.pop("b_max", None)
+                return s.multiflip_mcmc_sweep(**a)
 
-            dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.multiflip_mcmc_sweep(**a),
-                                                  c=c, **kwargs)
-            if _bm_test() and test:
-                Sf = self.entropy(**entropy_args)
-                assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                    r"inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                                 str(entropy_args))
-            return dS, nattempts, nmoves
+            return self._h_sweep(dispatch_level, c=c, **kwargs)
         else:
             return self._h_sweep_states(lambda s, **a: s.multiflip_mcmc_sweep(**a),
                                         c=c, **kwargs)
@@ -898,6 +679,7 @@ class NestedBlockState(object):
         algo = lambda s, lstates, lsweep_states: s._multiflip_mcmc_sweep_parallel_dispatch(lstates, lsweep_states)
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
+    @mcmc_sweep_wrap
     def multilevel_mcmc_sweep(self, **kwargs):
         kwargs["psingle"] = kwargs.get("psingle", self.g.num_vertices())
 
@@ -906,20 +688,8 @@ class NestedBlockState(object):
             c = [c * 2 ** l for l in range(0, len(self.levels))]
 
         if kwargs.pop("dispatch", True):
-            test = kwargs.get("test", True)
-            if _bm_test() and test:
-                kwargs = dict(kwargs, test=False)
-                entropy_args = kwargs.get("entropy_args", {})
-                Si = self.entropy(**entropy_args)
-
-            dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.multilevel_mcmc_sweep(**a),
-                                                  c=c, **kwargs)
-            if _bm_test() and test:
-                Sf = self.entropy(**entropy_args)
-                assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                    r"inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                                 str(entropy_args))
-            return dS, nattempts, nmoves
+            return self._h_sweep(lambda s, **a: s.multilevel_mcmc_sweep(**a),
+                                 c=c, **kwargs)
         else:
             return self._h_sweep_states(lambda s, **a: s.multilevel_mcmc_sweep(**a),
                                         c=c, **kwargs)
@@ -928,6 +698,7 @@ class NestedBlockState(object):
         algo = lambda s, lstates, lsweep_states: s._multilevel_mcmc_sweep_parallel_dispatch(lstates, lsweep_states)
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
+    @mcmc_sweep_wrap
     def gibbs_sweep(self, **kwargs):
         r"""Perform ``niter`` sweeps of a rejection-free Gibbs sampling MCMC
         to sample network partitions.
@@ -943,25 +714,14 @@ class NestedBlockState(object):
            it once with a large value of ``niter``.
 
         """
-        if _bm_test():
-            kwargs = dict(kwargs, test=False)
-            entropy_args = kwargs.get("entropy_args", {})
-            Si = self.entropy(**entropy_args)
-
-        dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.gibbs_sweep(**a),
-                                              **kwargs)
-
-        if _bm_test():
-            Sf = self.entropy(**entropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-        return dS, nattempts, nmoves
+        return self._h_sweep(lambda s, **a: s.gibbs_sweep(**a),
+                             **kwargs)
 
     def _gibbs_sweep_parallel_dispatch(states, sweeps):
         algo = lambda s, lstates, lsweep_states: s._gibbs_sweep_parallel_dispatch(lstates, lsweep_states)
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
+    @mcmc_sweep_wrap
     def multicanonical_sweep(self, **kwargs):
         r"""Perform ``niter`` sweeps of a non-Markovian multicanonical sampling using the
         Wang-Landau algorithm.
@@ -969,19 +729,7 @@ class NestedBlockState(object):
         The arguments accepted are the same as in
         :meth:`graph_tool.inference.blockmodel.BlockState.multicanonical_sweep`.
         """
-        if _bm_test():
-            kwargs = dict(kwargs, test=False)
-            entropy_args = kwargs.get("entropy_args", {})
-            Si = self.entropy(**entropy_args)
-
-        dS, nattempts, nmoves = self._h_sweep(lambda s, **a: s.multicanonical_sweep(**a))
-
-        if _bm_test():
-            Sf = self.entropy(**entropy_args)
-            assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
-                "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
-                                                            str(entropy_args))
-        return dS, nattempts, nmoves
+        return self._h_sweep(lambda s, **a: s.multicanonical_sweep(**a))
 
     def collect_partition_histogram(self, h=None, update=1):
         r"""Collect a histogram of partitions.
@@ -1015,259 +763,6 @@ class NestedBlockState(object):
         draws the hierarchical state."""
         import graph_tool.draw
         return graph_tool.draw.draw_hierarchy(self, **kwargs)
-
-
-
-def hierarchy_minimize(state, B_min=None, B_max=None, b_min=None, b_max=None,
-                       frozen_levels=None, bisection_args={},
-                       epsilon=1e-8, verbose=False):
-    r"""Attempt to find a fit of the nested stochastic block model that minimizes the
-    description length.
-
-    Parameters
-    ----------
-    state : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
-        The nested block state.
-    B_min : ``int`` (optional, default: ``None``)
-        The minimum number of blocks.
-    B_max : ``int`` (optional, default: ``None``)
-        The maximum number of blocks.
-    b_min : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        The partition to be used with the minimum number of blocks.
-    b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        The partition to be used with the maximum number of blocks.
-    frozen_levels : sequence of ``int`` values (optional, default: ``None``)
-        List of hierarchy levels that are kept constant during the minimization.
-    bisection_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.bisection.bisection_minimize`.
-    epsilon: ``float`` (optional, default: ``1e-8``)
-        Only replace levels if the description length difference is above this
-        threshold.
-    verbose : ``bool`` or ``tuple`` (optional, default: ``False``)
-        If ``True``, progress information will be shown. Optionally, this
-        accepts arguments of the type ``tuple`` of the form ``(level, prefix)``
-        where ``level`` is a positive integer that specifies the level of
-        detail, and ``prefix`` is a string that is prepended to the all output
-        messages.
-
-    Returns
-    -------
-    min_state : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
-        Nested state with minimal description length.
-
-    Notes
-    -----
-
-    This algorithms moves along the hierarchical levels, attempting to replace,
-    delete or insert partitions that minimize the description length, until no
-    further progress is possible.
-
-    See [peixoto-hierarchical-2014]_ for details on the algorithm.
-
-    This algorithm has a complexity of :math:`O(V \ln^2 V)`, where :math:`V` is
-    the number of nodes in the network.
-
-    References
-    ----------
-
-    .. [peixoto-hierarchical-2014] Tiago P. Peixoto, "Hierarchical block
-       structures and high-resolution model selection in large networks ",
-       Phys. Rev. X 4, 011047 (2014), :doi:`10.1103/PhysRevX.4.011047`,
-       :arxiv:`1310.4377`.
-    """
-
-    dS = 0
-
-    if frozen_levels is None:
-        frozen_levels = set()
-
-    l = len(state.levels) - 1  # begin from top!
-    done = []
-    while l >= 0:
-        bisection_args = dict(bisection_args,
-                              verbose=verbose_push(verbose, ("    l=%d  " % l)))
-
-        while len(done) < len(state.levels) + 2:
-            done.append(False)
-
-        if done[l]:
-            if check_verbose(verbose):
-                print(verbose_pad(verbose) + "level", l, ": skipping",
-                      state.levels[l].B)
-            l -= 1
-            continue
-
-        Si = state.entropy()
-
-        kept = True
-
-        if l in frozen_levels:
-            kept = False
-
-        # replace level
-        if kept:
-            add_last = False
-
-            if l < len(state.levels) - 1:
-                bstates = [state.levels[l], state.levels[l+1]]
-            else:
-                bstates = [state.levels[l]]
-
-                bstate = state.levels[-1].get_block_state(**dict(state.hstate_args,
-                                                                 b=zeros(state.levels[-1].B),
-                                                                 Lrecdx=state.levels[-1].Lrecdx))
-                state.levels.append(bstate)
-                state._regen_Lrecdx()
-                add_last = True
-
-            if l == 0:
-                bstate = state.find_new_level(l, bisection_args=bisection_args,
-                                              B_min=B_min, B_max=B_max,
-                                              b_min=b_min, b_max=b_max)
-            else:
-                bstate = state.find_new_level(l, bisection_args=bisection_args)
-            state.replace_level(l, bstate.b.fa)
-
-            Sf = state.entropy()
-
-            if Si - Sf > epsilon:
-                kept = False
-                dS += Sf - Si
-
-                if check_verbose(verbose):
-                    print(verbose_pad(verbose) + "level", l, ": replaced",
-                          (bstates[0].get_N(), bstates[0].get_nonempty_B()), "->",
-                          (bstate.get_N(), bstate.get_nonempty_B()),", dS:",
-                          Sf - Si, len(state.levels))
-            else:
-                state.levels[l:l+len(bstates)] = bstates
-                if add_last:
-                    del state.levels[-1]
-                state._regen_Lrecdx()
-
-                if _bm_test():
-                    assert math.isclose(Si, state.entropy(), abs_tol=1e-8), (Si, state.entropy())
-                if check_verbose(verbose):
-                    print(verbose_pad(verbose) + "level", l,
-                          ": rejected replacement",
-                          (bstates[0].get_N(), bstates[0].get_nonempty_B()), "->",
-                          (bstate.get_N(), bstate.get_nonempty_B()),", dS:",
-                          Sf - Si)
-
-        # delete level
-        if (kept and l > 0 and l < len(state.levels) - 1 and
-            not (B_min is not None and l == 1 and state.levels[l].B < B_min)):
-
-            bstates = [state.levels[l-1], state.levels[l]]
-
-            state.delete_level(l)
-
-            Sf = state.entropy()
-
-            if Si - Sf < epsilon:
-                state.levels[l - 1] = bstates[0]
-                state.levels.insert(l, bstates[1])
-                state._regen_Lrecdx()
-                if _bm_test():
-                    assert math.isclose(Si, state.entropy(), abs_tol=1e-8), (Si, state.entropy())
-            else:
-                kept = False
-                del done[l]
-                dS += Sf - Si
-
-                if check_verbose(verbose):
-                    print(verbose_pad(verbose) + "level", l, ": deleted",
-                          (bstates[1].get_N(), bstates[1].get_nonempty_B()),
-                          ", dS:", Sf - Si, len(state.levels))
-
-            if _bm_test():
-                if kept:
-                    assert math.isclose(state.entropy(), Si, abs_tol=1e-8), \
-                    "inconsistent delete at level %d (%g, %g)" % \
-                    (l, state.entropy(), Si)
-
-        # insert new level (duplicate and replace)
-        if kept and l > 0:
-            Si = state.entropy()
-
-            add_last = False
-
-            bstates = [state.levels[l]]
-            if l < len(state.levels) - 1:
-                bstates.append(state.levels[l + 1])
-            else:
-                bstate = state.levels[-1].get_block_state(**dict(state.hstate_args,
-                                                                 b=zeros(state.levels[-1].B),
-                                                                 Lrecdx=state.levels[-1].Lrecdx))
-                state.levels.append(bstate)
-                state._regen_Lrecdx()
-                add_last = True
-
-            if l < len(state.levels) - 2:
-                bstates.append(state.levels[l + 2])
-
-            state.duplicate_level(l)
-            bstate = state.find_new_level(l + 1, bisection_args=bisection_args)
-            state.replace_level(l + 1, bstate.b.fa)
-
-            Sf = state.entropy()
-
-            if Si - Sf < epsilon:
-                if check_verbose(verbose):
-                    print(verbose_pad(verbose) + "level", l, ": rejected insert",
-                          state.levels[l].B, ", dS:", Sf - Si)
-
-                if add_last:
-                    del state.levels[-1]
-                del state.levels[l + 1]
-                for j in range(len(bstates)):
-                    state.levels[l + j] = bstates[j]
-                if bstates[-1].B == 1:
-                    del state.levels[l + len(bstates):]
-                state._regen_Lrecdx()
-                if _bm_test():
-                    assert math.isclose(Si, state.entropy(), abs_tol=1e-8), (Si, state.entropy())
-            else:
-                kept = False
-                dS += Sf - Si
-
-                l += 1
-                done.insert(l, False)
-
-                if check_verbose(verbose):
-                    print(verbose_pad(verbose) + "level", l, ": inserted",
-                          state.levels[l].B, ", dS:", Sf - Si)
-
-        # create a new level at the top with B=1, if necessary
-        if state.levels[-1].B > 1:
-            bstate = state.levels[-1].get_block_state(**dict(state.hstate_args,
-                                                             b=zeros(state.levels[-1].B),
-                                                             Lrecdx=state.levels[-1].Lrecdx))
-            state.levels.append(bstate)
-            state._regen_Lrecdx()
-
-            if _bm_test():
-                state._consistency_check()
-
-        done[l] = True
-        if not kept:
-            if l + 1 < len(state.levels):
-                done[l+1] = False
-            if l > 0:
-                done[l-1] = False
-            l += 1
-        else:
-            if ((l + 1 < len(state.levels) and not done[l + 1]) or
-                (l + 1 == len(state.levels) and state.levels[l].B > 1)):
-                l += 1
-            else:
-                l -= 1
-
-        if l >= len(state.levels):
-            l = len(state.levels) - 1
-
-    return dS
-
 
 def get_hierarchy_tree(state, empty_branches=True):
     r"""Obtain the nested hierarchical levels as a tree.
