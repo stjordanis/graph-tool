@@ -15,14 +15,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include "graph.hh"
 #include "graph_filtering.hh"
+#include "graph_selectors.hh"
+#include "graph_trust_transitivity.hh"
 
 #include <boost/python.hpp>
 
-#include "graph.hh"
-#include "graph_selectors.hh"
-
-#include "graph_trust_transitivity.hh"
 
 using namespace std;
 using namespace boost;

@@ -16,6 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #define BOOST_PYTHON_MAX_ARITY 20
+#include "graph.hh"
 #include <boost/python.hpp>
 
 #include "graph_tool.hh"

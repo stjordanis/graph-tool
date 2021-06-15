@@ -19,6 +19,13 @@
 #define GRAPH_HH
 #include "config.h"
 
+// workaround for boost 1.76
+#include <iterator>
+namespace boost::detail
+{
+using std::iterator_traits;
+}
+
 #include <boost/python/object.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/tuple.hpp>

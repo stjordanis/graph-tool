@@ -16,14 +16,13 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-#include "graph_python_interface.hh"
-
 #include "graph.hh"
 #include "graph_filtering.hh"
 #include "graph_properties.hh"
 #include "graph_selectors.hh"
-
 #include "graph_similarity.hh"
+
+#include "graph_python_interface.hh"
 
 using namespace std;
 using namespace boost;

@@ -21,6 +21,9 @@
 #include <algorithm>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/mpl/greater.hpp>
+#include <boost/mpl/comparison.hpp>
+
 #include "histogram.hh"
 #include "numpy_bind.hh"
 

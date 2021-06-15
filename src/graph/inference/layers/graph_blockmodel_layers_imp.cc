@@ -15,10 +15,11 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include <boost/python.hpp>
-
+#include "graph.hh"
 #include "graph_tool.hh"
 #include "random.hh"
+
+#include <boost/python.hpp>
 
 #define GRAPH_BLOCKMODEL_RMAP_ENABLE
 #include "../blockmodel/graph_blockmodel_util.hh"

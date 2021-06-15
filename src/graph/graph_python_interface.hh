@@ -86,7 +86,7 @@ public:
     template <class Dispatch>
     CoroGenerator(Dispatch& dispatch)
         : _coro(make_coro<coro_t::pull_type>(dispatch)),
-          _iter(begin(*_coro)), _end(end(*_coro)), _first(true) {}
+          _iter(std::begin(*_coro)), _end(std::end(*_coro)), _first(true) {}
     boost::python::object next()
     {
         if (_first)

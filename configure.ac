@@ -372,6 +372,8 @@ fi
 
 AC_SUBST(MOD_LDFLAGS)
 
+AC_DEFINE([BOOST_BIND_GLOBAL_PLACEHOLDERS], [1], [Supress boost warning])
+
 AX_CREATE_PKGCONFIG_INFO([graph-tool-py${PYTHON_VERSION}.pc], [],
                          [${PYTHON_LIBS} -l${BOOST_PYTHON_LIB}],
                          [graph-tool Python library],

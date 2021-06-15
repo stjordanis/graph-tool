@@ -79,6 +79,7 @@ libgraph_tool_core_la_include_HEADERS = \
 
 libgraph_tool_core_la_workarounddir = $(MOD_DIR)/include/boost-workaround/boost/graph/
 libgraph_tool_core_la_workaround_HEADERS = \
+    ../boost-workaround/boost/graph/adjacency_iterator.hpp \
     ../boost-workaround/boost/graph/betweenness_centrality.hpp \
     ../boost-workaround/boost/graph/detail/read_graphviz_new.hpp \
     ../boost-workaround/boost/graph/graphml.hpp \

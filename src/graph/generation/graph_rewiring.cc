@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "graph_python_interface.hh"
 #include "graph.hh"
 #include "graph_filtering.hh"
+#include "graph_python_interface.hh"
+#include "graph_rewiring.hh"
 
 #include <boost/python.hpp>
-
-#include "graph_rewiring.hh"
 
 using namespace graph_tool;
 using namespace boost;

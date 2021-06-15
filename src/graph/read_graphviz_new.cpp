@@ -25,6 +25,8 @@
 //         Ronald Garcia
 //
 
+#include "graph.hh"
+
 #include <boost/property_map/dynamic_property_map.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <string>

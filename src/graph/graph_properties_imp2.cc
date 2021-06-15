@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "graph_python_interface.hh"
 #include "graph.hh"
 #include "graph_properties.hh"
 #include "graph_filtering.hh"
 #include "graph_selectors.hh"
 #include "graph_util.hh"
+#include "graph_python_interface.hh"
 
 #ifdef _OPENMP
 #include <omp.h>

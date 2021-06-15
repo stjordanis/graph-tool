@@ -9,6 +9,8 @@
 //           Andrew Lumsdaine
 //           Tiago de Paula Peixoto
 
+#include "graph.hh"
+
 #include <expat.h>
 #include <boost/graph/graphml.hpp>
 #include <boost/algorithm/string/replace.hpp>
