@@ -106,3 +106,8 @@
     :no-undoc-members:
     :show-inheritance:
     :inherited-members:
+
+.. automodule:: graph_tool.inference.clique_decomposition
+    :no-undoc-members:
+    :show-inheritance:
+    :inherited-members:

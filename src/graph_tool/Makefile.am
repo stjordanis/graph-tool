@@ -69,6 +69,7 @@ graph_tool_inference_PYTHON = \
     inference/base_states.py \
     inference/blockmodel.py \
     inference/blockmodel_em.py \
+    inference/clique_decomposition.py \
     inference/histogram.py \
     inference/layered_blockmodel.py \
     inference/nested_blockmodel.py \

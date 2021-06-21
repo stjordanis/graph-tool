@@ -55,6 +55,7 @@ State classes
    ~graph_tool.inference.planted_partition.PPBlockState
    ~graph_tool.inference.modularity.ModularityState
    ~graph_tool.inference.mcmc.TemperingState
+   ~graph_tool.inference.clique_decomposition.CliqueState
 
 Abstract base classes
 =====================
@@ -216,6 +217,7 @@ __all__ = ["minimize_blockmodel_dl",
            "LatentClosureBlockState",
            "MeasuredClosureBlockState",
            "HistState",
+           "CliqueState",
            "MCMCState",
            "MultiflipMCMCState",
            "MultilevelMCMCState",
@@ -280,3 +282,4 @@ from . partition_modes import *
 from . planted_partition import *
 from . latent_layers import *
 from . histogram import *
+from . clique_decomposition import *

@@ -28,6 +28,7 @@ libgraph_tool_inference_la_SOURCES = \
     blockmodel/graph_blockmodel_multicanonical_multiflip.cc \
     blockmodel/graph_blockmodel_multiflip_mcmc.cc \
     blockmodel/graph_blockmodel_multilevel_mcmc.cc \
+    cliques/graph_clique_decomposition.cc \
     histogram/graph_histogram.cc \
     histogram/graph_histogram_mcmc.cc \
     modularity/graph_modularity.cc \
@@ -125,6 +126,7 @@ nobase_libgraph_tool_inference_la_include_HEADERS = \
     blockmodel/graph_blockmodel_partition.hh \
     blockmodel/graph_blockmodel_util.hh \
     blockmodel/graph_blockmodel_weights.hh \
+    cliques/graph_clique_decomposition.hh \
     histogram/graph_histogram.hh \
     histogram/graph_histogram_mcmc.hh \
     modularity/graph_modularity.hh \

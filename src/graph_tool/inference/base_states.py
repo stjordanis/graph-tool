@@ -73,16 +73,17 @@ def mcmc_sweep_wrap(func):
                 assert self._check_clabel(), "invalid clabel before sweep"
             Si = self.entropy(**entropy_args)
 
-        dS, nattempts, nmoves = func(self, *args, **kwargs)
+        ret = func(self, *args, **kwargs)
 
         if _bm_test() and test:
             if hasattr(self, "_check_clabel"):
                 assert self._check_clabel(), "invalid clabel after sweep"
+            dS = ret[0]
             Sf = self.entropy(**entropy_args)
             assert math.isclose(dS, (Sf - Si), abs_tol=1e-8), \
                 "inconsistent entropy delta %g (%g): %s" % (dS, Sf - Si,
                                                             str(entropy_args))
-        return dS, nattempts, nmoves
+        return ret
     return wrapper
 
 class MCMCState(ABC):
