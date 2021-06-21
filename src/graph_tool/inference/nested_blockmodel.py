@@ -744,14 +744,23 @@ class NestedBlockState(object):
         return NestedBlockState._h_sweep_parallel_dispatch(states, sweeps, algo)
 
     @mcmc_sweep_wrap
-    def multicanonical_sweep(self, **kwargs):
+    def multicanonical_sweep(self, m_state, **kwargs):
         r"""Perform ``niter`` sweeps of a non-Markovian multicanonical sampling using the
         Wang-Landau algorithm.
 
         The arguments accepted are the same as in
         :meth:`graph_tool.inference.blockmodel.BlockState.multicanonical_sweep`.
         """
-        return self._h_sweep(lambda s, **a: s.multicanonical_sweep(**a))
+
+        def sweep(s, **kwargs):
+            S = 0
+            for l, state in enumerate(self.levels):
+                if s is state:
+                    continue
+                S += self.level_entropy(l)
+            return s.multicanonical_sweep(m_state, entropy_offset=S, **kwargs)
+
+        return self._h_sweep(sweep)
 
     def collect_partition_histogram(self, h=None, update=1):
         r"""Collect a histogram of partitions.

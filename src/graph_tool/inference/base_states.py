@@ -65,6 +65,9 @@ def mcmc_sweep_wrap(func):
         test = kwargs.pop("test", True)
         entropy_args = kwargs.get("entropy_args", {})
 
+        if not kwargs.get("dispatch", True):
+            return func(self, *args, **kwargs)
+
         if _bm_test() and test:
             if hasattr(self, "_check_clabel"):
                 assert self._check_clabel(), "invalid clabel before sweep"
@@ -553,6 +556,7 @@ class MulticanonicalMCMCState(ABC):
         multi_state = DictState(args)
 
         entropy_args = kwargs.get("entropy_args", {})
+        entropy_offset = kwargs.pop("entropy_offset", 0)
 
         if multiflip:
             mcmc_state = self.multiflip_mcmc_sweep(dispatch=False, **kwargs)
@@ -562,7 +566,7 @@ class MulticanonicalMCMCState(ABC):
         multi_state.update(mcmc_state)
         multi_state.multiflip = multiflip
 
-        multi_state.S = self.entropy(**entropy_args)
+        multi_state.S = self.entropy(**entropy_args) + entropy_offset
         multi_state.state = self._state
 
         multi_state.f = m_state._f
