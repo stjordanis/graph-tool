@@ -457,7 +457,7 @@ def multicanonical_equilibrate(m_state, f_range=(1., 1e-6), r=2,
         hf = m_state.get_flatness(allow_gaps=allow_gaps)
 
         if callback is not None:
-            callback(state, m_state)
+            callback(m_state)
 
         if check_verbose(verbose):
             print(verbose_pad(verbose) +
