@@ -1045,21 +1045,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                                              self._state,
                                                              _get_rng())
 
-    def shrink(self, B, **kwargs):
-        """Reduces the order of current state by progressively merging groups, until
-        only ``B`` are left. All remaining keyword arguments are passed to
-        :meth:`graph_tool.inference.blockmodel.BlockState.shrink` or
-        :meth:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.shrink`, as appropriate.
-
-        This function leaves the current state untouched and returns instead a
-        copy with the new partition.
-        """
-
-        if not self.overlap:
-            return BlockState.shrink(self, B, **kwargs)
-        else:
-            return OverlapBlockState.shrink(self, B, **kwargs)
-
     def draw(self, **kwargs):
         """Convenience function to draw the current state. All keyword arguments are
         passed to :meth:`graph_tool.inference.blockmodel.BlockState.draw` or
