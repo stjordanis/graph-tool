@@ -271,7 +271,6 @@ from . layered_blockmodel import *
 from . nested_blockmodel import *
 from . uncertain_blockmodel import *
 from . mcmc import *
-from . bisection import *
 from . minimize import *
 from . blockmodel_em import *
 from . util import *
