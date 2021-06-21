@@ -40,13 +40,13 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
         The partition to be used with the minimum number of blocks.
     b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the maximum number of blocks.
-    state : SBM state class (optional, default: :class:`~graph_tool.inference.blockmodel.BlockState`)
-        Type of model that will be used.
+    state : SBM-like state class (optional, default: :class:`~graph_tool.inference.blockmodel.BlockState`)
+        Type of model that will be used. Must be derived from :class:`~graph_tool.inference.base_states.MultilevelMCMCState`.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to appropriate state constructor (e.g.
         :class:`~graph_tool.inference.blockmodel.BlockState`)
     multilevel_mcmc_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.BlockState.multilevel_mcmc_sweep`.
+        Arguments to be passed to :meth:`~graph_tool.inference.base_states.MultilevelMCMCState.multilevel_mcmc_sweep`.
 
     Returns
     -------
@@ -57,7 +57,7 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
     -----
 
     This function is a convenience wrapper around
-    :func:`~graph_tool.inference.bisection.bisection_minimize`.
+    :meth:`~graph_tool.inference.base_states.MultilevelMCMCState.multilevel_mcmc_sweep`.
 
     See [peixoto-efficient-2014]_ for details on the algorithm.
 
@@ -96,7 +96,7 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
     .. doctest:: mdl_overlap
 
        >>> g = gt.collection.data["polbooks"]
-       >>> state = gt.minimize_blockmodel_dl(g, overlap=True)
+       >>> state = gt.minimize_blockmodel_dl(g, state=gt.OverlapBlockState)
        >>> state.draw(pos=g.vp["pos"], output="polbooks_overlap_blocks_mdl.svg")
        <...>
 
@@ -107,6 +107,24 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
        description length of the network according to the overlapping
        degree-corrected stochastic blockmodel.
 
+    .. doctest:: mdl_pp
+
+       >>> g = gt.collection.data["celegansneural"]
+       >>> state = gt.minimize_blockmodel_dl(g, state=gt.PPBlockState)
+       >>> state.draw(output="celegans_mdl_pp.pdf")
+       (...)
+
+    .. testcleanup:: mdl_pp
+
+       conv_png("celegans_mdl_pp.pdf")
+
+    .. figure:: celegans_mdl_pp.png
+       :align: center
+       :width: 60%
+
+       Assortative partition of the *C. elegans* neural network, which minimizes
+       the description length of the network according to the degree-corrected
+       planted-partition blockmodel.
 
     References
     ----------
@@ -144,13 +162,13 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
         The partition to be used with the minimum number of blocks.
     b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the maximum number of blocks.
-    state : SBM state class (optional, default: :class:`~graph_tool.inference.blockmodel.NestedBlockState`)
+    state : SBM state class (optional, default: :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`)
         Type of model that will be used.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to appropriate state constructor (e.g.
         :class:`~graph_tool.inference.blockmodel.BlockState`)
     multilevel_mcmc_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.BlockState.multilevel_mcmc_sweep`.
+        Arguments to be passed to :meth:`~graph_tool.inference.base_states.MultilevelMCMCState.multilevel_mcmc_sweep`.
 
     Returns
     -------
@@ -159,14 +177,13 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
 
     Notes
     -----
-
     This function is a convenience wrapper around
-    :func:`~graph_tool.inference.nested_blockmodel.hierarchy_minimize`.
+    :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.multilevel_mcmc_sweep`.
 
     See [peixoto-hierarchical-2014]_ for details on the algorithm.
 
-    This algorithm has a complexity of :math:`O(V \ln^2 V)`, where :math:`V` is
-    the number of nodes in the network.
+    This algorithm has a complexity of :math:`O(E \ln^2 V)`, where :math:`E` and
+    :math:`V` are the number of edges and nodes in the network, respectively.
 
     Examples
     --------
@@ -178,7 +195,7 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
     .. doctest:: nested_mdl
 
        >>> g = gt.collection.data["power"]
-       >>> state = gt.minimize_nested_blockmodel_dl(g, deg_corr=True)
+       >>> state = gt.minimize_nested_blockmodel_dl(g)
        >>> state.draw(output="power_nested_mdl.pdf")
        (...)
 
@@ -198,7 +215,7 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
     .. doctest:: nested_mdl_overlap
 
        >>> g = gt.collection.data["celegansneural"]
-       >>> state = gt.minimize_nested_blockmodel_dl(g, deg_corr=True, overlap=True)
+       >>> state = gt.minimize_nested_blockmodel_dl(g, state_args=dict(overlap=True))
        >>> state.draw(output="celegans_nested_mdl_overlap.pdf")
        (...)
 
@@ -220,6 +237,7 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
        structures and high-resolution model selection in large networks ",
        Phys. Rev. X 4, 011047 (2014), :doi:`10.1103/PhysRevX.4.011047`,
        :arxiv:`1310.4377`.
+
     """
 
     L = int(numpy.ceil(numpy.log2(g.num_vertices())))

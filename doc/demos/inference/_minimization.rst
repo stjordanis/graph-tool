@@ -94,16 +94,30 @@ which yields:
 
 .. testoutput:: football
 
-   3
+   103
+
+.. note::
+
+   For reasons of algorithmic efficiency, the group labels returned are
+   not necessarily contiguous, and they may lie in any subset of the
+   range :math:`[0, N-1]`, where :math:`N` is the number of nodes in the
+   network.
 
 We may also access the matrix of edge counts between groups via
 :mod:`~graph_tool.inference.blockmodel.BlockState.get_matrix`
 
 .. testcode:: football
 
+   # let us obtain a contiguous range first, which will facilitate
+   # visualization
+
+   b = gt.contiguous_map(state.get_blocks())
+   state = state.copy(b=b)
+              
    e = state.get_matrix()
 
-   matshow(e.todense())
+   B = state.get_nonempty_B()
+   matshow(e.todense()[:B, :B])
    savefig("football-edge-counts.svg")
 
 .. figure:: football-edge-counts.*
@@ -134,7 +148,7 @@ illustrate its use with the neural network of the `C. elegans
 
 .. testsetup:: celegans
 
-   gt.seed_rng(52)
+   gt.seed_rng(42)
 
 .. testcode:: celegans
 
@@ -192,10 +206,11 @@ which shows the number of nodes and groups in all levels:
 
 .. testoutput:: celegans
 
-   l: 0, N: 297, B: 19
-   l: 1, N: 19, B: 6
-   l: 2, N: 6, B: 2
-   l: 3, N: 2, B: 1
+   l: 0, N: 297, B: 20
+   l: 1, N: 20, B: 8
+   l: 2, N: 8, B: 3
+   l: 3, N: 3, B: 1
+   l: 4, N: 1, B: 1
 
 The hierarchical levels themselves are represented by individual
 :meth:`~graph_tool.inference.blockmodel.BlockState` instances obtained via the
@@ -206,13 +221,16 @@ The hierarchical levels themselves are represented by individual
    levels = state.get_levels()
    for s in levels:
        print(s)
+       if s.get_N() == 1:
+           break
 
 .. testoutput:: celegans
 
-   <BlockState object with 19 blocks (19 nonempty), degree-corrected, for graph <Graph object, directed, with 297 vertices and 2359 edges, 2 internal vertex properties, 1 internal edge property, 2 internal graph properties, at 0x...>, at 0x...>
-   <BlockState object with 6 blocks (6 nonempty), for graph <Graph object, directed, with 19 vertices and 176 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
-   <BlockState object with 2 blocks (2 nonempty), for graph <Graph object, directed, with 6 vertices and 30 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
-   <BlockState object with 1 blocks (1 nonempty), for graph <Graph object, directed, with 2 vertices and 4 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 297 blocks (20 nonempty), degree-corrected, for graph <Graph object, directed, with 297 vertices and 2359 edges, 2 internal vertex properties, 1 internal edge property, 2 internal graph properties, at 0x...>, at 0x...>
+   <BlockState object with 27 blocks (8 nonempty), for graph <Graph object, directed, with 297 vertices and 203 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 12 blocks (3 nonempty), for graph <Graph object, directed, with 27 vertices and 51 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 3 blocks (1 nonempty), for graph <Graph object, directed, with 12 vertices and 8 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 1 blocks (1 nonempty), for graph <Graph object, directed, with 3 vertices and 1 edge, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
 
 This means that we can inspect the hierarchical partition just as before:
 
@@ -227,9 +245,9 @@ This means that we can inspect the hierarchical partition just as before:
 
 .. testoutput:: celegans
 
-   5
+   175
+   10
    2
-   0
 
 Refinements using merge-split MCMC
 ++++++++++++++++++++++++++++++++++
@@ -264,7 +282,7 @@ to the above minimization for the `C. elegans` network is the following:
 
 .. testoutput:: celegans-mcmc
 
-   Improvement: -82.616161...
+   Improvement: -83.804934...
       
 Whenever possible, this procedure should be repeated several times, and
 the result with the smallest description length (obtained via the

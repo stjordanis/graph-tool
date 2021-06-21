@@ -493,6 +493,8 @@ class NestedBlockState(object):
         for l, state in enumerate(self.levels):
             print("l: %d, N: %d, B: %d" % (l, state.get_N(),
                                            state.get_nonempty_B()))
+            if state.get_N() == 1:
+                break
 
     def _couple_levels(self, hentropy_args, hentropy_args_top):
         if hentropy_args_top is None:
@@ -681,6 +683,26 @@ class NestedBlockState(object):
 
     @mcmc_sweep_wrap
     def multilevel_mcmc_sweep(self, **kwargs):
+        r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection MCMC
+        with multilevel moves to sample hierarchical network partitions.
+
+        The arguments accepted are the same as in
+        :meth:`graph_tool.inference.blockmodel.BlockState.multilevel_mcmc_sweep`.
+
+        If the parameter ``c`` is a scalar, the values used at each level are
+        ``c * 2 ** l`` for ``l`` in the range ``[0, L-1]``. Optionally, a list
+        of values may be passed instead, which specifies the value of ``c[l]``
+        to be used at each level.
+
+        .. warning::
+
+           This function performs ``niter`` sweeps at each hierarchical level
+           once. This means that in order for the chain to equilibrate, we need
+           to call this function several times, i.e. it is not enough to call
+           it once with a large value of ``niter``.
+
+        """
+
         kwargs["psingle"] = kwargs.get("psingle", self.g.num_vertices())
 
         c = kwargs.pop("c", 1)

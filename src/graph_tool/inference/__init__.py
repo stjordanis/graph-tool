@@ -56,6 +56,18 @@ State classes
    ~graph_tool.inference.modularity.ModularityState
    ~graph_tool.inference.mcmc.TemperingState
 
+Abstract base classes
+=====================
+.. autosummary::
+   :nosignatures:
+
+   ~graph_tool.inference.base_states.MCMCState
+   ~graph_tool.inference.base_states.MultiflipMCMCState
+   ~graph_tool.inference.base_states.MultilevelMCMCState
+   ~graph_tool.inference.base_states.GibbsMCMCState
+   ~graph_tool.inference.base_states.MulticanonicalMCMCState
+   ~graph_tool.inference.base_states.ExhaustiveSweepState
+
 Sampling and minimization
 =========================
 
@@ -64,7 +76,6 @@ Sampling and minimization
 
    ~graph_tool.inference.mcmc.mcmc_equilibrate
    ~graph_tool.inference.mcmc.mcmc_anneal
-   ~graph_tool.inference.mcmc.mcmc_multilevel
    ~graph_tool.inference.mcmc.multicanonical_equilibrate
    ~graph_tool.inference.mcmc.MulticanonicalState
 
@@ -91,6 +102,8 @@ Comparing and manipulating partitions
    ~graph_tool.inference.partition_modes.partition_overlap_center
    ~graph_tool.inference.partition_modes.nested_partition_overlap_center
    ~graph_tool.inference.partition_modes.nested_partition_clear_null
+   ~graph_tool.inference.util.contiguous_map
+   ~graph_tool.inference.util.nested_contiguous_map
 
 Auxiliary functions
 ===================
@@ -203,9 +216,14 @@ __all__ = ["minimize_blockmodel_dl",
            "LatentClosureBlockState",
            "MeasuredClosureBlockState",
            "HistState",
+           "MCMCState",
+           "MultiflipMCMCState",
+           "MultilevelMCMCState",
+           "GibbsMCMCState",
+           "MulticanonicalMCMCState",
+           "ExhaustiveSweepState",
            "mcmc_equilibrate",
            "mcmc_anneal",
-           "mcmc_multilevel",
            "TemperingState",
            "multicanonical_equilibrate",
            "MulticanonicalState",
@@ -229,6 +247,8 @@ __all__ = ["minimize_blockmodel_dl",
            "partition_overlap",
            "nested_partition_overlap",
            "contingency_graph",
+           "contiguous_map",
+           "nested_contiguous_map",
            "align_partition_labels",
            "align_nested_partition_labels",
            "shuffle_nested_partition_labels",
@@ -242,6 +262,7 @@ __all__ = ["minimize_blockmodel_dl",
            "mutual_information",
            "reduced_mutual_information"]
 
+from . base_states import *
 from . blockmodel import *
 from . overlap_blockmodel import *
 from . layered_blockmodel import *

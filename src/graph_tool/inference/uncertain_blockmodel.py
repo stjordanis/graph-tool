@@ -466,6 +466,9 @@ class LatentMultigraphBlockState(UncertainBaseState):
 
         self._state = libinference.make_uncertain_state(self.bstate._state,
                                                         self)
+    def entropy(self, density=True, **kwargs):
+        return super().entropy(density=density, **kwargs)
+
     def __getstate__(self):
         state = super().__getstate__()
         return dict(state, aE=self.aE)

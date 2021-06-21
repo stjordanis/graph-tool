@@ -83,7 +83,7 @@ def mcmc_sweep_wrap(func):
     return wrapper
 
 class MCMCState(ABC):
-    r"""Base state that implements single flip mcmc sweeps"""
+    r"""Base state that implements single-flip MCMC sweeps"""
 
     @abstractmethod
     def _mcmc_sweep_dispatch(self, mcmc_state):
@@ -147,7 +147,7 @@ class MCMCState(ABC):
         Notes
         -----
         This algorithm has an :math:`O(E)` complexity, where :math:`E` is the
-        number of edges (independent of the number of blocks).
+        number of edges (independent of the number of groups).
 
         References
         ----------
@@ -181,7 +181,7 @@ class MCMCState(ABC):
             return mcmc_state
 
 class MultiflipMCMCState(ABC):
-    r"""Base state that implements multiflip (merge-split) mcmc sweeps"""
+    r"""Base state that implements multiflip (merge-split) MCMC sweeps"""
 
     @abstractmethod
     def _multiflip_mcmc_sweep_dispatch(self, mcmc_state):
@@ -285,7 +285,7 @@ class MultiflipMCMCState(ABC):
         return dS, nattempts, nmoves
 
 class MultilevelMCMCState(ABC):
-    r"""Base state that implements multilevel agglomerative mcmc sweeps"""
+    r"""Base state that implements multilevel agglomerative MCMC sweeps"""
 
     @abstractmethod
     def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
@@ -422,7 +422,7 @@ class MultilevelMCMCState(ABC):
             return mcmc_state
 
 class GibbsMCMCState(ABC):
-    r"""Base state that implements single flip mcmc sweeps"""
+    r"""Base state that implements single flip MCMC sweeps"""
 
     @abstractmethod
     def _gibbs_sweep_dispatch(self, gibbs_state):
@@ -478,7 +478,7 @@ class GibbsMCMCState(ABC):
         Notes
         -----
         This algorithm has an :math:`O(E\times B)` complexity, where :math:`B`
-        is the number of blocks, and :math:`E` is the number of edges.
+        is the number of groups, and :math:`E` is the number of edges.
 
         """
 
@@ -500,7 +500,7 @@ class GibbsMCMCState(ABC):
         return dS, nattempts, nmoves
 
 class MulticanonicalMCMCState(ABC):
-    r"""Base state that implements multicanonical mcmc sweeps"""
+    r"""Base state that implements multicanonical MCMC sweeps"""
 
     @abstractmethod
     def _multicanonical_sweep_dispatch(self, multicanonical_state):
@@ -535,7 +535,7 @@ class MulticanonicalMCMCState(ABC):
         Notes
         -----
         This algorithm has an :math:`O(E)` complexity, where :math:`E` is the
-        number of edges (independent of the number of blocks).
+        number of edges (independent of the number of groups).
 
         References
         ----------
@@ -581,8 +581,8 @@ class MulticanonicalMCMCState(ABC):
 
         return S, nattempts, nmoves
 
-class ExhaustiveMCMCState(ABC):
-    r"""Base state that implements exhaustive mcmc sweeps"""
+class ExhaustiveSweepState(ABC):
+    r"""Base state that implements exhaustive enumerative sweeps"""
 
     @abstractmethod
     def _exhaustive_sweep_dispatch(self, exhaustive_state):
@@ -640,7 +640,7 @@ class ExhaustiveMCMCState(ABC):
         -----
 
         This algorithm has an :math:`O(B^N)` complexity, where :math:`B` is the
-        number of blocks, and :math:`N` is the number of vertices.
+        number of groups, and :math:`N` is the number of vertices.
 
         """
 

@@ -1425,7 +1425,7 @@ def get_hierarchy_control_points(g, t, tpos, beta=0.8, cts=None, is_tree=True,
        >>> g = gt.collection.data["netscience"]
        >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))
        >>> g.purge_vertices()
-       >>> state = gt.minimize_nested_blockmodel_dl(g, deg_corr=True)
+       >>> state = gt.minimize_nested_blockmodel_dl(g)
        >>> t = gt.get_hierarchy_tree(state)[0]
        >>> tpos = pos = gt.radial_tree_layout(t, t.vertex(t.num_vertices() - 1), weighted=True)
        >>> cts = gt.get_hierarchy_control_points(g, t, tpos)
@@ -1737,7 +1737,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
     .. doctest:: draw_hierarchy
 
        >>> g = gt.collection.data["celegansneural"]
-       >>> state = gt.minimize_nested_blockmodel_dl(g, deg_corr=True)
+       >>> state = gt.minimize_nested_blockmodel_dl(g)
        >>> gt.draw_hierarchy(state, output="celegansneural_nested_mdl.pdf")
        (...)
 

@@ -163,7 +163,7 @@ follows:
        os.chdir("demos/inference")
    except FileNotFoundError:
        pass
-   gt.seed_rng(44 + 4)
+   gt.seed_rng(42)
          
 .. testcode:: food-web
 
@@ -273,12 +273,11 @@ Therefore, we can compute the posterior odds ratio between both models as:
 .. testoutput:: food-web
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  16506.096401...
+   ln Λ:  -36.983569...
 
-A value of :math:`\Lambda \approx \mathrm{e}^{16506} \approx 10^{7168}`
-in favor the log-normal model indicates that the exponential model does
-not provide a better fit for this particular data. Based on this, we
-conclude that the log-normal model should be preferred in this case.
+A value of :math:`\Lambda \approx \mathrm{e}^{37} \approx 10^{16}` in
+favor the exponential model indicates that the log-normal model does not
+provide a better fit for this particular data.
    
    
 Posterior sampling

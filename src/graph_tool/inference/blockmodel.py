@@ -117,7 +117,7 @@ def init_q_cache(max_n=None):
     libinference.init_q_cache(min(_q_cache_max_n, max_n))
 
 class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
-                 GibbsMCMCState, MulticanonicalMCMCState, ExhaustiveMCMCState):
+                 GibbsMCMCState, MulticanonicalMCMCState, ExhaustiveSweepState):
     r"""The stochastic block model state of a given graph.
 
     Parameters
@@ -751,7 +751,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         return self.b
 
     def get_state(self):
-        """Alias to :meth:`~BlockState.get_blocks`."""
+        """Alias to :meth:`~graph_tool.inference.blockmodel.BlockState.get_blocks`."""
         return self.get_blocks()
 
     def set_state(self, b):
@@ -1600,7 +1600,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         .. doctest:: gen_sbm
 
            >>> g = gt.collection.data["polbooks"]
-           >>> state = gt.minimize_blockmodel_dl(g, B_max=3)
+           >>> state = gt.minimize_blockmodel_dl(g, multilevel_mcmc_args=dict(B_max=3))
            >>> u = state.sample_graph(canonical=True, self_loops=False, multigraph=False)
            >>> ustate = gt.BlockState(u, b=state.b)
            >>> state.draw(pos=g.vp.pos, output="polbooks-sbm.svg")

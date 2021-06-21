@@ -56,11 +56,16 @@ value of :math:`q(\boldsymbol b)`. A direct "brute force" computation of
 and :func:`~graph_tool.inference.blockmodel.microstate_entropy`, however
 this is only feasible for very small networks. For larger networks, we
 are forced to perform approximations. One possibility is to employ the
-method described in [peixoto-revealing-2020]_, based on fitting a
+method described in [peixoto-revealing-2021]_, based on fitting a
 mixture "random label" model to the posterior distribution, which allows
 us to compute its entropy. In graph-tool this is done by using
 :class:`~graph_tool.inference.partition_modes.ModeClusterState`, as we
 show in the example below.
+
+.. testsetup:: model-evidence
+
+   np.random.seed(43)            
+   gt.seed_rng(43)
 
 .. testcode:: model-evidence
 
@@ -105,16 +110,22 @@ show in the example below.
 
 .. testoutput:: model-evidence
 
-   Model log-evidence for deg_corr = True: -678.785176...
-   Model log-evidence for deg_corr = False: -672.643870...
+   Model log-evidence for deg_corr = True: -678.461337...
+   Model log-evidence for deg_corr = False: -672.572076...
 
 The outcome shows a preference for the non-degree-corrected model.
 
 When using the nested model, the approach is entirely analogous. We show below the
 approach for the same network, using the nested model.
 
+.. testsetup:: nested-model-evidence
 
-.. testcode:: model-evidence
+   np.random.seed(43)            
+   gt.seed_rng(42)
+
+.. testcode:: nested-model-evidence
+
+   from scipy.special import gammaln
 
    g = gt.collection.data["lesmis"]
 
@@ -155,10 +166,10 @@ approach for the same network, using the nested model.
                            
        print(f"Model log-evidence for deg_corr = {deg_corr}: {L}")
 
-.. testoutput:: model-evidence
+.. testoutput:: nested-model-evidence
 
-   Model log-evidence for deg_corr = True: -660.331060...
-   Model log-evidence for deg_corr = False: -657.839574...
+   Model log-evidence for deg_corr = True: -663.861749...
+   Model log-evidence for deg_corr = False: -655.062153...
 
 The results are similar: The non-degree-corrected model possesses the
 largest evidence. Note also that we observe a better evidence for the
