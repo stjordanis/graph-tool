@@ -254,15 +254,21 @@ struct MCMC
         std::vector<size_t> _pos;
     };
 
+    template <class T>
+    using iset = idx_set<T>;
+
+    template <class T, class V>
+    using imap = idx_map<T, V>;
+
     template <class... Ts>
     class MCMCBlockState:
         public Multilevel<MCMCBlockStateImp<Ts...>,
                           size_t,
                           size_t,
-                          idx_set,
-                          idx_map,
-                          idx_set,
-                          idx_map,
+                          iset,
+                          imap,
+                          iset,
+                          imap,
                           gmap_t, false, false>
     {
     public:
@@ -273,10 +279,10 @@ struct MCMC
            : Multilevel<MCMCBlockStateImp<Ts...>,
                         size_t,
                         size_t,
-                        idx_set,
-                        idx_map,
-                        idx_set,
-                        idx_map,
+                        iset,
+                        imap,
+                        iset,
+                        imap,
                         gmap_t, false, false>(as...)
         {}
     };

@@ -41,6 +41,9 @@ struct va_t
     using type = std::array<T, n>;
 };
 
+template <class T>
+using Vec = std::vector<T>;
+
 python::object hist_mcmc_sweep(python::object omcmc_state,
                                python::object ohist_state,
                                size_t D,
@@ -86,7 +89,7 @@ python::object hist_mcmc_sweep(python::object omcmc_state,
         break;
     default:
         {
-            hist_state<std::vector>::dispatch(ohist_state, dispatch);
+            hist_state<Vec>::dispatch(ohist_state, dispatch);
         }
     }
 

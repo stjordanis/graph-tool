@@ -240,14 +240,20 @@ struct MCMC
         std::vector<size_t> _pos;
     };
 
+    template <class T>
+    using iset = idx_set<T>;
+
+    template <class T, class V>
+    using imap = idx_map<T, V>;
+
     template <class... Ts>
     class MCMCBlockState:
         public MergeSplit<MCMCBlockStateImp<Ts...>,
                           size_t,
                           size_t,
-                          idx_set,
-                          idx_map,
-                          idx_set,
+                          iset,
+                          imap,
+                          iset,
                           gmap_t, false, false>
     {
     public:
@@ -258,9 +264,9 @@ struct MCMC
            : MergeSplit<MCMCBlockStateImp<Ts...>,
                         size_t,
                         size_t,
-                        idx_set,
-                        idx_map,
-                        idx_set,
+                        iset,
+                        imap,
+                        iset,
                         gmap_t, false, false>(as...)
         {}
     };

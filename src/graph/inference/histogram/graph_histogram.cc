@@ -36,6 +36,9 @@ struct va_t
     using type = std::array<T, n>;
 };
 
+template <class T>
+using Vec = std::vector<T>;
+
 python::object make_hist_state(boost::python::object ostate, size_t D)
 {
     python::object state;
@@ -67,8 +70,8 @@ python::object make_hist_state(boost::python::object ostate, size_t D)
         break;
     default:
         {
-            hist_state<std::vector>::make_dispatch(ostate,
-                                                   [&](auto& s){state = python::object(s);});
+            hist_state<Vec>::make_dispatch(ostate,
+                                           [&](auto& s){state = python::object(s);});
         }
     }
     return state;
@@ -121,7 +124,7 @@ void export_hist_state()
             ([&](auto* s){ dispatch_state_def(s);});
     }
     {
-        hist_state<std::vector>::dispatch
+        hist_state<Vec>::dispatch
             ([&](auto* s){ dispatch_state_def(s);});
     }
 }

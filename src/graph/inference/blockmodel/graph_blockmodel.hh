@@ -1633,7 +1633,8 @@ public:
         double p = 0;
         size_t w = 0;
 
-        auto [kin, kout] = get_deg(v, _eweight, _degs, _g);
+        size_t kin, kout;
+        std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
 
         m_entries.get_mes(_emat);
 
