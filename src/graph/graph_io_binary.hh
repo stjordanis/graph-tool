@@ -406,7 +406,7 @@ struct read_property_dispatch
             }
             else
             {
-                T y;
+                T y = T();
                 for (auto x : RangeTraits::get_range(g))
                 {
                     (void)x;
