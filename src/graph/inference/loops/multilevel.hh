@@ -27,8 +27,6 @@ namespace graph_tool
 using namespace boost;
 using namespace std;
 
-enum class move_t { single = 0, multilevel, null };
-
 template <class State, class Node, class Group,
           template <class> class VSet,
           template <class, class> class VMap,
@@ -38,6 +36,8 @@ template <class State, class Node, class Group,
           bool labelled=false>
 struct Multilevel: public State
 {
+    enum class move_t { single = 0, multilevel, null };
+
     template <class... TS>
     Multilevel(TS&&... as)
         : State(as...)

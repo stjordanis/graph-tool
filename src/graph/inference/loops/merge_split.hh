@@ -18,9 +18,6 @@ namespace graph_tool
 using namespace boost;
 using namespace std;
 
-enum class move_t { single = 0, split, merge, mergesplit, movelabel, null };
-enum class stage_t { random = 0, scatter, coalesce };
-
 template <class State, class Node, class Group,
           template <class> class VSet,
           template <class, class> class VMap,
@@ -29,6 +26,9 @@ template <class State, class Node, class Group,
           bool labelled=false>
 struct MergeSplit: public State
 {
+    enum class move_t { single = 0, split, merge, mergesplit, movelabel, null };
+    enum class stage_t { random = 0, scatter, coalesce };
+
     template <class... TS>
     MergeSplit(TS&&... as)
         : State(as...)
