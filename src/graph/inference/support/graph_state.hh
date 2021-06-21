@@ -42,6 +42,28 @@
 
 namespace graph_tool
 {
+
+namespace
+{
+    template <typename, template <typename...> typename>
+    struct is_instance_impl : public std::false_type {};
+
+    template <template <typename...> typename U, typename...Ts>
+    struct is_instance_impl<U<Ts...>, U> : public std::true_type {};
+
+    template <typename, template <typename T, size_t D> typename>
+    struct is_instance_impl_alt : public std::false_type {};
+
+    template <template <typename T, size_t D> typename U, typename T, size_t D>
+    struct is_instance_impl_alt<U<T, D>, U> : public std::true_type {};
+}
+
+template <typename T, template <typename ...> typename U>
+using is_instance = is_instance_impl<std::decay_t<T>, U>;
+
+template <typename T, template <typename T1, size_t D> typename U>
+using is_instance_alt = is_instance_impl_alt<std::decay_t<T>, U>;
+
 using namespace boost;
 
 template <size_t N>
@@ -352,13 +374,13 @@ struct StateWrap
                  {
                      typedef typename std::remove_reference<decltype(*t)>::type
                          val_t;
-                     if (std::is_same<val_t, python::object>::value)
+                     if constexpr (std::is_same<val_t, python::object>::value)
                      {
                          ret = obj;
                          found = true;
                      }
-                     else if (std::is_same<val_t, std::true_type>::value ||
-                              std::is_same<val_t, std::false_type>::value)
+                     else if constexpr (std::is_same<val_t, std::true_type>::value ||
+                                        std::is_same<val_t, std::false_type>::value)
                      {
                          python::extract<bool> extract(obj);
                          if (extract.check())
@@ -371,6 +393,15 @@ struct StateWrap
                                  found = true;
                              }
                          }
+                     }
+                     else if constexpr (is_instance_alt<val_t, multi_array_ref>{})
+                     {
+                         try
+                         {
+                             ret = get_array<typename val_t::element, val_t::dimensionality>(obj);
+                             found = true;
+                         }
+                         catch (InvalidNumpyConversion& e) {}
                      }
                      else
                      {
