@@ -1060,6 +1060,6 @@ def init_layer_confined(g, ec):
     be = tmp_state.get_edge_blocks()
     ba = ungroup_vector_property(be, [0])[0]
     ba.fa = ba.fa + ec.fa * (ba.fa.max() + 1)
-    contiguous_map(ba)
+    ba = contiguous_map(ba)
     be = group_vector_property([ba, ba])
     return be

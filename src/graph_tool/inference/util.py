@@ -131,6 +131,7 @@ def reverse_map(prop, value_map):
 
 def contiguous_map(prop):
     """Remap the values of ``prop`` in the contiguous range :math:`[0, N-1]`."""
+    prop = prop.copy()
     if isinstance(prop, PropertyMap):
         a = prop.fa
     else:
@@ -148,3 +149,18 @@ def contiguous_map(prop):
             libinference.vector_contiguous_map(a)
     if isinstance(prop, PropertyMap):
         prop.fa = a
+    return prop
+
+def nested_contiguous_map(bs):
+    """Remap the values of the nested partition ``bs`` in the contiguous range :math:`[0, N_l-1]` for each level :math:`l`."""
+    cs = [b for b in bs]
+    for i, b in enumerate(cs):
+        c = contiguous_map(b)
+        cs[i] = c
+        if i == len(cs) - 1:
+            break
+        nb = zeros(c.max() + 1, dtype=c.dtype)
+        for j, r in enumerate(c):
+            nb[r] = cs[i+1][b[j]]
+        cs[i+1] = nb
+    return cs

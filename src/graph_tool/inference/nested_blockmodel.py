@@ -269,8 +269,8 @@ class NestedBlockState(object):
                 args = dict(args, clabel=None, pclabel=None)
             bstate = state.get_block_state(b=b, **args)
             b2 = bstate.b.fa.copy()
-            contiguous_map(b)
-            contiguous_map(b2)
+            b = contiguous_map(b)
+            b2 = contiguous_map(b2)
             assert ((b == b2).all() and
                     math.isclose(bstate.entropy(dl=False),
                                  self.levels[l].entropy(dl=False),
