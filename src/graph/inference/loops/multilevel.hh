@@ -952,7 +952,7 @@ struct Multilevel: public State
             else
             {
                 B_min = B_mid;
-                S_min = S_min;
+                S_min = S_mid;
                 B_mid = get_mid(B_mid, B_max, rng);
             }
 
