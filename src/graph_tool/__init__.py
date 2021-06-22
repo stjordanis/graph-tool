@@ -3348,7 +3348,7 @@ class Graph(object):
         return state
 
     def __setstate__(self, state):
-        self.__init__()
+        Graph.__init__(self)
         blob = state["blob"]
         if blob != "":
             sio = io.BytesIO(blob)
