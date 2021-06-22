@@ -112,7 +112,7 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
        >>> g = gt.collection.data["celegansneural"]
        >>> state = gt.minimize_blockmodel_dl(g, state=gt.PPBlockState)
        >>> state.draw(output="celegans_mdl_pp.pdf")
-       (...)
+       <...>
 
     .. testcleanup:: mdl_pp
 

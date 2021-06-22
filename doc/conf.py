@@ -14,10 +14,6 @@
 
 import sys, os
 
-if sys.version_info < (3,):
-    reload(sys)
-    sys.setdefaultencoding("Cp1252")
-
 # If your extensions are in another directory, add it here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
 # absolute, like shown here.
@@ -55,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'graph-tool'
-copyright = u'2020, Tiago de Paula Peixoto <tiago@skewed.de>'
+copyright = u'2021, Tiago de Paula Peixoto <tiago@skewed.de>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

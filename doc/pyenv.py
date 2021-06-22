@@ -1,10 +1,5 @@
 from __future__ import division, absolute_import, print_function
 import sys
-if sys.version_info < (3,):
-    range = xrange
-else:
-    unicode = str
-
 import os
 from matplotlib import rc
 from matplotlib import rcParams
@@ -62,3 +57,5 @@ def conv_png(f):
 prandom.seed(42)
 np.random.seed(42)
 gt.seed_rng(42)
+
+is_done = False

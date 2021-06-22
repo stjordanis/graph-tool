@@ -1088,8 +1088,8 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         .. testsetup:: get_matrix
 
-           gt.seed_rng(42)
            np.random.seed(42)
+           gt.seed_rng(42)
            from pylab import *
 
         .. doctest:: get_matrix
@@ -1224,10 +1224,8 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         """
 
-
         Si = self.entropy(**dict(dict(partition_dl=False),
                                  **entropy_args))
-
         pos = {}
         for u, v in itertools.chain(missing, spurious):
             pos[u] = self.b[u]
@@ -1393,13 +1391,10 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         Examples
         --------
-        .. testsetup:: collect_edge_marginals
-
-           gt.seed_rng(42)
-           np.random.seed(42)
-
         .. doctest:: collect_edge_marginals
 
+           >>> np.random.seed(42)
+           >>> gt.seed_rng(42)
            >>> g = gt.collection.data["polbooks"]
            >>> state = gt.BlockState(g, B=4, deg_corr=True)
            >>> pe = None
@@ -1409,7 +1404,8 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
            ...     ret = state.mcmc_sweep(niter=10)
            ...     pe = state.collect_edge_marginals(pe)
            >>> gt.bethe_entropy(g, pe)[0]
-           -3.075472...
+           0.645886...
+
         """
 
         if p is None:
@@ -1453,13 +1449,10 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         Examples
         --------
-        .. testsetup:: cvm
-
-           gt.seed_rng(42)
-           np.random.seed(42)
-
         .. doctest:: cvm
 
+           >>> np.random.seed(42)
+           >>> gt.seed_rng(42)
            >>> g = gt.collection.data["polbooks"]
            >>> state = gt.BlockState(g, B=4, deg_corr=True)
            >>> pv = None
@@ -1469,7 +1462,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
            ...     ret = state.mcmc_sweep(niter=10)
            ...     pv = state.collect_vertex_marginals(pv)
            >>> gt.mf_entropy(g, pv)
-           16.057089...
+           44.535225...
            >>> gt.graph_draw(g, pos=g.vp["pos"], vertex_shape="pie",
            ...               vertex_pie_fractions=pv, output="polbooks_blocks_soft_B4.svg")
            <...>
@@ -1517,13 +1510,10 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         Examples
         --------
-        .. testsetup:: cvm
-
-           gt.seed_rng(42)
-           np.random.seed(42)
-
         .. doctest:: cvm
 
+           >>> np.random.seed(42)
+           >>> gt.seed_rng(42)
            >>> g = gt.collection.data["polbooks"]
            >>> state = gt.BlockState(g, B=4, deg_corr=True)
            >>> ph = None
@@ -1533,7 +1523,8 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
            ...     ret = state.mcmc_sweep(niter=10)
            ...     ph = state.collect_partition_histogram(ph)
            >>> gt.microstate_entropy(ph)
-           137.303039...
+           153.756324...
+
         """
 
         if h is None:
