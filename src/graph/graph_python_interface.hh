@@ -86,7 +86,11 @@ public:
     template <class Dispatch>
     CoroGenerator(Dispatch& dispatch)
         : _coro(make_coro<coro_t::pull_type>(dispatch)),
+#if (BOOST_VERSION >= 107600)
           _iter(std::begin(*_coro)), _end(std::end(*_coro)), _first(true) {}
+#else
+          _iter(begin(*_coro)), _end(end(*_coro)), _first(true) {}
+#endif
     boost::python::object next()
     {
         if (_first)
