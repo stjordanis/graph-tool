@@ -1,6 +1,6 @@
 ARG GIT_REF
 
-FROM archlinux/base:latest as builder
+FROM archlinux:latest as builder
 MAINTAINER Tiago de Paula Peixoto <tiago@skewed.de>
 
 RUN pacman -Sy
@@ -36,7 +36,7 @@ RUN mv -v "${MAKEPKG_ROOT}/"python-graph-tool-*-x86_64.pkg.tar.zst /tmp/python-g
 
 # Non-build
 
-FROM archlinux/base:latest
+FROM archlinux:latest
 
 RUN echo "Server=https://archive.archlinux.org/repos/`date -d 'yesterday 13:00' +%Y/%m/%d`/\$repo/os/\$arch" > /etc/pacman.d/mirrorlist
 
