@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl graph-tool package version number
 m4_define(graph_tool_version_major, 2)
-m4_define(graph_tool_version_minor, 39)
+m4_define(graph_tool_version_minor, 40dev)
 
 AC_INIT([graph-tool],
         [graph_tool_version_major().graph_tool_version_minor()],
