@@ -96,12 +96,14 @@ python::object hist_mcmc_sweep(python::object omcmc_state,
     return ret;
 }
 
-ostream& operator<<(ostream& s, move_t v)
+namespace graph_tool
+{
+ostream& operator<<(ostream& s, hmove_t v)
 {
     s << int(v);
     return s;
 }
-
+}
 
 void export_hist_mcmc()
 {

@@ -38,9 +38,9 @@ using namespace std;
     ((verbose,, int, 0))                                                       \
     ((niter,, size_t, 0))
 
-enum class move_t { move = 0, add, remove, null };
+enum class hmove_t { move = 0, add, remove, null };
 
-ostream& operator<<(ostream& s, move_t v);
+ostream& operator<<(ostream& s, hmove_t v);
 
 template <class State>
 struct MCMC
@@ -65,7 +65,7 @@ struct MCMC
             _state.update_bounds();
         }
 
-        constexpr static move_t _null_move = move_t::null;
+        constexpr static hmove_t _null_move = hmove_t::null;
 
         size_t node_state(size_t)
         {
@@ -84,7 +84,7 @@ struct MCMC
         constexpr static double _epsilon = 1e-8;
 
         template <class RNG>
-        move_t move_proposal(size_t, RNG& rng)
+        hmove_t move_proposal(size_t, RNG& rng)
         {
             std::uniform_int_distribution<size_t>
                 random_j(0, _state._D-1);
@@ -111,17 +111,17 @@ struct MCMC
                 m = random(rng);
             }
 
-            move_t move = move_t::null;
+            hmove_t move = hmove_t::null;
             switch (m)
             {
             case 0:
-                move = move_t::move;
+                move = hmove_t::move;
                 {
                     if (_i == 0)
                     {
                         if (_state._bounded[_j].first)
                         {
-                            move = move_t::null;
+                            move = hmove_t::null;
                         }
                         else
                         {
@@ -139,7 +139,7 @@ struct MCMC
                                 _x = _state._bounds[_j].first - d(rng);
                                 // if (_x > _state._bounds[_j].first ||
                                 //     _x >= *(_state._bins[_j]->begin() + 1))
-                                //     move = move_t::null;
+                                //     move = hmove_t::null;
                             }
 
                             assert(_x <= _state._bounds[_j].first);
@@ -149,7 +149,7 @@ struct MCMC
                     {
                         if (_state._bounded[_j].second)
                         {
-                            move = move_t::null;
+                            move = hmove_t::null;
                         }
                         else
                         {
@@ -166,10 +166,10 @@ struct MCMC
                                 std::exponential_distribution<double> d(1./(2 * w));
                                 _x = _state._bounds[_j].second + d(rng);
                                 if (_x == _state._bounds[_j].second)
-                                    move = move_t::null;
+                                    move = hmove_t::null;
                                 // if (_x <= _state._bounds[_j].second ||
                                 //     _x <= *(_state._bins[_j]->end() - 2))
-                                //     move = move_t::null;
+                                //     move = hmove_t::null;
                             }
                             assert(_x > _state._bounds[_j].second);
                         }
@@ -191,13 +191,13 @@ struct MCMC
                             _x = random_x(rng);
                             if (_x <= (*_state._bins[_j])[_i-1] ||
                                 _x >= (*_state._bins[_j])[_i+1])
-                                move = move_t::null;
+                                move = hmove_t::null;
                         }
                     }
                 }
                 break;
             case 1:
-                move = move_t::add;
+                move = hmove_t::add;
                 {
                     if (_state._discrete[_j])
                     {
@@ -205,7 +205,7 @@ struct MCMC
                         auto b = (*_state._bins[_j])[_i+1] - 1;
                         if (b < a)
                         {
-                            move = move_t::null;
+                            move = hmove_t::null;
                         }
                         else
                         {
@@ -221,12 +221,12 @@ struct MCMC
                         _x = random_x(rng);
                         if (_x <= (*_state._bins[_j])[_i] ||
                             _x >= (*_state._bins[_j])[_i+1])
-                            move = move_t::null;
+                            move = hmove_t::null;
                     }
                 }
                 break;
             case 2:
-                move = move_t::remove;
+                move = hmove_t::remove;
                 break;
             default:
                 break;
@@ -236,7 +236,7 @@ struct MCMC
         }
 
         std::tuple<double, double>
-        virtual_move_dS(size_t, move_t move)
+        virtual_move_dS(size_t, hmove_t move)
         {
             double dS = 0;
             double pf = 0;
@@ -244,7 +244,7 @@ struct MCMC
 
             switch (move)
             {
-            case move_t::move:
+            case hmove_t::move:
                 dS = _state.virtual_move_edge(_j, _i, _x);
 
                 if (_i == 0)
@@ -303,12 +303,12 @@ struct MCMC
                 }
 
                 break;
-            case move_t::add:
+            case hmove_t::add:
                 dS = _state.template virtual_change_edge<true>(_j, _i, _x);
                 pf = -safelog_fast(_state._bins[_j]->size() - 2);
                 pb = -safelog_fast(_state._bins[_j]->size() - 1);
                 break;
-            case move_t::remove:
+            case hmove_t::remove:
                 dS = _state.template virtual_change_edge<false>(_j, _i, 0.);
                 pf = -safelog_fast(_state._bins[_j]->size() - 2);
                 pb = -safelog_fast(_state._bins[_j]->size() - 3);
@@ -320,17 +320,17 @@ struct MCMC
             return std::make_tuple(dS, pb - pf);
         }
 
-        void perform_move(size_t, move_t move)
+        void perform_move(size_t, hmove_t move)
         {
             switch (move)
             {
-            case move_t::move:
+            case hmove_t::move:
                 _state.move_edge(_j, _i, _x);
                 break;
-            case move_t::add:
+            case hmove_t::add:
                 _state.add_edge(_j, _i, _x);
                 break;
-            case move_t::remove:
+            case hmove_t::remove:
                 _state.remove_edge(_j, _i);
                 break;
             default:
@@ -364,7 +364,7 @@ struct MCMC
             return _niter;
         }
 
-        void step(size_t, move_t)
+        void step(size_t, hmove_t)
         {
         }
     };
