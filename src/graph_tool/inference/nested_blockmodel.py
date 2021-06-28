@@ -798,7 +798,7 @@ class NestedBlockState(object):
         import graph_tool.draw
         return graph_tool.draw.draw_hierarchy(self, **kwargs)
 
-def get_hierarchy_tree(state, empty_branches=True):
+def get_hierarchy_tree(state, empty_branches=False):
     r"""Obtain the nested hierarchical levels as a tree.
 
     This transforms a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` instance
@@ -809,7 +809,7 @@ def get_hierarchy_tree(state, empty_branches=True):
     ----------
     state : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
        Nested block model state.
-    empty_branches : ``bool`` (optional, default: ``True``)
+    empty_branches : ``bool`` (optional, default: ``False``)
        If ``empty_branches == False``, dangling branches at the upper layers
        will be pruned.
 
