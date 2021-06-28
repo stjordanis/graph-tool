@@ -113,8 +113,6 @@ public:
 
     typedef int m_entries_t;
 
-    bool _egroups_update = true;
-
     // =========================================================================
     // State modification
     // =========================================================================
@@ -298,6 +296,7 @@ public:
     void pop_state() {}
     void store_next_state(size_t) {}
     void clear_next_state() {}
+    void relax_update(bool) {}
 
 };
 

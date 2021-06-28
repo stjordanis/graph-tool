@@ -545,6 +545,8 @@ void apply_delta(State& state, MEntries& m_entries)
     auto eops =
         [&](auto&& eop, auto&& mid_op, auto&& end_op, auto&& skip)
         {
+            bool update_egroups = !state._egroups.empty() && state._egroups_update;
+
             eop(m_entries, state._emat,
                 [&](auto r, auto s, auto& me, auto delta, auto&... edelta)
                 {
@@ -570,6 +572,19 @@ void apply_delta(State& state, MEntries& m_entries)
                     state._mrs[me] += delta;
                     state._mrp[r] += delta;
                     state._mrm[s] += delta;
+
+                    if (update_egroups)
+                    {
+                        if (r != s)
+                        {
+                            state._egroups.insert_edge(r, s, delta);
+                            state._egroups.insert_edge(s, r, delta);
+                        }
+                        else
+                        {
+                            state._egroups.insert_edge(r, s, 2 * delta);
+                        }
+                    }
 
                     assert(state._mrs[me] >= 0);
                     assert(state._mrp[r] >= 0);

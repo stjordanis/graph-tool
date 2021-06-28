@@ -1005,6 +1005,12 @@ struct Layers
             BaseState::clear_egroups();
         }
 
+        virtual void relax_update(bool relax)
+        {
+            BaseState::relax_update(relax);
+        }
+
+
         vprop_map_t<int32_t>::type::unchecked_t& get_b()
         {
             return BaseState::_b;

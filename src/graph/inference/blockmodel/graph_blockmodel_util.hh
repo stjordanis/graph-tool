@@ -71,6 +71,7 @@ public:
     virtual vprop_map_t<int32_t>::type::unchecked_t& get_pclabel() = 0;
     virtual bool check_edge_counts(bool emat=true) = 0;
     virtual bool allow_move(size_t r, size_t nr) = 0;
+    virtual void relax_update(bool relax) = 0;
 };
 
 } // graph_tool namespace

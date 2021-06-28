@@ -74,7 +74,7 @@ typedef mpl::vector1<std::false_type> rmap_tr;
 
 #define BLOCK_STATE_params                                                     \
     ((g, &, all_graph_views, 1))                                               \
-    ((is_weighted,, mpl::vector1<std::true_type>, 1))                                               \
+    ((is_weighted,, mpl::vector1<std::true_type>, 1))                          \
     ((use_hash,, bool_tr, 1))                                                  \
     ((use_rmap,, rmap_tr, 1))                                                  \
     ((_abg, &, boost::any&, 0))                                                \
@@ -417,9 +417,6 @@ public:
 
         _wr[r] -= _vweight[v];
 
-        if (!_egroups.empty() && _egroups_update)
-            _egroups.remove_vertex(v, _b, _eweight, _g);
-
         if (is_partition_stats_enabled())
             get_partition_stats(v).remove_vertex(v, r, _deg_corr, _g,
                                                  _vweight, _eweight,
@@ -431,9 +428,6 @@ public:
         _b[v] = r;
 
         _wr[r] += _vweight[v];
-
-        if (!_egroups.empty() && _egroups_update)
-            _egroups.add_vertex(v, _b, _eweight, _g);
 
         if (is_partition_stats_enabled())
             get_partition_stats(v).add_vertex(v, r, _deg_corr, _g, _vweight,
@@ -2352,6 +2346,14 @@ public:
     void pop_state() {}
     void store_next_state(size_t) {}
     void clear_next_state() {}
+
+    void relax_update(bool relax)
+    {
+        _egroups.check(_bg, _mrs);
+        _egroups_update = !relax;
+        if (_coupled_state != nullptr)
+            _coupled_state->relax_update(relax);
+    }
 
 //private:
     typedef typename

@@ -221,7 +221,7 @@ struct MCMC
 
         void relax_update(bool relax)
         {
-            _state._egroups_update = !relax;
+            _state.relax_update(relax);
         }
 
         template <class V>

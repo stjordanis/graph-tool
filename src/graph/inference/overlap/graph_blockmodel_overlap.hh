@@ -191,14 +191,10 @@ public:
         {
             _overlap_stats.add_half_edge(v, r, _b, _g);
             _b[v] = r;
-            if (!_egroups.empty() && _egroups_update)
-                _egroups.add_vertex(v, _b, _eweight, _g);
         }
         else
         {
             _overlap_stats.remove_half_edge(v, r, _b, _g);
-            if (!_egroups.empty() && _egroups_update)
-                _egroups.remove_vertex(v, _b, _eweight, _g);
         }
 
         _wr[r] = _overlap_stats.get_block_size(r);
@@ -1271,6 +1267,12 @@ public:
     void pop_state() {}
     void store_next_state(size_t) {}
     void clear_next_state() {}
+
+    void relax_update(bool relax)
+    {
+        _egroups.check(_bg, _mrs);
+        _egroups_update = !relax;
+    }
 
 //private:
     typedef typename

@@ -125,8 +125,6 @@ public:
 
     typedef modularity_entropy_args_t _entropy_args_t;
 
-    bool _egroups_update = true;
-
     // =========================================================================
     // State modification
     // =========================================================================
@@ -345,7 +343,7 @@ public:
     void pop_state() {}
     void store_next_state(size_t) {}
     void clear_next_state() {}
-
+    void relax_update(bool) {}
 };
 
 } // graph_tool namespace

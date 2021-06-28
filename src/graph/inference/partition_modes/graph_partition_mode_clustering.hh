@@ -144,8 +144,6 @@ public:
 
     typedef int m_entries_t;
 
-    bool _egroups_update = true;
-
     typedef char _entropy_args_t;
 
     PartitionModeState& get_mode(size_t r)
@@ -252,6 +250,8 @@ public:
             _next_state[v].clear();
         _next_list.clear();
     }
+
+    void relax_update(bool) {}
 
     size_t virtual_remove_size(size_t v)
     {

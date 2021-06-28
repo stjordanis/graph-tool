@@ -198,7 +198,7 @@ struct MCMC
 
         void relax_update(bool relax)
         {
-            _state._egroups_update = !relax;
+            _state.relax_update(relax);
         }
 
         void store_next_state(size_t v)
@@ -208,6 +208,7 @@ struct MCMC
 
         void clear_next_state()
         {
+            _state._egroups.check(_state._bg, _state._mrs);
             _state.clear_next_state();
         }
 

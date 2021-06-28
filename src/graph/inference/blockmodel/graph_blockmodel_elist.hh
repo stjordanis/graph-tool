@@ -43,6 +43,8 @@ public:
             insert_edge(source(e, bg), target(e, bg), mrs[e]);
             insert_edge(target(e, bg), source(e, bg), mrs[e]);
         }
+
+        check(bg, mrs);
     }
 
     void add_block()
@@ -97,45 +99,45 @@ public:
         }
     }
 
-    template <bool Add, class Vertex, class Eprop, class Vprop, class Graph>
-    void modify_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
-    {
-        auto iter_edges = [&](auto&& range)
-        {
-            for (auto e : range)
-            {
-                auto ew = (Add) ?  eweight[e] : -eweight[e];
-                auto s = b[source(e, g)];
-                auto t = b[target(e, g)];
-                insert_edge(s, t, ew);
-                if (source(e, g) != target(e, g))
-                    insert_edge(t, s, ew);
-            }
-        };
-
-        iter_edges(out_edges_range(v, g));
-        if constexpr (is_directed_::apply<Graph>::type::value)
-            iter_edges(in_edges_range(v, g));
-    }
-
-    template <class Vertex, class Vprop, class Eprop, class Graph>
-    void add_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
-    {
-        modify_vertex<true>(v, b, eweight, g);
-    }
-
-    template <class Vertex, class Vprop, class Eprop, class Graph>
-    void remove_vertex(Vertex v, Vprop& b, Eprop& eweight, Graph& g)
-    {
-        modify_vertex<false>(v, b, eweight, g);
-    }
-
     template <class RNG>
     size_t sample_edge(size_t r, RNG& rng)
     {
         auto s = _egroups[r].sample(rng);
         assert(s != numeric_limits<size_t>::max());
         return s;
+    }
+
+    template <class Eprop, class BGraph>
+    void check([[maybe_unused]] BGraph& bg, [[maybe_unused]] Eprop& mrs)
+    {
+#ifndef NDEBUG
+        if (empty() || true)
+            return;
+        for (auto e : edges_range(bg))
+        {
+            auto r = source(e, bg);
+            auto s = target(e, bg);
+
+            auto& pos = _pos[r];
+            auto iter = pos.find(s);
+            assert(iter != pos.end());
+
+            auto p = _egroups[r].get_prob(iter->second);
+
+            if (!graph_tool::is_directed(bg) || r == s)
+            {
+                assert(p == mrs[e] * (r == s ? 2 : 1));
+            }
+            else
+            {
+                auto ne = edge(s, r, bg);
+                if (ne.second)
+                    assert(p == mrs[e] + mrs[ne.first]);
+                else
+                    assert(p == mrs[e]);
+            }
+        }
+#endif
     }
 
 private:
