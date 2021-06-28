@@ -299,7 +299,7 @@ class MultilevelMCMCState(ABC):
     def _get_entropy_args(self, kwargs):
         pass
 
-    def _get_clabel(self):
+    def _get_bclabel(self):
         return None
 
     @mcmc_sweep_wrap
