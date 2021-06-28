@@ -67,13 +67,6 @@ class NestedBlockState(object):
                  hstate_args={}, hentropy_args={}, sampling=True, **kwargs):
         self.g = g
 
-        if bs is None:
-            if base_type is OverlapBlockState or state_args.get("overlap", False):
-                b = zeros(2 * g.num_edges(), dtype="int")
-            else:
-                b = zeros(g.num_vertices(), dtype="int")
-            bs = [b] + [zeros(1, dtype="int")] * int(ceil(log2(len(b))))
-
         self.base_type = base_type
         if base_type is LayeredBlockState:
             self.Lrecdx = []
@@ -104,7 +97,17 @@ class NestedBlockState(object):
                                   recs=True,
                                   recs_dl=False,
                                   beta_dl=1.)
+
+        if bs is None:
+            if base_type is OverlapBlockState:
+                N = 2 * g.num_edges()
+            else:
+                N = g.num_vertices()
+            L = int(numpy.ceil(numpy.log2(N)))
+            bs = [None] * (L + 1)
+
         self.levels = [base_type(g, b=bs[0], **self.state_args)]
+
         for i, b in enumerate(bs[1:]):
             state = self.levels[-1]
             args = self.hstate_args

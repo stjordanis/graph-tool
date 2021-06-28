@@ -224,6 +224,12 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         self.deg_corr = deg_corr
         self.overlap = False
 
+        if clabel is None:
+            clabel = pclabel
+
+        if b is None:
+            b = clabel
+
         if B is None and b is None:
             B = 1
 
@@ -315,8 +321,6 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
             else:
                 self.clabel = self.g.new_vp("int")
                 self.clabel.fa = clabel
-        elif self.pclabel.fa.max() > 0:
-            self.clabel = self.pclabel
         else:
             self.clabel = self.g.new_vp("int")
 
@@ -648,16 +652,19 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                     rec_params.append("microcanonical")
             rec_params = kwargs.pop("rec_params", rec_params)
 
+        if b is None:
+            b = self.get_bclabel()
+
         state = BlockState(bg,
                            eweight=eweight,
                            vweight=vweight,
-                           b=bg.vertex_index.copy("int") if b is None else b,
+                           b=b,
                            deg_corr=deg_corr,
                            rec_types=rec_types,
                            recs=recs,
                            drec=drec,
                            rec_params=rec_params,
-                           clabel=kwargs.pop("clabel", self.get_bclabel()),
+                           clabel=kwargs.pop("clabel", self.bclabel),
                            pclabel=kwargs.pop("pclabel", self.get_bpclabel()),
                            dense_bg=self.dense_bg,
                            epsilon=kwargs.pop("epsilon",
@@ -665,7 +672,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                            **kwargs)
 
         if copy_coupled and self._coupled_state is not None:
-            state._couple_state(state.get_block_state(b=state.get_bclabel(),
+            state._couple_state(state.get_block_state(b=self.bclabel,
                                                       copy_bg=False,
                                                       vweight="nonempty",
                                                       Lrecdx=state.Lrecdx),
@@ -1325,6 +1332,8 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         return libinference.multiflip_mcmc_sweep_parallel(mcmc_states,
                                                           [s._state for s in states],
                                                           _get_rng())
+    def _get_bclabel(self):
+        return self.bclabel
 
     def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
         return libinference.multilevel_mcmc_sweep(mcmc_state, self._state,

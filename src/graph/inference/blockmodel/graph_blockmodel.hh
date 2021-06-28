@@ -1489,6 +1489,8 @@ public:
             {
                 auto& hb = _coupled_state->get_b();
                 hb[s] = hb[r];
+                auto& hpclabel = _coupled_state->get_pclabel();
+                hpclabel[s] = _pclabel[v];
             }
             return s;
         }
@@ -2261,6 +2263,11 @@ public:
     vprop_map_t<int32_t>::type::unchecked_t& get_b()
     {
         return _b;
+    }
+
+    vprop_map_t<int32_t>::type::unchecked_t& get_bclabel()
+    {
+        return _bclabel;
     }
 
     vprop_map_t<int32_t>::type::unchecked_t& get_pclabel()

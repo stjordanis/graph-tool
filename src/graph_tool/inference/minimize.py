@@ -240,16 +240,10 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
 
     """
 
-    L = int(numpy.ceil(numpy.log2(g.num_vertices())))
-    if init_bs is None:
-        bs = [numpy.zeros(1)] * (L + 1)
-    else:
-        bs = init_bs
-    state = state(g, bs=bs, **state_args)
+    state = state(g, bs=init_bs, **state_args)
 
     args = dict(niter=1, psingle=0, beta=numpy.inf)
     args.update(multilevel_mcmc_args)
-
 
     l = 0
     while l >= 0:

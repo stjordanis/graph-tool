@@ -299,6 +299,9 @@ class MultilevelMCMCState(ABC):
     def _get_entropy_args(self, kwargs):
         pass
 
+    def _get_clabel(self):
+        return None
+
     @mcmc_sweep_wrap
     def multilevel_mcmc_sweep(self, niter=1, beta=1., c=.5, psingle=None,
                               pmultilevel=1, d=0.01, r=0.9, random_bisect=True,
@@ -406,8 +409,11 @@ class MultilevelMCMCState(ABC):
             global_moves = True
         else:
             global_moves = False
+        bclabel = self._get_bclabel()
+        if bclabel is not None:
+            B_min = max(len(numpy.unique(bclabel.fa)), B_min)
         if b_min is None:
-            b_min = self.g.new_vp("int")
+            b_min = self.g.vertex_index.copy("int")
         if b_max is None:
             b_max = self.g.new_vp("int")
 

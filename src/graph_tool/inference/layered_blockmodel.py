@@ -85,7 +85,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
     """
 
     def __init__(self, g, ec, eweight=None, vweight=None, recs=[], rec_types=[],
-                 rec_params=[], b=None, B=None, clabel=None, pclabel=False,
+                 rec_params=[], b=None, B=None, clabel=None, pclabel=None,
                  layers=False, deg_corr=True, overlap=False, **kwargs):
 
         kwargs = kwargs.copy()
@@ -945,6 +945,8 @@ class LayeredBlockState(OverlapBlockState, BlockState):
             return libinference.multiflip_mcmc_layered_overlap_sweep_parallel(mcmc_states,
                                                                               [s._state for s in states],
                                                                               _get_rng())
+    def _get_bclabel(self):
+        return self.agg_state._get_bclabel()
 
     def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
         if not self.overlap:

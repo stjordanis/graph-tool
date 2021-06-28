@@ -91,6 +91,12 @@ class OverlapBlockState(BlockState):
         if node_index is not None and self.base_g is None:
             raise ValueError("Must specify base graph if node_index is specified...")
 
+        if clabel is None:
+            clabel = pclabel
+
+        if b is None:
+            b = clabel
+
         if B is None and b is None:
             B = 1
 
@@ -618,6 +624,9 @@ class OverlapBlockState(BlockState):
         return libinference.overlap_multiflip_mcmc_sweep_parallel(mcmc_states,
                                                                   [s._state for s in states],
                                                                   _get_rng())
+
+    def _get_bclabel(self):
+        return self.bclabel
 
     def _multilevel_mcmc_sweep_dispatch(self, mcmc_state):
         return libinference.overlap_multilevel_mcmc_sweep(mcmc_state, self._state,

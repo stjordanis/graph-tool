@@ -832,22 +832,25 @@ struct Multilevel: public State
 
         if (State::_has_b_min)
         {
-            push_b(vs);
-            double S = 0;
-            if (rs.size() > B_min)
+            if (B_min == _B_min)
             {
-                for (auto& v : vs)
+                push_b(vs);
+                double S = 0;
+                if (rs.size() > B_min)
                 {
-                    auto r = State::get_group(v);
-                    Group t = _b_min[v];
-                    if (r == t)
-                        continue;
-                    S += State::virtual_move(v, r, t);
-                    move_node(v, t);
+                    for (auto& v : vs)
+                    {
+                        auto r = State::get_group(v);
+                        Group t = _b_min[v];
+                        if (r == t)
+                            continue;
+                        S += State::virtual_move(v, r, t);
+                        move_node(v, t);
+                    }
                 }
+                put_cache(B_min, S);
+                pop_b();
             }
-            put_cache(B_min, S);
-            pop_b();
         }
         else if (B_min == 1)
         {
@@ -884,7 +887,7 @@ struct Multilevel: public State
                     rs.insert(s);
                     continue;
                 }
-                auto t = State::get_new_group(v, std::isinf(_beta), rng);
+                auto t = State::get_new_group(v, true, rng);
                 S += State::virtual_move(v, s, t);
                 move_node(v, t);
                 rs.insert(t);
@@ -912,10 +915,11 @@ struct Multilevel: public State
                 B_max = B_max_init = std::min(rs.size(), B_max);
             }
 
-            put_cache(rs.size(), S);
+            if (cache.find(rs.size()) == cache.end())
+                put_cache(rs.size(), S);
 
-            State::relax_update(false);
             pop_b();
+            State::relax_update(false);
             get_cache(rs.size(), rs);
         }
         else
