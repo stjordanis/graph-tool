@@ -189,9 +189,9 @@ Which yields the following output:
 
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 0.345334...
+   Posterior probability of edge (11, 36): 0.377937...
    Posterior probability of non-edge (15, 73): 0.0
-   Estimated average local clustering: 0.570758 ± 0.00247256
+   Estimated average local clustering: 0.571134 ± 0.002860...
 
 
 We have a successful reconstruction, where both ambiguous adjacency
@@ -313,9 +313,9 @@ Which yields:
 
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 0.218221...
+   Posterior probability of edge (11, 36): 0.414341...
    Posterior probability of non-edge (15, 73): 0.0
-   Estimated average local clustering: 0.565382 ± 0.00778943
+   Estimated average local clustering: 0.57138 ± 0.003014...
 
 The results are very similar to the ones obtained with the uniform model
 in this case, but can be quite different in situations where a large
@@ -439,9 +439,9 @@ The above yields the output:
 
 .. testoutput:: uncertain
 
-   Posterior probability of edge (11, 36): 0.891589...
-   Posterior probability of non-edge (15, 73): 0.003300...
-   Estimated average local clustering: 0.51592 ± 0.0284656
+   Posterior probability of edge (11, 36): 0.699969...
+   Posterior probability of non-edge (15, 73): 0.0
+   Estimated average local clustering: 0.540214 ± 0.028586...
 
 The reconstruction is accurate, despite the two ambiguous entries having
 the same measurement probability. The reconstructed network is visualized below.
@@ -718,8 +718,8 @@ Which yields the following output:
 
 .. testoutput:: measured-closure
 
-   Posterior probability of edge (11, 36): 1.0
+   Posterior probability of edge (11, 36): 0.915691...
    Posterior probability of non-edge (15, 73): 0.0
-   Estimated average local clustering: 0.573263 ± 0.00149512
+   Estimated average local clustering: 0.573308 ± 0.002496...
 
 .. include:: _reconstruction_dynamics.rst
