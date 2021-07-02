@@ -287,7 +287,6 @@ public:
     template <class Emat>
     vector<bedge_t>& get_mes(Emat& emat)
     {
-        _mes.reserve(_entries.size());
         for (size_t i = _mes.size(); i < _entries.size(); ++i)
         {
             auto& rs = _entries[i];
@@ -545,63 +544,73 @@ void apply_delta(State& state, MEntries& m_entries)
     auto eops =
         [&](auto&& eop, auto&& mid_op, auto&& end_op, auto&& skip)
         {
-            bool update_egroups = !state._egroups.empty() && state._egroups_update;
-
-            eop(m_entries, state._emat,
-                [&](auto r, auto s, auto& me, auto delta, auto&... edelta)
-                {
-                    if (skip(delta, edelta...))
-                        return;
-
-                    if (Add && me == state._emat.get_null_edge())
+            auto dispatch = [&](auto&& update_egroups)
+            {
+                eop(m_entries, state._emat,
+                    [&](auto r, auto s, auto& me, auto delta, auto&... edelta)
                     {
-                        me = boost::add_edge(r, s, state._bg).first;
-                        state._emat.put_me(r, s, me);
-                        state._c_mrs[me] = 0;
-                        for (size_t i = 0; i < state._rec_types.size(); ++i)
+                        if (skip(delta, edelta...))
+                            return;
+
+                        if (Add && me == state._emat.get_null_edge())
                         {
-                            state._c_brec[i][me] = 0;
-                            state._c_bdrec[i][me] = 0;
+                            me = boost::add_edge(r, s, state._bg).first;
+                            state._emat.put_me(r, s, me);
+                            state._c_mrs[me] = 0;
+                            for (size_t i = 0; i < state._rec_types.size(); ++i)
+                            {
+                                state._c_brec[i][me] = 0;
+                                state._c_bdrec[i][me] = 0;
+                            }
+                            if (state._coupled_state != nullptr)
+                                state._coupled_state->add_edge(me);
                         }
-                        if (state._coupled_state != nullptr)
-                            state._coupled_state->add_edge(me);
-                    }
 
-                    mid_op(me, edelta...);
+                        mid_op(me, edelta...);
 
-                    state._mrs[me] += delta;
-                    state._mrp[r] += delta;
-                    state._mrm[s] += delta;
+                        state._mrs[me] += delta;
+                        state._mrp[r] += delta;
+                        state._mrm[s] += delta;
 
-                    if (update_egroups)
-                    {
-                        if (r != s)
+                        update_egroups(r, s, delta);
+
+                        assert(state._mrs[me] >= 0);
+                        assert(state._mrp[r] >= 0);
+                        assert(state._mrm[s] >= 0);
+
+                        end_op(me, edelta...);
+
+                        if (Remove && state._mrs[me] == 0)
                         {
-                            state._egroups.insert_edge(r, s, delta);
-                            state._egroups.insert_edge(s, r, delta);
+                            state._emat.remove_me(me, state._bg);
+                            if (state._coupled_state != nullptr)
+                                state._coupled_state->remove_edge(me);
+                            else
+                                boost::remove_edge(me, state._bg);
+                            me = state._emat.get_null_edge();
                         }
-                        else
-                        {
-                            state._egroups.insert_edge(r, s, 2 * delta);
-                        }
-                    }
+                    });
+            };
 
-                    assert(state._mrs[me] >= 0);
-                    assert(state._mrp[r] >= 0);
-                    assert(state._mrm[s] >= 0);
-
-                    end_op(me, edelta...);
-
-                    if (Remove && state._mrs[me] == 0)
-                    {
-                        state._emat.remove_me(me, state._bg);
-                        if (state._coupled_state != nullptr)
-                            state._coupled_state->remove_edge(me);
-                        else
-                            boost::remove_edge(me, state._bg);
-                        me = state._emat.get_null_edge();
-                    }
-                });
+            if (!state._egroups.empty() && state._egroups_update)
+            {
+                dispatch([&](auto r, auto s, auto delta)
+                         {
+                             if (r != s)
+                             {
+                                 state._egroups.insert_edge(r, s, delta);
+                                 state._egroups.insert_edge(s, r, delta);
+                             }
+                             else
+                             {
+                                 state._egroups.insert_edge(r, s, 2 * delta);
+                             }
+                         });
+            }
+            else
+            {
+                dispatch([&](auto, auto, auto) {});
+            }
         };
 
     if (state._rec_types.empty())
@@ -622,13 +631,13 @@ void apply_delta(State& state, MEntries& m_entries)
                            m_entries._p_entries.emplace_back(r, s, me, delta,
                                                              dummy);
                        });
-        }
 
-        if (state._coupled_state != nullptr && !m_entries._p_entries.empty())
-        {
-            state._coupled_state->propagate_delta(m_entries.get_move().first,
-                                                  m_entries.get_move().second,
+            if (!m_entries._p_entries.empty())
+            {
+                state._coupled_state->propagate_delta(m_entries.get_move().first,
+                                                      m_entries.get_move().second,
                                                   m_entries._p_entries);
+            }
         }
     }
     else
