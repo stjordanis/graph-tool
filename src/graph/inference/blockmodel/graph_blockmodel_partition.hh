@@ -103,6 +103,7 @@ public:
     partition_stats(const partition_stats& o)
         : _bmap(o._bmap),
           _N(o._N),
+          _E(o._E),
           _actual_B(o._actual_B),
           _total_B(o._total_B),
           _hist(o._hist),
