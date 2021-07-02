@@ -68,7 +68,6 @@ struct Uncertain
             _edges.resize(num_vertices(_g));
             for (auto e : edges_range(_g))
                 get_edge<true>(source(e, _g), target(e, _g)) = e;
-            _block_state.enable_partition_stats();
         }
 
         UncertainState(const UncertainState& other)
@@ -78,9 +77,7 @@ struct Uncertain
               _edges(other._edges),
               _pe(other._pe),
               _E(other._E)
-        {
-            _block_state.enable_partition_stats();
-        }
+        {}
 
         typedef BlockState block_state_t;
         BlockState& _block_state;

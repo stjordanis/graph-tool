@@ -197,6 +197,8 @@ public:
                             out_degreeS()(v, _g, _eweight)};
             }
         }
+
+        init_partition_stats();
     }
 
     // =========================================================================
@@ -417,10 +419,9 @@ public:
 
         _wr[r] -= _vweight[v];
 
-        if (is_partition_stats_enabled())
-            get_partition_stats(v).remove_vertex(v, r, _deg_corr, _g,
-                                                 _vweight, _eweight,
-                                                 _degs);
+        get_partition_stats(v).remove_vertex(v, r, _deg_corr, _g,
+                                             _vweight, _eweight,
+                                             _degs);
     }
 
     void add_partition_node(size_t v, size_t r)
@@ -429,9 +430,8 @@ public:
 
         _wr[r] += _vweight[v];
 
-        if (is_partition_stats_enabled())
-            get_partition_stats(v).add_vertex(v, r, _deg_corr, _g, _vweight,
-                                              _eweight, _degs);
+        get_partition_stats(v).add_vertex(v, r, _deg_corr, _g, _vweight,
+                                          _eweight, _degs);
 
         if (_vweight[v] > 0 && _wr[r] == _vweight[v])
         {
@@ -483,16 +483,13 @@ public:
         size_t r = _b[u];
         size_t s = _b[v];
 
-        if (is_partition_stats_enabled())
-        {
-            get_partition_stats(u).remove_vertex(u, r, _deg_corr, _g,
+        get_partition_stats(u).remove_vertex(u, r, _deg_corr, _g,
+                                             _vweight, _eweight,
+                                             _degs);
+        if (u != v)
+            get_partition_stats(v).remove_vertex(v, s, _deg_corr, _g,
                                                  _vweight, _eweight,
                                                  _degs);
-            if (u != v)
-                get_partition_stats(v).remove_vertex(v, s, _deg_corr, _g,
-                                                     _vweight, _eweight,
-                                                     _degs);
-        }
 
         auto me = _emat.get_me(r, s);
         if constexpr (Add)
@@ -539,17 +536,14 @@ public:
 
         modify_edge<Add, Deplete>(u, v, e, _is_weighted);
 
-        if (is_partition_stats_enabled())
-        {
-            get_partition_stats(u).add_vertex(u, r, _deg_corr, _g,
+        get_partition_stats(u).add_vertex(u, r, _deg_corr, _g,
+                                          _vweight, _eweight,
+                                          _degs);
+        if (u != v)
+            get_partition_stats(v).add_vertex(v, s, _deg_corr, _g,
                                               _vweight, _eweight,
-                                              _degs);
-            if (u != v)
-                get_partition_stats(v).add_vertex(v, s, _deg_corr, _g,
-                                                  _vweight, _eweight,
                                                   _degs);
-            get_partition_stats(u).change_E(Add ? 1 : -1); // FIXME: wrong for multiple partition stats
-        }
+        get_partition_stats(u).change_E(Add ? 1 : -1); // FIXME: wrong for multiple partition stats
 
         if (_coupled_state != nullptr)
         {
@@ -1002,7 +996,6 @@ public:
 
         if (ea.degree_dl || ea.edges_dl)
         {
-            enable_partition_stats();
             auto& ps = get_partition_stats(v);
             if (_deg_corr && ea.degree_dl)
                 dS_dl += ps.get_delta_deg_dl(v, r, nr, _vweight, _eweight,
@@ -1242,7 +1235,6 @@ public:
             if (r != s && dr + ds != 0 && ea.edges_dl)
             {
                 size_t actual_B = 0;
-                enable_partition_stats();
                 for (auto& ps : _partition_stats)
                     actual_B += ps.get_actual_B();
                 size_t E = _partition_stats.front().get_E();
@@ -1278,7 +1270,6 @@ public:
 
         if (ea.partition_dl)
         {
-            enable_partition_stats();
             auto& ps = get_partition_stats(v);
             dS += ps.get_delta_partition_dl(v, r, nr, _vweight);
         }
@@ -1665,7 +1656,6 @@ public:
 
         if (ea.edges_dl)
         {
-            enable_partition_stats();
             size_t actual_B = 0;
             for (auto& ps : _partition_stats)
                 actual_B += ps.get_actual_B();
@@ -1705,7 +1695,6 @@ public:
 
     double get_partition_dl()
     {
-        enable_partition_stats();
         double S = 0;
         for (auto& ps : _partition_stats)
             S += ps.get_partition_dl();
@@ -1714,7 +1703,6 @@ public:
 
     double get_deg_dl(int kind)
     {
-        enable_partition_stats();
         double S = 0;
         for (auto& ps : _partition_stats)
             S += ps.get_deg_dl(kind);
@@ -1775,8 +1763,6 @@ public:
 
         if (ea.degree_dl && _deg_corr)
         {
-            enable_partition_stats();
-
             if (r != s || u == v)
             {
                 std::array<std::pair<size_t, size_t>, 2> degs;
@@ -1938,7 +1924,6 @@ public:
         {
             if (ea.edges_dl)
             {
-                enable_partition_stats();
                 size_t actual_B = 0;
                 for (auto& psi : _partition_stats)
                     actual_B += psi.get_actual_B();
@@ -1967,65 +1952,55 @@ public:
         return dS;
     }
 
-    void enable_partition_stats()
+    void init_partition_stats()
     {
-        if (_partition_stats.empty())
-        {
-            size_t E = 0;
-            for (auto e : edges_range(_g))
-                E += _eweight[e];
-            size_t B = num_vertices(_bg);
+        reset_partition_stats();
+        size_t E = 0;
+        for (auto e : edges_range(_g))
+            E += _eweight[e];
+        size_t B = num_vertices(_bg);
 
 // Clang 8.0 fails to correctly recognize these as ForwardIterators,
 // triggering a static_assert in std::max_element(). See #576.
 #ifndef __clang__
-            auto vi = std::max_element(
+        auto vi = std::max_element(
 #else
-            auto vi = boost::first_max_element(
+        auto vi = boost::first_max_element(
 #endif
-                vertices(_g).first, vertices(_g).second,
-                [&](auto u, auto v)
-                { return (this->_pclabel[u] <
-                          this->_pclabel[v]); });
+            vertices(_g).first, vertices(_g).second,
+            [&](auto u, auto v)
+            { return (this->_pclabel[u] <
+                      this->_pclabel[v]); });
 
-            size_t C = _pclabel[*vi] + 1;
+        size_t C = _pclabel[*vi] + 1;
 
-            vector<vector<size_t>> vcs(C);
-            vector<size_t> rc(num_vertices(_bg));
-            for (auto v : vertices_range(_g))
-            {
-                vcs[_pclabel[v]].push_back(v);
-                rc[_b[v]] = _pclabel[v];
-            }
-
-            for (size_t c = 0; c < C; ++c)
-                _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
-                                              _vweight, _eweight, _degs);
-
-            for (auto r : vertices_range(_bg))
-                _partition_stats[rc[r]].get_r(r);
+        vector<vector<size_t>> vcs(C);
+        vector<size_t> rc(num_vertices(_bg));
+        for (auto v : vertices_range(_g))
+        {
+            vcs[_pclabel[v]].push_back(v);
+            rc[_b[v]] = _pclabel[v];
         }
+
+        for (size_t c = 0; c < C; ++c)
+            _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
+                                          _vweight, _eweight, _degs);
+
+        for (auto r : vertices_range(_bg))
+            _partition_stats[rc[r]].get_r(r);
     }
 
-    void disable_partition_stats()
+    void reset_partition_stats()
     {
         _partition_stats.clear();
         _partition_stats.shrink_to_fit();
-    }
-
-    bool is_partition_stats_enabled() const
-    {
-        return !_partition_stats.empty();
     }
 
     partition_stats_t& get_partition_stats(size_t v)
     {
         size_t r = _pclabel[v];
         if (r >= _partition_stats.size())
-        {
-            disable_partition_stats();
-            enable_partition_stats();
-        }
+            init_partition_stats();
         return _partition_stats[r];
     }
 
@@ -2033,11 +2008,6 @@ public:
     void init_mcmc(MCMCState& state)
     {
         auto c = state._c;
-        auto& entropy_args = state._entropy_args;
-        bool dl = (entropy_args.partition_dl ||
-                   entropy_args.degree_dl ||
-                   entropy_args.edges_dl);
-
         if (!std::isinf(c))
         {
             _egroups.clear();
@@ -2047,11 +2017,6 @@ public:
         {
             _egroups.clear();
         }
-
-        if (dl)
-            enable_partition_stats();
-        else
-            disable_partition_stats();
     }
 
     void couple_state(BlockStateVirtualBase& s, const entropy_args_t& ea)

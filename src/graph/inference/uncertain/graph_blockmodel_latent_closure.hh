@@ -199,8 +199,6 @@ struct LatentClosure
                 //         assert(_M[i] > 0);
                 // }
             }
-            if (_l == 0)
-                _pbstate.enable_partition_stats();
         }
 
         size_t _l;
@@ -696,10 +694,6 @@ struct LatentClosure
                 else
                     _m[e_g.first] = me;
             }
-        }
-
-        void enable_partition_stats()
-        {
         }
 
         bool check()

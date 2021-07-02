@@ -167,8 +167,7 @@ public:
           _overlap_stats(other._overlap_stats),
           _coupled_state(nullptr)
     {
-        if (other.is_partition_stats_enabled())
-            enable_partition_stats();
+        init_partition_stats();
     }
 
     template <bool Add>
@@ -273,10 +272,7 @@ public:
             }
         }
 
-
-        if (is_partition_stats_enabled())
-            get_partition_stats(v).move_vertex(v, r, nr, _g);
-
+        get_partition_stats(v).move_vertex(v, r, nr, _g);
     }
 
     void add_edge(size_t, size_t, GraphInterface::edge_t&,
@@ -421,7 +417,6 @@ public:
         dS_dl += get_delta_partition_dl(v, r, nr, ea);
         if (ea.partition_dl || ea.degree_dl || ea.edges_dl)
         {
-            enable_partition_stats();
             auto& ps = get_partition_stats(v);
             if (_deg_corr && ea.degree_dl)
                 dS_dl += ps.get_delta_deg_dl(v, r, nr, _eweight, _g);
@@ -496,7 +491,6 @@ public:
 
         if (ea.partition_dl)
         {
-            enable_partition_stats();
             auto& ps = get_partition_stats(v);
             dS += ps.get_delta_partition_dl(v, r, nr, _g);
         }
@@ -848,7 +842,6 @@ public:
 
         if (ea.edges_dl)
         {
-            enable_partition_stats();
             size_t actual_B = 0;
             for (auto& ps : _partition_stats)
                 actual_B += ps.get_actual_B();
@@ -870,8 +863,6 @@ public:
 
     double get_partition_dl()
     {
-        if (!is_partition_stats_enabled())
-            enable_partition_stats();
         double S = 0;
         for (auto& ps : _partition_stats)
             S += ps.get_partition_dl();
@@ -880,8 +871,6 @@ public:
 
     double get_deg_dl(int kind)
     {
-        if (!is_partition_stats_enabled())
-            enable_partition_stats();
         double S = 0;
         for (auto& ps : _partition_stats)
             S += ps.get_deg_dl(kind);
@@ -930,49 +919,45 @@ public:
     {
     }
 
-    void enable_partition_stats()
-    {
-        if (_partition_stats.empty())
-        {
-
-            size_t E = num_vertices(_g) / 2;
-            size_t B = num_vertices(_bg);
-
-            auto vi = std::max_element(vertices(_g).first, vertices(_g).second,
-                                       [&](auto u, auto v)
-                                       { return this->_pclabel[u] < this->_pclabel[v];});
-            size_t C = _pclabel[*vi] + 1;
-
-            vector<gt_hash_set<size_t>> vcs(C);
-            vector<size_t> rc(num_vertices(_bg));
-            for (auto v : vertices_range(_g))
-            {
-                vcs[_pclabel[v]].insert(_overlap_stats.get_node(v));
-                rc[_b[v]] = _pclabel[v];
-            }
-
-            for (size_t c = 0; c < C; ++c)
-                _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
-                                              _eweight, _overlap_stats);
-
-            for (size_t r = 0; r < num_vertices(_bg); ++r)
-                _partition_stats[rc[r]].get_r(r);
-        }
-    }
-
-    void disable_partition_stats()
+    void reset_partition_stats()
     {
         _partition_stats.clear();
+        _partition_stats.shrink_to_fit();
     }
 
-    bool is_partition_stats_enabled() const
+    void init_partition_stats()
     {
-        return !_partition_stats.empty();
+        reset_partition_stats();
+        size_t E = num_vertices(_g) / 2;
+        size_t B = num_vertices(_bg);
+
+        auto vi = std::max_element(vertices(_g).first, vertices(_g).second,
+                                   [&](auto u, auto v)
+                                   { return this->_pclabel[u] < this->_pclabel[v];});
+        size_t C = _pclabel[*vi] + 1;
+
+        vector<gt_hash_set<size_t>> vcs(C);
+        vector<size_t> rc(num_vertices(_bg));
+        for (auto v : vertices_range(_g))
+        {
+            vcs[_pclabel[v]].insert(_overlap_stats.get_node(v));
+            rc[_b[v]] = _pclabel[v];
+        }
+
+        for (size_t c = 0; c < C; ++c)
+            _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
+                                          _eweight, _overlap_stats);
+
+        for (size_t r = 0; r < num_vertices(_bg); ++r)
+            _partition_stats[rc[r]].get_r(r);
     }
 
     overlap_partition_stats_t& get_partition_stats(size_t v)
     {
-        return _partition_stats[_pclabel[v]];
+        size_t r = _pclabel[v];
+        if (r >= _partition_stats.size())
+            init_partition_stats();
+        return _partition_stats[r];
     }
 
     void couple_state(BlockStateVirtualBase& s, const entropy_args_t& ea)
@@ -1172,10 +1157,6 @@ public:
     void init_mcmc(MCMCState& state)
     {
         auto c = state._c;
-        auto& entropy_args = state._entropy_args;
-        bool dl = (entropy_args.partition_dl ||
-                   entropy_args.degree_dl ||
-                   entropy_args.edges_dl);
         if (!std::isinf(c))
         {
             if (_egroups.empty())
@@ -1185,11 +1166,6 @@ public:
         {
             _egroups.clear();
         }
-
-        if (dl)
-            enable_partition_stats();
-        else
-            disable_partition_stats();
     }
 
     bool check_edge_counts(bool emat=true)

@@ -85,7 +85,6 @@ struct Layers
         using BaseState::_m_entries;
         using BaseState::_emat;
         using BaseState::_partition_stats;
-        using BaseState::is_partition_stats_enabled;
         using BaseState::get_move_entries;
 
         typedef vprop_map_t<int32_t>::type block_rmap_t;
@@ -229,7 +228,6 @@ struct Layers
               _layers(other._layers),
               _actual_B(other._actual_B),
               _N(other._N),
-              _is_partition_stats_enabled(other._is_partition_stats_enabled),
               _lcoupled_state(other._lcoupled_state),
               _vc_c(_vc.get_checked()),
             _vmap_c(_vmap.get_checked())
@@ -242,7 +240,6 @@ struct Layers
         std::vector<LayerState> _layers;
         size_t _actual_B = 0;
         size_t _N = 0;
-        bool _is_partition_stats_enabled = false;
         typedef entropy_args_t _entropy_args_t;
         LayeredBlockStateVirtualBase* _lcoupled_state = nullptr;
         typename vc_t::checked_t _vc_c;
@@ -640,25 +637,6 @@ struct Layers
         }
 
         double edge_entropy_term(size_t, size_t, const entropy_args_t&) { return 0; }
-
-        void enable_partition_stats()
-        {
-            if (!_is_partition_stats_enabled)
-            {
-                BaseState::enable_partition_stats();
-                for (auto& state : _layers)
-                    state.enable_partition_stats();
-                _is_partition_stats_enabled = true;
-            }
-        }
-
-        void disable_partition_stats()
-        {
-            BaseState::disable_partition_stats();
-            for (auto& state : _layers)
-                state.disable_partition_stats();
-            _is_partition_stats_enabled = false;
-        }
 
         template <class MCMCState>
         void init_mcmc(MCMCState& state)

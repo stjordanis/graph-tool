@@ -89,7 +89,6 @@ struct Dynamics
                 get_u_edge<true>(source(e, _u), target(e, _u)) = e;
                 _E += _eweight[e];
             }
-            _block_state.enable_partition_stats();
         }
 
         DynamicsState(const DynamicsState& other)
@@ -102,9 +101,7 @@ struct Dynamics
               _E(other._E),
               _dstate(*this, _params),
               _xc(_x.get_checked())
-        {
-            _block_state.enable_partition_stats();
-        }
+        {}
 
         typedef BlockState block_state_t;
         BlockState& _block_state;

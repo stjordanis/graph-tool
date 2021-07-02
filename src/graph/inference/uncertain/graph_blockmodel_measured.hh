@@ -100,8 +100,6 @@ struct Measured
 
             _N += (_NP - gE) * _n_default;
             _X += (_NP - gE) * _x_default;
-
-            _block_state.enable_partition_stats();
         }
 
         MeasuredState(const MeasuredState& other)
@@ -116,9 +114,7 @@ struct Measured
               _X(other._X),
               _T(other._T),
               _M(other._M)
-        {
-            _block_state.enable_partition_stats();
-        }
+        {}
 
         typedef BlockState block_state_t;
         BlockState& _block_state;

@@ -58,8 +58,6 @@ struct DummyBlockState
     DummyBlockState(Graph& g, EW& eweight)
         :_g(g), _eweight(eweight){}
 
-    constexpr void enable_partition_stats() {}
-
     template <bool Add, class E, class R, class EA>
     constexpr double modify_edge_dS(size_t, size_t, E&&, R&&, EA&&)
     {
@@ -124,7 +122,6 @@ struct LatentLayers
                     _E += x;
                     _Es[l] += x;
                 }
-                bstate.enable_partition_stats();
             }
 
             _uea.latent_edges = true;
