@@ -432,6 +432,17 @@ class OverlapBlockState(BlockState):
                                      _prop("v", self.base_g, b))
         return b
 
+    def get_bclabel(self, clabel=None):
+        r"""Returns a :class:`~graph_tool.VertexPropertyMap` corresponding to constraint
+        labels for the block graph."""
+
+        bclabel = self.bg.new_vertex_property("int")
+        reverse_map(self.b, bclabel)
+        if clabel is None:
+            clabel = self.clabel
+        pmap(bclabel, clabel)
+        return bclabel
+
     @copy_state_wrap
     def entropy(self, adjacency=True, dl=True, partition_dl=True,
                 degree_dl=True, degree_dl_kind="distributed", edges_dl=True,

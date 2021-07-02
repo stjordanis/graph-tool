@@ -317,7 +317,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         if clabel is not None:
             if isinstance(clabel, PropertyMap):
-                self.clabel = self.g.own_property(clabel).copy("int")
+                self.clabel = self.g.own_property(clabel)
             else:
                 self.clabel = self.g.new_vp("int")
                 self.clabel.fa = clabel
@@ -710,10 +710,11 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         labels for the block graph."""
 
         bclabel = self.bg.new_vertex_property("int")
-        reverse_map(self.b, bclabel)
+        idx = self.vweight.a > 0
+        reverse_map(self.b.a[idx], bclabel)
         if clabel is None:
             clabel = self.clabel
-        pmap(bclabel, clabel)
+        pmap(bclabel, clabel.a[idx])
         return bclabel
 
     def _set_bclabel(self, bstate):
