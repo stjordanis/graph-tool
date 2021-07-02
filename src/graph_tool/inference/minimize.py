@@ -23,7 +23,7 @@ from . util import *
 from . blockmodel import *
 from . nested_blockmodel import *
 
-def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
+def minimize_blockmodel_dl(g, state=BlockState, state_args={},
                            multilevel_mcmc_args={}):
     r"""Fit the stochastic block model, by minimizing its description length using an
     agglomerative heuristic.
@@ -143,7 +143,7 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={}, mcmc_args={},
     return state
 
 def minimize_nested_blockmodel_dl(g, init_bs=None,
-                                  state=NestedBlockState, state_args={}, mcmc_args={},
+                                  state=NestedBlockState, state_args={},
                                   multilevel_mcmc_args={}):
     r"""Fit the nested stochastic block model, by minimizing its description length
     using an agglomerative heuristic.

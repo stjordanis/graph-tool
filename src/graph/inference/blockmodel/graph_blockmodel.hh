@@ -464,74 +464,6 @@ public:
         remove_vertex(v, r);
     }
 
-    template <class Vlist>
-    void remove_vertices(Vlist& vs)
-    {
-        typedef typename graph_traits<g_t>::vertex_descriptor vertex_t;
-        typedef typename graph_traits<g_t>::edge_descriptor edges_t;
-
-        gt_hash_set<vertex_t> vset(vs.begin(), vs.end());
-        gt_hash_set<edges_t> eset;
-
-        for (auto v : vset)
-        {
-            for (auto e : all_edges_range(v, _g))
-            {
-                auto u = (source(e, _g) == v) ? target(e, _g) : source(e, _g);
-                if (vset.find(u) != vset.end())
-                    eset.insert(e);
-            }
-        }
-
-        for (auto v : vset)
-            remove_vertex(v, _b[v],
-                          [&](auto& e) { return eset.find(e) != eset.end(); });
-
-        for (auto& e : eset)
-        {
-            vertex_t v = source(e, _g);
-            vertex_t u = target(e, _g);
-            vertex_t r = _b[v];
-            vertex_t s = _b[u];
-
-            auto me = _emat.get_me(r, s);
-
-            auto ew = _eweight[e];
-            _mrs[me] -= ew;
-
-            assert(_mrs[me] >= 0);
-
-            _mrp[r] -= ew;
-            _mrm[s] -= ew;
-
-            for (size_t i = 0; i < _rec_types.size(); ++i)
-            {
-                switch (_rec_types[i])
-                {
-                case weight_type::REAL_NORMAL: // signed weights
-                    _bdrec[i][me] -= _drec[i][e];
-                    [[gnu::fallthrough]];
-                default:
-                    _brec[i][me] -= _rec[i][e];
-                }
-            }
-
-            if (_mrs[me] == 0)
-            {
-                _emat.remove_me(me, _bg);
-                if (_coupled_state != nullptr)
-                    _coupled_state->remove_edge(me);
-                else
-                    boost::remove_edge(me, this->_bg);
-            }
-        }
-    }
-
-    void remove_vertices(python::object ovs)
-    {
-        multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
-        remove_vertices(vs);
-    }
 
     template <class EFilt>
     void add_vertex(size_t v, size_t r, EFilt&& efilt)
@@ -542,89 +474,6 @@ public:
     void add_vertex(size_t v, size_t r)
     {
         add_vertex(v, r, [](auto&){ return false; });
-    }
-
-    template <class Vlist, class Blist>
-    void add_vertices(Vlist& vs, Blist& rs)
-    {
-        if (vs.size() != rs.size())
-            throw ValueException("vertex and group lists do not have the same size");
-
-        typedef typename graph_traits<g_t>::vertex_descriptor vertex_t;
-
-        gt_hash_map<vertex_t, size_t> vset;
-        for (size_t i = 0; i < vs.size(); ++i)
-            vset[vs[i]] = rs[i];
-
-        typedef typename graph_traits<g_t>::edge_descriptor edges_t;
-
-        gt_hash_set<edges_t> eset;
-        for (auto vr : vset)
-        {
-            auto v = vr.first;
-            for (auto e : all_edges_range(v, _g))
-            {
-                auto u = (source(e, _g) == v) ? target(e, _g) : source(e, _g);
-                if (vset.find(u) != vset.end())
-                    eset.insert(e);
-            }
-        }
-
-        for (auto vr : vset)
-            add_vertex(vr.first, vr.second,
-                       [&](auto& e){ return eset.find(e) != eset.end(); });
-
-        for (auto e : eset)
-        {
-            vertex_t v = source(e, _g);
-            vertex_t u = target(e, _g);
-            vertex_t r = vset[v];
-            vertex_t s = vset[u];
-
-            auto me = _emat.get_me(r, s);
-
-            if (me == _emat.get_null_edge())
-            {
-                me = boost::add_edge(r, s, _bg).first;
-                _emat.put_me(r, s, me);
-                _c_mrs[me] = 0;
-                for (size_t i = 0; i < _rec_types.size(); ++i)
-                {
-                    _c_brec[i][me] = 0;
-                    _c_bdrec[i][me] = 0;
-                }
-
-                if (_coupled_state != nullptr)
-                    _coupled_state->add_edge(me);
-            }
-
-            assert(me == _emat.get_me(r, s));
-
-            auto ew = _eweight[e];
-
-            _mrs[me] += ew;
-            _mrp[r] += ew;
-            _mrm[s] += ew;
-
-            for (size_t i = 0; i < _rec_types.size(); ++i)
-            {
-                switch (_rec_types[i])
-                {
-                case weight_type::REAL_NORMAL: // signed weights
-                    _bdrec[i][me] += _drec[i][e];
-                    [[gnu::fallthrough]];
-                default:
-                    _brec[i][me] += _rec[i][e];
-                }
-            }
-        }
-    }
-
-    void add_vertices(python::object ovs, python::object ors)
-    {
-        multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
-        multi_array_ref<uint64_t, 1> rs = get_array<uint64_t, 1>(ors);
-        add_vertices(vs, rs);
     }
 
     template <bool Add, bool Deplete=true>
@@ -819,22 +668,6 @@ public:
     {
         vweight.resize(num_vertices(_g));
         vweight[v] = 0;
-    }
-
-    template <class Vec>
-    void move_vertices(Vec& v, Vec& nr)
-    {
-        for (size_t i = 0; i < std::min(v.size(), nr.size()); ++i)
-            move_vertex(v[i], nr[i]);
-    }
-
-    void move_vertices(python::object ovs, python::object ors)
-    {
-        multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
-        multi_array_ref<uint64_t, 1> rs = get_array<uint64_t, 1>(ors);
-        if (vs.size() != rs.size())
-            throw ValueException("vertex and group lists do not have the same size");
-        move_vertices(vs, rs);
     }
 
     template <class VMap>

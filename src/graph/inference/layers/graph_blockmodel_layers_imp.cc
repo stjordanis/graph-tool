@@ -65,12 +65,6 @@ void export_lsbm()
                           = &state_t::get_move_prob;
                       void (state_t::*set_partition)(boost::any&)
                           = &state_t::set_partition;
-                      void (state_t::*move_vertices)(python::object, python::object) =
-                          &state_t::move_vertices;
-                      void (state_t::*remove_vertices)(python::object) =
-                          &state_t::remove_vertices;
-                      void (state_t::*add_vertices)(python::object, python::object) =
-                          &state_t::add_vertices;
                       void (state_t::*couple_state)(LayeredBlockStateVirtualBase&,
                                                     const entropy_args_t&) =
                           &state_t::couple_state;
@@ -81,9 +75,6 @@ void export_lsbm()
                       c.def("remove_vertex", &state_t::remove_vertex)
                           .def("add_vertex", &state_t::add_vertex)
                           .def("move_vertex", &state_t::move_vertex)
-                          .def("add_vertices", add_vertices)
-                          .def("remove_vertices", remove_vertices)
-                          .def("move_vertices", move_vertices)
                           .def("set_partition", set_partition)
                           .def("virtual_move", virtual_move)
                           .def("sample_block", sample_block)
@@ -103,12 +94,10 @@ void export_lsbm()
                                 {
                                     return python::object(block_state_t(state.get_layer(l)));
                                 })
-                          .def("enable_partition_stats",
-                               &state_t::enable_partition_stats)
-                          .def("disable_partition_stats",
-                               &state_t::disable_partition_stats)
-                          .def("is_partition_stats_enabled",
-                               &state_t::is_partition_stats_enabled)
+                          .def("reset_partition_stats",
+                               &state_t::reset_partition_stats)
+                          .def("init_partition_stats",
+                               &state_t::init_partition_stats)
                           .def("clear_egroups",
                                &state_t::clear_egroups)
                           .def("sync_emat",

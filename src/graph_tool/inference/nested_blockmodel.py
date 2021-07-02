@@ -561,20 +561,16 @@ class NestedBlockState(object):
         nattempts = 0
         nmoves = 0
 
-        try:
-            for l, lstate, args in self._h_sweep_gen(**kwargs):
+        for l, lstate, args in self._h_sweep_gen(**kwargs):
 
-                ret = algo(self.levels[l], **dict(args, test=False))
+            ret = algo(self.levels[l], **dict(args, test=False))
 
-                if l > 0 and "beta_dl" in entropy_args:
-                    dS += ret[0] * entropy_args["beta_dl"]
-                else:
-                    dS += ret[0]
-                nattempts += ret[1]
-                nmoves += ret[2]
-        finally:
-            for state in self.levels:
-                state.B = state.bg.num_vertices()
+            if l > 0 and "beta_dl" in entropy_args:
+                dS += ret[0] * entropy_args["beta_dl"]
+            else:
+                dS += ret[0]
+            nattempts += ret[1]
+            nmoves += ret[2]
 
         return dS, nattempts, nmoves
 
