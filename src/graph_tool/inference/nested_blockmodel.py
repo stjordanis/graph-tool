@@ -52,9 +52,6 @@ class NestedBlockState(object):
     hentropy_args : ``dict`` (optional, default: `{}`)
         Keyword arguments to be passed to the ``entropy()`` method of the
         higher-level states.
-    sampling : ``bool`` (optional, default: ``True``)
-        If ``True``, the state will be properly prepared for MCMC sampling (as
-        opposed to minimization).
     state_args : ``dict`` (optional, default: ``{}``)
         Keyword arguments to be passed to base type constructor.
     **kwargs :  keyword arguments
@@ -64,7 +61,7 @@ class NestedBlockState(object):
     """
 
     def __init__(self, g, bs=None, base_type=BlockState, state_args={},
-                 hstate_args={}, hentropy_args={}, sampling=True, **kwargs):
+                 hstate_args={}, hentropy_args={}, **kwargs):
         self.g = g
 
         self.base_type = base_type
@@ -81,9 +78,7 @@ class NestedBlockState(object):
         self.hstate_args = dict(dict(deg_corr=False, vweight="nonempty"),
                                 **hstate_args)
         self.hstate_args["Lrecdx"] = self.Lrecdx
-        self.sampling = sampling
-        if sampling:
-            self.hstate_args = dict(self.hstate_args, copy_bg=False)
+        self.hstate_args["copy_bg"] = False
         self.hentropy_args = dict(hentropy_args,
                                   adjacency=True,
                                   dense=True,
@@ -118,8 +113,7 @@ class NestedBlockState(object):
 
         self._regen_Lrecdx()
 
-        if self.sampling:
-            self._couple_levels(self.hentropy_args, None)
+        self._couple_levels(self.hentropy_args, None)
 
         if _bm_test():
             self._consistency_check()
@@ -194,7 +188,7 @@ class NestedBlockState(object):
         return self.copy(g=g)
 
     def copy(self, g=None, bs=None, state_args=None, hstate_args=None,
-             hentropy_args=None, sampling=None, **kwargs):
+             hentropy_args=None, **kwargs):
         r"""Copies the block state. The parameters override the state properties,
         and have the same meaning as in the constructor."""
         bs = self.get_bs() if bs is None else bs
@@ -203,13 +197,12 @@ class NestedBlockState(object):
                                 state_args=self.state_args if state_args is None else state_args,
                                 hstate_args=self.hstate_args if hstate_args is None else hstate_args,
                                 hentropy_args=self.hentropy_args if hentropy_args is None else hentropy_args,
-                                sampling=self.sampling if sampling is None else sampling,
                                 **kwargs)
 
     def __getstate__(self):
         state = dict(g=self.g, bs=self.get_bs(), base_type=type(self.levels[0]),
                      hstate_args=self.hstate_args,
-                     hentropy_args=self.hentropy_args, sampling=self.sampling,
+                     hentropy_args=self.hentropy_args,
                      state_args=self.state_args)
         return state
 
@@ -442,11 +435,10 @@ class NestedBlockState(object):
             else:
                 eargs = entropy_args
 
-            if self.sampling:
-                lstate._couple_state(None, None)
-                if l > 0:
-                    lstate._state.sync_emat()
-                    lstate._state.clear_egroups()
+            lstate._couple_state(None, None)
+            if l > 0:
+                lstate._state.sync_emat()
+                lstate._state.clear_egroups()
 
             L += lstate.get_edges_prob(missing, spurious, entropy_args=eargs)
             if isinstance(self.levels[0], LayeredBlockState):
@@ -514,9 +506,6 @@ class NestedBlockState(object):
             lstate._clear_egroups()
 
     def _h_sweep_gen(self, **kwargs):
-
-        if not self.sampling:
-            raise ValueError("NestedBlockState must be constructed with 'sampling=True'")
 
         verbose = kwargs.get("verbose", False)
         entropy_args = dict(kwargs.get("entropy_args", {}), edges_dl=False)
