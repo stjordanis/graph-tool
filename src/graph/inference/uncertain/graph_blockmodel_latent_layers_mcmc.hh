@@ -265,24 +265,32 @@ struct MCMC
                     else
                     {
                         dS = _state.remove_edge_dS(l, u, v, _entropy_args);
+                        size_t j = 0;
                         for (int i = 0; i < -dm-1; ++i)
                         {
+                            if (std::isinf(dS))
+                                break;
                             _state.remove_edge(l, u, v);
                             dS += _state.remove_edge_dS(l, u, v, _entropy_args);
+                            j++;
                         }
-                        for (int i = 0; i < -dm-1; ++i)
+                        for (size_t i = 0; i < j; ++i)
                             _state.add_edge(l, u, v);
                     }
                 }
                 else
                 {
                     dS = _state.add_edge_dS(l, u, v, _entropy_args);
+                    size_t j = 0;
                     for (int i = 0; i < dm-1; ++i)
                     {
+                        if (std::isinf(dS))
+                            break;
                         _state.add_edge(l, u, v);
                         dS += _state.add_edge_dS(l, u, v, _entropy_args);
+                        j++;
                     }
-                    for (int i = 0; i < dm-1; ++i)
+                    for (size_t i = 0; i < j; ++i)
                         _state.remove_edge(l, u, v);
                 }
 
