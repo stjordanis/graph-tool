@@ -135,10 +135,7 @@ public:
     void add_block(BGraph& bg)
     {
         if (num_vertices(bg) > _L)
-        {
-            _L = num_vertices(bg) * 10;
             sync(bg);
-        }
     }
 
     typedef typename graph_traits<BGraph>::vertex_descriptor vertex_t;
