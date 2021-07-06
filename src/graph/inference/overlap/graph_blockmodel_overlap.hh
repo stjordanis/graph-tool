@@ -275,6 +275,22 @@ public:
         get_partition_stats(v).move_vertex(v, r, nr, _g);
     }
 
+    template <class Vec>
+    void move_vertices(Vec& v, Vec& nr)
+    {
+        for (size_t i = 0; i < std::min(v.size(), nr.size()); ++i)
+            move_vertex(v[i], nr[i]);
+    }
+
+    void move_vertices(python::object ovs, python::object ors)
+    {
+        multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
+        multi_array_ref<uint64_t, 1> rs = get_array<uint64_t, 1>(ors);
+        if (vs.size() != rs.size())
+            throw ValueException("vertex and group lists do not have the same size");
+        move_vertices(vs, rs);
+    }
+
     void add_edge(size_t, size_t, GraphInterface::edge_t&,
                   const std::vector<double>&)
     {

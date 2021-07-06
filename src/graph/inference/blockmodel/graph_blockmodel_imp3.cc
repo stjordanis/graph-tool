@@ -40,8 +40,14 @@ void export_sbm_state_rmap()
          {
              typedef typename std::remove_reference<decltype(*s)>::type state_t;
 
+             // void (state_t::*remove_vertices)(python::object) =
+             //     &state_t::remove_vertices;
+             // void (state_t::*add_vertices)(python::object, python::object) =
+             //     &state_t::add_vertices;
              // void (state_t::*move_vertex)(size_t, size_t) =
              //     &state_t::move_vertex;
+             // void (state_t::*move_vertices)(python::object, python::object) =
+             //     &state_t::move_vertices;
              // double (state_t::*virtual_move)(size_t, size_t, size_t,
              //                                 entropy_args_t) =
              //     &state_t::virtual_move;
@@ -62,7 +68,10 @@ void export_sbm_state_rmap()
                   &state_t::get_B_E)
                  .def("get_B_E_D",
                       &state_t::get_B_E_D);
-             // c.def("move_vertex", move_vertex)
+             // c.def("remove_vertices", remove_vertices)
+             //     .def("add_vertices", add_vertices)
+             //     .def("move_vertex", move_vertex)
+             //     .def("move_vertices", move_vertices)
              //     .def("set_partition", set_partition)
              //     .def("virtual_move", virtual_move)
              //     .def("sample_block", sample_block)

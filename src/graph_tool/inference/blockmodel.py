@@ -1131,11 +1131,21 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                                                                     **kwargs)))
 
     def move_vertex(self, v, s):
-        r"""Move vertex ``v`` to block ``s``."""
-        self._state.move_vertex(int(v), s)
+        r"""Move vertex ``v`` to block ``s``.
+
+        This optionally accepts a list of vertices and blocks to move
+        simultaneously.
+        """
+        if not isinstance(v, collections.abc.Iterable):
+            self._state.move_vertex(int(v), s)
+        else:
+            self._state.move_vertices(numpy.asarray(v, dtype="uint64"),
+                                      numpy.asarray(s, dtype="uint64"))
 
     def remove_vertex(self, v):
         r"""Remove vertex ``v`` from its current group.
+
+        This optionally accepts a list of vertices to remove.
 
         .. warning::
 
@@ -1143,16 +1153,33 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
            is returned to some other group, or if the same vertex is removed
            twice.
         """
-        self._state.remove_vertex(int(v))
+        if isinstance(v, collections.abc.Iterable):
+            if not isinstance(v, numpy.ndarray):
+                v = list(v)
+            self._state.remove_vertices(numpy.asarray(v, dtype="uint64"))
+        else:
+            self._state.remove_vertex(int(v))
 
     def add_vertex(self, v, r):
         r"""Add vertex ``v`` to block ``r``.
 
+        This optionally accepts a list of vertices and blocks to add.
+
+        .. warning::
 
            This can leave the state in an inconsistent state if a vertex is
            added twice to the same group.
         """
-        self._state.add_vertex(int(v), r)
+        if isinstance(v, collections.abc.Iterable):
+            if not isinstance(v, numpy.ndarray):
+                v = list(v)
+            if not isinstance(r, numpy.ndarray):
+                r = list(r)
+            self._state.add_vertices(numpy.asarray(v, dtype="uint64"),
+                                     numpy.asarray(r, dtype="uint64"))
+        else:
+            self._state.add_vertex(int(v), r)
+
 
     def sample_vertex_move(self, v, c=1., d=.1):
         r"""Sample block membership proposal of vertex ``v`` according to real-valued

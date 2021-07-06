@@ -84,6 +84,9 @@ void export_layered_overlap_blockmodel_state()
                       double (state_t::*get_move_prob)(size_t, size_t, size_t,
                                                        double, double, bool)
                           = &state_t::get_move_prob;
+                      void (state_t::*move_vertices)(python::object,
+                                                     python::object) =
+                          &state_t::move_vertices;
                       void (state_t::*couple_state)(LayeredBlockStateVirtualBase&,
                                                     const entropy_args_t&) =
                           &state_t::couple_state;
@@ -93,6 +96,7 @@ void export_layered_overlap_blockmodel_state()
                       c.def("remove_vertex", &state_t::remove_vertex)
                           .def("add_vertex", &state_t::add_vertex)
                           .def("move_vertex", &state_t::move_vertex)
+                          .def("move_vertices", move_vertices)
                           .def("virtual_move", virtual_move)
                           .def("sample_block", sample_block)
                           .def("entropy", &state_t::entropy)

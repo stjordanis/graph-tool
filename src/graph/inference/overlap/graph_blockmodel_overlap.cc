@@ -181,6 +181,8 @@ void export_overlap_blockmodel_state()
                  = &state_t::get_move_prob;
              void (state_t::*set_partition)(boost::any&)
                  = &state_t::set_partition;
+             void (state_t::*move_vertices)(python::object, python::object) =
+                 &state_t::move_vertices;
              void (state_t::*remove_vertex)(size_t) = &state_t::remove_vertex;
              void (state_t::*add_vertex)(size_t, size_t) = &state_t::add_vertex;
 
@@ -189,6 +191,7 @@ void export_overlap_blockmodel_state()
              c.def("remove_vertex", remove_vertex)
                  .def("add_vertex", add_vertex)
                  .def("move_vertex", &state_t::move_vertex)
+                 .def("move_vertices", move_vertices)
                  .def("set_partition", set_partition)
                  .def("virtual_move", virtual_move)
                  .def("sample_block", sample_block)

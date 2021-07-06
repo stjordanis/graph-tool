@@ -334,6 +334,22 @@ struct Layers
             // assert(check_edge_counts());
         }
 
+        template <class Vec>
+        void move_vertices(Vec& v, Vec& nr)
+        {
+            for (size_t i = 0; i < std::min(v.size(), nr.size()); ++i)
+                move_vertex(v[i], nr[i]);
+        }
+
+        void move_vertices(python::object ovs, python::object ors)
+        {
+            multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
+            multi_array_ref<uint64_t, 1> rs = get_array<uint64_t, 1>(ors);
+            if (vs.size() != rs.size())
+                throw ValueException("vertex and group lists do not have the same size");
+            move_vertices(vs, rs);
+        }
+
         void remove_vertex(size_t v)
         {
             size_t r = _b[v];
@@ -351,6 +367,53 @@ struct Layers
                 _actual_B--;
         }
 
+        template <class Vec>
+        void remove_vertices(Vec& vs)
+        {
+            gt_hash_map<size_t, vector<size_t>> lvs;
+            gt_hash_set<size_t> rs;
+            for (auto v : vs)
+            {
+                for (auto l : _vc[v])
+                    lvs[l].push_back(v);
+                rs.insert(_b[v]);
+            }
+            for (auto& lv : lvs)
+            {
+                auto l = lv.first;
+                auto& state = _layers[l];
+                vector<size_t> us;
+                gt_hash_map<size_t, size_t> rus;
+                for (auto v : lv.second)
+                {
+                    auto u = _vmap[v][l];
+                    us.push_back(u);
+                    size_t r = _b[v];
+                    size_t r_u = state._b[u];
+                    rus[r] = r_u;
+                }
+                state.remove_vertices(us);
+
+                // for (auto rr_u : rus)
+                // {
+                //     if (state._wr[rr_u.second] == 0)
+                //         state.remove_block_map(rr_u.first);
+                // }
+            }
+            BaseState::remove_vertices(vs);
+            for (auto r : rs)
+            {
+                if (_wr[r] == 0)
+                    _actual_B--;
+            }
+        }
+
+        void remove_vertices(python::object ovs)
+        {
+            multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
+            remove_vertices(vs);
+        }
+
         void add_vertex(size_t v, size_t r)
         {
             auto& ls = _vc[v];
@@ -366,6 +429,50 @@ struct Layers
             if (_wr[r] == 0)
                 _actual_B++;
             BaseState::add_vertex(v, r);
+        }
+
+        template <class Vs, class Rs>
+        void add_vertices(Vs& vs, Rs& rs)
+        {
+            if (vs.size() != rs.size())
+                throw ValueException("vertex and group lists do not have the same size");
+
+            gt_hash_map<size_t, vector<size_t>> lvs;
+            gt_hash_map<size_t, size_t> vrs;
+            for (size_t i = 0; i < vs.size(); ++i)
+            {
+                auto v = vs[i];
+                vrs[v] = rs[i];
+                for (auto l : _vc[v])
+                    lvs[l].push_back(v);
+            }
+
+            for (auto& lv : lvs)
+            {
+                auto l = lv.first;
+                auto& state = _layers[l];
+                vector<size_t> us;
+                vector<size_t> rus;
+                for (auto v : lv.second)
+                {
+                    us.emplace_back(_vmap[v][l]);
+                    rus.emplace_back(state.get_block_map(vrs[v]));
+                }
+                state.add_vertices(us, rus);
+            }
+            for (auto r : rs)
+            {
+                if (_wr[r] == 0)
+                    _actual_B++;
+            }
+            BaseState::add_vertices(vs, rs);
+        }
+
+        void add_vertices(python::object ovs, python::object ors)
+        {
+            multi_array_ref<uint64_t, 1> vs = get_array<uint64_t, 1>(ovs);
+            multi_array_ref<uint64_t, 1> rs = get_array<uint64_t, 1>(ors);
+            add_vertices(vs, rs);
         }
 
         template <class VMap>
