@@ -382,23 +382,6 @@ AX_CREATE_PKGCONFIG_INFO([graph-tool-py${PYTHON_VERSION}.pc], [],
 
 AC_CONFIG_FILES([
 Makefile
-src/Makefile
-src/graph/Makefile
-src/graph/centrality/Makefile
-src/graph/clustering/Makefile
-src/graph/correlations/Makefile
-src/graph/draw/Makefile
-src/graph/dynamics/Makefile
-src/graph/flow/Makefile
-src/graph/generation/Makefile
-src/graph/inference/Makefile
-src/graph/layout/Makefile
-src/graph/search/Makefile
-src/graph/spectral/Makefile
-src/graph/stats/Makefile
-src/graph/topology/Makefile
-src/graph/util/Makefile
-src/graph_tool/Makefile
 ])
 AC_OUTPUT
 
