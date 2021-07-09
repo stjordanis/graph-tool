@@ -18,8 +18,8 @@
 #ifndef GRAPH_BLOCKMODEL_ELIST_HH
 #define GRAPH_BLOCKMODEL_ELIST_HH
 
-#include "../generation/sampler.hh"
-#include "../generation/dynamic_sampler.hh"
+#include "../../generation/sampler.hh"
+#include "../../generation/dynamic_sampler.hh"
 
 namespace graph_tool
 {
