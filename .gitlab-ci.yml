@@ -55,7 +55,7 @@ build_sid:
     - BASE=debian:sid
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -68,7 +68,7 @@ build_bullseye:
     - BASE=debian:bullseye
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -81,7 +81,7 @@ build_buster:
     - BASE=debian:buster
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -94,7 +94,7 @@ build_bionic:
     - BASE=ubuntu:bionic
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -107,7 +107,7 @@ build_focal:
     - BASE=ubuntu:focal
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -120,7 +120,7 @@ build_groovy:
     - BASE=ubuntu:groovy
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -133,7 +133,7 @@ build_hirsute:
     - BASE=ubuntu:hirsute
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img .
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
     - docker run -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
@@ -144,6 +144,6 @@ build_hirsute:
 build_docker:
   script:
     - cd release/docker
-    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool .
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool . --no-cache
   only:
     - tags
