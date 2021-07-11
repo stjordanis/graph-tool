@@ -6,6 +6,7 @@ include /usr/share/cdbs/1/class/autotools.mk
 export SPARSEHASH_CFLAGS=-I/usr/include
 export SPARSEHASH_LIBS=-L/usr/lib
 
+export CXXFLAGS=-O3  # prevent -O2 -g default
 #export CXXFLAGS=-flto=${NJOBS} -ffunction-sections -fdata-sections
 #export LDFLAGS=-flto=${NJOBS}
 
