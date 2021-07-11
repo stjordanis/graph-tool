@@ -18,22 +18,19 @@ AC_SUBST(GRAPH_TOOL_VERSION_MINOR)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src)
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([foreign subdir-objects tar-pax])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-AM_PROG_CC_C_O
 AC_CONFIG_HEADERS([config.h])
 
 AC_SEARCH_LIBS([strerror],[cposix])
-AC_SUBST(CXXFLAGS,$CXXFLAGS)
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CXX
 AC_LANG([C++])
 AC_PROG_CC_STDC
 AC_HEADER_STDC
-AC_DISABLE_STATIC
 AC_PROG_INSTALL
-LT_INIT
+LT_INIT([disable-static])
 
 # pkg-config generation
 PKG_PROG_PKG_CONFIG
@@ -313,7 +310,7 @@ AC_SUBST(PACKAGE_DOC_DIR)
 
 # Allow the pkg-config directory to be set
 AC_ARG_WITH(pkgconfigdir,
-            AC_HELP_STRING([--with-pkgconfigdir],
+            AS_HELP_STRING([--with-pkgconfigdir],
             [Use the specified pkgconfig dir (default is libdir/pkgconfig)]),
             [pkgconfigdir=${withval}],
             [pkgconfigdir='${libdir}/pkgconfig'])
@@ -335,7 +332,7 @@ AC_DEFINE_UNQUOTED([PACKAGE_DOC_DIR], "${PACKAGE_DOC_DIR}", [package doc dir])
 AC_DEFINE_UNQUOTED([AUTHOR], "Tiago de Paula Peixoto <tiago@skewed.de>", [program author(s)])
 
 AC_DEFINE_UNQUOTED([COPYRIGHT],
-    "Copyright (C) 2006-2021 Tiago de Paula Peixoto\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    ["Copyright (C) 2006-2021 Tiago de Paula Peixoto\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."],
         [copyright info])
 
 # git information
@@ -346,12 +343,6 @@ AC_DEFINE([GIT_COMMIT_DATE], "esyscmd(git log -1 | head -n 3 | grep 'Date:' | se
 AC_DEFINE([GCC_VERSION], [(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)], [GCC version value])
 
 # set automake variables
-
-# global CPP flags
-AC_SUBST(CPPFLAGS)
-
-# global CXX flags
-AC_SUBST(CXXFLAGS)
 
 # extra CPP flags for submodules
 [MOD_CPPFLAGS="-I\$(top_srcdir)/src/boost-workaround -I\$(top_srcdir)/src/pcg-cpp/include -DHAVE_CONFIG_H -I\$(top_srcdir)/src/graph -I\$(top_builddir) ${PYTHON_CPPFLAGS} ${BOOST_CPPFLAGS} ${NUMPY_CPPFLAGS} ${EXPAT_CFLAGS}"]
@@ -366,13 +357,13 @@ AC_SUBST(MOD_LIBADD)
 [MOD_LDFLAGS="-module -avoid-version -export-dynamic -no-undefined -Wl,-E -Wl,--as-needed"]
 
 # MacOS needs different options
-if [[ `echo ${target_os} | grep -c -e "^darwin"` == 1 ]]; then
-   [MOD_LDFLAGS="-module -dynamiclib"]
-fi
-
+AS_CASE([${host_os}],
+    [darwin*], [
+        MOD_LDFLAGS="-module -dynamiclib"
+])
 AC_SUBST(MOD_LDFLAGS)
 
-AC_DEFINE([BOOST_BIND_GLOBAL_PLACEHOLDERS], [1], [Supress boost warning])
+AC_DEFINE([BOOST_BIND_GLOBAL_PLACEHOLDERS], [1], [Suppress Boost warning])
 
 AX_CREATE_PKGCONFIG_INFO([graph-tool-py${PYTHON_VERSION}.pc], [],
                          [${PYTHON_LIBS} -l${BOOST_PYTHON_LIB}],
