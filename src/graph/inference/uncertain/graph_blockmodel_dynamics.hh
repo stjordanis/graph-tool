@@ -91,18 +91,6 @@ struct Dynamics
             }
         }
 
-        DynamicsState(const DynamicsState& other)
-            : DynamicsStateBase<Ts...>(static_cast<const DynamicsStateBase<Ts...>&>(other)),
-              _block_state(other._block_state),
-              _t(other._t),
-              _s(other._s),
-              _u_edges(other._u_edges),
-              _pe(other._pe),
-              _E(other._E),
-              _dstate(*this, _params),
-              _xc(_x.get_checked())
-        {}
-
         typedef BlockState block_state_t;
         BlockState& _block_state;
         std::vector<typename tmap_t::unchecked_t> _t;

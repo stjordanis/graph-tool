@@ -77,7 +77,7 @@ python::object mcmc_epidemics_sweep_r(python::object omcmc_state,
                      (omcmc_state,
                       [&](auto& s)
                       {
-                          auto ret_ = mcmc_sweep(s, rng);
+                          auto ret_ = mcmc_sweep(*s, rng);
                           ret = tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret_);
                       });
              },

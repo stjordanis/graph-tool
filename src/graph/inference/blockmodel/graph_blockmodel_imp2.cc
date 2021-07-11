@@ -62,7 +62,7 @@ void export_sbm_state()
              void (state_t::*set_partition)(boost::any&) =
                  &state_t::set_partition;
 
-             class_<state_t, bases<BlockStateVirtualBase>>
+             class_<state_t, bases<BlockStateVirtualBase>, std::shared_ptr<state_t>>
                  c(name_demangle(typeid(state_t).name()).c_str(),
                    no_init);
              c.def("remove_vertices", remove_vertices)

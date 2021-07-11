@@ -50,7 +50,7 @@ void export_modularity_state()
                                              const modularity_entropy_args_t& ea) =
                  &state_t::virtual_move;
 
-             class_<state_t>
+             class_<state_t, bases<>, std::shared_ptr<state_t>>
                  c(name_demangle(typeid(state_t).name()).c_str(),
                    no_init);
              c.def("move_vertex", move_vertex)

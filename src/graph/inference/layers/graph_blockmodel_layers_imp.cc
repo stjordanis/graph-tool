@@ -43,7 +43,8 @@ void export_lsbm()
 #ifdef GRAPH_BLOCKMODEL_LAYERS_ENABLE
     using namespace boost::python;
 
-    class_<LayeredBlockStateVirtualBase, boost::noncopyable>
+    class_<LayeredBlockStateVirtualBase, bases<>,
+           std::shared_ptr<LayeredBlockStateVirtualBase>, boost::noncopyable>
         ("LayeredBlockStateVirtualBase", no_init);
 
     block_state::dispatch
@@ -75,7 +76,8 @@ void export_lsbm()
                                                     const entropy_args_t&) =
                           &state_t::couple_state;
 
-                      class_<state_t, bases<LayeredBlockStateVirtualBase>>
+                      class_<state_t, bases<LayeredBlockStateVirtualBase>,
+                             std::shared_ptr<state_t>>
                           c(name_demangle(typeid(state_t).name()).c_str(),
                             no_init);
                       c.def("remove_vertex", &state_t::remove_vertex)

@@ -91,7 +91,7 @@ void export_layered_overlap_blockmodel_state()
                                                     const entropy_args_t&) =
                           &state_t::couple_state;
 
-                      class_<state_t> c(name_demangle(typeid(state_t).name()).c_str(),
+                      class_<state_t, bases<>, std::shared_ptr<state_t>> c(name_demangle(typeid(state_t).name()).c_str(),
                                         no_init);
                       c.def("remove_vertex", &state_t::remove_vertex)
                           .def("add_vertex", &state_t::add_vertex)

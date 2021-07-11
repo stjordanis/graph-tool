@@ -144,6 +144,8 @@ public:
         }
         _dBdx.resize(_rec_types.size());
         _LdBdx.resize(_rec_types.size());
+
+        init_partition_stats();
     }
 
     OverlapBlockState(const OverlapBlockState& other)
@@ -164,8 +166,9 @@ public:
           _rt(other._rt),
           _emat(other._emat),
           _egroups_update(other._egroups_update),
-          _overlap_stats(other._overlap_stats),
-          _coupled_state(nullptr)
+          //_overlap_stats(other._overlap_stats),
+          _overlap_stats(_g, _b, _half_edges, _node_index, num_vertices(_bg)),
+          _coupled_state(other._coupled_state)
     {
         init_partition_stats();
     }

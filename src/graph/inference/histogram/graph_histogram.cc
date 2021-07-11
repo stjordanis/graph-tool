@@ -82,7 +82,7 @@ void dispatch_state_def(State*)
 {
     using namespace boost::python;
 
-    class_<State>
+    class_<State, bases<>, std::shared_ptr<State>>
         c(name_demangle(typeid(State).name()).c_str(),
           no_init);
     c.def("entropy", &State::entropy)

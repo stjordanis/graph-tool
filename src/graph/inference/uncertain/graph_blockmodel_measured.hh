@@ -102,20 +102,6 @@ struct Measured
             _X += (_NP - gE) * _x_default;
         }
 
-        MeasuredState(const MeasuredState& other)
-            : MeasuredStateBase<Ts...>(static_cast<const MeasuredStateBase<Ts...>&>(other)),
-              _block_state(other._block_state),
-              _u_edges(other._u_edges),
-              _edges(other._edges),
-              _pe(other._pe),
-              _NP(other._NP),
-              _E(other._E),
-              _N(other._N),
-              _X(other._X),
-              _T(other._T),
-              _M(other._M)
-        {}
-
         typedef BlockState block_state_t;
         BlockState& _block_state;
         typename BlockState::g_t& _u = _block_state._g;

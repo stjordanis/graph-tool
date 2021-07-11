@@ -52,8 +52,10 @@ python::object do_multicanonical_sweep(python::object omulticanonical_state,
 
         mcmc_block_state<state_t>::make_dispatch
             (omulticanonical_state,
-             [&](auto& mcmc_state)
+             [&](auto& pmcmc_state)
              {
+                 auto& mcmc_state = *pmcmc_state;
+
                  typedef typename std::remove_reference<decltype(mcmc_state)>::type
                      mcmc_state_t;
 
@@ -63,7 +65,7 @@ python::object do_multicanonical_sweep(python::object omulticanonical_state,
                      (omulticanonical_state,
                       [&](auto& mc_state)
                       {
-                          auto ret_ = mcmc_sweep(mc_state, rng);
+                          auto ret_ = mcmc_sweep(*mc_state, rng);
                           ret = tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret_);
                       });
              });

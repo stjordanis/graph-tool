@@ -52,7 +52,7 @@ python::object gibbs_overlap_sweep(python::object ogibbs_state,
            (ogibbs_state,
             [&](auto& s)
             {
-                auto ret_ = gibbs_sweep(s, rng);
+                auto ret_ = gibbs_sweep(*s, rng);
                 ret = tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret_);
             });
     };
@@ -74,7 +74,7 @@ public:
 
     virtual std::tuple<double, size_t, size_t> run(rng_t& rng)
     {
-        return gibbs_sweep(_s, rng);
+        return gibbs_sweep(*_s, rng);
     }
 private:
     State _s;

@@ -109,7 +109,7 @@ void export_latent_closure_state()
                   {
                       typedef typename std::remove_reference<decltype(*cs)>::type c_state_t;
 
-                      class_<c_state_t>
+                      class_<c_state_t, bases<>, std::shared_ptr<c_state_t>>
                           c(name_demangle(typeid(c_state_t).name()).c_str(),
                             no_init);
                       c.def("entropy", &c_state_t::entropy);
@@ -118,7 +118,7 @@ void export_latent_closure_state()
                           ([&](auto* s)
                            {
                                typedef typename std::remove_reference<decltype(*s)>::type state_t;
-                               class_<state_t>
+                               class_<state_t, bases<>, std::shared_ptr<state_t>>
                                    c(name_demangle(typeid(state_t).name()).c_str(),
                                      no_init);
                                c.def("remove_edge", &state_t::remove_edge)

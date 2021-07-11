@@ -47,7 +47,7 @@ python::object pp_gibbs_sweep(python::object ogibbs_state,
            (ogibbs_state,
             [&](auto& s)
             {
-                auto ret_ = gibbs_sweep(s, rng);
+                auto ret_ = gibbs_sweep(*s, rng);
                 ret = tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret_);
             });
     };

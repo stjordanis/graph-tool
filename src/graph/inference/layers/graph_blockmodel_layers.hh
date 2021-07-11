@@ -222,19 +222,6 @@ struct Layers
             // assert(check_edge_counts());
         }
 
-        LayeredBlockState(const LayeredBlockState& other)
-            : LayeredBlockStateBase<Ts...>(static_cast<const LayeredBlockStateBase<Ts...>&>(other)),
-              BaseState(other),
-              _layers(other._layers),
-              _actual_B(other._actual_B),
-              _N(other._N),
-              _lcoupled_state(other._lcoupled_state),
-              _vc_c(_vc.get_checked()),
-            _vmap_c(_vmap.get_checked())
-        {
-            for (auto& state : _layers)
-                state._lstate = this;
-        }
         virtual ~LayeredBlockState() {}
 
         std::vector<LayerState> _layers;

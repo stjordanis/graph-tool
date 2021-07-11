@@ -70,15 +70,6 @@ struct Uncertain
                 get_edge<true>(source(e, _g), target(e, _g)) = e;
         }
 
-        UncertainState(const UncertainState& other)
-            : UncertainStateBase<Ts...>(static_cast<const UncertainStateBase<Ts...>&>(other)),
-              _block_state(other._block_state),
-              _u_edges(other._u_edges),
-              _edges(other._edges),
-              _pe(other._pe),
-              _E(other._E)
-        {}
-
         typedef BlockState block_state_t;
         BlockState& _block_state;
         typename BlockState::g_t& _u = _block_state._g;

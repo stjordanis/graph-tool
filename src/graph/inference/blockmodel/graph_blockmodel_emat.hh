@@ -110,11 +110,6 @@ public:
         sync(bg);
     }
 
-    EHash(const EHash& other)
-        : _h(other._h),
-          _L(other._L)
-    {}
-
     void sync(BGraph& bg)
     {
         if (num_vertices(bg) > _L)

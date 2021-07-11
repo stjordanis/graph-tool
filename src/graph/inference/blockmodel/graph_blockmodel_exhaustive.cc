@@ -52,7 +52,7 @@ void do_exhaustive_sweep(python::object oexhaustive_state,
            (oexhaustive_state,
             [&](auto& s)
             {
-                exhaustive_sweep(s,
+                exhaustive_sweep(*s,
                                  [&](auto& state)
                                  {
                                      callback(state._S,
@@ -79,13 +79,12 @@ python::object do_exhaustive_sweep_iter(python::object oexhaustive_state,
                    (oexhaustive_state,
                     [&](auto& s)
                     {
-                        exhaustive_sweep
-                            (s,
-                             [&](auto& state)
-                             {
-                                 yield(python::make_tuple(state._S,
-                                                          state._S_min));
-                             });
+                        exhaustive_sweep(*s,
+                                         [&](auto& state)
+                                         {
+                                             yield(python::make_tuple(state._S,
+                                                                      state._S_min));
+                                         });
                     });
             };
             block_state::dispatch(oblock_state, dispatch);
@@ -113,7 +112,7 @@ void do_exhaustive_dens(python::object oexhaustive_state,
            (oexhaustive_state,
             [&](auto& s)
             {
-                exhaustive_sweep(s,
+                exhaustive_sweep(*s,
                                  [&](auto& state)
                                  {
                                      auto S = state._S;

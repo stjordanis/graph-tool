@@ -45,8 +45,9 @@ void export_em_blockmodel_state()
         ([&](auto* s)
          {
              typedef typename std::remove_reference<decltype(*s)>::type state_t;
-             class_<state_t> c(name_demangle(typeid(state_t).name()).c_str(),
-                               no_init);
+             class_<state_t, bases<>, std::shared_ptr<state_t>>
+                 c(name_demangle(typeid(state_t).name()).c_str(),
+                   no_init);
              c.def("learn_iter", &state_t::learn_iter)
                  .def("bp_iter", &state_t::bp_iter)
                  .def("bethe_fe", &state_t::bethe_fe)

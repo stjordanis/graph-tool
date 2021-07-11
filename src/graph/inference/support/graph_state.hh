@@ -40,6 +40,8 @@
 
 #include "config.h"
 
+#include <memory>
+
 namespace graph_tool
 {
 
@@ -162,7 +164,7 @@ struct StateWrap
         template <class... ATs>
         auto operator()(ATs&&... args) const
         {
-            return type(std::forward<ATs>(args)...);
+            return std::make_shared<type>(std::forward<ATs>(args)...);
         };
     };
 

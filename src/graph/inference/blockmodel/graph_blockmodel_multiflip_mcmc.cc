@@ -48,7 +48,7 @@ python::object do_multiflip_mcmc_sweep(python::object omcmc_state,
            (omcmc_state,
             [&](auto& s)
             {
-                auto ret_ = mcmc_sweep(s, rng);
+                auto ret_ = mcmc_sweep(*s, rng);
                 ret = tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret_);
             });
     };
@@ -71,7 +71,7 @@ public:
 
     virtual std::tuple<double, size_t, size_t> run(rng_t& rng)
     {
-        return mcmc_sweep(_s, rng);
+        return mcmc_sweep(*_s, rng);
     }
 private:
     State _s;
