@@ -44,7 +44,7 @@ def copy_state_wrap(func):
 
         S = func(self, *args, **kwargs)
 
-        if kwargs.pop("test", True) and _bm_test():
+        if _bm_test() and kwargs.pop("test", True):
             assert not isnan(S) and not isinf(S), \
                 "invalid entropy %g (%s) " % (S, str(args))
 
