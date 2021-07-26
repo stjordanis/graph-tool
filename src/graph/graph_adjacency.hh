@@ -535,10 +535,10 @@ private:
     vertex_list_t _edges;
     size_t _n_edges;
     size_t _edge_index_range;
-    std::deque<size_t> _free_indexes; // indexes of deleted edges to be used up
-                                      // for new edges to avoid very large
-                                      // indexes, and unnecessary property map
-                                      // memory use
+    std::vector<size_t> _free_indexes; // indexes of deleted edges to be used up
+                                       // for new edges to avoid very large
+                                       // indexes, and unnecessary property map
+                                       // memory use
     bool _keep_epos;
     std::vector<std::pair<uint32_t, uint32_t>> _epos; // out, in
 
@@ -962,8 +962,8 @@ add_edge(Vertex s, Vertex t, adj_list<Vertex>& g)
     }
     else
     {
-        idx = g._free_indexes.front();
-        g._free_indexes.pop_front();
+        idx = g._free_indexes.back();
+        g._free_indexes.pop_back();
     }
 
     // put target on back of source's out-list (middle of total list)
