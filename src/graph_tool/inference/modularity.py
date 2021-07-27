@@ -118,7 +118,7 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         self.g = GraphView(g, directed=False)
         if b is None:
             self.b = self.g.new_vp("int32_t")
-        elif isinstance(g, PropertyMap):
+        elif isinstance(b, PropertyMap):
             self.b = b.copy("int32_t")
         else:
             self.b = self.g.new_vp("int32_t", vals=b)
