@@ -106,7 +106,7 @@ public:
         size_t idx = pos[key];
         if constexpr (shared_pos)
         {
-            if (idx >= _items.size() || _items[pos].first != key)
+            if (idx >= _items.size() || _items[idx].first != key)
                 return end();
         }
         else
@@ -125,8 +125,15 @@ public:
     void clear()
     {
         auto& pos = get_pos();
-        for (auto k : _items)
-            pos[k.first] = _null;
+        if constexpr (shared_pos)
+        {
+            for (auto k : _items)
+                pos[k.first] = _null;
+        }
+        else
+        {
+            pos.clear();
+        }
         _items.clear();
     }
 
@@ -238,8 +245,15 @@ public:
     void clear()
     {
         auto& pos = const_cast<pos_t&>(get_pos());
-        for (auto k : _items)
-            pos[k] = _null;
+        if constexpr (shared_pos)
+        {
+            for (auto k : _items)
+                pos[k] = _null;
+        }
+        else
+        {
+            pos.clear();
+        }
         _items.clear();
     }
 
