@@ -33,7 +33,7 @@ namespace graph_tool
 {
 
 template <class GibbsState, class RNG>
-auto gibbs_sweep(GibbsState state, RNG& rng)
+auto gibbs_sweep(GibbsState& state, RNG& rng)
 {
     GILRelease gil;
 

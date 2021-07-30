@@ -58,7 +58,7 @@ bool metropolis_accept(double dS, double mP, double beta, RNG& rng)
 
 
 template <class MCMCState, class RNG>
-auto mcmc_sweep(MCMCState state, RNG& rng)
+auto mcmc_sweep(MCMCState& state, RNG& rng)
 {
     GILRelease gil;
 
