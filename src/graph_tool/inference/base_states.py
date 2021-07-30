@@ -40,16 +40,16 @@ def _bm_test():
 
 def copy_state_wrap(func):
     @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args, test=True, **kwargs):
 
         S = func(self, *args, **kwargs)
 
-        if _bm_test() and kwargs.pop("test", True):
+        if _bm_test() and test:
             assert not isnan(S) and not isinf(S), \
                 "invalid entropy %g (%s) " % (S, str(args))
 
             state_copy = self.copy()
-            Salt = state_copy.entropy(*args, **dict(kwargs, test=False))
+            Salt = state_copy.entropy(*args, test=False, **kwargs)
 
             assert math.isclose(S, Salt, abs_tol=1e-8), \
                 "entropy discrepancy after copying (%g %g %g)" % (S, Salt,
