@@ -321,8 +321,6 @@ struct add_edge_list_hash
                     else
                         x = python::extract<val_t>(val);
                     auto v = get_vertex(x);
-                    while (v >= num_vertices(g))
-                        add_vertex(g);
                     if (i == 0)
                         s = v;
                     else
