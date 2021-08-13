@@ -69,8 +69,8 @@ public:
         _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
         _N(HardNumVertices()(_g)),
         _E(HardNumEdges()(_g)),
-        _bclabel(_N),
-        _pclabel(_N),
+        _bclabel(num_vertices(_g)),
+        _pclabel(num_vertices(_g)),
         _partition_stats(_g, _b, vertices_range(_g), _E,
                          num_vertices(_g), _vweight, _eweight, _degs)
     {
@@ -86,7 +86,7 @@ public:
             _er[r] += out_degree(v, _g);
         }
 
-        for (size_t r = 0; r < _N; ++r)
+        for (size_t r = 0; r < num_vertices(_g); ++r)
         {
             if (_wr[r] == 0)
                 _empty_groups.insert(r);

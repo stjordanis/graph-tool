@@ -68,7 +68,8 @@ class PPBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         init_q_cache(max(2 * max(self.g.num_edges(),
                                  self.g.num_vertices()), 100))
 
-        self.bg = self.g
+        self.bg = GraphView(self.g)
+        self.bg.clear_filters()
         self._abg = self.bg._get_any()
         self._state = libinference.make_pp_state(self)
 
