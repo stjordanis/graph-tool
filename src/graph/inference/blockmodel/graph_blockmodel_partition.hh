@@ -166,7 +166,7 @@ public:
     double get_partition_dl()
     {
         double S = 0;
-        S += lbinom(_N - 1, _actual_B - 1);
+        S += lbinom_fast(_N - 1, _actual_B - 1);
         S += lgamma_fast(_N + 1);
         for (auto nr : _total)
             S -= lgamma_fast(nr + 1);
@@ -213,8 +213,8 @@ public:
         for (auto r : rs)
         {
             r = get_r(r);
-            S += lbinom(_total[r] + _ep[r] - 1, _ep[r]);
-            S += lbinom(_total[r] + _em[r] - 1, _em[r]);
+            S += lbinom_fast(_total[r] + _ep[r] - 1, _ep[r]);
+            S += lbinom_fast(_total[r] + _em[r] - 1, _em[r]);
         }
         return S;
     }
@@ -470,11 +470,15 @@ public:
     template <class DegOP>
     double get_delta_deg_dl_uniform_change(size_t r, DegOP&& dop, int diff)
     {
+        auto total_r = _total[r];
+        auto ep_r = _ep[r];
+        auto em_r = _em[r];
+
         auto get_Se = [&](int dn, int dkin, int dkout)
             {
                 double S = 0;
-                S += lbinom_fast(_total[r] + dn + _ep[r] - 1 + dkout, _ep[r] + dkout);
-                S += lbinom_fast(_total[r] + dn + _em[r] - 1 + dkin,  _em[r] + dkin);
+                S += lbinom_fast(total_r + dn + ep_r - 1 + dkout, ep_r + dkout);
+                S += lbinom_fast(total_r + dn + em_r - 1 + dkin,  em_r + dkin);
                 return S;
             };
 
@@ -495,21 +499,25 @@ public:
     template <class DegOP>
     double get_delta_deg_dl_dist_change(size_t r, DegOP&& dop, int diff)
     {
+        auto total_r = _total[r];
+        auto ep_r = _ep[r];
+        auto em_r = _em[r];
+
         auto get_Se = [&](int delta, int kin, int kout)
             {
                 double S = 0;
-                assert(_total[r] + delta >= 0);
-                assert(_em[r] + kin >= 0);
-                assert(_ep[r] + kout >= 0);
-                S += log_q(_em[r] + kin, _total[r] + delta);
-                S += log_q(_ep[r] + kout, _total[r] + delta);
+                assert(total_r + delta >= 0);
+                assert(em_r + kin >= 0);
+                assert(ep_r + kout >= 0);
+                S += log_q(em_r + kin, total_r + delta);
+                S += log_q(ep_r + kout, total_r + delta);
                 return S;
             };
 
         auto get_Sr = [&](int delta)
             {
-                assert(_total[r] + delta + 1 >= 0);
-                return lgamma_fast(_total[r] + delta + 1);
+                assert(total_r + delta + 1 >= 0);
+                return lgamma_fast(total_r + delta + 1);
             };
 
         auto get_Sk = [&](pair<size_t, size_t>& deg, int delta)
