@@ -146,7 +146,6 @@ struct MCMC
             return _state._b[v];
         }
 
-        std::vector<std::tuple<size_t, size_t, size_t>> _rs_keep;
         template <class RNG>
         size_t get_new_group(size_t v, bool inherit, RNG& rng)
         {
