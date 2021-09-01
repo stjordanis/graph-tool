@@ -288,15 +288,6 @@ class OverlapBlockState(BlockState):
     def __copy__(self):
         return self.copy()
 
-    def __deepcopy__(self, memo):
-        g = copy.deepcopy(self.g, memo)
-        node_index = g.own_property(copy.deepcopy(self.node_index, memo))
-        eindex = g.own_property(copy.deepcopy(self.eindex, memo))
-        half_edges = base_g.own_property(copy.deepcopy(self.half_edges, memo))
-        base_g = copy.deepcopy(self.base_g, memo)
-        return self.copy(g=g, node_index=node_index, eindex=eindex,
-                         half_edges=half_edges, base_g=base_g)
-
     def copy(self, g=None, b=None, B=None, deg_corr=None, clabel=None,
              pclabel=None, **kwargs):
         r"""Copies the block state. The parameters override the state properties, and

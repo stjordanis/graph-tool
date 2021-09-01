@@ -496,10 +496,6 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def __copy__(self):
         return self.copy()
 
-    def __deepcopy__(self, memo):
-        g = copy.deepcopy(self.g, memo)
-        return self.copy(g=g)
-
     def copy(self, g=None, eweight=None, vweight=None, b=None, B=None,
              deg_corr=None, clabel=None, overlap=False, pclabel=None,
              bfield=None, dense_bg=None, **kwargs):

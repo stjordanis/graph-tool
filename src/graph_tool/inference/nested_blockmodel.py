@@ -183,10 +183,6 @@ class NestedBlockState(object):
     def __copy__(self):
         return self.copy()
 
-    def __deepcopy__(self, memo):
-        g = copy.deepcopy(self.g, memo)
-        return self.copy(g=g)
-
     def copy(self, g=None, bs=None, state_args=None, hstate_args=None,
              hentropy_args=None, **kwargs):
         r"""Copies the block state. The parameters override the state properties,

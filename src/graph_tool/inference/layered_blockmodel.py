@@ -383,11 +383,6 @@ class LayeredBlockState(OverlapBlockState, BlockState):
     def __copy__(self):
         return self.copy()
 
-    def __deepcopy__(self, memo):
-        g = copy.deepcopy(self.g, memo)
-        ec = g.own_property(copy.deepcopy(self.ec, memo))
-        return self.copy(g=g, ec=ec)
-
     def copy(self, g=None, eweight=None, vweight=None, b=None, B=None,
              deg_corr=None, clabel=None, pclabel=None, bfield=None,
              overlap=None, layers=None, ec=None, **kwargs):
