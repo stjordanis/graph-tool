@@ -93,6 +93,8 @@ public:
         _NB = B * B;
     }
 
+    SBMEdgeSampler(const SBMEdgeSampler&) = delete;
+
     std::tuple<size_t, size_t> get_edge(size_t u, size_t v)
     {
         if (!graph_tool::is_directed(_state._g) && u > v)

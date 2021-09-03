@@ -96,11 +96,11 @@ void export_sbm_state()
                  .def("get_edge_sampler",
                       +[](state_t& state, bool edges_only)
                       {
-                          return SBMEdgeSampler(state, edges_only);
+                          return make_shared<SBMEdgeSampler<state_t>>(state, edges_only);
                       });
 
              typedef SBMEdgeSampler<state_t> edge_sampler_t;
-             class_<edge_sampler_t>
+             class_<edge_sampler_t, std::shared_ptr<edge_sampler_t>, boost::noncopyable>
                  es(name_demangle(typeid(edge_sampler_t).name()).c_str(),
                     no_init);
              es.def("sample",
