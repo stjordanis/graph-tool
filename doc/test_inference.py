@@ -72,8 +72,7 @@ def gen_nested_state(*args):
     B = state_args.pop("B")
     return NestedBlockState(u,
                             bs=[numpy.arange(B)] + [numpy.zeros(1)] * 6,
-                            base_type=base_type, state_args=state_args,
-                            sampling=True)
+                            base_type=base_type, state_args=state_args)
 
 
 pranges = {"directed": [False, True],
@@ -112,11 +111,10 @@ for pvals in iter_ranges(pranges):
     print("\t mcmc (unweighted)", file=out)
     state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
 
+    eargs = dict(dl=dl, degree_dl_kind=degree_dl_kind, beta_dl=0.95)
+
     print("\t\t",
-          state.mcmc_sweep(beta=0,
-                           entropy_args=dict(dl=dl,
-                                             degree_dl_kind=degree_dl_kind,
-                                             beta_dl=0.95)),
+          state.mcmc_sweep(beta=0, entropy_args=eargs),
           state.get_nonempty_B(), file=out)
 
     if overlap:
@@ -130,29 +128,20 @@ for pvals in iter_ranges(pranges):
     print("\t mcmc (unweighted, multiflip)", file=out)
     state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
     print("\t\t",
-          state.multiflip_mcmc_sweep(beta=0,
-                                     entropy_args=dict(dl=dl,
-                                                       degree_dl_kind=degree_dl_kind,
-                                                       beta_dl=0.95)),
+          state.multiflip_mcmc_sweep(beta=0, entropy_args=eargs),
           state.get_nonempty_B(), file=out)
 
     print("\t mcmc (unweighted, multilevel)", file=out)
     state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
     print("\t\t",
-          state.multilevel_mcmc_sweep(beta=0, M=3,
-                                      entropy_args=dict(dl=dl,
-                                                        degree_dl_kind=degree_dl_kind,
-                                                        beta_dl=0.95)),
+          state.multilevel_mcmc_sweep(beta=0, M=3, entropy_args=eargs),
           state.get_nonempty_B(), file=out)
 
     print("\t gibbs (unweighted)", file=out)
     state = gen_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
 
     print("\t\t",
-          state.gibbs_sweep(beta=0,
-                            entropy_args=dict(dl=dl,
-                                              degree_dl_kind=degree_dl_kind,
-                                              beta_dl=0.95)),
+          state.gibbs_sweep(beta=0, entropy_args=eargs),
           state.get_nonempty_B(), file=out)
 
     if not overlap:
@@ -162,24 +151,15 @@ for pvals in iter_ranges(pranges):
         bstate = state.get_block_state(vweight=True,  deg_corr=deg_corr)
 
         print("\t\t",
-              bstate.mcmc_sweep(beta=0,
-                                entropy_args=dict(dl=dl,
-                                                  degree_dl_kind=degree_dl_kind,
-                                                  beta_dl=0.95)),
+              bstate.mcmc_sweep(beta=0, entropy_args=eargs),
               bstate.get_nonempty_B(), file=out)
 
         print("\t\t",
-              bstate.mcmc_sweep(beta=0,
-                                entropy_args=dict(dl=dl,
-                                                  degree_dl_kind=degree_dl_kind,
-                                                  beta_dl=0.95)),
+              bstate.mcmc_sweep(beta=0, entropy_args=eargs),
               bstate.get_nonempty_B(), file=out)
 
         print("\t\t",
-              bstate.gibbs_sweep(beta=0,
-                                 entropy_args=dict(dl=dl,
-                                                   degree_dl_kind=degree_dl_kind,
-                                                   beta_dl=0.95)),
+              bstate.gibbs_sweep(beta=0, entropy_args=eargs),
               bstate.get_nonempty_B(), file=out)
 
 
@@ -214,11 +194,10 @@ for pvals in iter_ranges(pranges):
     print("\t mcmc (single flip)", file=out)
     state = gen_nested_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
 
+    eargs = dict(dl=dl, degree_dl_kind=degree_dl_kind, beta_dl=0.95)
+
     for i in range(5):
-        print("\t\t",
-              state.mcmc_sweep(beta=0, d=0.5,
-                               entropy_args=dict(degree_dl_kind=degree_dl_kind,
-                                                 beta_dl=0.95)),
+        print("\t\t", state.mcmc_sweep(beta=0, d=0.5, entropy_args=eargs),
               [s.get_nonempty_B() for s in state.levels], file=out)
 
     print("\n\t mcmc (multiple flip)", file=out)
@@ -226,9 +205,7 @@ for pvals in iter_ranges(pranges):
 
     for i in range(5):
         print("\t\t",
-              state.multiflip_mcmc_sweep(beta=0, d=0.5,
-                                         entropy_args=dict(degree_dl_kind=degree_dl_kind,
-                                                           beta_dl=0.95)),
+              state.multiflip_mcmc_sweep(beta=0, d=0.5, entropy_args=eargs),
               [s.get_nonempty_B() for s in state.levels], file=out)
 
 pranges = {"directed": [False, True],
