@@ -100,23 +100,6 @@ void tuple_op(T& tuple, OP&& op, Ts&&... vals)
     tuple_op_imp<0>(tuple, std::forward<OP>(op), std::forward<Ts>(vals)...);
 }
 
-namespace detail {
-   template <class F, class Tuple, std::size_t... I>
-   constexpr decltype(auto) tuple_apply_impl(F&& f, Tuple&& t,
-                                             std::index_sequence<I...>)
-   {
-       return f(std::get<I>(std::forward<Tuple>(t))...);
-   }
-} // namespace detail
-
-template <class F, class Tuple>
-constexpr decltype(auto) tuple_apply(F&& f, Tuple&& t)
-{
-    return detail::tuple_apply_impl
-        (std::forward<F>(f), std::forward<Tuple>(t),
-         std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>{}>{});
-}
-
 // Manage a set of block pairs and corresponding edge counts that will be
 // updated
 

@@ -86,9 +86,23 @@ inline T log_sum_exp(T a, T b)
         return b + std::log1p(exp(a-b));
 }
 
+namespace detail {
+   template <class F, class Tuple, std::size_t... I>
+   constexpr decltype(auto) tuple_apply_impl(F&& f, Tuple&& t,
+                                             std::index_sequence<I...>)
+   {
+       return f(std::get<I>(std::forward<Tuple>(t))...);
+   }
+} // namespace detail
+
+template <class F, class Tuple>
+constexpr decltype(auto) tuple_apply(F&& f, Tuple&& t)
+{
+    return detail::tuple_apply_impl
+        (std::forward<F>(f), std::forward<Tuple>(t),
+         std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>{}>{});
+}
+
 } // namespace graph_tool
-
-
-
 
 #endif // UTIL_HH
