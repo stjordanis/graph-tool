@@ -23,22 +23,16 @@
 
 #include "idx_map.hh"
 
-#ifndef __clang__
-#include <ext/numeric>
-using __gnu_cxx::power;
-#else
-template <class Value>
-Value power(Value value, int n)
-{
-    return pow(value, n);
-}
-#endif
-
-
 namespace graph_tool
 {
 using namespace std;
 using namespace boost;
+
+template <class Value>
+Value pow2(Value x)
+{
+    return x * x;
+}
 
 template <class Val, class Weight>
 class QuadTree
@@ -56,8 +50,8 @@ public:
 
         double get_w()
         {
-            return sqrt(power(_ur[0] - _ll[0], 2) +
-                        power(_ur[1] - _ll[1], 2));
+            return sqrt(pow2(_ur[0] - _ll[0]) +
+                        pow2(_ur[1] - _ll[1]));
         }
 
         template <class Pos>
@@ -198,7 +192,7 @@ static double dist(const Pos1& p1, const Pos2& p2)
 {
     double r = 0;
     for (size_t i = 0; i < 2; ++i)
-        r += power(double(p1[i] - p2[i]), 2);
+        r += pow2(double(p1[i] - p2[i]));
     return sqrt(r);
 }
 
@@ -214,7 +208,7 @@ static double f_r(double C, double K, double p, const Pos1& p1, const Pos2& p2)
 template <class Pos1, class Pos2>
 static double f_a(double K, const Pos1& p1, const Pos2& p2)
 {
-    return power(dist(p1, p2), 2) / K;
+    return pow2(dist(p1, p2)) / K;
 }
 
 template <class Pos1, class Pos2, class Pos3>
@@ -239,7 +233,7 @@ static double norm(Pos& x)
 {
     double abs = 0;
     for (size_t i = 0; i < 2; ++i)
-        abs += power(x[i], 2);
+        abs += pow2(x[i]);
     for (size_t i = 0; i < 2; ++i)
         x[i] /= sqrt(abs);
     return sqrt(abs);
@@ -472,14 +466,14 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
                          val_t d = get_diff(ccm[s], pos[v], diff);
                          if (d == 0)
                              continue;
-                         double Kp = K * power(HN, 2);
+                         double Kp = K * pow2(HN);
                          val_t f = f_a(Kp, ccm[s], pos[v]) * r * csize[s] * get(vweight, v);
                          for (size_t l = 0; l < 2; ++l)
                              ftot[l] += f * diff[l];
                      }
                  }
 
-                 E += power(norm(ftot), 2);
+                 E += pow2(norm(ftot));
 
                  for (size_t l = 0; l < 2; ++l)
                  {
