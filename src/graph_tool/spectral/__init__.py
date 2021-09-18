@@ -61,21 +61,25 @@ __all__ = ["adjacency", "AdjacencyOperator", "laplacian", "LaplacianOperator",
            "modularity_matrix", "hashimoto", "HashimotoOperator",
            "CompactHashimotoOperator"]
 
-def adjacency(g, weight=None, vindex=None, operator=False):
+def adjacency(g, weight=None, vindex=None, operator=False, csr=True):
     r"""Return the adjacency matrix of the graph.
 
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
-    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map specifying the row/column indexes. If not provided, the
         internal vertex index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
         returned, instead of a sparse matrix.
+    csr : ``bool`` (optional, default: ``True``)
+        If ``True``, and ``operator`` is ``False``, a
+        :class:`scipy.sparse.csr_matrix` sparse matrix is returned, otherwise a
+        :class:`scipy.sparse.coo_matrix` is returned instead.
 
     Returns
     -------
@@ -193,7 +197,8 @@ def adjacency(g, weight=None, vindex=None, operator=False):
         V = g.num_vertices()
 
     m = scipy.sparse.coo_matrix((data, (i,j)), shape=(V, V))
-    m = m.tocsr()
+    if csr:
+        m = m.tocsr()
     return m
 
 class AdjacencyOperator(scipy.sparse.linalg.LinearOperator):
@@ -247,7 +252,8 @@ class AdjacencyOperator(scipy.sparse.linalg.LinearOperator):
             return self
 
 @_limit_args({"deg": ["total", "in", "out"]})
-def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False):
+def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False,
+              csr=True):
     r"""Return the Laplacian matrix of the graph.
 
     Parameters
@@ -258,14 +264,18 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
         Degree to be used, in case of a directed graph.
     norm : bool (optional, default: False)
         Whether to compute the normalized Laplacian.
-    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
-    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map specifying the row/column indexes. If not provided, the
         internal vertex index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
         returned, instead of a sparse matrix.
+    csr : ``bool`` (optional, default: ``True``)
+        If ``True``, and ``operator`` is ``False``, a
+        :class:`scipy.sparse.csr_matrix` sparse matrix is returned, otherwise a
+        :class:`scipy.sparse.coo_matrix` is returned instead.
 
     Returns
     -------
@@ -412,7 +422,8 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
         V = g.num_vertices()
 
     m = scipy.sparse.coo_matrix((data, (i, j)), shape=(V, V))
-    m = m.tocsr()
+    if csr:
+        m = m.tocsr()
     return m
 
 class LaplacianOperator(scipy.sparse.linalg.LinearOperator):
@@ -493,22 +504,26 @@ class LaplacianOperator(scipy.sparse.linalg.LinearOperator):
             return self
 
 
-def incidence(g, vindex=None, eindex=None, operator=False):
+def incidence(g, vindex=None, eindex=None, operator=False, csr=True):
     r"""Return the incidence matrix of the graph.
 
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map specifying the row indexes. If not provided, the
         internal vertex index is used.
-    eindex : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
+    eindex : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map specifying the column indexes. If not provided, the
         internal edge index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
         returned, instead of a sparse matrix.
+    csr : ``bool`` (optional, default: ``True``)
+        If ``True``, and ``operator`` is ``False``, a
+        :class:`scipy.sparse.csr_matrix` sparse matrix is returned, otherwise a
+        :class:`scipy.sparse.coo_matrix` is returned instead.
 
     Returns
     -------
@@ -615,7 +630,8 @@ def incidence(g, vindex=None, eindex=None, operator=False):
     libgraph_tool_spectral.incidence(g._Graph__graph, _prop("v", g, vindex),
                                      _prop("e", g, eindex), data, i, j)
     m = scipy.sparse.coo_matrix((data, (i,j)))
-    m = m.tocsr()
+    if csr:
+        m = m.tocsr()
     return m
 
 
@@ -687,21 +703,25 @@ class IncidenceOperator(scipy.sparse.linalg.LinearOperator):
         return IncidenceOperator(self.g, vindex=self.vindex, eindex=self.eindex,
                                  transpose=not self.transpose)
 
-def transition(g, weight=None, vindex=None, operator=False):
+def transition(g, weight=None, vindex=None, operator=False, csr=True):
     r"""Return the transition matrix of the graph.
 
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
-    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map specifying the row/column indexes. If not provided,
         the internal vertex index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
         returned, instead of a sparse matrix.
+    csr : ``bool`` (optional, default: ``True``)
+        If ``True``, and ``operator`` is ``False``, a
+        :class:`scipy.sparse.csr_matrix` sparse matrix is returned, otherwise a
+        :class:`scipy.sparse.coo_matrix` is returned instead.
 
     Returns
     -------
@@ -799,7 +819,8 @@ def transition(g, weight=None, vindex=None, operator=False):
     else:
         V = g.num_vertices()
     m = scipy.sparse.coo_matrix((data, (i,j)), shape=(V, V))
-    m = m.tocsr()
+    if csr:
+        m = m.tocsr()
     return m
 
 class TransitionOperator(scipy.sparse.linalg.LinearOperator):
@@ -876,9 +897,9 @@ def modularity_matrix(g, weight=None, vindex=None):
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: True)
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
-    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map specifying the row/column indexes. If not provided, the
         internal vertex index is used.
 
@@ -972,14 +993,14 @@ def modularity_matrix(g, weight=None, vindex=None):
 
     return B
 
-def hashimoto(g, index=None, compact=False, operator=False):
+def hashimoto(g, index=None, compact=False, operator=False, csr=True):
     r"""Return the Hashimoto (or non-backtracking) matrix of a graph.
 
     Parameters
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    index : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Edge property map specifying the row/column indexes. If not provided, the
         internal edge index is used.
     compact : ``boolean`` (optional, default: ``False``)
@@ -988,6 +1009,10 @@ def hashimoto(g, index=None, compact=False, operator=False):
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
         returned, instead of a sparse matrix.
+    csr : ``bool`` (optional, default: ``True``)
+        If ``True``, and ``operator`` is ``False``, a
+        :class:`scipy.sparse.csr_matrix` sparse matrix is returned, otherwise a
+        :class:`scipy.sparse.coo_matrix` is returned instead.
 
     Returns
     -------
@@ -1115,7 +1140,8 @@ def hashimoto(g, index=None, compact=False, operator=False):
 
         data = numpy.ones(i.a.shape)
         m = scipy.sparse.coo_matrix((data, (i.a,j.a)), shape=(E, E))
-    m = m.tocsr()
+    if csr:
+        m = m.tocsr()
     return m
 
 
