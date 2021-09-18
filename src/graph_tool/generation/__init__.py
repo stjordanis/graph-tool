@@ -1637,8 +1637,9 @@ def graph_union(g1, g2, intersection=None, props=None, include=False,
        value is ``None``, an empty map is created. The values of the property
        maps are propagated into the union graph, and returned.
     include : bool (optional, default: ``False``)
-       If ``True``, graph `g2` is inserted into `g1` which is modified. If false, a
-       new graph is created, and both graphs remain unmodified.
+       If ``True``, graph `g2` is inserted in-place into `g1`, which is
+       modified. If ``False``, a new graph is created, and both graphs remain
+       unmodified.
     internal_props : bool (optional, default: ``False``)
        If ``True``, all internal property maps are propagated, in addition
        to ``props``.
