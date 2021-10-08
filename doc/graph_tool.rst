@@ -167,6 +167,7 @@
     .. autoattribute:: ep
     .. autoattribute:: graph_properties
     .. autoattribute:: gp
+    .. automethod:: own_property
     .. automethod:: list_properties
 
 
