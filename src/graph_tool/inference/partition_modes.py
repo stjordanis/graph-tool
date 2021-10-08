@@ -542,6 +542,8 @@ def partition_overlap(x, y, norm=True):
     """
     x = np.asarray(x, dtype="int32")
     y = np.asarray(y, dtype="int32")
+    if len(x) != len(y):
+        raise ValueError("Partitions need to have the same number of elements")
     m = libinference.partition_overlap(x, y)
     if norm:
         m /= max(len(x), len(y))
