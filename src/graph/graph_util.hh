@@ -472,6 +472,18 @@ struct hash<std::vector<Value, Allocator>>
     }
 };
 
+template <class Value, size_t N>
+struct hash<std::array<Value, N>>
+{
+    size_t operator()(const std::array<Value, N>& x) const
+    {
+        size_t seed = 0;
+        for (size_t i = 0; i < N; ++i)
+            std::_hash_combine(seed, x[i]);
+        return seed;
+    }
+};
+
 template <class Value>
 struct hash<std::complex<Value>>
 {

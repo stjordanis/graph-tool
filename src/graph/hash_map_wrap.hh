@@ -64,6 +64,18 @@ struct empty_key<std::vector<Key, Allocator>>
     }
 };
 
+template <class T, size_t N>
+struct empty_key<std::array<T, N>>
+{
+    static std::array<T, N> get()
+    {
+        std::array<T, N> x;
+        for (size_t i = 0; i < N; ++i)
+            x[i] = empty_key<T>::get();
+        return x;
+    }
+};
+
 template <class Val1, class Val2>
 struct empty_key<std::pair<Val1, Val2>>
 {
@@ -134,6 +146,18 @@ struct deleted_key<std::vector<Key, Allocator>>
     static std::vector<Key, Allocator> get()
     {
         return { deleted_key<Key>::get() };
+    }
+};
+
+template <class T, size_t N>
+struct deleted_key<std::array<T, N>>
+{
+    static std::array<T, N> get()
+    {
+        std::array<T, N> x;
+        for (size_t i = 0; i < N; ++i)
+            x[i] = deleted_key<T>::get();
+        return x;
     }
 };
 

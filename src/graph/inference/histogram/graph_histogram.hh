@@ -28,30 +28,6 @@
 #include <boost/container/static_vector.hpp>
 
 template <class T, size_t D>
-struct empty_key<std::array<T,D>>
-{
-    static std::array<T,D> get()
-    {
-        std::array<T,D> x;
-        for (size_t i = 0; i < D; ++i)
-            x[i] = empty_key<T>::get();
-        return x;
-    }
-};
-
-template <class T, size_t D>
-struct deleted_key<std::array<T,D>>
-{
-    static std::array<T,D> get()
-    {
-        std::array<T,D> x;
-        for (size_t i = 0; i < D; ++i)
-            x[i] = deleted_key<T>::get();
-        return x;
-    }
-};
-
-template <class T, size_t D>
 struct empty_key<boost::container::static_vector<T,D>>
 {
     static boost::container::static_vector<T,D> get()
@@ -78,18 +54,6 @@ struct deleted_key<boost::container::static_vector<T,D>>
 
 namespace std
 {
-template <class Value, size_t D>
-struct hash<std::array<Value, D>>
-{
-    size_t operator()(const std::array<Value, D>& v) const
-    {
-        size_t seed = 0;
-        for (const auto& x : v)
-            std::_hash_combine(seed, x);
-        return seed;
-    }
-};
-
 template <class Value, size_t D>
 struct hash<boost::container::static_vector<Value, D>>
 {
