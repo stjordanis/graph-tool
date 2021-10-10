@@ -67,7 +67,7 @@ auto mcmc_sweep(MCMCState& state, RNG& rng)
 
     typedef std::remove_const_t<decltype(state._null_move)> move_t;
     constexpr bool single_step =
-        std::is_same_v<decltype(state.move_proposal(vlist.front(), rng)),
+        std::is_same_v<std::remove_reference_t<decltype(state.move_proposal(vlist.front(), rng))>,
                        move_t>;
 
     double S = 0;
@@ -97,16 +97,29 @@ auto mcmc_sweep(MCMCState& state, RNG& rng)
             if (state.skip_node(v))
                 continue;
 
-            auto r = (state._verbose > 1) ? state.node_state(v)
-                : decltype(state.node_state(v))();
+            if (state._verbose > 1)
+            {
+                auto&& r = state.node_state(v);
+                cout << v << ": " << r;
+            }
 
-            move_t s;
+            auto&& ret = state.move_proposal(v, rng);
 
-            auto ret = state.move_proposal(v, rng);
-            if constexpr (single_step)
-                s = ret;
-            else
-                std::tie(s, nsteps) = ret;
+            auto get_s =
+                [&]() -> move_t&
+                {
+                    if constexpr (single_step)
+                    {
+                        return ret;
+                    }
+                    else
+                    {
+                        nsteps = get<1>(ret);
+                        return get<0>(ret);
+                    }
+                };
+
+            move_t& s = get_s();
 
             if (s == state._null_move)
                 continue;
@@ -128,7 +141,7 @@ auto mcmc_sweep(MCMCState& state, RNG& rng)
             state.step(v, s);
 
             if (state._verbose > 1)
-                cout << v << ": " << r << " -> " << s << " " << accept << " " << dS << " " << mP << " " << -dS * beta + mP << " " << S << endl;
+                cout << " -> " << s << " " << accept << " " << dS << " " << mP << " " << -dS * beta + mP << " " << S << endl;
         }
 
         if (state.is_sequential() && state.is_deterministic())
