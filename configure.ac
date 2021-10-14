@@ -23,12 +23,11 @@ AM_INIT_AUTOMAKE([foreign subdir-objects tar-pax])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
-AC_SEARCH_LIBS([strerror],[cposix])
 AC_USE_SYSTEM_EXTENSIONS
+AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CXX
 AC_LANG([C++])
-AC_PROG_CC_STDC
-AC_HEADER_STDC
+
 AC_PROG_INSTALL
 LT_INIT([disable-static])
 
@@ -121,7 +120,7 @@ AM_PATH_PYTHON([3.6])
 AC_SUBST(PYTHON_VERSION)
 PYTHON_FULL_VERSION=[`${PYTHON} -c "import sys; print(sys.version.split()[0])"`]
 AC_SUBST(PYTHON_FULL_VERSION)
-AC_PYTHON_DEVEL([== '${PYTHON_FULL_VERSION}'])
+AX_PYTHON_DEVEL([== '${PYTHON_FULL_VERSION}'])
 
 # default directory for submodules
 [MOD_DIR="${PYTHON_SITE_PKG}"]
