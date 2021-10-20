@@ -332,7 +332,7 @@ class MultilevelMCMCState(ABC):
             it will be selected as the number of nodes in the graph.
         pmultilevel : ``float`` (optional, default: ``1``)
             Relative probability of proposing a multilevel move.
-        d : ``float`` (optional, default: ``1``)
+        d : ``float`` (optional, default: ``.01``)
             Probability of selecting a new (i.e. empty) group for a given
             single-node move.
         r : ``float`` (optional, default: ``0.9``)
