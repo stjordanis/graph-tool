@@ -33,15 +33,17 @@ void adjacency_matmat(GraphInterface& g, boost::any index, boost::any weight,
                       python::object ov, python::object oret);
 
 void laplacian(GraphInterface& g, boost::any index, boost::any weight,
-               string sdeg,
+               string sdeg, double r,
                python::object odata, python::object oi,
                python::object oj);
 
 void laplacian_matvec(GraphInterface& g, boost::any index, boost::any weight,
-                      boost::any deg, python::object ov, python::object oret);
+                      boost::any deg, double r, python::object ov,
+                      python::object oret);
 
 void laplacian_matmat(GraphInterface& g, boost::any index, boost::any weight,
-                      boost::any deg, python::object ov, python::object oret);
+                      boost::any deg, double r, python::object ov,
+                      python::object oret);
 
 void norm_laplacian(GraphInterface& g, boost::any index, boost::any weight,
                     string sdeg,

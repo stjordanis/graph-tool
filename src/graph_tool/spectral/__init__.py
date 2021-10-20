@@ -252,9 +252,9 @@ class AdjacencyOperator(scipy.sparse.linalg.LinearOperator):
             return self
 
 @_limit_args({"deg": ["total", "in", "out"]})
-def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False,
+def laplacian(g, deg="out", norm=False, weight=None, r=1, vindex=None, operator=False,
               csr=True):
-    r"""Return the Laplacian matrix of the graph.
+    r"""Return the Laplacian (or Bethe Hessian if :math:`r > 1`) matrix of the graph.
 
     Parameters
     ----------
@@ -266,6 +266,10 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
         Whether to compute the normalized Laplacian.
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
+    r : ``double`` (optional, default: ``1.``)
+        Regularization parameter. If :math:`r > 1`, and ``norm`` is ``False``,
+        then this corresponds to the Bethe Hessian. (This parameter has an
+        effect only for ``norm == False``.)
     vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map specifying the row/column indexes. If not provided, the
         internal vertex index is used.
@@ -296,7 +300,21 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
         \end{cases}
 
     Where :math:`\Gamma(v_i)=\sum_j A_{ij}w_{ij}` is sum of the weights of the
-    edges incident on vertex :math:`v_i`. The normalized version is
+    edges incident on vertex :math:`v_i`.
+
+    In case of :math:`r > 1`, the matrix returned is the Bethe Hessian
+    [bethe-hessian]_:
+
+    .. math::
+
+        \ell_{ij} =
+        \begin{cases}
+        \Gamma(v_i) + (r^2 - 1) & \text{if } i = j \\
+        -r w_{ij}     & \text{if } i \neq j \text{ and } (j, i) \in E \\
+        0           & \text{otherwise}.
+        \end{cases}
+
+    The normalized version is
 
     .. math::
 
@@ -386,10 +404,15 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
     References
     ----------
     .. [wikipedia-laplacian] http://en.wikipedia.org/wiki/Laplacian_matrix
+    .. [bethe-hessian] Saade, Alaa, Florent Krzakala, and Lenka
+       Zdeborová. "Spectral clustering of graphs with the bethe hessian." Advances
+       in Neural Information Processing Systems 27 (2014): 406-414, :arxiv:`1406.1880`,
+       https://proceedings.neurips.cc/paper/2014/hash/63923f49e5241343aa7acb6a06a751e7-Abstract.html
+
     """
 
     if operator:
-        return LaplacianOperator(g, deg=deg, norm=norm, weight=weight,
+        return LaplacianOperator(g, deg=deg, norm=norm, weight=weight, r=r,
                                  vindex=vindex)
 
     if vindex is None:
@@ -415,7 +438,7 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
                                               _prop("e", g, weight), deg, data, i, j)
     else:
         libgraph_tool_spectral.laplacian(g._Graph__graph, _prop("v", g, vindex),
-                                         _prop("e", g, weight), deg, data, i, j)
+                                         _prop("e", g, weight), deg, r, data, i, j)
     if E > 0:
         V = max(g.num_vertices(), max(i.max() + 1, j.max() + 1))
     else:
@@ -429,12 +452,13 @@ def laplacian(g, deg="out", norm=False, weight=None, vindex=None, operator=False
 class LaplacianOperator(scipy.sparse.linalg.LinearOperator):
 
     @_limit_args({"deg": ["total", "in", "out"]})
-    def __init__(self, g, weight=None, deg="out", norm=False, vindex=None):
+    def __init__(self, g, weight=None, deg="out", r=1, norm=False, vindex=None):
         r"""A :class:`scipy.sparse.linalg.LinearOperator` representing the laplacian
         matrix of a graph. See :func:`laplacian` for details."""
 
         self.g = g
         self.weight = weight
+        self.r = r
 
         if vindex is None:
             if g.get_vertex_filter()[0] is not None:
@@ -469,12 +493,16 @@ class LaplacianOperator(scipy.sparse.linalg.LinearOperator):
         x = numpy.asarray(x, dtype="float")
         if self.norm:
             matvec = libgraph_tool_spectral.norm_laplacian_matvec
+            matvec(self.g._Graph__graph,
+                   _prop("v", self.g, self.vindex),
+                   _prop("e", self.g, self.weight),
+                   _prop("v", self.g, self.d), x, y)
         else:
             matvec = libgraph_tool_spectral.laplacian_matvec
-        matvec(self.g._Graph__graph,
-               _prop("v", self.g, self.vindex),
-               _prop("e", self.g, self.weight),
-               _prop("v", self.g, self.d), x, y)
+            matvec(self.g._Graph__graph,
+                   _prop("v", self.g, self.vindex),
+                   _prop("e", self.g, self.weight),
+                   _prop("v", self.g, self.d), self.r, x, y)
         return y
 
     def _matmat(self, x):
@@ -482,12 +510,16 @@ class LaplacianOperator(scipy.sparse.linalg.LinearOperator):
         x = numpy.asarray(x, dtype="float")
         if self.norm:
             matmat = libgraph_tool_spectral.norm_laplacian_matmat
+            matmat(self.g._Graph__graph,
+                   _prop("v", self.g, self.vindex),
+                   _prop("e", self.g, self.weight),
+                   _prop("v", self.g, self.d), x, y)
         else:
             matmat = libgraph_tool_spectral.laplacian_matmat
-        matmat(self.g._Graph__graph,
-               _prop("v", self.g, self.vindex),
-               _prop("e", self.g, self.weight),
-               _prop("v", self.g, self.d), x, y)
+            matmat(self.g._Graph__graph,
+                   _prop("v", self.g, self.vindex),
+                   _prop("e", self.g, self.weight),
+                   _prop("v", self.g, self.d), self.r, x, y)
         return y
 
     def _adjoint(self):

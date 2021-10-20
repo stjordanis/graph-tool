@@ -32,7 +32,7 @@ using namespace boost;
 using namespace graph_tool;
 
 void laplacian(GraphInterface& g, boost::any index, boost::any weight,
-               string sdeg,
+               string sdeg, double r,
                python::object odata, python::object oi,
                python::object oj)
 {
@@ -67,13 +67,14 @@ void laplacian(GraphInterface& g, boost::any index, boost::any weight,
              return get_laplacian()
                  (std::forward<decltype(graph)>(graph),
                   std::forward<decltype(a2)>(a2),
-                  std::forward<decltype(a3)>(a3), deg, data, i, j);
+                  std::forward<decltype(a3)>(a3), deg, r, data, i, j);
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }
 
 void laplacian_matvec(GraphInterface& g, boost::any index, boost::any weight,
-                      boost::any deg, python::object ov, python::object oret)
+                      boost::any deg, double r, python::object ov,
+                      python::object oret)
 {
     if (!belongs<vertex_scalar_properties>()(index))
         throw ValueException("index vertex property must have a scalar value type");
@@ -98,13 +99,14 @@ void laplacian_matvec(GraphInterface& g, boost::any index, boost::any weight,
         (g,
          [&](auto&& graph, auto&& vi, auto&& w)
          {
-             return lap_matvec(graph, vi, w, d, v, ret);
+             return lap_matvec(graph, vi, w, d, r, v, ret);
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }
 
 void laplacian_matmat(GraphInterface& g, boost::any index, boost::any weight,
-                      boost::any deg, python::object ov, python::object oret)
+                      boost::any deg, double r, python::object ov,
+                      python::object oret)
 {
     if (!belongs<vertex_scalar_properties>()(index))
         throw ValueException("index vertex property must have a scalar value type");
@@ -129,7 +131,7 @@ void laplacian_matmat(GraphInterface& g, boost::any index, boost::any weight,
         (g,
          [&](auto&& graph, auto&& vi, auto&& w)
          {
-             return lap_matmat(graph, vi, w, d, v, ret);
+             return lap_matmat(graph, vi, w, d, r, v, ret);
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }

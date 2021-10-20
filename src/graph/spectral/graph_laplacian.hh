@@ -73,6 +73,7 @@ struct get_laplacian
 {
     template <class Graph, class Index, class Weight>
     void operator()(const Graph& g, Index index, Weight weight, deg_t deg,
+                    double r,
                     multi_array_ref<double,1>& data,
                     multi_array_ref<int32_t,1>& i,
                     multi_array_ref<int32_t,1>& j) const
@@ -83,20 +84,21 @@ struct get_laplacian
             if (source(e, g) == target(e, g))
                 continue;
 
-            data[pos] = -get(weight, e);
+            data[pos] = -get(weight, e) * r;
             i[pos] = get(index, target(e, g));
             j[pos] = get(index, source(e, g));
 
             ++pos;
             if (!graph_tool::is_directed(g))
             {
-                data[pos] = -get(weight, e);
+                data[pos] = -get(weight, e) * r;
                 i[pos] = get(index, source(e, g));
                 j[pos] = get(index, target(e, g));
                 ++pos;
             }
         }
 
+        double rr = r*r - 1;
         for (auto v : vertices_range(g))
         {
             double k = 0;
@@ -111,7 +113,7 @@ struct get_laplacian
             case TOTAL_DEG:
                 k = sum_degree(g, v, weight, all_edges_iteratorS<Graph>());
             }
-            data[pos] = k;
+            data[pos] = k + rr;
             i[pos] = j[pos] = get(index, v);
             ++pos;
         }
@@ -120,8 +122,9 @@ struct get_laplacian
 };
 
 template <class Graph, class Vindex, class Weight, class Deg, class V>
-void lap_matvec(Graph& g, Vindex index, Weight w, Deg d, V& x, V& ret)
+void lap_matvec(Graph& g, Vindex index, Weight w, Deg d, double r, V& x, V& ret)
 {
+    double rr = r*r - 1;
     parallel_vertex_loop
         (g,
          [&](auto v)
@@ -135,7 +138,7 @@ void lap_matvec(Graph& g, Vindex index, Weight w, Deg d, V& x, V& ret)
                      if (u == v)
                          continue;
                      auto w_e = get(w, e);
-                     y += w_e * x[get(index, u)];
+                     y += r * w_e * x[get(index, u)];
                  }
              }
              else
@@ -144,16 +147,17 @@ void lap_matvec(Graph& g, Vindex index, Weight w, Deg d, V& x, V& ret)
                  {
                      if (u == v)
                          continue;
-                     y += x[get(index, u)];
+                     y += r * x[get(index, u)];
                  }
              }
-             ret[get(index, v)] = d[v] * x[get(index, v)] - y;
+             ret[get(index, v)] = (d[v] + rr) * x[get(index, v)] - y;
          });
 }
 
 template <class Graph, class Vindex, class Weight, class Deg, class Mat>
-void lap_matmat(Graph& g, Vindex index, Weight w, Deg d, Mat& x, Mat& ret)
+void lap_matmat(Graph& g, Vindex index, Weight w, Deg d, double r, Mat& x, Mat& ret)
 {
+    double rr = r*r - 1;
     size_t M = x.shape()[1];
     parallel_vertex_loop
         (g,
@@ -171,7 +175,7 @@ void lap_matmat(Graph& g, Vindex index, Weight w, Deg d, Mat& x, Mat& ret)
                      auto w_e = get(w, e);
                      auto ui = get(index, u);
                      for (size_t i = 0; i < M; ++i)
-                         y[i] += w_e * x[ui][i];
+                         y[i] += r * w_e * x[ui][i];
                  }
              }
              else
@@ -182,11 +186,11 @@ void lap_matmat(Graph& g, Vindex index, Weight w, Deg d, Mat& x, Mat& ret)
                          continue;
                      auto ui = get(index, u);
                      for (size_t i = 0; i < M; ++i)
-                         y[i] += x[ui][i];
+                         y[i] += r * x[ui][i];
                  }
              }
              for (size_t i = 0; i < M; ++i)
-                 ret[vi][i] = d[v] * x[vi][i] - y[i];
+                 ret[vi][i] = (d[v] + rr) * x[vi][i] - y[i];
          });
 }
 
