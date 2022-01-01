@@ -383,7 +383,7 @@ def distance_histogram(g, weight=None, bins=[0, 1], samples=None,
         and starting from the first value.
     samples : int (optional, default: `None`)
         If supplied, the distances will be randomly sampled from a number of
-        source vertices given by this parameter. It `samples is None` (default),
+        source vertices given by this parameter. If `samples is None` (default),
         all pairs are used.
     float_count : bool (optional, default: `True`)
         If True, the counts in each histogram bin will be returned as floats. If
