@@ -372,6 +372,11 @@ libgraph_tool_inference_la_SOURCES = \
 	src/graph/inference/modularity/graph_modularity_mcmc.cc \
 	src/graph/inference/modularity/graph_modularity_multiflip_mcmc.cc \
 	src/graph/inference/modularity/graph_modularity_multilevel_mcmc.cc \
+	src/graph/inference/norm_cut/graph_norm_cut.cc \
+	src/graph/inference/norm_cut/graph_norm_cut_gibbs.cc \
+	src/graph/inference/norm_cut/graph_norm_cut_mcmc.cc \
+	src/graph/inference/norm_cut/graph_norm_cut_multiflip_mcmc.cc \
+	src/graph/inference/norm_cut/graph_norm_cut_multilevel_mcmc.cc \
 	src/graph/inference/partition_centroid/graph_partition_centroid.cc \
 	src/graph/inference/partition_centroid/graph_partition_centroid_mcmc.cc \
 	src/graph/inference/partition_centroid/graph_partition_centroid_multiflip_mcmc.cc \
@@ -476,6 +481,10 @@ dist_graph_inference_histogram_HEADERS = \
 graph_inference_modularitydir = $(MOD_DIR)/include/inference/modularity
 dist_graph_inference_modularity_HEADERS = \
 	src/graph/inference/modularity/graph_modularity.hh
+
+graph_inference_norm_cutdir = $(MOD_DIR)/include/inference/norm_cut
+dist_graph_inference_norm_cut_HEADERS = \
+	src/graph/inference/norm_cut/graph_norm_cut.hh
 
 graph_inference_partition_centroiddir = $(MOD_DIR)/include/inference/partition_centroid
 dist_graph_inference_partition_centroid_HEADERS = \
@@ -773,6 +782,7 @@ graph_tool_inference_PYTHON = \
 	src/graph_tool/inference/mcmc.py \
 	src/graph_tool/inference/minimize.py \
 	src/graph_tool/inference/modularity.py \
+	src/graph_tool/inference/norm_cut.py \
 	src/graph_tool/inference/partition_centroid.py \
 	src/graph_tool/inference/partition_modes.py \
 	src/graph_tool/inference/planted_partition.py \

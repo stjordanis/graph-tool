@@ -203,6 +203,7 @@ __all__ = ["minimize_blockmodel_dl",
            "PartitionModeState",
            "ModeClusterState",
            "ModularityState",
+           "NormCutState",
            "LatentMultigraphBlockState",
            "UncertainBlockState",
            "MeasuredBlockState",
@@ -275,6 +276,7 @@ from . minimize import *
 from . blockmodel_em import *
 from . util import *
 from . modularity import *
+from . norm_cut import *
 from . latent_multigraph import *
 from . partition_centroid import *
 from . partition_modes import *
