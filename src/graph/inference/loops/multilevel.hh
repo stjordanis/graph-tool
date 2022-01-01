@@ -727,6 +727,7 @@ struct Multilevel: public State
         if (_verbose)
             cout << "staging multilevel, N = " << N << endl;
 
+        size_t B_init = rs.size();
         size_t B_max = State::_global_moves ? std::min(N, _B_max) : std::min(N, State::_M);
         size_t B_min = State::_global_moves ? std::max(size_t(1), _B_min) : 1;
 
@@ -1111,6 +1112,12 @@ struct Multilevel: public State
         }
 
         assert(rs.size() == B);
+
+        if (B_min > B_init || B_max < B_init)
+        {
+            S = -numeric_limits<double>::infinity();
+            lp = 0;
+        }
 
         return {S, lp};
     }
