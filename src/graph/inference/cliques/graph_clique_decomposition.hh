@@ -25,17 +25,10 @@ using namespace boost;
 using namespace std;
 
 
-double L_sparse(size_t N, size_t d, size_t Ed, size_t D, double E)
-{
-    double lb = lbinom_fast(N, d);
-    return lgamma_fast(Ed + 1) - (Ed + 1) * log1p(E / (D - 1)) - Ed * lb;
-}
-
 double L_over(size_t N, size_t d, size_t Ed, size_t D, double E)
 {
     double lb = lbinom_fast(N, d);
-    double mu = -(D - 1) * log(1 + 2 * E / N * (N - 1));
-    return lgamma_fast(Ed + 1) - (Ed + 1) * log((N - d  + 1) / d + 1 / mu) - Ed * lb - log(mu);
+    return lgamma_fast(Ed + 1) - (Ed + 1) * log1p((D - 1) / E) - Ed * lb - log(E / (D - 1));
 }
 
 template <class Graph, class Vxprop, class Vprop, class Cprop, class Vec, class RNG>
@@ -166,8 +159,8 @@ iter_mh(Graph& g, Vxprop x, Cprop c, Vprop is_fac, Vprop is_max, Vec& Ed, int N,
             a -= (x[v] == 0) ? 0 : -log(2);
             a += (x[v] + dx == 0) ? 0 : -log(2);
 
-            bernoulli_distribution accept(exp(beta * (pa - pb) + a));
-            if (pa > pb || (!std::isinf(beta) && accept(rng)))
+            bernoulli_distribution accept(exp(min(beta * (pa - pb) + a, 0.)));
+            if ((std::isinf(beta) && (pa > pb)) || accept(rng))
             {
                 x[v] += dx;
                 for (auto u : out_neighbors_range(v, g))

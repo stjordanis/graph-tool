@@ -59,5 +59,4 @@ void export_clique_decomposition()
     using namespace boost::python;
     def("clique_iter_mh", clique_iter_mh);
     def("clique_L_over", L_over);
-    def("clique_L_sparse", L_sparse);
 }
