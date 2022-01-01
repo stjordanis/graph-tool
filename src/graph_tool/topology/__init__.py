@@ -1953,7 +1953,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
     elif target is None:
         target = numpy.array([], dtype="int64")
     else:
-        target = numpy.asarray([int(target)], dtype="int64")
+        target = numpy.asarray([int(g.vertex(int(target)))], dtype="int64")
 
     if weights is None:
         dist_type = 'int32_t'
@@ -1993,7 +1993,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
             pmap = u.copy_property(u.vertex_index, value_type="int64_t")
         reached = libcore.Vector_size_t()
         libgraph_tool_topology.get_dists(u._Graph__graph,
-                                         int(source),
+                                         int(u.vertex(int(source))),
                                          target,
                                          _prop("v", u, dist_map),
                                          _prop("e", u, weights),
