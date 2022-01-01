@@ -38,13 +38,11 @@ struct do_all_pairs_search
         typedef typename property_traits<DistMap>::value_type::value_type
             dist_t;
 
-        parallel_vertex_loop
-            (g,
-             [&](auto& v)
-             {
-                 dist_map[v].clear();
-                 dist_map[v].resize(num_vertices(g), 0);
-             });
+        for (size_t v = 0; v < num_vertices(g); ++v)
+        {
+            dist_map[v].clear();
+            dist_map[v].resize(num_vertices(g), 0);
+        }
 
         if (dense)
         {
