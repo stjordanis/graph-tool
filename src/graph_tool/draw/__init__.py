@@ -72,7 +72,7 @@ from .. import Graph, GraphView, _check_prop_vector, _check_prop_scalar, \
 from .. topology import max_cardinality_matching, max_independent_vertex_set, \
     label_components, shortest_distance, make_maximal_planar, is_planar
 from .. generation import predecessor_tree, condensation_graph
-from .. inference import nested_contiguous_map
+from .. inference.util import nested_contiguous_map
 import numpy.random
 from numpy import sqrt
 

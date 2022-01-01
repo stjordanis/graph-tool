@@ -117,7 +117,8 @@ def init_q_cache(max_n=None):
     libinference.init_q_cache(min(_q_cache_max_n, max_n))
 
 class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
-                 GibbsMCMCState, MulticanonicalMCMCState, ExhaustiveSweepState):
+                 GibbsMCMCState, MulticanonicalMCMCState, ExhaustiveSweepState,
+                 DrawBlockState):
     r"""The stochastic block model state of a given graph.
 
     Parameters
@@ -1529,22 +1530,6 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         libinference.collect_partitions(_prop("v", self.g, self.b),
                                         h, update, unlabel)
         return h
-
-    def draw(self, **kwargs):
-        r"""Convenience wrapper to :func:`~graph_tool.draw.graph_draw` that
-        draws the state of the graph as colors on the vertices and edges."""
-        gradient = self.g.new_ep("double")
-        gradient = group_vector_property([gradient])
-        from graph_tool.draw import graph_draw
-        return graph_draw(self.g,
-                          vertex_fill_color=kwargs.get("vertex_fill_color",
-                                                       self.b),
-                          vertex_color=kwargs.get("vertex_color", self.b),
-                          edge_gradient=kwargs.get("edge_gradient",
-                                                   gradient),
-                          **dmask(kwargs, ["vertex_fill_color",
-                                           "vertex_color",
-                                           "edge_gradient"]))
 
     def sample_graph(self, canonical=False, multigraph=True, self_loops=True,
                      sample_params=False, max_ent=False, n_iter=1000):

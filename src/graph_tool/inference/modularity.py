@@ -90,7 +90,7 @@ def modularity(g, b, gamma=1., weight=None):
 
 
 class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
-                      GibbsMCMCState):
+                      GibbsMCMCState, DrawBlockState):
     r"""Obtain the partition of a network according to Newman's modularity.
 
     .. warning::
@@ -228,22 +228,6 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         Q = self.entropy(gamma=gamma)
         return -Q / (2 * self.g.num_edges())
-
-    def draw(self, **kwargs):
-        r"""Convenience wrapper to :func:`~graph_tool.draw.graph_draw` that
-        draws the state of the graph as colors on the vertices and edges."""
-        gradient = self.g.new_ep("double")
-        gradient = group_vector_property([gradient])
-        from graph_tool.draw import graph_draw
-        return graph_draw(self.g,
-                          vertex_fill_color=kwargs.get("vertex_fill_color",
-                                                       self.b),
-                          vertex_color=kwargs.get("vertex_color", self.b),
-                          edge_gradient=kwargs.get("edge_gradient",
-                                                   gradient),
-                          **dmask(kwargs, ["vertex_fill_color",
-                                           "vertex_color",
-                                           "edge_gradient"]))
 
     def _mcmc_sweep_dispatch(self, mcmc_state):
         return libinference.modularity_mcmc_sweep(mcmc_state, self._state,

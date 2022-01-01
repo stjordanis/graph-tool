@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from .. import Vector_size_t
+from .. import Vector_size_t, group_vector_property
 
 from . util import *
 
@@ -27,6 +27,8 @@ from abc import ABC, abstractmethod
 import gc
 
 import numpy
+
+import graph_tool.draw
 
 __test__ = False
 
@@ -690,3 +692,22 @@ class ExhaustiveSweepState(ABC):
                 return (Ss, density[2]), b_min
         else:
             return b_min
+
+
+class DrawBlockState(ABC):
+    r"""Base state that implements group-based drawing."""
+
+    def draw(self, **kwargs):
+        r"""Convenience wrapper to :func:`~graph_tool.draw.graph_draw` that
+        draws the state of the graph as colors on the vertices and edges."""
+        gradient = self.g.new_ep("double")
+        gradient = group_vector_property([gradient])
+        return graph_tool.draw.graph_draw(self.g,
+                                          vertex_fill_color=kwargs.get("vertex_fill_color",
+                                                                       self.b),
+                                          vertex_color=kwargs.get("vertex_color", self.b),
+                                          edge_gradient=kwargs.get("edge_gradient",
+                                                                   gradient),
+                                          **dmask(kwargs, ["vertex_fill_color",
+                                                           "vertex_color",
+                                                           "edge_gradient"]))
