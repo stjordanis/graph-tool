@@ -74,16 +74,19 @@ class CliqueState(object):
        array([0, 1, 3, 5], dtype=int32) 1
        array([0, 1, 5, 6], dtype=int32) 1
        array([0, 4, 5, 6], dtype=int32) 0
-       array([2, 5, 7], dtype=int32) 1
+       array([2, 5, 7], dtype=int32) 0
        array([ 4, 28], dtype=int32) 1
        array([ 4,  6, 29], dtype=int32) 1
        array([ 4, 30, 31], dtype=int32) 1
-       array([5, 6, 7], dtype=int32) 0
+       array([5, 6, 7], dtype=int32) 1
        array([ 7, 71], dtype=int32) 1
        array([ 7, 14, 58], dtype=int32) 1
        array([ 7, 58, 85], dtype=int32) 0
-       array([ 7, 30, 58], dtype=int32) 1
-       array([ 6, 10, 12], dtype=int32) 1
+       array([ 7, 30, 58], dtype=int32) 0
+       array([ 6, 10, 12], dtype=int32) 0
+       array([ 6, 12, 18], dtype=int32) 1
+       array([ 8, 12, 13, 32], dtype=int32) 0
+       array([ 8, 12, 23, 32, 33], dtype=int32) 1
 
     References
     ----------
