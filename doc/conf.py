@@ -173,7 +173,7 @@ htmlhelp_basename = 'graph-tooldoc'
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
-                       'numpy': ('https://docs.scipy.org/doc/numpy', None),
+                       'numpy': ('https://numpy.org/doc/stable/', None),
                        'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
                        'matplotlib': ('https://matplotlib.org', None),
                        'cairo': ('https://www.cairographics.org/documentation/pycairo/3', None),
@@ -201,6 +201,8 @@ autodoc_default_options = {
 }
 
 autosummary_gerenerate = True
+autosummary_imported_members = True
+autosummary_ignore_module_all = False
 numpydoc_show_class_members = False
 autodoc_docstring_signature = False
 autoclass_content = 'both'

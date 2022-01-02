@@ -1,6 +1,6 @@
 .. automodule:: graph_tool.inference
-    :no-undoc-members:
-    :no-members:
+    :show-inheritance:
+    :inherited-members:
 
 ..
    .. testcode:: inference_detailed
@@ -111,3 +111,9 @@
     :no-undoc-members:
     :show-inheritance:
     :inherited-members:
+
+.. automodule:: graph_tool.inference.norm_cut
+    :no-undoc-members:
+    :show-inheritance:
+    :inherited-members:
+

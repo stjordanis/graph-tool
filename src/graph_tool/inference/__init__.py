@@ -36,11 +36,13 @@ Nonparametric stochastic block model inference
 High-level functions
 ====================
 
+.. currentmodule:: graph_tool.inference
+
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.minimize.minimize_blockmodel_dl
-   ~graph_tool.inference.minimize.minimize_nested_blockmodel_dl
+   minimize_blockmodel_dl
+   minimize_nested_blockmodel_dl
 
 State classes
 =============
@@ -48,26 +50,27 @@ State classes
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.blockmodel.BlockState
-   ~graph_tool.inference.overlap_blockmodel.OverlapBlockState
-   ~graph_tool.inference.layered_blockmodel.LayeredBlockState
-   ~graph_tool.inference.nested_blockmodel.NestedBlockState
-   ~graph_tool.inference.planted_partition.PPBlockState
-   ~graph_tool.inference.modularity.ModularityState
-   ~graph_tool.inference.mcmc.TemperingState
-   ~graph_tool.inference.clique_decomposition.CliqueState
+   BlockState
+   OverlapBlockState
+   LayeredBlockState
+   NestedBlockState
+   PPBlockState
+   ModularityState
+   NormCutState
+   TemperingState
+   CliqueState
 
 Abstract base classes
 =====================
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.base_states.MCMCState
-   ~graph_tool.inference.base_states.MultiflipMCMCState
-   ~graph_tool.inference.base_states.MultilevelMCMCState
-   ~graph_tool.inference.base_states.GibbsMCMCState
-   ~graph_tool.inference.base_states.MulticanonicalMCMCState
-   ~graph_tool.inference.base_states.ExhaustiveSweepState
+   MCMCState
+   MultiflipMCMCState
+   MultilevelMCMCState
+   GibbsMCMCState
+   MulticanonicalMCMCState
+   ExhaustiveSweepState
 
 Sampling and minimization
 =========================
@@ -75,10 +78,10 @@ Sampling and minimization
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.mcmc.mcmc_equilibrate
-   ~graph_tool.inference.mcmc.mcmc_anneal
-   ~graph_tool.inference.mcmc.multicanonical_equilibrate
-   ~graph_tool.inference.mcmc.MulticanonicalState
+   mcmc_equilibrate
+   mcmc_anneal
+   multicanonical_equilibrate
+   MulticanonicalState
 
 Comparing and manipulating partitions
 =====================================
@@ -86,25 +89,25 @@ Comparing and manipulating partitions
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.partition_modes.PartitionModeState
-   ~graph_tool.inference.partition_modes.ModeClusterState
-   ~graph_tool.inference.partition_centroid.PartitionCentroidState
-   ~graph_tool.inference.partition_modes.partition_overlap
-   ~graph_tool.inference.partition_modes.nested_partition_overlap
-   ~graph_tool.inference.partition_centroid.variation_information
-   ~graph_tool.inference.partition_centroid.mutual_information
-   ~graph_tool.inference.partition_centroid.reduced_mutual_information
-   ~graph_tool.inference.partition_modes.contingency_graph
-   ~graph_tool.inference.partition_modes.shuffle_partition_labels
-   ~graph_tool.inference.partition_modes.order_partition_labels
-   ~graph_tool.inference.partition_modes.order_nested_partition_labels
-   ~graph_tool.inference.partition_modes.align_partition_labels
-   ~graph_tool.inference.partition_modes.align_nested_partition_labels
-   ~graph_tool.inference.partition_modes.partition_overlap_center
-   ~graph_tool.inference.partition_modes.nested_partition_overlap_center
-   ~graph_tool.inference.partition_modes.nested_partition_clear_null
-   ~graph_tool.inference.util.contiguous_map
-   ~graph_tool.inference.util.nested_contiguous_map
+   PartitionModeState
+   ModeClusterState
+   PartitionCentroidState
+   partition_overlap
+   nested_partition_overlap
+   variation_information
+   mutual_information
+   reduced_mutual_information
+   contingency_graph
+   shuffle_partition_labels
+   order_partition_labels
+   order_nested_partition_labels
+   align_partition_labels
+   align_nested_partition_labels
+   partition_overlap_center
+   nested_partition_overlap_center
+   nested_partition_clear_null
+   contiguous_map
+   nested_contiguous_map
 
 Auxiliary functions
 ===================
@@ -112,12 +115,12 @@ Auxiliary functions
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.blockmodel.mf_entropy
-   ~graph_tool.inference.blockmodel.bethe_entropy
-   ~graph_tool.inference.blockmodel.microstate_entropy
-   ~graph_tool.inference.uncertain_blockmodel.marginal_multigraph_entropy
-   ~graph_tool.inference.overlap_blockmodel.half_edge_graph
-   ~graph_tool.inference.overlap_blockmodel.get_block_edge_gradient
+   mf_entropy
+   bethe_entropy
+   microstate_entropy
+   marginal_multigraph_entropy
+   half_edge_graph
+   get_block_edge_gradient
 
 Auxiliary classes
 =================
@@ -125,8 +128,8 @@ Auxiliary classes
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.blockmodel.PartitionHist
-   ~graph_tool.inference.blockmodel.BlockPairHist
+   PartitionHist
+   BlockPairHist
 
 Nonparametric network reconstruction
 ++++++++++++++++++++++++++++++++++++
@@ -137,20 +140,20 @@ State classes
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.uncertain_blockmodel.LatentMultigraphBlockState
-   ~graph_tool.inference.latent_layers.LatentClosureBlockState
-   ~graph_tool.inference.uncertain_blockmodel.MeasuredBlockState
-   ~graph_tool.inference.latent_layers.MeasuredClosureBlockState
-   ~graph_tool.inference.uncertain_blockmodel.MixedMeasuredBlockState
-   ~graph_tool.inference.uncertain_blockmodel.UncertainBlockState
-   ~graph_tool.inference.uncertain_blockmodel.UncertainBaseState
-   ~graph_tool.inference.uncertain_blockmodel.DynamicsBlockStateBase
-   ~graph_tool.inference.uncertain_blockmodel.EpidemicsBlockState
-   ~graph_tool.inference.uncertain_blockmodel.IsingBaseBlockState
-   ~graph_tool.inference.uncertain_blockmodel.IsingGlauberBlockState
-   ~graph_tool.inference.uncertain_blockmodel.CIsingGlauberBlockState
-   ~graph_tool.inference.uncertain_blockmodel.PseudoIsingBlockState
-   ~graph_tool.inference.uncertain_blockmodel.PseudoCIsingBlockState
+   LatentMultigraphBlockState
+   LatentClosureBlockState
+   MeasuredBlockState
+   MeasuredClosureBlockState
+   MixedMeasuredBlockState
+   UncertainBlockState
+   UncertainBaseState
+   DynamicsBlockStateBase
+   EpidemicsBlockState
+   IsingBaseBlockState
+   IsingGlauberBlockState
+   CIsingGlauberBlockState
+   PseudoIsingBlockState
+   PseudoCIsingBlockState
 
 Expectation-maximization Inference
 ==================================
@@ -158,7 +161,7 @@ Expectation-maximization Inference
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.latent_multigraph.latent_multigraph
+   latent_multigraph
 
 Semiparametric stochastic block model inference
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -169,7 +172,7 @@ State classes
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.blockmodel_em.EMBlockState
+   EMBlockState
 
 Expectation-maximization Inference
 ==================================
@@ -177,7 +180,7 @@ Expectation-maximization Inference
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.blockmodel_em.em_infer
+   em_infer
 
 Large-scale descriptors
 +++++++++++++++++++++++
@@ -185,7 +188,7 @@ Large-scale descriptors
 .. autosummary::
    :nosignatures:
 
-   ~graph_tool.inference.modularity.modularity
+   modularity
 
 Contents
 ++++++++
@@ -209,7 +212,9 @@ __all__ = ["minimize_blockmodel_dl",
            "MeasuredBlockState",
            "UncertainBaseState",
            "MixedMeasuredBlockState",
+           "DynamicsBlockStateBase",
            "EpidemicsBlockState",
+           "IsingBaseBlockState",
            "IsingGlauberBlockState",
            "PseudoIsingBlockState",
            "CIsingGlauberBlockState",
