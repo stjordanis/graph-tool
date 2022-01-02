@@ -152,7 +152,8 @@ libgraph_tool_core_la_workaround_HEADERS = \
 	src/boost-workaround/boost/graph/overloading.hpp \
 	src/boost-workaround/boost/graph/push_relabel_max_flow.hpp \
 	src/boost-workaround/boost/graph/copy_alt.hpp \
-	src/boost-workaround/boost/graph/stoer_wagner_min_cut.hpp
+	src/boost-workaround/boost/graph/stoer_wagner_min_cut.hpp \
+	src/boost-workaround/boost/graph/vf2_sub_graph_iso.hpp
 libgraph_tool_core_la_pcg_cppdir = $(MOD_DIR)/include/pcg-cpp
 libgraph_tool_core_la_pcg_cpp_HEADERS = \
 	src/pcg-cpp/include/pcg_extras.hpp \
