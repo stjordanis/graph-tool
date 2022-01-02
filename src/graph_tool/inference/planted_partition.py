@@ -128,7 +128,7 @@ class PPBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def virtual_vertex_move(self, v, s, **kwargs):
         r"""Computes the entropy difference if vertex ``v`` is moved to block ``s``. The
         remaining parameters are the same as in
-        :meth:`~graph_tool.inference.planted_partition.PPBlockState.entropy`."""
+        :meth:`~graph_tool.inference.PPBlockState.entropy`."""
         return self._state.virtual_move(int(v), self.b[v], s,
                                         get_pp_entropy_args(dict(self._entropy_args,
                                                                  **kwargs)))
@@ -219,7 +219,7 @@ class PPBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
 
         For the partition prior :math:`P(\boldsymbol{b})` please refer to
-        :meth:`~graph_tool.inference.blockmodel.BlockState.entropy`.
+        :meth:`~graph_tool.inference.BlockState.entropy`.
 
         References
         ----------

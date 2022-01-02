@@ -41,11 +41,11 @@ class NestedBlockState(object):
     bs : ``list`` of :class:`~graph_tool.VertexPropertyMap` or :class:`numpy.ndarray` (optional, default: ``None``)
         Hierarchical node partition. If not provided it will correspond to a
         single-group hierarchy of length :math:`\lceil\log_2(N)\rceil`.
-    base_type : ``type`` (optional, default: :class:`~graph_tool.inference.blockmodel.BlockState`)
+    base_type : ``type`` (optional, default: :class:`~graph_tool.inference.BlockState`)
         State type for lowermost level
-        (e.g. :class:`~graph_tool.inference.blockmodel.BlockState`,
-        :class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState` or
-        :class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`)
+        (e.g. :class:`~graph_tool.inference.BlockState`,
+        :class:`~graph_tool.inference.OverlapBlockState` or
+        :class:`~graph_tool.inference.LayeredBlockState`)
     hstate_args : ``dict`` (optional, default: `{}`)
         Keyword arguments to be passed to the constructor of the higher-level
         states.
@@ -221,7 +221,7 @@ class NestedBlockState(object):
             self.levels[i].set_state(bs[i])
 
     def get_levels(self):
-        """Get hierarchy levels as a list of :class:`~graph_tool.inference.blockmodel.BlockState`
+        """Get hierarchy levels as a list of :class:`~graph_tool.inference.BlockState`
         instances."""
         return self.levels
 
@@ -351,9 +351,9 @@ class NestedBlockState(object):
 
         The keyword arguments are passed to the ``entropy()`` method of the
         underlying state objects
-        (e.g. :class:`graph_tool.inference.blockmodel.BlockState.entropy`,
-        :class:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.entropy`, or
-        :class:`graph_tool.inference.layered_blockmodel.LayeredBlockState.entropy`).  """
+        (e.g. :class:`graph_tool.inference.BlockState.entropy`,
+        :class:`graph_tool.inference.OverlapBlockState.entropy`, or
+        :class:`graph_tool.inference.LayeredBlockState.entropy`).  """
         S = 0
         for l in range(len(self.levels)):
             S += self.level_entropy(l, **dict(kwargs, test=False))
@@ -410,7 +410,7 @@ class NestedBlockState(object):
         (with missing edges added and spurious edges deleted).
 
         The values in ``entropy_args`` are passed to
-        :meth:`graph_tool.inference.blockmodel.BlockState.entropy()` to calculate the
+        :meth:`graph_tool.inference.BlockState.entropy()` to calculate the
         log-probability.
         """
 
@@ -587,7 +587,7 @@ class NestedBlockState(object):
         MCMC to sample hierarchical network partitions.
 
         The arguments accepted are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep`.
+        :meth:`graph_tool.inference.BlockState.mcmc_sweep`.
 
         If the parameter ``c`` is a scalar, the values used at each level are
         ``c * 2 ** l`` for ``l`` in the range ``[0, L-1]``. Optionally, a list
@@ -624,7 +624,7 @@ class NestedBlockState(object):
         with multiple moves to sample hierarchical network partitions.
 
         The arguments accepted are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`.
+        :meth:`graph_tool.inference.BlockState.multiflip_mcmc_sweep`.
 
         If the parameter ``c`` is a scalar, the values used at each level are
         ``c * 2 ** l`` for ``l`` in the range ``[0, L-1]``. Optionally, a list
@@ -671,7 +671,7 @@ class NestedBlockState(object):
         with multilevel moves to sample hierarchical network partitions.
 
         The arguments accepted are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.multilevel_mcmc_sweep`.
+        :meth:`graph_tool.inference.BlockState.multilevel_mcmc_sweep`.
 
         If the parameter ``c`` is a scalar, the values used at each level are
         ``c * 2 ** l`` for ``l`` in the range ``[0, L-1]``. Optionally, a list
@@ -710,7 +710,7 @@ class NestedBlockState(object):
         to sample network partitions.
 
         The arguments accepted are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.gibbs_sweep`.
+        :meth:`graph_tool.inference.BlockState.gibbs_sweep`.
 
         .. warning::
 
@@ -733,7 +733,7 @@ class NestedBlockState(object):
         Wang-Landau algorithm.
 
         The arguments accepted are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.multicanonical_sweep`.
+        :meth:`graph_tool.inference.BlockState.multicanonical_sweep`.
         """
 
         def sweep(s, **kwargs):
@@ -750,11 +750,11 @@ class NestedBlockState(object):
         r"""Collect a histogram of partitions.
 
         This should be called multiple times, e.g. after repeated runs of the
-        :meth:`graph_tool.inference.nested_blockmodel.NestedBlockState.mcmc_sweep` function.
+        :meth:`graph_tool.inference.NestedBlockState.mcmc_sweep` function.
 
         Parameters
         ----------
-        h : :class:`~graph_tool.inference.blockmodel.PartitionHist` (optional, default: ``None``)
+        h : :class:`~graph_tool.inference.PartitionHist` (optional, default: ``None``)
             Partition histogram. If not provided, an empty histogram will be created.
         update : float (optional, default: ``1``)
             Each call increases the current count by the amount given by this
@@ -762,7 +762,7 @@ class NestedBlockState(object):
 
         Returns
         -------
-        h : :class:`~graph_tool.inference.blockmodel.PartitionHist` (optional, default: ``None``)
+        h : :class:`~graph_tool.inference.PartitionHist` (optional, default: ``None``)
             Updated Partition histogram.
 
         """
@@ -782,13 +782,13 @@ class NestedBlockState(object):
 def get_hierarchy_tree(state, empty_branches=False):
     r"""Obtain the nested hierarchical levels as a tree.
 
-    This transforms a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` instance
+    This transforms a :class:`~graph_tool.inference.NestedBlockState` instance
     into a single :class:`~graph_tool.Graph` instance containing the hierarchy
     tree.
 
     Parameters
     ----------
-    state : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+    state : :class:`~graph_tool.inference.NestedBlockState`
        Nested block model state.
     empty_branches : ``bool`` (optional, default: ``False``)
        If ``empty_branches == False``, dangling branches at the upper layers

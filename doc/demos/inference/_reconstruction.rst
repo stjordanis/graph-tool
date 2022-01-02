@@ -62,11 +62,11 @@ generally can lead to substantial improvements
 In graph-tool there is support for reconstruction with the above
 framework for three measurement processes: 1. Repeated measurements with
 uniform errors (via
-:class:`~graph_tool.inference.uncertain_blockmodel.MeasuredBlockState`), 2. Repeated
+:class:`~graph_tool.inference.MeasuredBlockState`), 2. Repeated
 measurements with heterogeneous errors (via
-:class:`~graph_tool.inference.uncertain_blockmodel.MixedMeasuredBlockState`),
+:class:`~graph_tool.inference.MixedMeasuredBlockState`),
 and 3. Extraneously obtained edge probabilities (via
-:class:`~graph_tool.inference.uncertain_blockmodel.UncertainBlockState`),
+:class:`~graph_tool.inference.UncertainBlockState`),
 which we describe in the following.
 
 In addition, it is also possible to reconstruct networks from observed
@@ -125,7 +125,7 @@ In this situation the priors :math:`P(p|\alpha=1,\beta=1)` and
 
 Below, we illustrate how the reconstruction can be performed with a
 simple example, using
-:class:`~graph_tool.inference.uncertain_blockmodel.MeasuredBlockState`:
+:class:`~graph_tool.inference.MeasuredBlockState`:
 
 .. testsetup:: measured
 
@@ -506,7 +506,7 @@ into the scheme of Eq. :eq:`posterior-reconstruction` by considering
 the data to be the observed simple graph,
 :math:`\boldsymbol{\mathcal{D}} = \boldsymbol G`. We proceed in same
 way as in the previous reconstruction scenarios, but using instead
-:class:`~graph_tool.inference.uncertain_blockmodel.LatentMultigraphBlockState`.
+:class:`~graph_tool.inference.LatentMultigraphBlockState`.
 
 For example, in the following we will obtain the community structure and
 latent multiedges of a network of political books:
@@ -574,7 +574,7 @@ community structure [peixoto-disentangling-2021]_. This approach can be
 used to separate the effects of triangle formation from node homophily,
 which are typically conflated. We proceed in same way as in the previous
 reconstruction scenarios, but using instead
-:class:`~graph_tool.inference.latent_layers.LatentClosureBlockState`.
+:class:`~graph_tool.inference.LatentClosureBlockState`.
 
 For example, in the following we will obtain the community structure and
 latent closure edges of a network of political books:
@@ -652,7 +652,7 @@ latent closure edges of a network of political books:
 
 Triadic closure can also be used to perform uncertain network
 reconstruction, using
-:class:`~graph_tool.inference.latent_layers.MeasuredClosureBlockState`,
+:class:`~graph_tool.inference.MeasuredClosureBlockState`,
 in a manner analogous to what was done in :ref:`measured_networks`:
 
 .. testsetup:: measured-closure

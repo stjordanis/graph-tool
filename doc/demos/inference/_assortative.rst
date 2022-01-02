@@ -12,9 +12,9 @@ it might make sense to search exclusively for assortative communities
 [lizhi-statistical-2020]_. A version of the SBM that is constrained in
 this way is called the "planted partition model", which can be inferred
 with graph-tool using
-:class:`~graph_tool.inference.planted_partition.PPBlockState`. This
+:class:`~graph_tool.inference.PPBlockState`. This
 class behaves just like
-:class:`~graph_tool.inference.blockmodel.BlockState`, therefore all
+:class:`~graph_tool.inference.BlockState`, therefore all
 algorithms described in this documentation work in the same way. Below
 we show how this model can be inferred for the football network
 considered previously

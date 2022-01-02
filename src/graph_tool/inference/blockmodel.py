@@ -570,7 +570,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         self.__init__(**state)
 
     def get_block_state(self, b=None, vweight=False, **kwargs):
-        r"""Returns a :class:`~graph_tool.inference.blockmodel.BlockState` corresponding
+        r"""Returns a :class:`~graph_tool.inference.BlockState` corresponding
         to the block graph (i.e. the blocks of the current state become the
         nodes). The parameters have the same meaning as the in the
         constructor. If ``vweight == True`` the nodes of the block state are
@@ -756,7 +756,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         return self.b
 
     def get_state(self):
-        """Alias to :meth:`~graph_tool.inference.blockmodel.BlockState.get_blocks`."""
+        """Alias to :meth:`~graph_tool.inference.BlockState.get_blocks`."""
         return self.get_blocks()
 
     def set_state(self, b):
@@ -1122,7 +1122,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def virtual_vertex_move(self, v, s, **kwargs):
         r"""Computes the entropy difference if vertex ``v`` is moved to block ``s``. The
         remaining parameters are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.entropy`."""
+        :meth:`graph_tool.inference.BlockState.entropy`."""
         return self._state.virtual_move(int(v), self.b[v], s,
                                         self._get_entropy_args(dict(self._entropy_args,
                                                                     **kwargs)))
@@ -1190,7 +1190,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def get_move_prob(self, v, s, c=1., d=.1, reverse=False):
         r"""Compute the log-probability of a move proposal for vertex ``v`` to block ``s``
         according to sampling parameters ``c`` and ``d``, as obtained with
-        :meth:`graph_tool.inference.blockmodel.BlockState.sample_vertex_move`. If ``reverse
+        :meth:`graph_tool.inference.BlockState.sample_vertex_move`. If ``reverse
         == True``, the reverse probability of moving the node back from block
         ``s`` to its current one is obtained.
         """
@@ -1215,7 +1215,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         (with missing edges added and spurious edges deleted).
 
         The values in ``entropy_args`` are passed to
-        :meth:`~graph_tool.inference.blockmodel.BlockState.entropy()` to
+        :meth:`~graph_tool.inference.BlockState.entropy()` to
         calculate the log-probability.
 
         """
@@ -1371,7 +1371,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         the endpoints of each node have been assigned to a given block pair.
 
         This should be called multiple times, e.g. after repeated runs of the
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` function.
+        :meth:`graph_tool.inference.BlockState.mcmc_sweep` function.
 
         Parameters
         ----------
@@ -1422,7 +1422,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         node was assigned to a given block.
 
         This should be called multiple times, e.g. after repeated runs of the
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` function.
+        :meth:`graph_tool.inference.BlockState.mcmc_sweep` function.
 
         Parameters
         ----------
@@ -1488,11 +1488,11 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         r"""Collect a histogram of partitions.
 
         This should be called multiple times, e.g. after repeated runs of the
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` function.
+        :meth:`graph_tool.inference.BlockState.mcmc_sweep` function.
 
         Parameters
         ----------
-        h : :class:`~graph_tool.inference.blockmodel.PartitionHist` (optional, default: ``None``)
+        h : :class:`~graph_tool.inference.PartitionHist` (optional, default: ``None``)
             Partition histogram. If not provided, an empty histogram will be created.
         update : float (optional, default: ``1``)
             Each call increases the current count by the amount given by this
@@ -1503,7 +1503,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         Returns
         -------
-        h : :class:`~graph_tool.inference.blockmodel.PartitionHist` (optional, default: ``None``)
+        h : :class:`~graph_tool.inference.PartitionHist` (optional, default: ``None``)
             Updated Partition histogram.
 
         Examples
@@ -1677,7 +1677,7 @@ def bethe_entropy(g, p):
         Vertex property map with vector-type values, storing the accumulated
         block membership counts. These are the node marginals, as would be
         returned by the
-        :meth:`~graph_tool.inference.blockmodel.BlockState.collect_vertex_marginals`
+        :meth:`~graph_tool.inference.BlockState.collect_vertex_marginals`
         method.
 
     Notes
@@ -1754,7 +1754,7 @@ def microstate_entropy(h, unlabel=True):
 
     Parameters
     ----------
-    h : :class:`~graph_tool.inference.blockmodel.PartitionHist` (optional, default: ``None``)
+    h : :class:`~graph_tool.inference.PartitionHist` (optional, default: ``None``)
         Partition histogram.
     unlabel : bool (optional, default: ``True``)
         If ``True``, a canonical labelling of the groups will be used, so that

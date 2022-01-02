@@ -59,7 +59,7 @@ class OverlapBlockState(BlockState):
         ``"discrete-poisson"`` or ``"discrete-binomial"``.
     rec_params : list of ``dict`` (optional, default: ``[]``)
         Model hyperparameters for edge covariates. This should a list of
-        ``dict`` instances. See :class:`~graph_tool.inference.blockmodel.BlockState` for
+        ``dict`` instances. See :class:`~graph_tool.inference.BlockState` for
         more details.
     clabel : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Constraint labels on the vertices. If supplied, vertices with different
@@ -292,7 +292,7 @@ class OverlapBlockState(BlockState):
              pclabel=None, **kwargs):
         r"""Copies the block state. The parameters override the state properties, and
          have the same meaning as in the constructor. If ``overlap=False`` an
-         instance of :class:`~graph_tool.inference.blockmodel.BlockState` is returned. This
+         instance of :class:`~graph_tool.inference.BlockState` is returned. This
          is by default a shallow copy."""
 
         state = OverlapBlockState(self.g if g is None else g,
@@ -507,12 +507,12 @@ class OverlapBlockState(BlockState):
 
         The model likelihood :math:`P(\boldsymbol{A}|\theta)` is given
         analogously to the non-overlapping case, as described in
-        :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+        :meth:`graph_tool.inference.BlockState.entropy`.
 
         If ``dl == True``, the description length :math:`\mathcal{L} = -\ln
         P(\boldsymbol{\theta})` of the model will be returned as well. The
         edge-count prior :math:`P(\boldsymbol{e})` is described in described in
-        :meth:`~graph_tool.inference.blockmodel.BlockState.entropy`. For the
+        :meth:`~graph_tool.inference.BlockState.entropy`. For the
         overlapping partition :math:`P(\boldsymbol{b})`, we have
 
         .. math::
@@ -613,7 +613,7 @@ class OverlapBlockState(BlockState):
         network partitions. If ``bundled == True``, the half-edges incident of
         the same node that belong to the same group are moved together. All
         remaining parameters are passed to
-        :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep`."""
+        :meth:`graph_tool.inference.BlockState.mcmc_sweep`."""
         self.__bundled = bundled
         return BlockState.mcmc_sweep(self, **kwargs)
 

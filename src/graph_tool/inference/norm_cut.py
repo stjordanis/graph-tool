@@ -38,9 +38,9 @@ class NormCutState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
        Do not use this approach in the analysis of networks without
        understanding the consequences. This algorithm is included only for
        comparison purposes. In general, the inference-based approaches based on
-       :class:`~graph_tool.inference.blockmodel.BlockState`,
-       :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`, and
-       :class:`~graph_tool.inference.planted_partition.PPBlockState` should be
+       :class:`~graph_tool.inference.BlockState`,
+       :class:`~graph_tool.inference.NestedBlockState`, and
+       :class:`~graph_tool.inference.PPBlockState` should be
        universally preferred.
 
     Parameters

@@ -26,11 +26,11 @@ groups being used in the model, and hence is suitable for use on very
 large networks.
 
 In order to perform such moves, one needs again to operate with
-:class:`~graph_tool.inference.blockmodel.BlockState` or
-:class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+:class:`~graph_tool.inference.BlockState` or
+:class:`~graph_tool.inference.NestedBlockState`
 instances, and calling either their
-:meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` or
-:meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`
+:meth:`~graph_tool.inference.BlockState.mcmc_sweep` or
+:meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`
 methods. The former implements a simpler MCMC where a single node is
 moved at a time, where the latter is a more efficient version that
 performs merges and splits [peixoto-merge-split-2020]_, which should be
@@ -65,7 +65,7 @@ from a random partition into 20 groups
 
 Although the above is sufficient to implement sampling from the
 posterior, there is a convenience function called
-:func:`~graph_tool.inference.mcmc.mcmc_equilibrate` that is intend to
+:func:`~graph_tool.inference.mcmc_equilibrate` that is intend to
 simplify the detection of equilibration, by keeping track of the maximum
 and minimum values of description length encountered and how many sweeps
 have been made without a "record breaking" event. For example,
@@ -81,14 +81,14 @@ Note that the value of ``wait`` above was made purposefully low so that
 the output would not be overly long. The most appropriate value requires
 experimentation, but a typically good value is ``wait=1000``.
 
-The function :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` accepts
+The function :func:`~graph_tool.inference.mcmc_equilibrate` accepts
 a ``callback`` argument that takes an optional function to be invoked
 after each call to
-:meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`. This
+:meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`. This
 function should accept a single parameter which will contain the actual
-:class:`~graph_tool.inference.blockmodel.BlockState` instance. We will
+:class:`~graph_tool.inference.BlockState` instance. We will
 use this in the example below to collect the posterior vertex marginals
-(via :class:`~graph_tool.inference.partition_modes.PartitionModeState`,
+(via :class:`~graph_tool.inference.PartitionModeState`,
 which disambiguates group labels [peixoto-revealing-2021]_), i.e. the
 posterior probability that a node belongs to a given group:
 
@@ -170,7 +170,7 @@ Hierarchical partitions
 We can also perform model averaging using the nested SBM, which will
 give us a distribution over hierarchies. The whole procedure is fairly
 analogous, but now we make use of
-:class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` instances.
+:class:`~graph_tool.inference.NestedBlockState` instances.
 
 Here we perform the sampling of hierarchical partitions using the same
 network as above.
@@ -201,18 +201,18 @@ network as above.
 .. warning::
 
    When using
-   :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`, a
+   :class:`~graph_tool.inference.NestedBlockState`, a
    single call to
-   :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.multiflip_mcmc_sweep`
+   :meth:`~graph_tool.inference.NestedBlockState.multiflip_mcmc_sweep`
    or
-   :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.mcmc_sweep`
+   :meth:`~graph_tool.inference.NestedBlockState.mcmc_sweep`
    performs ``niter`` sweeps at each hierarchical level once. This means
    that in order for the chain to equilibrate, we need to call these
    functions several times, i.e. it is not enough to call it once with a
    large value of ``niter``.
    
 Similarly to the the non-nested case, we can use
-:func:`~graph_tool.inference.mcmc.mcmc_equilibrate` to do most of the boring
+:func:`~graph_tool.inference.mcmc_equilibrate` to do most of the boring
 work, and we can now obtain vertex marginals on all hierarchical levels:
 
 .. testcode:: nested-model-averaging
@@ -332,7 +332,7 @@ Characterizing the posterior distribution
 The posterior distribution of partitions can have an elaborate
 structure, containing multiple possible explanations for the data. In
 order to summarize it, we can infer the modes of the distribution using
-:class:`~graph_tool.inference.partition_modes.ModeClusterState`, as
+:class:`~graph_tool.inference.ModeClusterState`, as
 described in [peixoto-revealing-2021]_. This amounts to identifying
 clusters of partitions that are very similar to each other, but
 sufficiently different from those that belong to other

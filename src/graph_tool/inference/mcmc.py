@@ -32,7 +32,7 @@ def mcmc_equilibrate(state, wait=1000, nbreaks=2, max_niter=numpy.inf,
 
     Parameters
     ----------
-    state : Any state class (e.g. :class:`~graph_tool.inference.blockmodel.BlockState`)
+    state : Any state class (e.g. :class:`~graph_tool.inference.BlockState`)
         Initial state. This state will be modified during the algorithm.
     wait : ``int`` (optional, default: ``1000``)
         Number of iterations to wait for a record-breaking event.
@@ -79,8 +79,8 @@ def mcmc_equilibrate(state, wait=1000, nbreaks=2, max_niter=numpy.inf,
     event.
 
     This function calls ``state.mcmc_sweep`` (or ``state.gibbs_sweep``) at each
-    iteration (e.g. :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep` and
-    :meth:`graph_tool.inference.blockmodel.BlockState.gibbs_sweep`), and keeps track of
+    iteration (e.g. :meth:`graph_tool.inference.BlockState.mcmc_sweep` and
+    :meth:`graph_tool.inference.BlockState.gibbs_sweep`), and keeps track of
     the value of ``state.entropy(**args)`` with ``args`` corresponding to
     ``mcmc_args["entropy_args"]``.
 
@@ -184,7 +184,7 @@ def mcmc_anneal(state, beta_range=(1., 10.), niter=100, history=False,
 
     Parameters
     ----------
-    state : Any state class (e.g. :class:`~graph_tool.inference.blockmodel.BlockState`)
+    state : Any state class (e.g. :class:`~graph_tool.inference.BlockState`)
         Initial state. This state will be modified during the algorithm.
     beta_range : ``tuple`` of two floats (optional, default: ``(1., 10.)``)
         Inverse temperature range.
@@ -194,7 +194,7 @@ def mcmc_anneal(state, beta_range=(1., 10.), niter=100, history=False,
     history : ``bool`` (optional, default: ``False``)
         If ``True``, a list of tuples of the form ``(nattempts, nmoves, beta, entropy)``
     mcmc_equilibrate_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :func:`~graph_tool.inference.mcmc.mcmc_equilibrate`.
+        Arguments to be passed to :func:`~graph_tool.inference.mcmc_equilibrate`.
     verbose : ``bool`` or ``tuple`` (optional, default: ``False``)
         If ``True``, progress information will be shown. Optionally, this
         accepts arguments of the type ``tuple`` of the form ``(level, prefix)``
@@ -211,7 +211,7 @@ def mcmc_anneal(state, beta_range=(1., 10.), niter=100, history=False,
     iterations.
 
     At each iteration, the function
-    :func:`~graph_tool.inference.mcmc.mcmc_equilibrate` is called with the current
+    :func:`~graph_tool.inference.mcmc_equilibrate` is called with the current
     value of `beta` (via the ``mcmc_args`` parameter).
 
     Returns
@@ -272,11 +272,11 @@ def mcmc_anneal(state, beta_range=(1., 10.), niter=100, history=False,
 
 class MulticanonicalState(object):
     r"""The density of states of a multicanonical Monte Carlo algorithm. It is used
-    by :func:`graph_tool.inference.mcmc.multicanonical_equilibrate`.
+    by :func:`graph_tool.inference.multicanonical_equilibrate`.
 
     Parameters
     ----------
-    state : :class:`~graph_tool.inference.blockmodel.BlockState` or :class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState` or :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+    state : :class:`~graph_tool.inference.BlockState` or :class:`~graph_tool.inference.OverlapBlockState` or :class:`~graph_tool.inference.NestedBlockState`
         Block state to be used.
     S_min : ``float``
         Minimum energy.
@@ -405,7 +405,7 @@ def multicanonical_equilibrate(m_state, f_range=(1., 1e-6), r=2,
 
     Parameters
     ----------
-    m_state :  :class:`~graph_tool.inference.mcmc.MulticanonicalState`
+    m_state :  :class:`~graph_tool.inference.MulticanonicalState`
         Initial multicanonical state, where the state density will be stored.
     f_range : ``tuple`` of two floats (optional, default: ``(1., 1e-6)``)
         Range of density updates.
@@ -422,7 +422,7 @@ def multicanonical_equilibrate(m_state, f_range=(1., 1e-6), r=2,
         function must accept the current ``state`` and ``m_state`` as arguments.
     multicanonical_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to ``state.multicanonical_sweep`` (e.g.
-        :meth:`graph_tool.inference.blockmodel.BlockState.multicanonical_sweep`).
+        :meth:`graph_tool.inference.BlockState.multicanonical_sweep`).
     verbose : ``bool`` or ``tuple`` (optional, default: ``False``)
         If ``True``, progress information will be shown. Optionally, this
         accepts arguments of the type ``tuple`` of the form ``(level, prefix)``
@@ -481,11 +481,11 @@ class TemperingState(object):
     inverse-temperature values to implement `parallel tempering MCMC
     <https://en.wikipedia.org/wiki/Parallel_tempering>`_.
 
-    This is meant to be used with :func:`~graph_tool.inference.mcmc.mcmc_equilibrate`.
+    This is meant to be used with :func:`~graph_tool.inference.mcmc_equilibrate`.
 
     Parameters
     ----------
-    states : list of state objects (e.g. :class:`~graph_tool.inference.blockmodel.BlockState`)
+    states : list of state objects (e.g. :class:`~graph_tool.inference.BlockState`)
         Initial parallel states.
     betas : list of floats
         Inverse temperature values.

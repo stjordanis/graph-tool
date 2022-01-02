@@ -46,7 +46,7 @@ class PartitionModeState(object):
 
         If ``True``, the label alignment will be iterated until convergence upon
         initialization (otherwise
-        :meth:`~graph_tool.inference.partition_modes.PartitionModeState.replace_partitions`
+        :meth:`~graph_tool.inference.PartitionModeState.replace_partitions`
         needs to be called repeatedly).
 
     References
@@ -151,7 +151,7 @@ class PartitionModeState(object):
     def align_mode(self, mode):
         r"""Relabel entire ensemble to align with another ensemble given by ``mode``,
         which should be an instance of
-        :class:`~graph_tool.inference.partition_modes.PartitionModeState`."""
+        :class:`~graph_tool.inference.PartitionModeState`."""
         self._base.align_mode(mode._base)
 
     def get_partition(self, i):
@@ -205,7 +205,7 @@ class PartitionModeState(object):
         return self._base.posterior_lprob(b, MLE)
 
     def get_coupled_state(self):
-        r"""Return the instance of :class:`~graph_tool.inference.partition_modes.PartitionModeState`
+        r"""Return the instance of :class:`~graph_tool.inference.PartitionModeState`
         representing the model at the upper hierarchical level.
         """
         base = self._base.get_coupled_state()
@@ -340,13 +340,13 @@ class ModeClusterState(MCMCState, MultiflipMCMCState, MultilevelMCMCState):
 
     def get_mode(self, r):
         r"""Return the mode in cluster ``r`` as an instance of
-        :class:`~graph_tool.inference.partition_modes.PartitionModeState`. """
+        :class:`~graph_tool.inference.PartitionModeState`. """
         base = self._state.get_mode(r);
         return PartitionModeState(None, base=base, nested=self.nested)
 
     def get_modes(self, sort=True):
         r"""Return the list of nonempty modes, as instances of
-        :class:`~graph_tool.inference.partition_modes.PartitionModeState`. If `sorted == True`,
+        :class:`~graph_tool.inference.PartitionModeState`. If `sorted == True`,
         the modes are retured in decreasing order with respect to their size.
         """
         modes = [self.get_mode(r) for r in np.unique(self.b)]
@@ -717,7 +717,7 @@ def shuffle_partition_labels(x):
     --------
     >>> x = [0, 0, 0, 1, 1, 1, 2, 2, 2]
     >>> gt.shuffle_partition_labels(x)
-    array([0, 0, 0, 2, 2, 2, 1, 1, 1], dtype=int32)
+    array([1, 1, 1, 0, 0, 0, 2, 2, 2], dtype=int32)
     """
 
     x = np.asarray(x, dtype="int32").copy()
@@ -741,7 +741,7 @@ def shuffle_nested_partition_labels(x):
     --------
     >>> x = [[0, 0, 0, 1, 1, 1, 2, 2, 2], [0, 0, 1], [1, 0]]
     >>> gt.shuffle_nested_partition_labels(x)
-    [array([1, 1, 1, 0, 0, 0, 2, 2, 2], dtype=int32), array([0, 0, 1], dtype=int32), array([0, 1], dtype=int32)]
+    [array([0, 0, 0, 2, 2, 2, 1, 1, 1], dtype=int32), array([1, 0, 1], dtype=int32), array([1, 0], dtype=int32)]
     """
 
     x = [np.asarray(xl, dtype="int32") for xl in x]
@@ -825,7 +825,7 @@ def align_partition_labels(x, y):
     >>> x = [0, 2, 2, 1, 1, 1, 2, 3, 2]
     >>> y = gt.shuffle_partition_labels(x)
     >>> print(y)
-    [3 0 0 1 1 1 0 2 0]
+    [0 3 3 2 2 2 3 1 3]
     >>> gt.align_partition_labels(y, x)
     array([0, 2, 2, 1, 1, 1, 2, 3, 2], dtype=int32)
 
@@ -868,7 +868,7 @@ def align_nested_partition_labels(x, y):
     >>> x = [[0, 2, 2, 1, 1, 1, 2, 3, 2], [1, 0, 1, 0], [0,0]]
     >>> y = gt.shuffle_nested_partition_labels(x)
     >>> print(y)
-    [array([1, 3, 3, 2, 2, 2, 3, 0, 3], dtype=int32), array([1, 0, 1, 0], dtype=int32), array([0, 0], dtype=int32)]
+    [array([3, 2, 2, 0, 0, 0, 2, 1, 2], dtype=int32), array([1, 1, 0, 0], dtype=int32), array([0, 0], dtype=int32)]
     >>> gt.align_nested_partition_labels(y, x)
     [array([0, 2, 2, 1, 1, 1, 2, 3, 2], dtype=int32), array([1, 0, 1, 0], dtype=int32), array([0, 0], dtype=int32)]
     """
@@ -1073,7 +1073,7 @@ def nested_partition_clear_null(x):
     Notes
     -----
     This is useful to pass hierarchical partitions to
-    :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`.
+    :class:`~graph_tool.inference.NestedBlockState`.
 
     Examples
     --------

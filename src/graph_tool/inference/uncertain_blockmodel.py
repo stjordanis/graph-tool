@@ -127,8 +127,8 @@ class UncertainBaseState(object):
 
     def get_block_state(self):
         """Return the underlying block state, which can be either
-        :class:`~graph_tool.inference.blockmodel.BlockState` or
-        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`.
+        :class:`~graph_tool.inference.BlockState` or
+        :class:`~graph_tool.inference.NestedBlockState`.
         """
         if self.nbstate is None:
             return self.bstate
@@ -198,8 +198,8 @@ class UncertainBaseState(object):
         sample network partitions and latent edges. The parameter ``r`` controls
         the probability with which edge move will be attempted, instead of
         partition moves. The remaining keyword parameters will be passed to
-        :meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` or
-        :meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`,
+        :meth:`~graph_tool.inference.BlockState.mcmc_sweep` or
+        :meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`,
         if ``multiflip=True``.
         """
 
@@ -343,14 +343,14 @@ class UncertainBlockState(UncertainBaseState):
         Expected total number of edges used in prior. If ``NaN``, a flat
         prior will be used instead.
     nested : ``boolean`` (optional, default: ``True``)
-        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        If ``True``, a :class:`~graph_tool.inference.NestedBlockState`
         will be used, otherwise
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
+        :class:`~graph_tool.inference.BlockState`.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to
-        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
-    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+        :class:`~graph_tool.inference.NestedBlockState` or
+        :class:`~graph_tool.inference.BlockState`.
+    bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState`  (optional, default: ``None``)
         If passed, this will be used to initialize the block state
         directly.
     self_loops : bool (optional, default: ``False``)
@@ -428,14 +428,14 @@ class LatentMultigraphBlockState(UncertainBaseState):
         Expected total number of edges used in prior. If ``NaN``, a flat
         prior will be used instead.
     nested : ``boolean`` (optional, default: ``True``)
-        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        If ``True``, a :class:`~graph_tool.inference.NestedBlockState`
         will be used, otherwise
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
+        :class:`~graph_tool.inference.BlockState`.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to
-        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
-    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+        :class:`~graph_tool.inference.NestedBlockState` or
+        :class:`~graph_tool.inference.BlockState`.
+    bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState`  (optional, default: ``None``)
         If passed, this will be used to initialize the block state
         directly.
     self_loops : bool (optional, default: ``False``)
@@ -522,14 +522,14 @@ class MeasuredBlockState(UncertainBaseState):
         Expected total number of edges used in prior. If ``NaN``, a flat
         prior will be used instead.
     nested : ``boolean`` (optional, default: ``True``)
-        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        If ``True``, a :class:`~graph_tool.inference.NestedBlockState`
         will be used, otherwise
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
+        :class:`~graph_tool.inference.BlockState`.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to
-        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
-    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+        :class:`~graph_tool.inference.NestedBlockState` or
+        :class:`~graph_tool.inference.BlockState`.
+    bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState`  (optional, default: ``None``)
         If passed, this will be used to initialize the block state
         directly.
     self_loops : bool (optional, default: ``False``)
@@ -640,14 +640,14 @@ class MixedMeasuredBlockState(UncertainBaseState):
         Expected total number of edges used in prior. If ``NaN``, a flat
         prior will be used instead.
     nested : ``boolean`` (optional, default: ``True``)
-        If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+        If ``True``, a :class:`~graph_tool.inference.NestedBlockState`
         will be used, otherwise
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
+        :class:`~graph_tool.inference.BlockState`.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to
-        :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
-        :class:`~graph_tool.inference.blockmodel.BlockState`.
-    bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState` (optional, default: ``None``)
+        :class:`~graph_tool.inference.NestedBlockState` or
+        :class:`~graph_tool.inference.BlockState`.
+    bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState` (optional, default: ``None``)
         If passed, this will be used to initialize the block state
         directly.
     self_loops : bool (optional, default: ``False``)
@@ -749,8 +749,8 @@ class MixedMeasuredBlockState(UncertainBaseState):
         size of the step.
 
         The remaining keyword parameters will be passed to
-        :meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` or
-        :meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`,
+        :meth:`~graph_tool.inference.BlockState.mcmc_sweep` or
+        :meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`,
         if ``multiflip=True``.
         """
 
@@ -1034,14 +1034,14 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
             Expected total number of edges used in prior. If ``NaN``, a flat
             prior will be used instead.
         nested : ``boolean`` (optional, default: ``True``)
-            If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+            If ``True``, a :class:`~graph_tool.inference.NestedBlockState`
             will be used, otherwise
-            :class:`~graph_tool.inference.blockmodel.BlockState`.
+            :class:`~graph_tool.inference.BlockState`.
         state_args : ``dict`` (optional, default: ``{}``)
             Arguments to be passed to
-            :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
-            :class:`~graph_tool.inference.blockmodel.BlockState`.
-        bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+            :class:`~graph_tool.inference.NestedBlockState` or
+            :class:`~graph_tool.inference.BlockState`.
+        bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState`  (optional, default: ``None``)
             If passed, this will be used to initialize the block state
             directly.
         self_loops : bool (optional, default: ``False``)
@@ -1119,8 +1119,8 @@ class EpidemicsBlockState(DynamicsBlockStateBase):
         edge transmission probabilities.
 
         The remaining keyword parameters will be passed to
-        :meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` or
-        :meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`,
+        :meth:`~graph_tool.inference.BlockState.mcmc_sweep` or
+        :meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`,
         if ``multiflip=True``.
 
         """
@@ -1221,14 +1221,14 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
             Expected total number of edges used in prior. If ``NaN``, a flat
             prior will be used instead.
         nested : ``boolean`` (optional, default: ``True``)
-            If ``True``, a :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+            If ``True``, a :class:`~graph_tool.inference.NestedBlockState`
             will be used, otherwise
-            :class:`~graph_tool.inference.blockmodel.BlockState`.
+            :class:`~graph_tool.inference.BlockState`.
         state_args : ``dict`` (optional, default: ``{}``)
             Arguments to be passed to
-            :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or
-            :class:`~graph_tool.inference.blockmodel.BlockState`.
-        bstate : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` or :class:`~graph_tool.inference.blockmodel.BlockState`  (optional, default: ``None``)
+            :class:`~graph_tool.inference.NestedBlockState` or
+            :class:`~graph_tool.inference.BlockState`.
+        bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState`  (optional, default: ``None``)
             If passed, this will be used to initialize the block state
             directly.
         self_loops : bool (optional, default: ``False``)
@@ -1296,8 +1296,8 @@ class IsingBaseBlockState(DynamicsBlockStateBase):
         edge coupling parameters.
 
         The remaining keyword parameters will be passed to
-        :meth:`~graph_tool.inference.blockmodel.BlockState.mcmc_sweep` or
-        :meth:`~graph_tool.inference.blockmodel.BlockState.multiflip_mcmc_sweep`,
+        :meth:`~graph_tool.inference.BlockState.mcmc_sweep` or
+        :meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`,
         if ``multiflip=True``.
         """
 

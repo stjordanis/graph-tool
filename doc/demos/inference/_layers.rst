@@ -6,9 +6,9 @@ representing distinct types if interactions
 [peixoto-inferring-2015]_. Extensions to the SBM may be defined for such
 data, and they can be inferred using the exact same interface shown
 above, except one should use the
-:class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`
+:class:`~graph_tool.inference.LayeredBlockState`
 class, instead of
-:class:`~graph_tool.inference.blockmodel.BlockState`. This class takes
+:class:`~graph_tool.inference.BlockState`. This class takes
 two additional parameters: the ``ec`` parameter, that must correspond to
 an edge :class:`~graph_tool.PropertyMap` with the layer/covariate values
 on the edges, and the Boolean ``layers`` parameter, which if ``True``
@@ -16,10 +16,10 @@ specifies a layered model, otherwise one with categorical edge
 covariates (not to be confused with the weighted models in
 Sec. :ref:`weights`).
 
-If we use :func:`~graph_tool.inference.minimize.minimize_blockmodel_dl`, this can
+If we use :func:`~graph_tool.inference.minimize_blockmodel_dl`, this can
 be achieved simply by passing the option ``layers=True`` as well as the
 appropriate value of ``state_args``, which will be propagated to
-:class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`'s constructor.
+:class:`~graph_tool.inference.LayeredBlockState`'s constructor.
 
 As an example, let us consider a social network of tribes, where two
 types of interactions were recorded, amounting to either friendship or

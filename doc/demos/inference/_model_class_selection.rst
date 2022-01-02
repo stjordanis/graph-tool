@@ -52,14 +52,14 @@ The computation of the posterior entropy :math:`\mathcal{S}`, however,
 is significantly more difficult, since it involves measuring the precise
 value of :math:`q(\boldsymbol b)`. A direct "brute force" computation of
 :math:`\mathcal{S}` is implemented via
-:meth:`~graph_tool.inference.blockmodel.BlockState.collect_partition_histogram`
-and :func:`~graph_tool.inference.blockmodel.microstate_entropy`, however
+:meth:`~graph_tool.inference.BlockState.collect_partition_histogram`
+and :func:`~graph_tool.inference.microstate_entropy`, however
 this is only feasible for very small networks. For larger networks, we
 are forced to perform approximations. One possibility is to employ the
 method described in [peixoto-revealing-2021]_, based on fitting a
 mixture "random label" model to the posterior distribution, which allows
 us to compute its entropy. In graph-tool this is done by using
-:class:`~graph_tool.inference.partition_modes.ModeClusterState`, as we
+:class:`~graph_tool.inference.ModeClusterState`, as we
 show in the example below.
 
 .. testsetup:: model-evidence

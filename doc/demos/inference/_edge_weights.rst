@@ -81,8 +81,8 @@ and any of the other discrete distributions for the magnitude,
    
 The support for weighted networks is activated by passing the parameters
 ``recs`` and ``rec_types`` to
-:class:`~graph_tool.inference.blockmodel.BlockState` (or
-:class:`~graph_tool.inference.overlap_blockmodel.OverlapBlockState`),
+:class:`~graph_tool.inference.BlockState` (or
+:class:`~graph_tool.inference.OverlapBlockState`),
 that specify the edge covariates (an edge
 :class:`~graph_tool.PropertyMap`) and their types (a string from the
 table above), respectively. Note that these parameters expect *lists*,

@@ -123,7 +123,7 @@ class MCMCState(ABC):
             made for each node.
         entropy_args : ``dict`` (optional, default: ``{}``)
             Entropy arguments, with the same meaning and defaults as in
-            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+            :meth:`graph_tool.inference.BlockState.entropy`.
         allow_vacate : ``bool`` (optional, default: ``True``)
             Allow groups to be vacated.
         sequential : ``bool`` (optional, default: ``True``)
@@ -234,7 +234,7 @@ class MultiflipMCMCState(ABC):
             made for each node, on average.
         entropy_args : ``dict`` (optional, default: ``{}``)
             Entropy arguments, with the same meaning and defaults as in
-            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+            :meth:`graph_tool.inference.BlockState.entropy`.
         verbose : ``bool`` (optional, default: ``False``)
             If ``verbose == True``, detailed information will be displayed.
 
@@ -375,7 +375,7 @@ class MultilevelMCMCState(ABC):
             search.
         entropy_args : ``dict`` (optional, default: ``{}``)
             Entropy arguments, with the same meaning and defaults as in
-            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+            :meth:`graph_tool.inference.BlockState.entropy`.
         verbose : ``bool`` (optional, default: ``False``)
             If ``verbose == True``, detailed information will be displayed.
 
@@ -460,7 +460,7 @@ class GibbsMCMCState(ABC):
             made for each node.
         entropy_args : ``dict`` (optional, default: ``{}``)
             Entropy arguments, with the same meaning and defaults as in
-            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+            :meth:`graph_tool.inference.BlockState.entropy`.
         allow_new_group : ``bool`` (optional, default: ``True``)
             Allow the number of groups to increase and decrease.
         sequential : ``bool`` (optional, default: ``True``)
@@ -525,8 +525,8 @@ class MulticanonicalMCMCState(ABC):
 
         Parameters
         ----------
-        m_state : :class:`~graph_tool.inference.mcmc.MulticanonicalState`
-            :class:`~graph_tool.inference.mcmc.MulticanonicalState` instance
+        m_state : :class:`~graph_tool.inference.MulticanonicalState`
+            :class:`~graph_tool.inference.MulticanonicalState` instance
             containing the current state of the Wang-Landau run.
         multiflip : ``bool`` (optional, default: ``False``)
             If ``True``, ``multiflip_mcmc_sweep()`` will be used, otherwise
@@ -613,7 +613,7 @@ class ExhaustiveSweepState(ABC):
         ----------
         entropy_args : ``dict`` (optional, default: ``{}``)
             Entropy arguments, with the same meaning and defaults as in
-            :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+            :meth:`graph_tool.inference.BlockState.entropy`.
         callback : callable object (optional, default: ``None``)
             Function to be called for each partition, with three arguments ``(S,
             S_min, b_min)`` corresponding to the the current entropy value, the

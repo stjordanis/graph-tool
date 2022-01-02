@@ -1635,7 +1635,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
 
     Parameters
     ----------
-    state : :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`
+    state : :class:`~graph_tool.inference.NestedBlockState`
         Nested block state to be drawn.
     pos : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         If supplied, this specifies a vertex property map with the positions of

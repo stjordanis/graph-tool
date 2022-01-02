@@ -46,7 +46,7 @@ which do not depend on the normalization constant.
 
 The values :math:`P(\delta \boldsymbol A | \boldsymbol A, \boldsymbol b)`
 can be computed with
-:meth:`~graph_tool.inference.blockmodel.BlockState.get_edges_prob`. Hence, we can
+:meth:`~graph_tool.inference.BlockState.get_edges_prob`. Hence, we can
 compute spurious/missing edge probabilities just as if we were
 collecting marginal distributions when doing model averaging.
 

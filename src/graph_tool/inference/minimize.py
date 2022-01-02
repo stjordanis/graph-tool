@@ -40,13 +40,13 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={},
         The partition to be used with the minimum number of blocks.
     b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the maximum number of blocks.
-    state : SBM-like state class (optional, default: :class:`~graph_tool.inference.blockmodel.BlockState`)
-        Type of model that will be used. Must be derived from :class:`~graph_tool.inference.base_states.MultilevelMCMCState`.
+    state : SBM-like state class (optional, default: :class:`~graph_tool.inference.BlockState`)
+        Type of model that will be used. Must be derived from :class:`~graph_tool.inference.MultilevelMCMCState`.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to appropriate state constructor (e.g.
-        :class:`~graph_tool.inference.blockmodel.BlockState`)
+        :class:`~graph_tool.inference.BlockState`)
     multilevel_mcmc_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :meth:`~graph_tool.inference.base_states.MultilevelMCMCState.multilevel_mcmc_sweep`.
+        Arguments to be passed to :meth:`~graph_tool.inference.MultilevelMCMCState.multilevel_mcmc_sweep`.
 
     Returns
     -------
@@ -57,7 +57,7 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={},
     -----
 
     This function is a convenience wrapper around
-    :meth:`~graph_tool.inference.base_states.MultilevelMCMCState.multilevel_mcmc_sweep`.
+    :meth:`~graph_tool.inference.MultilevelMCMCState.multilevel_mcmc_sweep`.
 
     See [peixoto-efficient-2014]_ for details on the algorithm.
 
@@ -162,13 +162,13 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
         The partition to be used with the minimum number of blocks.
     b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         The partition to be used with the maximum number of blocks.
-    state : SBM state class (optional, default: :class:`~graph_tool.inference.nested_blockmodel.NestedBlockState`)
+    state : SBM state class (optional, default: :class:`~graph_tool.inference.NestedBlockState`)
         Type of model that will be used.
     state_args : ``dict`` (optional, default: ``{}``)
         Arguments to be passed to appropriate state constructor (e.g.
-        :class:`~graph_tool.inference.blockmodel.BlockState`)
+        :class:`~graph_tool.inference.BlockState`)
     multilevel_mcmc_args : ``dict`` (optional, default: ``{}``)
-        Arguments to be passed to :meth:`~graph_tool.inference.base_states.MultilevelMCMCState.multilevel_mcmc_sweep`.
+        Arguments to be passed to :meth:`~graph_tool.inference.MultilevelMCMCState.multilevel_mcmc_sweep`.
 
     Returns
     -------
@@ -178,7 +178,7 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
     Notes
     -----
     This function is a convenience wrapper around
-    :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.multilevel_mcmc_sweep`.
+    :meth:`~graph_tool.inference.NestedBlockState.multilevel_mcmc_sweep`.
 
     See [peixoto-hierarchical-2014]_ for details on the algorithm.
 

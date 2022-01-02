@@ -55,7 +55,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         ``"discrete-poisson"`` or ``"discrete-binomial"``.
     rec_params : list of ``dict`` (optional, default: ``[]``)
         Model hyperparameters for edge covariates. This should a list of
-        ``dict`` instances. See :class:`~graph_tool.inference.blockmodel.BlockState` for
+        ``dict`` instances. See :class:`~graph_tool.inference.BlockState` for
         more details.
     eweight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge multiplicities (for multigraphs or block graphs).
@@ -495,7 +495,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
 
     def get_block_state(self, b=None, vweight=False, deg_corr=False,
                         overlap=False, layers=None, **kwargs):
-        r"""Returns a :class:`~graph_tool.inference.layered_blockmodel.LayeredBlockState`
+        r"""Returns a :class:`~graph_tool.inference.LayeredBlockState`
         corresponding to the block graph. The parameters have the same meaning
         as the in the constructor.
         """
@@ -730,7 +730,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                 **kwargs):
         r"""Calculate the entropy associated with the current block partition. The
         meaning of the parameters are the same as in
-        :meth:`graph_tool.inference.blockmodel.BlockState.entropy`.
+        :meth:`graph_tool.inference.BlockState.entropy`.
         """
 
         return BlockState.entropy(self, adjacency=adjacency, dl=dl,
@@ -763,7 +763,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         (with missing edges added and spurious edges deleted).
 
         The values in ``entropy_args`` are passed to
-        :meth:`graph_tool.inference.blockmodel.BlockState.entropy()` to calculate the
+        :meth:`graph_tool.inference.BlockState.entropy()` to calculate the
         log-probability.
         """
 
@@ -916,7 +916,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
         network partitions. If ``bundled == True`` and the state is an
         overlapping one, the half-edges incident of the same node that belong to
         the same group are moved together. All remaining parameters are passed
-        to :meth:`graph_tool.inference.blockmodel.BlockState.mcmc_sweep`."""
+        to :meth:`graph_tool.inference.BlockState.mcmc_sweep`."""
 
         self.__bundled = bundled
         return BlockState.mcmc_sweep(self, **kwargs)
@@ -1044,8 +1044,8 @@ class LayeredBlockState(OverlapBlockState, BlockState):
 
     def draw(self, **kwargs):
         """Convenience function to draw the current state. All keyword arguments are
-        passed to :meth:`graph_tool.inference.blockmodel.BlockState.draw` or
-        :meth:`graph_tool.inference.overlap_blockmodel.OverlapBlockState.draw`, as appropriate.
+        passed to :meth:`graph_tool.inference.BlockState.draw` or
+        :meth:`graph_tool.inference.OverlapBlockState.draw`, as appropriate.
         """
 
         self.agg_state.draw(**kwargs)

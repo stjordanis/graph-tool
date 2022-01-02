@@ -4,8 +4,8 @@ Inferring the best partition
 The simplest and most efficient approach is to find the best
 partition of the network by maximizing Eq. :eq:`model-posterior`
 according to some version of the model. This is obtained via the
-functions :func:`~graph_tool.inference.minimize.minimize_blockmodel_dl` or
-:func:`~graph_tool.inference.minimize.minimize_nested_blockmodel_dl`, which
+functions :func:`~graph_tool.inference.minimize_blockmodel_dl` or
+:func:`~graph_tool.inference.minimize_nested_blockmodel_dl`, which
 employs an agglomerative multilevel `Markov chain Monte Carlo (MCMC)
 <https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo>`_ algorithm
 [peixoto-efficient-2014]_.
@@ -41,7 +41,7 @@ We then fit the degree-corrected model by calling:
 
    state = gt.minimize_blockmodel_dl(g)
 
-This returns a :class:`~graph_tool.inference.blockmodel.BlockState` object that
+This returns a :class:`~graph_tool.inference.BlockState` object that
 includes the inference results.
 
 .. note::
@@ -59,12 +59,12 @@ includes the inference results.
    and select the partition with the largest posterior probability of
    Eq. :eq:`model-posterior`, or equivalently, the minimum description
    length of Eq. :eq:`model-dl`. The description length of a fit can be
-   obtained with the :meth:`~graph_tool.inference.blockmodel.BlockState.entropy`
+   obtained with the :meth:`~graph_tool.inference.BlockState.entropy`
    method. See also Sec. :ref:`sec_model_selection` below.
 
 
 We may perform a drawing of the partition obtained via the
-:mod:`~graph_tool.inference.blockmodel.BlockState.draw` method, that functions as a
+:mod:`~graph_tool.inference.BlockState.draw` method, that functions as a
 convenience wrapper to the :func:`~graph_tool.draw.graph_draw` function
 
 .. testcode:: football
@@ -83,7 +83,7 @@ which yields the following image.
 
 We can obtain the group memberships as a
 :class:`~graph_tool.PropertyMap` on the vertices via the
-:mod:`~graph_tool.inference.blockmodel.BlockState.get_blocks` method:
+:mod:`~graph_tool.inference.BlockState.get_blocks` method:
 
 .. testcode:: football
 
@@ -105,7 +105,7 @@ which yields:
    network.
 
 We may also access the matrix of edge counts between groups via
-:mod:`~graph_tool.inference.blockmodel.BlockState.get_matrix`
+:mod:`~graph_tool.inference.BlockState.get_matrix`
 
 .. testcode:: football
 
@@ -143,7 +143,7 @@ Hierarchical partitions
 
 The inference of the nested family of SBMs is done in a similar manner,
 but we must use instead the
-:func:`~graph_tool.inference.minimize.minimize_nested_blockmodel_dl` function. We
+:func:`~graph_tool.inference.minimize_nested_blockmodel_dl` function. We
 illustrate its use with the neural network of the `C. elegans
 <https://en.wikipedia.org/wiki/Caenorhabditis_elegans>`_ worm:
 
@@ -169,10 +169,10 @@ A hierarchical fit of the degree-corrected model is performed as follows.
    state = gt.minimize_nested_blockmodel_dl(g)
 
 The object returned is an instance of a
-:class:`~graph_tool.inference.nested_blockmodel.NestedBlockState` class, which
+:class:`~graph_tool.inference.NestedBlockState` class, which
 encapsulates the results. We can again draw the resulting hierarchical
 clustering using the
-:meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.draw` method:
+:meth:`~graph_tool.inference.NestedBlockState.draw` method:
 
 .. testcode:: celegans
 
@@ -193,12 +193,12 @@ clustering using the
 .. note::
 
    If the ``output`` parameter to
-   :meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.draw` is omitted, an
+   :meth:`~graph_tool.inference.NestedBlockState.draw` is omitted, an
    interactive visualization is performed, where the user can re-order
    the hierarchy nodes using the mouse and pressing the ``r`` key.
 
 A summary of the inferred hierarchy can be obtained with the
-:meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.print_summary` method,
+:meth:`~graph_tool.inference.NestedBlockState.print_summary` method,
 which shows the number of nodes and groups in all levels:
 
 .. testcode:: celegans
@@ -214,8 +214,8 @@ which shows the number of nodes and groups in all levels:
    l: 4, N: 1, B: 1
 
 The hierarchical levels themselves are represented by individual
-:meth:`~graph_tool.inference.blockmodel.BlockState` instances obtained via the
-:meth:`~graph_tool.inference.nested_blockmodel.NestedBlockState.get_levels()` method:
+:meth:`~graph_tool.inference.BlockState` instances obtained via the
+:meth:`~graph_tool.inference.NestedBlockState.get_levels()` method:
 
 .. testcode:: celegans
 
@@ -254,8 +254,8 @@ Refinements using merge-split MCMC
 ++++++++++++++++++++++++++++++++++
 
 The agglomerative algorithm behind
-:func:`~graph_tool.inference.minimize.minimize_blockmodel_dl` and
-:func:`~graph_tool.inference.minimize.minimize_nested_blockmodel_dl` has
+:func:`~graph_tool.inference.minimize_blockmodel_dl` and
+:func:`~graph_tool.inference.minimize_nested_blockmodel_dl` has
 a log-linear complexity on the size of the network, and it usually works
 very well in finding a good estimate of the optimum
 partition. Nevertheless, it's often still possible to find refinements
@@ -287,10 +287,10 @@ to the above minimization for the `C. elegans` network is the following:
       
 Whenever possible, this procedure should be repeated several times, and
 the result with the smallest description length (obtained via the
-:meth:`~graph_tool.inference.blockmodel.BlockState.entropy` method)
+:meth:`~graph_tool.inference.BlockState.entropy` method)
 should be chosen. In more demanding situations, better results still can
 be obtained, at the expense of a longer computation time, by using the
-:meth:`~graph_tool.inference.mcmc.mcmc_anneal` function, which
+:meth:`~graph_tool.inference.mcmc_anneal` function, which
 implements `simulated annealing
 <https://en.wikipedia.org/wiki/Simulated_annealing>`_:
 
