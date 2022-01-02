@@ -63,6 +63,19 @@ build_sid:
     paths:
       - release/debian/build/*
 
+build_bookworm:
+  script:
+    - BASE=debian:bookworm
+    - img=`echo $BASE | sed s/:/_/`
+    - cd release/debian
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
+    - docker run -v $PWD:/mount $img tar -c build | tar x
+  only:
+    - tags
+  artifacts:
+    paths:
+      - release/debian/build/*
+
 build_bullseye:
   script:
     - BASE=debian:bullseye
@@ -131,6 +144,19 @@ build_groovy:
 build_hirsute:
   script:
     - BASE=ubuntu:hirsute
+    - img=`echo $BASE | sed s/:/_/`
+    - cd release/debian
+    - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
+    - docker run -v $PWD:/mount $img tar -c build | tar x
+  only:
+    - tags
+  artifacts:
+    paths:
+      - release/debian/build/*
+
+build_impish:
+  script:
+    - BASE=ubuntu:impish
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
     - docker build --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache
