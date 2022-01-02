@@ -19,7 +19,7 @@
 /* -- page layout ----------------------------------------------------------- */
 body {
     font-family: 'Droid Serif', serif;
-    font-size: 17px;
+    font-size: 15px;
     background-color: #ddd;
     color: #000;
     margin: 0;
@@ -363,7 +363,12 @@ dl dd {
 dl.function, dl.class, dl.exception {
     border-top: 3px solid #6AB0DE;
     /* padding-top: 1em; */
+    padding-bottom: 1em;
     clear: both;
+}
+
+dl.method {
+    padding-top: 1em;
 }
 
 dl.function dt, dl.class dt, dl.exception dt{
