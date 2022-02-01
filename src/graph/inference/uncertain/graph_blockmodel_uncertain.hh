@@ -154,21 +154,21 @@ struct Uncertain
             return -S;
         }
 
-        double remove_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
+        double remove_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
             double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
                                                                     target(e, _u),
-                                                                    e, _recs, ea);
+                                                                    e, dw, ea);
             if (ea.density && _E_prior)
             {
-                dS += _pe;
-                dS += lgamma_fast(_E) - lgamma_fast(_E + 1);
+                dS += _pe * dw;
+                dS += lgamma_fast(_E + 1 - dw) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
             {
-                if (_eweight[e] == 1 && (_self_loops || u != v))
+                if (_eweight[e] == dw && (_self_loops || u != v))
                 {
                     auto& m = get_edge<false>(u, v);
                     double q_e = (m == _null_edge) ? _q_default : _q[m];
@@ -178,15 +178,14 @@ struct Uncertain
             return dS;
         }
 
-        double add_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
+        double add_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<true>(u, v, e,
-                                                                   _recs, ea);
+            double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw, ea);
             if (ea.density && _E_prior)
             {
-                dS -= _pe;
-                dS += lgamma_fast(_E + 2) - lgamma_fast(_E + 1);
+                dS -= _pe * dw;
+                dS += lgamma_fast(_E + 1 + dw) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
@@ -201,20 +200,18 @@ struct Uncertain
             return dS;
         }
 
-        void remove_edge(size_t u, size_t v)
+        void remove_edge(size_t u, size_t v, int dw)
         {
             auto& e = get_u_edge(u, v);
-            _block_state.template modify_edge<false>(u, v, e,
-                                                     _recs);
-            _E--;
+            _block_state.template modify_edge<false>(u, v, e, dw);
+            _E -= dw;
         }
 
-        void add_edge(size_t u, size_t v)
+        void add_edge(size_t u, size_t v, int dw)
         {
             auto& e = get_u_edge<true>(u, v);
-            _block_state.template modify_edge<true>(u, v, e,
-                                                    _recs);
-            _E++;
+            _block_state.template modify_edge<true>(u, v, e, dw);
+            _E += dw;
         }
 
     };

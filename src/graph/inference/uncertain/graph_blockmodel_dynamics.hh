@@ -98,7 +98,6 @@ struct Dynamics
         typename BlockState::g_t& _u = _block_state._g;
         typename BlockState::eweight_t& _eweight = _block_state._eweight;
         GraphInterface::edge_t _null_edge;
-        std::vector<double> _recs;
 
         std::vector<gt_hash_map<size_t, GraphInterface::edge_t>> _u_edges;
 
@@ -149,24 +148,27 @@ struct Dynamics
             return -S;
         }
 
-        double remove_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
+        double remove_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
+            if (dw == 0)
+                return 0;
+
             auto& e = get_u_edge(u, v);
             auto x = _xc[e];
             double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
                                                                     target(e, _u),
-                                                                    e, _recs, ea);
+                                                                    e, dw, ea);
             _xc[e] = x;
 
             if (ea.density && _E_prior)
             {
-                dS += _pe;
-                dS += lgamma_fast(_E) - lgamma_fast(_E + 1);
+                dS += _pe * dw;
+                dS += lgamma_fast(_E + 1 - dw) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
             {
-                if (_eweight[e] == 1 && (_self_loops || u != v))
+                if (_eweight[e] == dw && (_self_loops || u != v))
                 {
                     dS += _dstate.template get_edge_dS<false>(u, v, _xc[e]);
                     if (u != v && !graph_tool::is_directed(_u))
@@ -176,15 +178,17 @@ struct Dynamics
             return dS;
         }
 
-        double add_edge_dS(size_t u, size_t v, double x, const uentropy_args_t& ea)
+        double add_edge_dS(size_t u, size_t v, int dw, double x, const uentropy_args_t& ea)
         {
+            if (dw == 0)
+                return 0;
+
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<true>(u, v, e,
-                                                                   _recs, ea);
+            double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw, ea);
             if (ea.density && _E_prior)
             {
-                dS -= _pe;
-                dS += lgamma_fast(_E + 2) - lgamma_fast(_E + 1);
+                dS -= _pe * dw;
+                dS += lgamma_fast(_E + 1 + dw) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
@@ -201,6 +205,9 @@ struct Dynamics
 
         double update_edge_dS(size_t u, size_t v, double dx, const uentropy_args_t& ea)
         {
+            if (dx == 0)
+                return 0;
+
             double dS = 0;
             if (ea.latent_edges)
             {
@@ -214,13 +221,15 @@ struct Dynamics
             return dS;
         }
 
-        void remove_edge(size_t u, size_t v)
+        void remove_edge(size_t u, size_t v, int dw)
         {
+            if (dw == 0)
+                return;
+
             auto& e = get_u_edge(u, v);
             auto x = _xc[e];
 
-            _block_state.template modify_edge<false>(u, v, e,
-                                                     _recs);
+            _block_state.template modify_edge<false>(u, v, e, dw);
 
             if ((e == _null_edge || _eweight[e] == 0) && (_self_loops || u != v))
             {
@@ -232,13 +241,15 @@ struct Dynamics
             _E--;
         }
 
-        void add_edge(size_t u, size_t v, double x)
+        void add_edge(size_t u, size_t v, int dw, double x)
         {
-            auto& e = get_u_edge<true>(u, v);
-            _block_state.template modify_edge<true>(u, v, e,
-                                                    _recs);
+            if (dw == 0)
+                return;
 
-            if (_eweight[e] == 1 && (_self_loops || u != v))
+            auto& e = get_u_edge<true>(u, v);
+            _block_state.template modify_edge<true>(u, v, e, dw);
+
+            if (_eweight[e] == dw && (_self_loops || u != v))
             {
                 _xc[e] = x;
                 _dstate.template update_edge<true>(u, v, x);
@@ -250,6 +261,9 @@ struct Dynamics
 
         void update_edge(size_t u, size_t v, double dx)
         {
+            if (dx == 0)
+                return;
+
             if (_self_loops || u != v)
             {
                 auto& e = get_u_edge(u, v);

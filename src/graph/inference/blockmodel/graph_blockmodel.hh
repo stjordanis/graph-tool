@@ -628,9 +628,11 @@ public:
     }
 
     template <bool Add, bool Deplete=true>
-    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e,
-                     const std::vector<double>& rec)
+    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
     {
+        if (dw == 0)
+            return;
+
         size_t r = _b[u];
         size_t s = _b[v];
 
@@ -658,34 +660,33 @@ public:
             }
 
             if (_coupled_state == nullptr)
-                _mrs[me]++;
-            _mrp[r]++;
-            _mrm[s]++;
+                _mrs[me] += dw;
+
+            _mrp[r] += dw;
+            _mrm[s] += dw;
         }
         else
         {
             assert(me != _emat.get_null_edge());
             if (_coupled_state == nullptr)
-                _mrs[me]--;
-            _mrp[r]--;
-            _mrm[s]--;
+            {
+                _mrs[me] -= dw;
+                if (_mrs[me] == 0)
+                {
+                    _emat.remove_me(me, _bg);
+                    boost::remove_edge(me, _bg);
+                }
+            }
+            else
+            {
+                if (_mrs[me] == dw)
+                    _emat.remove_me(me, _bg);
+            }
+            _mrp[r] -= dw;
+            _mrm[s] -= dw;
         }
 
-        // constexpr auto one = (Add) ? 1 : -1;
-        // for (size_t i = 0; i < _rec_types.size(); ++i)
-        // {
-        //     switch (_rec_types[i])
-        //     {
-        //     case weight_type::REAL_NORMAL: // signed weights
-        //         _bdrec[i][me] += one * std::pow(rec[i], 2);
-        //         throw GraphException("Lrecdx, etc...");
-        //         [[gnu::fallthrough]];
-        //     default:
-        //         _brec[i][me] += one * rec[i];
-        //     }
-        // }
-
-        modify_edge<Add, Deplete>(u, v, e, _is_weighted);
+        modify_edge<Add, Deplete>(u, v, e, dw, _is_weighted);
 
         get_partition_stats(u).add_vertex(u, r, _deg_corr, _g,
                                           _vweight, _eweight,
@@ -693,20 +694,21 @@ public:
         if (u != v)
             get_partition_stats(v).add_vertex(v, s, _deg_corr, _g,
                                               _vweight, _eweight,
-                                                  _degs);
-        get_partition_stats(u).change_E(Add ? 1 : -1); // FIXME: wrong for multiple partition stats
+                                              _degs);
+
+        get_partition_stats(u).change_E(Add ? dw : -dw); // FIXME: wrong for multiple partition stats
 
         if (_coupled_state != nullptr)
         {
             if constexpr (Add)
-                _coupled_state->add_edge(r, s, me, rec);
+                _coupled_state->add_edge(r, s, me, dw);
             else
-                _coupled_state->remove_edge(r, s, me, rec);
+                _coupled_state->remove_edge(r, s, me, dw);
         }
     }
 
     template <bool Add, bool Deplete>
-    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e,
+    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int,
                      std::false_type)
     {
         if constexpr (Add)
@@ -724,7 +726,7 @@ public:
     }
 
     template <bool Add, bool Deplete>
-    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e,
+    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw,
                      std::true_type)
     {
         if constexpr (Add)
@@ -733,25 +735,25 @@ public:
             {
                 e = boost::add_edge(u, v, _g).first;
                 auto c_eweight = _eweight.get_checked();
-                c_eweight[e] = 1;
+                c_eweight[e] = dw;
             }
             else
             {
-                _eweight[e]++;
+                _eweight[e] += dw;
             }
 
             if (_deg_corr)
             {
-                get<1>(_degs[u])++;
+                get<1>(_degs[u]) += dw;
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v])++;
+                    get<0>(_degs[v]) += dw;
                 else
-                    get<1>(_degs[v])++;
+                    get<1>(_degs[v]) += dw;
             }
         }
         else
         {
-            _eweight[e]--;
+            _eweight[e] -= dw;
             if (_eweight[e] == 0 && Deplete)
             {
                 boost::remove_edge(e, _g);
@@ -760,25 +762,23 @@ public:
 
             if (_deg_corr)
             {
-                get<1>(_degs[u])--;
+                get<1>(_degs[u]) -= dw;
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v])--;
+                    get<0>(_degs[v]) -= dw;
                 else
-                    get<1>(_degs[v])--;
+                    get<1>(_degs[v]) -= dw;
             }
         }
     }
 
-    void add_edge(size_t u, size_t v, GraphInterface::edge_t& e,
-                  const std::vector<double>& rec)
+    void add_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
     {
-        modify_edge<true, false>(u, v, e, rec);
+        modify_edge<true, false>(u, v, e, dw);
     }
 
-    void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e,
-                     const std::vector<double>& rec)
+    void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
     {
-        modify_edge<false, false>(u, v, e, rec);
+        modify_edge<false, false>(u, v, e, dw);
     }
 
     void set_vertex_weight(size_t v, int w)
@@ -1922,7 +1922,8 @@ public:
     }
 
     template <bool Add>
-    double edge_entropy_term(size_t u, size_t v, const entropy_args_t& ea)
+    double edge_entropy_term(size_t u, size_t v, int dw,
+                             const entropy_args_t& ea)
     {
         double S = 0, S_dl = 0;
         size_t r = _b[u];
@@ -1941,25 +1942,25 @@ public:
                 if (u != v)
                 {
                     if constexpr (Add)
-                        degs[1] = {kin, kout + 1};
+                        degs[1] = {kin, kout + dw};
                     else
-                        degs[1] = {kin, kout - 1};
+                        degs[1] = {kin, kout - dw};
                 }
                 else
                 {
                     if constexpr (!is_directed_::apply<g_t>::type::value)
                     {
                         if constexpr (Add)
-                            degs[1] = {kin, kout + 2};
+                            degs[1] = {kin, kout + 2 * dw};
                         else
-                            degs[1] = {kin, kout - 2};
+                            degs[1] = {kin, kout - 2 * dw};
                     }
                     else
                     {
                         if constexpr (Add)
-                            degs[1] = {kin + 1, kout + 1};
+                            degs[1] = {kin + dw, kout + dw};
                         else
-                            degs[1] = {kin - 1, kout - 1};
+                            degs[1] = {kin - dw, kout - dw};
                     }
                 }
 
@@ -1977,16 +1978,16 @@ public:
                     if constexpr (!is_directed_::apply<g_t>::type::value)
                     {
                         if constexpr (Add)
-                            degs[1] = {kin, kout + 1};
+                            degs[1] = {kin, kout + dw};
                         else
-                            degs[1] = {kin, kout - 1};
+                            degs[1] = {kin, kout - dw};
                     }
                     else
                     {
                         if constexpr (Add)
-                            degs[1] = {kin + 1, kout};
+                            degs[1] = {kin + dw, kout};
                         else
-                            degs[1] = {kin - 1, kout};
+                            degs[1] = {kin - dw, kout};
                     }
 
                     S_dl += get_partition_stats(v).get_deg_dl(ea.degree_dl_kind,
@@ -2003,9 +2004,9 @@ public:
                 degs[0] = {kin, kout};
 
                 if constexpr (Add)
-                    degs[1] = {kin, kout + 1};
+                    degs[1] = {kin, kout + dw};
                 else
-                    degs[1] = {kin, kout - 1};
+                    degs[1] = {kin, kout - dw};
 
                 std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
 
@@ -2014,16 +2015,16 @@ public:
                 if constexpr (!is_directed_::apply<g_t>::type::value)
                 {
                     if constexpr (Add)
-                        degs[3] = {kin, kout + 1};
+                        degs[3] = {kin, kout + dw};
                     else
-                        degs[3] = {kin, kout - 1};
+                        degs[3] = {kin, kout - dw};
                 }
                 else
                 {
                     if constexpr (Add)
-                        degs[3] = {kin + 1, kout};
+                        degs[3] = {kin + dw, kout};
                     else
-                        degs[3] = {kin - 1, kout};
+                        degs[3] = {kin - dw, kout};
                 }
 
                 for (size_t i = 0; i < 2; ++i)
@@ -2085,7 +2086,7 @@ public:
 
         if (_coupled_state != nullptr)
         {
-            S_dl += _coupled_state->edge_entropy_term(r, s, _coupled_entropy_args);
+            S_dl += _coupled_state->edge_entropy_term(r, s, dw, _coupled_entropy_args);
         }
         else
         {
@@ -2102,20 +2103,23 @@ public:
         return S + S_dl * ea.beta_dl;
     }
 
-    double edge_entropy_term(size_t u, size_t v, const entropy_args_t& ea)
+    double edge_entropy_term(size_t u, size_t v, int dw, const entropy_args_t& ea)
     {
-        return edge_entropy_term<true>(u, v, ea);
+        return edge_entropy_term<true>(u, v, dw, ea);
     }
 
     template <bool Add>
     double modify_edge_dS(size_t u, size_t v, GraphInterface::edge_t& e,
-                          const std::vector<double>& recs, const entropy_args_t& ea)
+                          int dw, const entropy_args_t& ea)
     {
+        if (dw == 0)
+            return 0;
+
         double dS = 0;
-        dS -= edge_entropy_term<Add>(u, v, ea);
-        modify_edge<Add>(u, v, e, recs);
-        dS += edge_entropy_term<!Add>(u, v, ea);
-        modify_edge<!Add>(u, v, e, recs);
+        dS -= edge_entropy_term<Add>(u, v, dw, ea);
+        modify_edge<Add>(u, v, e, dw);
+        dS += edge_entropy_term<!Add>(u, v, dw, ea);
+        modify_edge<!Add>(u, v, e, dw);
         return dS;
     }
 

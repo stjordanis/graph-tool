@@ -337,13 +337,12 @@ struct LatentClosure
                 _cstates[_l + 1]->internal_move_proposal(u, v, rng);
         }
 
-        template <bool Add, class Edge, class Recs, class Eargs>
-        double modify_edge_dS(size_t u, size_t v, Edge& e, Recs& recs,
-                              Eargs& ea)
+        template <bool Add, class Edge, class Eargs>
+        double modify_edge_dS(size_t u, size_t v, Edge& e, Eargs& ea)
         {
             double dS = 0;
             if (_l == 0)
-                dS = _ebstate.template modify_edge_dS<Add>(u, v, e, recs, ea);
+                dS = _ebstate.template modify_edge_dS<Add>(u, v, e, 1, ea);
             else
                 dS = modify_edge_g_dS<Add>(u, v);
 
@@ -363,8 +362,8 @@ struct LatentClosure
             return dS;
         }
 
-        template <bool Add, class Edge, class Recs>
-        void modify_edge(size_t u, size_t v, Edge& e, Recs& recs)
+        template <bool Add, class Edge>
+        void modify_edge(size_t u, size_t v, Edge& e)
         {
             if (u != v)
             {
@@ -376,7 +375,7 @@ struct LatentClosure
             }
 
             if (_l == 0)
-                _ebstate.template modify_edge<Add>(u, v, e, recs);
+                _ebstate.template modify_edge<Add>(u, v, e, 1);
             else
                 modify_edge_g<Add>(u, v, e);
         }

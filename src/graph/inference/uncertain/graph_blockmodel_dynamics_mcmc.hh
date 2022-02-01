@@ -229,31 +229,11 @@ struct MCMC
 
             double dS = 0;
             if (dm == 0)
-            {
                 dS = _state.update_edge_dS(u, v, dx, _entropy_args);
-            }
             else if (dm < 0)
-            {
-                dS = _state.remove_edge_dS(u, v, _entropy_args);
-                for (int i = 0; i < -dm-1; ++i)
-                {
-                    _state.remove_edge(u, v);
-                    dS += _state.remove_edge_dS(u, v, _entropy_args);
-                }
-                for (int i = 0; i < -dm-1; ++i)
-                    _state.add_edge(u, v, (i == 0) ? x : 0);
-            }
+                dS = _state.remove_edge_dS(u, v, -dm, _entropy_args);
             else
-            {
-                dS = _state.add_edge_dS(u, v, dx, _entropy_args);
-                for (int i = 0; i < dm-1; ++i)
-                {
-                    _state.add_edge(u, v, 0);
-                    dS += _state.add_edge_dS(u, v, 0, _entropy_args);
-                }
-                for (int i = 0; i < dm-1; ++i)
-                    _state.remove_edge(u, v);
-            }
+                dS = _state.add_edge_dS(u, v, dm, dx, _entropy_args);
 
             double a = 0;
             if (dm != 0)
@@ -282,15 +262,9 @@ struct MCMC
                 size_t m = get<0>(node_state(u, v));
                 _edge_sampler.update_edge(u, v, m, dm);
                 if (dm < 0)
-                {
-                    for (int i = 0; i < -dm; ++i)
-                        _state.remove_edge(u, v);
-                }
+                    _state.remove_edge(u, v, -dm);
                 else
-                {
-                    for (int i = 0; i < dm; ++i)
-                        _state.add_edge(u, v, (i == 0) ? dx : 0);
-                }
+                    _state.add_edge(u, v, dm, dx);
             }
         }
 

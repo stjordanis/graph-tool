@@ -107,7 +107,6 @@ struct Measured
         typename BlockState::g_t& _u = _block_state._g;
         typename BlockState::eweight_t& _eweight = _block_state._eweight;
         GraphInterface::edge_t _null_edge;
-        std::vector<double> _recs;
 
         std::vector<gt_hash_map<size_t, GraphInterface::edge_t>> _u_edges;
         std::vector<gt_hash_map<size_t, GraphInterface::edge_t>> _edges;
@@ -190,21 +189,21 @@ struct Measured
             return -(Sf - Si);
         }
 
-        double remove_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
+        double remove_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
             double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
                                                                     target(e, _u),
-                                                                    e, _recs, ea);
+                                                                    e, dw, ea);
             if (ea.density && _E_prior)
             {
-                dS += _pe;
-                dS += lgamma_fast(_E) - lgamma_fast(_E + 1);
+                dS += _pe * dw;
+                dS += lgamma_fast(_E + 1 - dw) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
             {
-                if (_eweight[e] == 1 && (_self_loops || u != v))
+                if (_eweight[e] == dw && (_self_loops || u != v))
                 {
                     auto& m = get_edge<false>(u, v);
                     int dT = (m == _null_edge) ? _x_default : _x[m];
@@ -216,15 +215,15 @@ struct Measured
             return dS;
         }
 
-        double add_edge_dS(size_t u, size_t v, const uentropy_args_t& ea)
+        double add_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<true>(u, v, e,
-                                                                   _recs, ea);
+            double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw,
+                                                                   ea);
             if (ea.density && _E_prior)
             {
-                dS -= _pe;
-                dS += lgamma_fast(_E + 2) - lgamma_fast(_E + 1);
+                dS -= _pe * dw;
+                dS += lgamma_fast(_E + 1 + dw) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
@@ -240,11 +239,11 @@ struct Measured
             return dS;
         }
 
-        void remove_edge(size_t u, size_t v)
+        void remove_edge(size_t u, size_t v, int dw)
         {
             auto& e = get_u_edge(u, v);
 
-            if (_eweight[e] == 1 && (_self_loops || u != v))
+            if (_eweight[e] == dw && (_self_loops || u != v))
             {
                 auto& m = get_edge<false>(u, v);
                 int dT = (m == _null_edge) ? _x_default : _x[m];
@@ -253,12 +252,11 @@ struct Measured
                 _M -= dM;
             }
 
-            _block_state.template modify_edge<false>(u, v, e,
-                                                     _recs);
-            _E--;
+            _block_state.template modify_edge<false>(u, v, e, dw);
+            _E -= dw;
         }
 
-        void add_edge(size_t u, size_t v)
+        void add_edge(size_t u, size_t v, int dw)
         {
             auto& e = get_u_edge<true>(u, v);
 
@@ -271,9 +269,8 @@ struct Measured
                 _M += dM;
             }
 
-            _block_state.template modify_edge<true>(u, v, e,
-                                                    _recs);
-            _E++;
+            _block_state.template modify_edge<true>(u, v, e, dw);
+            _E += dw;
         }
 
         void set_hparams(double alpha, double beta, double mu, double nu)

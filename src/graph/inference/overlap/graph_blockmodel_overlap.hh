@@ -294,13 +294,11 @@ public:
         move_vertices(vs, rs);
     }
 
-    void add_edge(size_t, size_t, GraphInterface::edge_t&,
-                  const std::vector<double>&)
+    void add_edge(size_t, size_t, GraphInterface::edge_t&, int)
     {
     }
 
-    void remove_edge(size_t, size_t, GraphInterface::edge_t&,
-                     const std::vector<double>&)
+    void remove_edge(size_t, size_t, GraphInterface::edge_t&, int)
     {
     }
 
@@ -919,7 +917,7 @@ public:
         return S;
     }
 
-    double edge_entropy_term(size_t, size_t, const entropy_args_t&)
+    double edge_entropy_term(size_t, size_t, int, const entropy_args_t&)
     {
         return 0;
     }

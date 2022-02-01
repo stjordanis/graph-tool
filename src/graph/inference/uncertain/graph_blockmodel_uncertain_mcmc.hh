@@ -122,27 +122,9 @@ struct MCMC
 
             double dS = 0;
             if (dm < 0)
-            {
-                dS = _state.remove_edge_dS(u, v, _entropy_args);
-                for (int i = 0; i < -dm-1; ++i)
-                {
-                    _state.remove_edge(u, v);
-                    dS += _state.remove_edge_dS(u, v, _entropy_args);
-                }
-                for (int i = 0; i < -dm-1; ++i)
-                    _state.add_edge(u, v);
-            }
+                dS = _state.remove_edge_dS(u, v, -dm, _entropy_args);
             else
-            {
-                dS = _state.add_edge_dS(u, v, _entropy_args);
-                for (int i = 0; i < dm-1; ++i)
-                {
-                    _state.add_edge(u, v);
-                    dS += _state.add_edge_dS(u, v, _entropy_args);
-                }
-                for (int i = 0; i < dm-1; ++i)
-                    _state.remove_edge(u, v);
-            }
+                dS = _state.add_edge_dS(u, v, dm, _entropy_args);
 
             size_t m = node_state(u, v);
             double a = (_edge_sampler.log_prob(u, v, m, dm) -
@@ -160,6 +142,7 @@ struct MCMC
         {
             if (dm == 0)
                 return;
+
             size_t u, v;
             std::tie(u, v) = get_edge();
             size_t m = node_state(u, v);
@@ -167,15 +150,9 @@ struct MCMC
             _edge_sampler.update_edge(u, v, m, dm);
 
             if (dm < 0)
-            {
-                for (int i = 0; i < -dm; ++i)
-                    _state.remove_edge(u, v);
-            }
+                _state.remove_edge(u, v, -dm);
             else
-            {
-                for (int i = 0; i < dm; ++i)
-                    _state.add_edge(u, v);
-            }
+                _state.add_edge(u, v, dm);
         }
 
         bool is_deterministic()

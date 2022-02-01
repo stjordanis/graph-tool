@@ -139,7 +139,6 @@ struct LatentLayers
         g_t& _g;
         std::vector<std::reference_wrapper<BlockState>> _block_state;
         GraphInterface::edge_t _null_edge;
-        std::vector<double> _recs;
 
         std::vector<std::vector<gt_hash_map<size_t, GraphInterface::edge_t>>> _u_edges;
         std::vector<gt_hash_map<size_t, GraphInterface::edge_t>> _edges;
@@ -202,7 +201,7 @@ struct LatentLayers
             auto& g = bstate._g;
             double dS = bstate.template modify_edge_dS<false>(source(e, g),
                                                               target(e, g),
-                                                              e, _recs, ea);
+                                                              e, ea);
             if (ea.density && _E_prior && l == 0)
             {
                 dS += _pe;
@@ -210,7 +209,7 @@ struct LatentLayers
             }
 
             if (_measured && !std::isinf(dS))
-                dS += _mstate[0].remove_edge_dS(u, v, _uea);
+                dS += _mstate[0].remove_edge_dS(u, v, 1, _uea);
 
             return dS;
         }
@@ -219,8 +218,7 @@ struct LatentLayers
         {
             auto& bstate = _block_state[l].get();
             auto& e = get_u_edge(l, u, v);
-            double dS = bstate.template modify_edge_dS<true>(u, v, e,
-                                                             _recs, ea);
+            double dS = bstate.template modify_edge_dS<true>(u, v, e, ea);
             if (ea.density && _E_prior && l == 0)
             {
                 dS -= _pe;
@@ -228,7 +226,7 @@ struct LatentLayers
             }
 
             if (_measured && !std::isinf(dS))
-                dS += _mstate[0].add_edge_dS(u, v, _uea);
+                dS += _mstate[0].add_edge_dS(u, v, 1, _uea);
 
             return dS;
         }
@@ -236,11 +234,11 @@ struct LatentLayers
         void remove_edge(size_t l, size_t u, size_t v)
         {
             if (_measured)
-                _mstate[0].remove_edge(u, v);
+                _mstate[0].remove_edge(u, v, 1);
 
             auto& bstate = _block_state[l].get();
             auto& e = get_u_edge(l, u, v);
-            bstate.template modify_edge<false>(u, v, e, _recs);
+            bstate.template modify_edge<false>(u, v, e);
 
             auto& ge = get_edge(u, v);
             _eweight[ge]--;
@@ -258,11 +256,11 @@ struct LatentLayers
         void add_edge(size_t l, size_t u, size_t v)
         {
             if (_measured)
-                _mstate[0].add_edge(u, v);
+                _mstate[0].add_edge(u, v, 1);
 
             auto& bstate = _block_state[l].get();
             auto& e = get_u_edge<true>(l, u, v);
-            bstate.template modify_edge<true>(u, v, e, _recs);
+            bstate.template modify_edge<true>(u, v, e);
 
             auto& ge = get_edge<true>(u, v);
             if (ge == _null_edge)

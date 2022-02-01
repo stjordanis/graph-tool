@@ -730,7 +730,7 @@ struct Layers
             }
         }
 
-        double edge_entropy_term(size_t, size_t, const entropy_args_t&) { return 0; }
+        double edge_entropy_term(size_t, size_t, int, const entropy_args_t&) { return 0; }
 
         template <class MCMCState>
         void init_mcmc(MCMCState& state)
@@ -925,13 +925,11 @@ struct Layers
             BaseState::update_edge_rec(e, delta);
         }
 
-        void add_edge(size_t, size_t, GraphInterface::edge_t&,
-                      const std::vector<double>&)
+        void add_edge(size_t, size_t, GraphInterface::edge_t&, int)
         {
         }
 
-        void remove_edge(size_t, size_t, GraphInterface::edge_t&,
-                         const std::vector<double>&)
+        void remove_edge(size_t, size_t, GraphInterface::edge_t&, int)
         {
         }
 

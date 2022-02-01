@@ -40,8 +40,8 @@ double get_edge_prob(State& state, size_t u, size_t v, const uentropy_args_t& ea
             old_x = state._xc[e];
     }
 
-    for (size_t i = 0; i < ew; ++i)
-        state.remove_edge(u, v);
+    if (ew > 0)
+        state.remove_edge(u, v, ew);
 
     double S = 0;
     double delta = 1. + epsilon;
@@ -49,8 +49,8 @@ double get_edge_prob(State& state, size_t u, size_t v, const uentropy_args_t& ea
     double L = -std::numeric_limits<double>::infinity();
     while (delta > epsilon || ne < 2)
     {
-        double dS = state.add_edge_dS(u, v, x..., ea);
-        state.add_edge(u, v, x...);
+        double dS = state.add_edge_dS(u, v, 1, x..., ea);
+        state.add_edge(u, v, 1, x...);
         S += dS;
         double old_L = L;
         L = log_sum_exp(L, -S);
@@ -60,13 +60,19 @@ double get_edge_prob(State& state, size_t u, size_t v, const uentropy_args_t& ea
 
     L = (L > 0) ? -log1p(exp(-L)) : L - log1p(exp(L));
 
-    for (int i = 0; i < int(ne - ew); ++i)
-        state.remove_edge(u, v);
-    for (int i = 0; i < int(ew - ne); ++i)
-        if constexpr (sizeof...(X) > 0)
-            state.add_edge(u, v, old_x);
-        else
-            state.add_edge(u, v);
+    if constexpr (sizeof...(X) > 0)
+    {
+        state.remove_edge(u, v, ne);
+        if (ew > 0)
+            state.add_edge(u, v, ew, old_x);
+    }
+    else
+    {
+        if (ne > ew)
+            state.remove_edge(u, v, ne - ew);
+        else if (ne < ew)
+            state.add_edge(u, v, ew - ne);
+    }
 
     return L;
 }
@@ -107,23 +113,17 @@ void set_state(State& state, Graph& g, EProp w)
             us.emplace_back(w, state._eweight[e]);
         }
         for (auto& uw : us)
-        {
-            for (size_t i = 0; i < uw.second; ++i)
-                state.remove_edge(v, uw.first);
-        }
+            state.remove_edge(v, uw.first, uw.second);
+
         auto& e = state.template get_u_edge<false>(v, v);
         if (e == state._null_edge)
             continue;
         size_t x = state._eweight[e];
-        for (size_t i = 0; i < x; ++i)
-            state.remove_edge(v, v);
+        state.remove_edge(v, v, x);
     }
 
     for (auto e : edges_range(g))
-    {
-        for (size_t i = 0; i < size_t(w[e]); ++i)
-            state.add_edge(source(e, g), target(e, g));
-    }
+        state.add_edge(source(e, g), target(e, g), w[e]);
 }
 
 
