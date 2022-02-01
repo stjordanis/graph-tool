@@ -216,7 +216,7 @@ class UncertainBaseState(object):
 
     def get_edge_prob(self, u, v, entropy_args={}, epsilon=1e-8):
         r"""Return conditional posterior log-probability of edge :math:`(u,v)`."""
-        entropy_args = self._get_entropy_args(entropy_args)
+        ea = self._get_entropy_args(entropy_args)
         return self._state.get_edge_prob(u, v, ea, epsilon)
 
     def get_edges_prob(self, elist, entropy_args={}, epsilon=1e-8):
