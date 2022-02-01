@@ -929,9 +929,7 @@ struct MergeSplit: public State
             {
                 auto r = uniform_sample(_rlist, rng);
 
-                auto s = r;
-                while (get_wr(s) > 0)
-                    s = sample_move(r, rng);
+                auto s = State::sample_new_group(*_groups[r].begin(), rng);
 
                 if (!allow_merge(r, s))
                 {
@@ -940,9 +938,6 @@ struct MergeSplit: public State
                 }
 
                 State::relax_update(true);
-
-                if (!std::isinf(_beta))
-                    pf += merge_prob(r, s); //FIXME
 
                 auto& vrs = _groups[r];
                 _vs.clear();
@@ -954,9 +949,6 @@ struct MergeSplit: public State
 
                 for (const auto& v : _vs)
                     _bnext[v] = State::get_group(v);
-
-                if (!std::isinf(_beta))
-                    pb += merge_prob(s, r); //FIXME
 
                 pop_b();
 

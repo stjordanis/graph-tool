@@ -202,6 +202,7 @@ __all__ = ["minimize_blockmodel_dl",
            "LayeredBlockState",
            "NestedBlockState",
            "PPBlockState",
+           "RankedBlockState",
            "PartitionCentroidState",
            "PartitionModeState",
            "ModeClusterState",
@@ -287,6 +288,7 @@ from . latent_multigraph import *
 from . partition_centroid import *
 from . partition_modes import *
 from . planted_partition import *
+from . ranked import *
 from . latent_layers import *
 from . histogram import *
 from . clique_decomposition import *

@@ -17,6 +17,7 @@ reader is referred to [peixoto-bayesian-2019]_.
 .. include:: _edge_weights.rst
 .. include:: _layers.rst
 .. include:: _assortative.rst
+.. include:: _ranked.rst
 .. include:: _reconstruction.rst
 .. include:: _prediction.rst
 
@@ -85,6 +86,9 @@ References
 .. [lizhi-statistical-2020] Lizhi Zhang, Tiago P. Peixoto, "Statistical
    inference of assortative community structures", Phys. Rev. Research 2
    043271 (2020), :doi:`10.1103/PhysRevResearch.2.043271`, :arxiv:`2006.14493`
+
+.. [peixoto-ordered-2022] Tiago P. Peixoto, "Ordered community detection
+   in directed networks", :arxiv:`2203.16460`
 
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8

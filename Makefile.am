@@ -425,6 +425,11 @@ libgraph_tool_inference_la_SOURCES = \
 	src/graph/inference/layers/graph_blockmodel_layers_overlap_multiflip_mcmc.cc \
 	src/graph/inference/layers/graph_blockmodel_layers_overlap_multilevel_mcmc.cc \
 	src/graph/inference/layers/graph_blockmodel_layers_overlap_vacate.cc \
+	src/graph/inference/ranked/graph_ranked.cc \
+	src/graph/inference/ranked/graph_ranked_mcmc.cc \
+	src/graph/inference/ranked/graph_ranked_gibbs.cc \
+	src/graph/inference/ranked/graph_ranked_multiflip_mcmc.cc \
+	src/graph/inference/ranked/graph_ranked_multilevel_mcmc.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_epidemics.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_epidemics_mcmc.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_epidemics_mcmc_r.cc \
@@ -500,6 +505,14 @@ dist_graph_inference_partition_modes_HEADERS = \
 graph_inference_planted_partitiondir = $(MOD_DIR)/include/inference/planted_partition
 dist_graph_inference_planted_partition_HEADERS = \
 	src/graph/inference/planted_partition/graph_planted_partition.hh
+
+graph_inference_rankeddir = $(MOD_DIR)/include/inference/ranked
+dist_graph_inference_ranked_HEADERS = \
+	src/graph/inference/ranked/graph_ranked.hh \
+	src/graph/inference/ranked/graph_ranked_mcmc.hh \
+	src/graph/inference/ranked/graph_ranked_gibbs.hh \
+	src/graph/inference/ranked/graph_ranked_multiflip_mcmc.hh \
+	src/graph/inference/ranked/graph_ranked_multilevel_mcmc.hh
 
 graph_inference_overlapdir = $(MOD_DIR)/include/inference/overlap
 dist_graph_inference_overlap_HEADERS = \
@@ -787,6 +800,7 @@ graph_tool_inference_PYTHON = \
 	src/graph_tool/inference/partition_centroid.py \
 	src/graph_tool/inference/partition_modes.py \
 	src/graph_tool/inference/planted_partition.py \
+	src/graph_tool/inference/ranked.py \
 	src/graph_tool/inference/latent_multigraph.py \
 	src/graph_tool/inference/latent_layers.py \
 	src/graph_tool/inference/util.py
