@@ -111,13 +111,14 @@ public:
     void check([[maybe_unused]] BGraph& bg, [[maybe_unused]] Eprop& mrs)
     {
 #ifndef NDEBUG
-        if (empty() || true)
+        if (empty())
             return;
         for (auto e : edges_range(bg))
         {
             auto r = source(e, bg);
             auto s = target(e, bg);
 
+            assert(r < _pos.size());
             auto& pos = _pos[r];
             auto iter = pos.find(s);
             assert(iter != pos.end());
