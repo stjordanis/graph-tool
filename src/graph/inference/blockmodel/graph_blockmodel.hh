@@ -198,6 +198,10 @@ public:
             }
         }
 
+        _E = 0;
+        for (auto e : edges_range(_g))
+            _E += _eweight[e];
+
         init_partition_stats();
     }
 
@@ -714,14 +718,13 @@ public:
         if constexpr (Add)
         {
             e = boost::add_edge(u, v, _g).first;
+            _E++;
         }
         else
         {
-            if constexpr (Deplete)
-            {
-                boost::remove_edge(e, _g);
-                e = GraphInterface::edge_t();
-            }
+            boost::remove_edge(e, _g);
+            e = GraphInterface::edge_t();
+            _E--;
         }
     }
 
@@ -750,6 +753,8 @@ public:
                 else
                     get<1>(_degs[v]) += dw;
             }
+
+            _E += dw;
         }
         else
         {
@@ -768,6 +773,8 @@ public:
                 else
                     get<1>(_degs[v]) -= dw;
             }
+
+            _E--;
         }
     }
 
@@ -1404,9 +1411,8 @@ public:
                 size_t actual_B = 0;
                 for (auto& ps : _partition_stats)
                     actual_B += ps.get_actual_B();
-                size_t E = _partition_stats.front().get_E();
-                dS -= get_edges_dl(actual_B, E, _g);
-                dS += get_edges_dl(actual_B + dr + ds, E, _g);
+                dS -= get_edges_dl(actual_B, _E, _g);
+                dS += get_edges_dl(actual_B + dr + ds, _E, _g);
             }
         }
         return dS;
@@ -1826,7 +1832,7 @@ public:
             size_t actual_B = 0;
             for (auto& ps : _partition_stats)
                 actual_B += ps.get_actual_B();
-            S_dl += get_edges_dl(actual_B, _partition_stats.front().get_E(), _g);
+            S_dl += get_edges_dl(actual_B, _E, _g);
         }
 
         for (auto v : vertices_range(_g))
@@ -2223,10 +2229,12 @@ public:
 
     size_t get_N()
     {
-        size_t N = 0;
-        for (auto r : vertices_range(_bg))
-            N += _wr[r];
-        return N;
+        return _N;
+    }
+
+    size_t get_E()
+    {
+        return _E;
     }
 
     vprop_map_t<int32_t>::type::unchecked_t& get_b()
@@ -2355,6 +2363,7 @@ public:
     size_t _B_E_D = 0;
     int _rt = weight_type::NONE;
     size_t _N;
+    size_t _E;
 
     typedef typename std::conditional<is_weighted_t::value,
                                       vmap_t::unchecked_t, vcmap_t>::type vweight_t;
