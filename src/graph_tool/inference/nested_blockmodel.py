@@ -94,14 +94,17 @@ class NestedBlockState(object):
                                   beta_dl=1.)
 
         if bs is None:
-            if base_type is OverlapBlockState:
-                N = 2 * g.num_edges()
-            else:
-                N = g.num_vertices()
-            L = int(numpy.ceil(numpy.log2(N)))
-            bs = [None] * (L + 1)
+            bs = [None]
 
         self.levels = [base_type(g, b=bs[0], **self.state_args)]
+
+        if base_type is OverlapBlockState:
+            N = 2 * self.levels[0].get_N()
+        else:
+            N = self.levels[0].get_N()
+
+        L = int(numpy.ceil(numpy.log2(N)))
+        bs += [None] * L
 
         for i, b in enumerate(bs[1:]):
             state = self.levels[-1]
@@ -640,7 +643,7 @@ class NestedBlockState(object):
 
         """
 
-        kwargs["psingle"] = kwargs.get("psingle", self.g.num_vertices())
+        kwargs["psingle"] = kwargs.get("psingle", self.levels[0].get_N())
 
         c = kwargs.pop("c", 1)
         if not isinstance(c, collections.abc.Iterable):
