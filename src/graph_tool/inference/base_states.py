@@ -702,12 +702,11 @@ class DrawBlockState(ABC):
         draws the state of the graph as colors on the vertices and edges."""
         gradient = self.g.new_ep("double")
         gradient = group_vector_property([gradient])
+        b = self.g.own_property(self.b)
         return graph_tool.draw.graph_draw(self.g,
-                                          vertex_fill_color=kwargs.get("vertex_fill_color",
-                                                                       self.b),
-                                          vertex_color=kwargs.get("vertex_color", self.b),
-                                          edge_gradient=kwargs.get("edge_gradient",
-                                                                   gradient),
+                                          vertex_fill_color=kwargs.get("vertex_fill_color", b),
+                                          vertex_color=kwargs.get("vertex_color", b),
+                                          edge_gradient=kwargs.get("edge_gradient", gradient),
                                           **dmask(kwargs, ["vertex_fill_color",
                                                            "vertex_color",
                                                            "edge_gradient"]))
