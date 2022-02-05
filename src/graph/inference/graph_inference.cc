@@ -267,8 +267,10 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
 
     def("vector_map", vector_map<int32_t>);
     def("vector_map64", vector_map<int64_t>);
+    def("vector_mapdouble", vector_map<double>);
     def("vector_rmap", vector_rmap<int32_t>);
     def("vector_rmap64", vector_rmap<int64_t>);
+    def("vector_rmapdouble", vector_rmap<double>);
     def("vector_contiguous_map", vector_contiguous_map<int32_t>);
     def("vector_contiguous_map64", vector_contiguous_map<int64_t>);
 }

@@ -103,6 +103,8 @@ def pmap(prop, value_map):
         value_map = array(value_map, dtype=a.dtype)
     if a.dtype == "int64":
         libinference.vector_map64(a, value_map)
+    elif a.dtype == "float64":
+        libinference.vector_mapdouble(a, value_map)
     else:
         libinference.vector_map(a, value_map)
     if isinstance(prop, PropertyMap):
@@ -124,6 +126,8 @@ def reverse_map(prop, value_map):
         prop = array(prop, dtype=a.dtype)
     if a.dtype == "int64":
         libinference.vector_rmap64(prop, a)
+    elif a.dtype == "float64":
+        libinference.vector_rmapdouble(prop, a)
     else:
         libinference.vector_rmap(prop, a)
     if isinstance(value_map, PropertyMap):
