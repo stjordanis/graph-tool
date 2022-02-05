@@ -206,6 +206,15 @@ static double f_r(double C, double K, double p, const Pos1& p1, const Pos2& p2)
 }
 
 template <class Pos1, class Pos2>
+static double fs_r(double C, double l, const Pos1& p1, const Pos2& p2)
+{
+    double d = dist(p1, p2);
+    if (d == 0)
+        return 0;
+    return -C * exp(-d/l);
+}
+
+template <class Pos1, class Pos2>
 static double f_a(double K, const Pos1& p1, const Pos2& p2)
 {
     return pow2(dist(p1, p2)) / K;
@@ -361,9 +370,9 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
                             if (groups)
                             {
                                 if (intra)
-                                    f = -f_r(mu, K, gamma, pos[v], get<0>(dleaf));
+                                    f = -fs_r(gamma, mu, pos[v], get<0>(dleaf));
                                 else
-                                    f = f_r(mu, K, gamma, pos[v], get<0>(dleaf)) + f_r(C, K, p, pos[v], get<0>(dleaf));
+                                    f = fs_r(gamma, mu, pos[v], get<0>(dleaf)) + f_r(C, K, p, pos[v], get<0>(dleaf));
                             }
                             else
                             {
@@ -399,9 +408,9 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
                                 if (groups)
                                 {
                                     if (intra)
-                                        f = -f_r(mu, K, gamma, pos[v], cm);
+                                        f = -fs_r(gamma, mu, pos[v], cm);
                                     else
-                                        f = f_r(mu, K, gamma, pos[v], cm) + f_r(C, K, p, pos[v], cm);
+                                        f = fs_r(gamma, mu, pos[v], cm) + f_r(C, K, p, pos[v], cm);
                                 }
                                 else
                                 {

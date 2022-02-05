@@ -559,8 +559,8 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
         Strength of attractive force between connected components.
     gamma : float (optional, default: ``.3``)
         Strength of the repulsive force between different groups.
-    mu : float (optional, default: ``3.0``)
-        Exponent of the strength of the repulsive force between different groups.
+    mu : float (optional, default: ``2``)
+        Typical length of the repulsive force between different groups.
     kappa : float (optional, default: ``1.0``)
         Multiplicative factor on the attracttive force between nodes of the same group.
     init_step : float (optional, default: ``None``)
@@ -655,6 +655,8 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
     if K is None:
         K = _avg_edge_distance(g, pos)
 
+    mu *= K
+
     if init_step is None:
         init_step = 2 * max(_avg_edge_distance(g, pos), K)
 
@@ -682,7 +684,7 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
                               eweight=ecount if weighted_coarse else None,
                               groups=groups,
                               C=C, K=K, p=p,
-                              theta=theta, gamma=gamma, mu=mu,
+                              theta=theta, gamma=gamma, mu=mu, kappa=kappa,
                               epsilon=epsilon,
                               max_iter=max_iter,
                               cooling_step=cooling_step,
