@@ -709,6 +709,9 @@ public:
             else
                 _coupled_state->remove_edge(r, s, me, dw);
         }
+
+        if (!_egroups.empty())
+            _egroups.clear();
     }
 
     template <bool Add, bool Deplete>
@@ -774,7 +777,7 @@ public:
                     get<1>(_degs[v]) -= dw;
             }
 
-            _E--;
+            _E -= dw;
         }
     }
 
