@@ -199,9 +199,9 @@ class MultiflipMCMCState(ABC):
 
     @mcmc_sweep_wrap
     def multiflip_mcmc_sweep(self, beta=1., c=.5, psingle=None, psplit=1,
-                             pmerge=1, pmergesplit=1, d=0.01, gibbs_sweeps=10,
-                             niter=1, entropy_args={}, accept_stats=None,
-                             verbose=False, **kwargs):
+                             pmerge=1, pmergesplit=1, pmovelabel=0, d=0.01,
+                             gibbs_sweeps=10, niter=1, entropy_args={},
+                             accept_stats=None, verbose=False, **kwargs):
         r"""Perform ``niter`` sweeps of a Metropolis-Hastings acceptance-rejection MCMC
         with multiple simultaneous moves (i.e. merges and splits) to sample
         network partitions.
@@ -223,6 +223,8 @@ class MultiflipMCMCState(ABC):
             Relative probability of proposing a group split.
         pmergesplit : ``float`` (optional, default: ``1``)
             Relative probability of proposing a marge-split move.
+        pmovelabel : ``float`` (optional, default: ``0``)
+            Relative probability of proposing a group label move.
         d : ``float`` (optional, default: ``1``)
             Probability of selecting a new (i.e. empty) group for a given
             single-node move.
