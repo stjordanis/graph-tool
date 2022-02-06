@@ -2132,9 +2132,6 @@ public:
     void init_partition_stats()
     {
         reset_partition_stats();
-        size_t E = 0;
-        for (auto e : edges_range(_g))
-            E += _eweight[e];
         size_t B = num_vertices(_bg);
 
 // Clang 8.0 fails to correctly recognize these as ForwardIterators,
@@ -2160,7 +2157,7 @@ public:
         }
 
         for (size_t c = 0; c < C; ++c)
-            _partition_stats.emplace_back(_g, _b, vcs[c], E, B,
+            _partition_stats.emplace_back(_g, _b, vcs[c], _E, B,
                                           _vweight, _eweight, _degs);
 
         for (auto r : vertices_range(_bg))
