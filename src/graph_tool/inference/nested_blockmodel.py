@@ -186,23 +186,22 @@ class NestedBlockState(object):
     def __copy__(self):
         return self.copy()
 
-    def copy(self, g=None, bs=None, state_args=None, hstate_args=None,
-             hentropy_args=None, **kwargs):
+    def copy(self, **kwargs):
         r"""Copies the block state. The parameters override the state properties,
         and have the same meaning as in the constructor."""
-        bs = self.get_bs() if bs is None else bs
-        return NestedBlockState(self.g if g is None else g, bs,
-                                base_type=type(self.levels[0]),
-                                state_args=self.state_args if state_args is None else state_args,
-                                hstate_args=self.hstate_args if hstate_args is None else hstate_args,
-                                hentropy_args=self.hentropy_args if hentropy_args is None else hentropy_args,
-                                **kwargs)
+        state = dict(self.__getstate__(), **kwargs)
+        return NestedBlockState(**state)
 
     def __getstate__(self):
-        state = dict(g=self.g, bs=self.get_bs(), base_type=type(self.levels[0]),
+        base_state = self.levels[0].__getstate__()
+        state_args = dict(base_state, **self.state_args)
+        state_args.pop("g", None)
+        state_args.pop("b", None)
+        state = dict(g=self.g, bs=self.get_bs(),
+                     base_type=type(self.levels[0]),
                      hstate_args=self.hstate_args,
                      hentropy_args=self.hentropy_args,
-                     state_args=self.state_args)
+                     state_args=state_args)
         return state
 
     def __setstate__(self, state):
