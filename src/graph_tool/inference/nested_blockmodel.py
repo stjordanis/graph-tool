@@ -192,6 +192,9 @@ class NestedBlockState(object):
 
     def __getstate__(self):
         base_state = self.levels[0].__getstate__()
+        base_state.pop("Lrecdx", None)
+        base_state.pop("epsilon", None)
+        base_state.pop("drec", None)
         state_args = dict(base_state, **self.state_args)
         state_args.pop("g", None)
         state_args.pop("b", None)
