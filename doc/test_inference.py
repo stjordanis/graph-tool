@@ -194,7 +194,7 @@ for pvals in iter_ranges(pranges):
     print("\t mcmc (single flip)", file=out)
     state = gen_nested_state(directed, deg_corr, layered, overlap, rec_, rec, dense_bg)
 
-    eargs = dict(dl=dl, degree_dl_kind=degree_dl_kind, beta_dl=0.95)
+    eargs = dict(degree_dl_kind=degree_dl_kind, beta_dl=0.95)
 
     for i in range(5):
         print("\t\t", state.mcmc_sweep(beta=0, d=0.5, entropy_args=eargs),

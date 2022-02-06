@@ -240,7 +240,7 @@ def get_hist(params, pos=0, check_only=False):
 
         if model == "nsbm":
             bs = [g.get_vertices()] if init == "N" else [zeros(1)]
-            state = state.copy(bs=bs + [zeros(1)] * 6, sampling=True)
+            state = state.copy(bs=bs + [zeros(1)] * 6)
         else:
             b = g.get_vertices() if init == "N" else zeros(g.num_vertices())
             state = state.copy(b=b)
