@@ -619,7 +619,7 @@ void apply_delta(State& state, MEntries& m_entries)
             {
                 state._coupled_state->propagate_delta(m_entries.get_move().first,
                                                       m_entries.get_move().second,
-                                                  m_entries._p_entries);
+                                                      m_entries._p_entries);
             }
         }
     }
