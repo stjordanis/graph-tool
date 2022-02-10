@@ -195,7 +195,7 @@ class NestedBlockState(object):
         base_state.pop("Lrecdx", None)
         base_state.pop("epsilon", None)
         base_state.pop("drec", None)
-        state_args = dict(base_state, **self.state_args)
+        state_args = dict(self.state_args, **base_state)
         state_args.pop("g", None)
         state_args.pop("b", None)
         state = dict(g=self.g, bs=self.get_bs(),
