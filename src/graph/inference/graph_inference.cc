@@ -21,6 +21,8 @@
 #include "numpy_bind.hh"
 #include "hash_map_wrap.hh"
 
+#include "support/util.hh"
+
 using namespace std;
 using namespace boost;
 using namespace graph_tool;
@@ -273,4 +275,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     def("vector_rmapdouble", vector_rmap<double>);
     def("vector_contiguous_map", vector_contiguous_map<int32_t>);
     def("vector_contiguous_map64", vector_contiguous_map<int64_t>);
+
+    def("lbinom", lbinom<size_t, size_t>);
+    def("lbinom_fast", lbinom_fast<true, size_t, size_t>);
 }
