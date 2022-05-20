@@ -131,7 +131,7 @@ class PartitionModeState(object):
         return self._base.virtual_add_partition(b, relabel)
 
     def replace_partitions(self):
-        r"""Removes and re-adds every partition, after relabelling, an returns
+        r"""Removes and re-adds every partition, after relabelling, and returns
         the entropy difference (negative log probability)."""
         return self._base.replace_partitions(_get_rng())
 
