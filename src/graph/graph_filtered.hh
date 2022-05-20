@@ -174,10 +174,6 @@ public:
         EdgePred, typename Graph::all_edge_iterator
         > all_edge_iterator;
 
-    typedef filter_iterator<
-        EdgePred, typename Graph::all_edge_iterator_reversed
-        > all_edge_iterator_reversed;
-
     typedef typename inv_adjacency_iterator_generator<self,
                                                       vertex_descriptor,
                                                       in_edge_iterator>::type
