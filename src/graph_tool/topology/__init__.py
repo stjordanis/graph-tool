@@ -1850,7 +1850,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
         targets.
     pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, if ``pred_map == True``)
         Vertex property map with the predecessors in the search tree.
-    pred_map : :class:`numpy.ndarray` (optional, if ``return_reached == True``)
+    visited : :class:`numpy.ndarray` (optional, if ``return_reached == True``)
         Array containing vertices visited during the search.
 
     Notes
