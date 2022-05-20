@@ -120,6 +120,9 @@ class NestedBlockState(object):
             self._consistency_check()
 
     def _regen_Lrecdx(self, lstate=None):
+        if not hasattr(self.levels[0], "recdx"):
+            return
+
         if lstate is None:
             levels = self.levels
             Lrecdx = self.Lrecdx
@@ -305,6 +308,9 @@ class NestedBlockState(object):
         return S
 
     def _Lrecdx_entropy(self, Lrecdx=None):
+        if not hasattr(self.levels[0], "recdx"):
+            return 0
+
         if self.base_type is not LayeredBlockState:
             S_D = 0
 

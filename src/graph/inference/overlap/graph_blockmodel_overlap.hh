@@ -623,6 +623,10 @@ public:
     {
     }
 
+    void copy_branch(size_t, BlockStateVirtualBase&)
+    {
+    }
+
     template <class RNG>
     size_t get_lateral_half_edge(size_t v, RNG& rng)
     {
@@ -988,6 +992,11 @@ public:
         _coupled_state = nullptr;
     }
 
+    BlockStateVirtualBase* get_coupled_state()
+    {
+        return _coupled_state;
+    }
+
     void clear_egroups()
     {
         _egroups.clear();
@@ -1170,6 +1179,11 @@ public:
         return _pclabel;
     }
 
+    vprop_map_t<int32_t>::type::unchecked_t& get_bclabel()
+    {
+        return _bclabel;
+    }
+
     template <class MCMCState>
     void init_mcmc(MCMCState& state)
     {
@@ -1231,6 +1245,12 @@ public:
             if (!_coupled_state->check_edge_counts(false))
                 return false;
         return true;
+    }
+
+    void check_node_counts()
+    {
+        if (_coupled_state != nullptr)
+            _coupled_state->check_node_counts();
     }
 
     void add_partition_node(size_t, size_t) { }

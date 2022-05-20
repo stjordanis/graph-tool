@@ -72,8 +72,12 @@ typedef mpl::vector1<std::true_type> rmap_tr;
 typedef mpl::vector1<std::false_type> rmap_tr;
 #endif
 
+#ifndef GRAPH_RANGE
+#define GRAPH_RANGE all_graph_views
+#endif
+
 #define BLOCK_STATE_params                                                     \
-    ((g, &, all_graph_views, 1))                                               \
+    ((g, &, GRAPH_RANGE, 1))                                                   \
     ((is_weighted,, mpl::vector1<std::true_type>, 1))                          \
     ((use_hash,, bool_tr, 1))                                                  \
     ((use_rmap,, rmap_tr, 1))                                                  \
@@ -1522,6 +1526,30 @@ public:
         _b[v] = s;
     }
 
+    void copy_branch(size_t r, BlockStateVirtualBase& state)
+    {
+        if (r >= num_vertices(_bg))
+            add_block(r - num_vertices(_bg) + 1);
+
+        _bclabel[r] = state.get_bclabel()[r];
+
+        if (_coupled_state != nullptr)
+        {
+            auto& cstate = *state.get_coupled_state();
+            auto& sbh = cstate.get_b();
+
+            auto s = sbh[r];
+
+            _coupled_state->copy_branch(s, cstate);
+
+            auto& bh = _coupled_state->get_b();
+            bh[r] = s;
+            auto& pclabel = cstate.get_pclabel();
+            auto& hpclabel = _coupled_state->get_pclabel();
+            hpclabel[r] = pclabel[r];
+        }
+    }
+
     // Sample node placement
     size_t sample_block(size_t v, double c, double d, rng_t& rng)
     {
@@ -2205,6 +2233,11 @@ public:
     void decouple_state()
     {
         _coupled_state = nullptr;
+    }
+
+    BlockStateVirtualBase* get_coupled_state()
+    {
+        return _coupled_state;
     }
 
     void clear_egroups()

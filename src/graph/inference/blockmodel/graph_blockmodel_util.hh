@@ -37,9 +37,11 @@ public:
     virtual void remove_partition_node(size_t v, size_t r) = 0;
     virtual void set_vertex_weight(size_t v, int w) = 0;
     virtual void coupled_resize_vertex(size_t v) = 0;
+    virtual BlockStateVirtualBase* get_coupled_state() = 0;
     virtual double virtual_move(size_t v, size_t r, size_t nr,
                                 const entropy_args_t& eargs) = 0;
     virtual void sample_branch(size_t v, size_t u, rng_t& rng) = 0;
+    virtual void copy_branch(size_t v, BlockStateVirtualBase&) = 0;
     virtual size_t sample_block(size_t v, double c, double d, rng_t& rng) = 0;
     virtual double get_move_prob(size_t v, size_t r, size_t s, double c, double d,
                                  bool reverse) = 0;
@@ -67,7 +69,9 @@ public:
                                           const entropy_args_t& ea) = 0;
     virtual vprop_map_t<int32_t>::type::unchecked_t& get_b() = 0;
     virtual vprop_map_t<int32_t>::type::unchecked_t& get_pclabel() = 0;
+    virtual vprop_map_t<int32_t>::type::unchecked_t& get_bclabel() = 0;
     virtual bool check_edge_counts(bool emat=true) = 0;
+    virtual void check_node_counts() = 0;
     virtual bool allow_move(size_t r, size_t nr) = 0;
     virtual void relax_update(bool relax) = 0;
 };

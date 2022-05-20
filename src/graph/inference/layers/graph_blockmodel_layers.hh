@@ -610,6 +610,10 @@ struct Layers
             BaseState::sample_branch(v, u, rng);
         }
 
+        void copy_branch(size_t, BlockStateVirtualBase&)
+        {
+        }
+
         double entropy(const entropy_args_t& ea, bool propagate=false)
         {
             double S = 0, S_dl = 0;
@@ -793,6 +797,11 @@ struct Layers
             _lcoupled_state = nullptr;
             for (auto& state : _layers)
                 state.decouple_state();
+        }
+
+        BlockStateVirtualBase* get_coupled_state()
+        {
+            return _lcoupled_state;
         }
 
         void couple_state(BlockStateVirtualBase& s,
@@ -984,6 +993,11 @@ struct Layers
             return BaseState::_pclabel;
         }
 
+        vprop_map_t<int32_t>::type::unchecked_t& get_bclabel()
+        {
+            return BaseState::_bclabel;
+        }
+
         void sync_emat()
         {
             BaseState::sync_emat();
@@ -1019,6 +1033,15 @@ struct Layers
                 if (!state.check_edge_counts(emat))
                     return false;
             return true;
+        }
+
+        void check_node_counts()
+        {
+            BaseState::check_node_counts();
+            for (auto& state : _layers)
+                state.check_edge_counts();
+            if (_lcoupled_state != nullptr)
+            _lcoupled_state->check_node_counts();
         }
 
         bool check_layers()

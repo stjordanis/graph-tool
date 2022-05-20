@@ -84,7 +84,7 @@ python::object do_gibbs_sweep_parallel(python::object ogibbs_states,
     std::vector<std::shared_ptr<gibbs_sweep_base>> sweeps;
 
     size_t N = python::len(ogibbs_states);
-    for (size_t i = 0; i < N; ++ i)
+    for (size_t i = 0; i < N; ++i)
     {
         auto dispatch = [&](auto& block_state)
         {
