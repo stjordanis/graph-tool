@@ -186,7 +186,8 @@ extlinks_fancy = {'issue': (['https://git.skewed.de/count0/graph-tool/issues/{0}
                            'https://sci-hub.tw/{0}',
                            'https://scihub22266oqcxt.onion.link/{0}'],
                           ['DOI: {0}', "sci-hub", "@tor"]),
-                  'arxiv': (['https://arxiv.org/abs/{0}'], ['arXiv: {0}'])}
+                  'arxiv': (['https://arxiv.org/abs/{0}'], ['arXiv: {0}']),
+                  'ns': (['https://networks.skewed.de/net/{0}'], ['{0}'])}
 
 # plot directive
 import pyenv
