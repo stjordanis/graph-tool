@@ -119,7 +119,7 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         if b is None:
             self.b = self.g.new_vp("int32_t")
         elif isinstance(b, PropertyMap):
-            self.b = b.copy("int32_t")
+            self.b = self.g.own_property(b).copy("int32_t")
         else:
             self.b = self.g.new_vp("int32_t", vals=b)
 
@@ -135,16 +135,11 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def __copy__(self):
         return self.copy()
 
-    def __deepcopy__(self, memo):
-        g = copy.deepcopy(self.g, memo)
-        b = copy.deepcopy(self.b, memo)
-        return self.copy(g=g, b=b)
-
     def copy(self, g=None, b=None):
         r"""Copies the state. The parameters override the state properties, and
          have the same meaning as in the constructor."""
         return ModularityState(g=g if g is not None else self.g,
-                                b=b if b is not None else self.b)
+                               b=b if b is not None else self.b)
 
     def __getstate__(self):
         return dict(g=self.g, b=self.b)
@@ -158,14 +153,16 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
     def get_B(self):
         r"Returns the total number of blocks."
-        return len(np.unique(self.b.fa))
+        rs = np.unique(self.b.fa)
+        return len(rs)
 
     def get_Be(self):
         r"""Returns the effective number of blocks, defined as :math:`e^{H}`, with
         :math:`H=-\sum_r\frac{n_r}{N}\ln \frac{n_r}{N}`, where :math:`n_r` is
         the number of nodes in group r.
         """
-        w = np.array(np.bincount(self.b.fa), dtype="double")
+        w = np.bincount(self.b.fa)
+        w = np.array(w, dtype="double")
         w = w[w>0]
         w /= w.sum()
         return np.exp(-(w*log(w)).sum())
