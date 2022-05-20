@@ -2317,12 +2317,17 @@ public:
 
     void check_node_counts()
     {
+#ifndef NDEBUG
         vector<size_t> wr(num_vertices(_bg));
         for (auto v : vertices_range(_g))
             wr[_b[v]] += _vweight[v];
 
         for (auto r : vertices_range(_bg))
             assert(size_t(_wr[r]) == wr[r]);
+
+        if (_coupled_state != nullptr)
+            _coupled_state->check_node_counts();
+#endif
     }
 
     template <class V>
