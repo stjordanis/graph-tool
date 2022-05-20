@@ -169,4 +169,3 @@ class NormCutState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def _gibbs_sweep_dispatch(self, gibbs_state):
         return libinference.norm_cut_gibbs_sweep(gibbs_state, self._state,
                                                  _get_rng())
-
