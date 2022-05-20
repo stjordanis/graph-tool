@@ -84,9 +84,10 @@ public:
         if (size_t(p) == v)
             return;
         _dist_map[v] = _dist_map[p] + 1;
-        _reached.push_back(v);
         if (_dist_map[v] > _max_dist)
             _unreached.push_back(v);
+        else
+            _reached.push_back(v);
         if (v == _target)
             throw stop_search();
     }
@@ -207,7 +208,8 @@ public:
     {
         if (_dist_map[u] > _max_dist)
             _unreached.push_back(u);
-        _reached.push_back(u);
+        else
+            _reached.push_back(u);
     }
 
 private:
@@ -261,7 +263,8 @@ public:
     {
         if (_dist_map[u] > _max_dist)
             _unreached.push_back(u);
-        _reached.push_back(u);
+        else
+            _reached.push_back(u);
     }
 
 private:
