@@ -251,14 +251,16 @@ static double norm(Pos& x)
 
 template <class Graph, class PosMap, class VertexWeightMap,
           class EdgeWeightMap, class PinMap, class GroupMaps, class CMap,
+          class OrderMap,
           class RNG>
-void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
-                      EdgeWeightMap eweight, PinMap pin, GroupMaps& groups,
-                      double C, double K, double p, double theta, double gamma,
-                      double mu, double kappa, double r, CMap c,
-                      double init_step, double step_schedule, size_t max_level,
-                      double epsilon, size_t max_iter, bool simple,
-                      bool verbose, RNG& rng)
+void get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
+                     EdgeWeightMap eweight, PinMap pin, GroupMaps& groups,
+                     double C, double K, double p, double theta, double gamma,
+                     double mu, double kappa, double r, CMap c, double R,
+                     OrderMap yorder,
+                     double init_step, double step_schedule, size_t max_level,
+                     double epsilon, size_t max_iter, bool simple,
+                     bool verbose, RNG& rng)
 {
     typedef typename property_traits<PosMap>::value_type::value_type val_t;
     typedef std::array<val_t, 2> pos_t;
@@ -268,7 +270,12 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
     vector<size_t> vertices;
     idx_map<size_t, size_t> rs;
 
+    double ocenter = 0;
+    double omax = -std::numeric_limits<double>::max();
+    double omin = std::numeric_limits<double>::max();
+
     int HN = 0;
+    vweight_t W = 0;
     for (auto v : vertices_range(g))
     {
         if (pin[v] == 0)
@@ -277,7 +284,15 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
         HN++;
 
         rs[groups[0][v]]++;
+
+        ocenter += yorder[v] * get(vweight, v);
+        omax = max(yorder[v], omax);
+        omin = min(yorder[v], omin);
+        W += get(vweight, v);
     }
+
+    ocenter /= W;
+    double o_rg = omax - omin;
 
     val_t delta = epsilon * K + 1, E = 0, E0;
     E0 = numeric_limits<val_t>::max();
@@ -299,6 +314,11 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
 
         ccm.clear();
         csize.clear();
+
+        double ycenter = 0;
+        val_t ymax = -std::numeric_limits<val_t>::max();
+        val_t ymin = std::numeric_limits<val_t>::max();
+
         for (auto v : vertices_range(g))
         {
             for (size_t j = 0; j < 2; ++j)
@@ -317,7 +337,13 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
             csize[s] += get(vweight, v);
             for (size_t j = 0; j < 2; ++j)
                 ccm[s][j] += pos[v][j] * get(vweight, v);
+
+            ycenter += pos[v][1] * get(vweight, v);
+            ymin = min(ymin, pos[v][1]);
+            ymax = max(ymax, pos[v][1]);
         }
+        ycenter /= W;
+        double y_rg = ymax - ymin;
 
         for (size_t s = 0; s < ccm.size(); ++s)
         {
@@ -480,6 +506,14 @@ void  get_sfdp_layout(Graph& g, PosMap pos, VertexWeightMap vweight,
                          for (size_t l = 0; l < 2; ++l)
                              ftot[l] += f * diff[l];
                      }
+                 }
+
+                 // yorder repulsive force
+                 if (R > 0)
+                 {
+                     double dz = (yorder[v] - ocenter)/o_rg;
+                     double dp = (pos[v][1] - ycenter)/y_rg;
+                     ftot[1] +=  R * (dz - dp);
                  }
 
                  E += pow2(norm(ftot));

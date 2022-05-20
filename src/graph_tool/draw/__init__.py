@@ -524,7 +524,7 @@ def coarse_graphs(g, method="hybrid", mivs_thres=0.9, ec_thres=0.75,
 
 def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
                 K=None, p=2., theta=0.6, max_level=15, r=1., gamma=.3, mu=2.,
-                kappa=1., init_step=None, cooling_step=0.95,
+                kappa=1., rmap=None, R=1, init_step=None, cooling_step=0.95,
                 adaptive_cooling=True, epsilon=1e-2, max_iter=0, pos=None,
                 multilevel=None, coarse_method="hybrid", mivs_thres=0.9,
                 ec_thres=0.75, weighted_coarse=False, verbose=False):
@@ -563,6 +563,11 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
         Typical length of the repulsive force between different groups.
     kappa : float (optional, default: ``1.0``)
         Multiplicative factor on the attracttive force between nodes of the same group.
+    rmap : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
+        Vertex rank to be used around to order them preferentially in the
+        :math:`y` direction.
+    R : float (optional, default: ``1.0``)
+        Strength of the rank ordering in the :math:`y` direction.
     init_step : float (optional, default: ``None``)
         Initial update step. If not provided, it will be chosen automatically.
     cooling_step : float (optional, default: ``0.95``)
@@ -632,6 +637,7 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
     .. [hu-multilevel-2005] Yifan Hu, "Efficient and High Quality Force-Directed
        Graph", Mathematica Journal, vol. 10, Issue 1, pp. 37-71, (2005)
        http://www.mathematica-journal.com/issue/v10i1/graph_draw.html
+
     """
 
     if pos is None:
@@ -656,6 +662,12 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
         K = _avg_edge_distance(g, pos)
 
     mu *= K
+
+    if rmap is None:
+        rmap = g.new_vp("double")
+        R = 0
+    elif rmap.value_type() != "double":
+        rmap = rmap.copy("double")
 
     if init_step is None:
         init_step = 2 * max(_avg_edge_distance(g, pos), K)
@@ -717,7 +729,7 @@ def sfdp_layout(g, vweight=None, eweight=None, pin=None, groups=None, C=0.2,
                                      _prop("e", g, eweight),
                                      _prop("v", g, pin),
                                      (C, K, p, gamma, mu, kappa, groups, r,
-                                      _prop("v", g, c)),
+                                      _prop("v", g, c), R, _prop("v", g, rmap)),
                                      theta, init_step, cooling_step, max_level,
                                      epsilon, max_iter, not adaptive_cooling,
                                      verbose, _get_rng())
