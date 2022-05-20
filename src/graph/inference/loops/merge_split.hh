@@ -703,6 +703,8 @@ struct MergeSplit: public State
         if (s == r || !allow_merge(r, s))
             return {_null_group, 0., 0., 0.};
 
+        push_b(_groups[s]);
+
         double pf = 0, pb = 0;
         if (!std::isinf(_beta))
         {
@@ -755,7 +757,7 @@ struct MergeSplit: public State
                 auto v = uniform_sample(_nodes, rng);
                 auto r = State::get_group(v);
                 auto s = State::sample_group(v, true, rng);
-                if (r == s)
+                if (r == s || !State::allow_move(r, s))
                 {
                     move = move_t::null;
                     break;
@@ -828,7 +830,7 @@ struct MergeSplit: public State
                 }
                 auto r = uniform_sample(_rlist, rng);
                 auto s = sample_move(r, rng);
-                if (!allow_merge(r, s))
+                if (s == r || !allow_merge(r, s))
                 {
                     move = move_t::null;
                     break;
@@ -890,7 +892,7 @@ struct MergeSplit: public State
                 {
                     while (!_bstack.empty())
                         pop_b();
-                    State::relax_update(true);
+                    State::relax_update(false);
                     move = move_t::null;
                     break;
                 }
@@ -898,8 +900,6 @@ struct MergeSplit: public State
                 _dS += get<1>(ret);
                 pf += get<2>(ret);
                 pb += get<3>(ret);
-
-                push_b(_groups[s]);
 
                 ret = sample_split(s, r, rng);
                 _dS += get<1>(ret);
