@@ -32,14 +32,6 @@ def minimize_blockmodel_dl(g, state=BlockState, state_args={},
     ----------
     g : :class:`~graph_tool.Graph`
         The graph.
-    B_min : ``int`` (optional, default: ``1``)
-        The minimum number of blocks.
-    B_max : ``int`` (optional, default: ``numpy.iinfo(numpy.int64).max``)
-        The maximum number of blocks.
-    b_min : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        The partition to be used with the minimum number of blocks.
-    b_max : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        The partition to be used with the maximum number of blocks.
     state : SBM-like state class (optional, default: :class:`~graph_tool.inference.BlockState`)
         Type of model that will be used. Must be derived from :class:`~graph_tool.inference.MultilevelMCMCState`.
     state_args : ``dict`` (optional, default: ``{}``)
