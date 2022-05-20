@@ -2324,9 +2324,6 @@ public:
 
         for (auto r : vertices_range(_bg))
             assert(size_t(_wr[r]) == wr[r]);
-
-        if (_coupled_state != nullptr)
-            _coupled_state->check_node_counts();
 #endif
     }
 
