@@ -188,17 +188,17 @@ public:
     ~djk_max_visitor()
     {
         for (auto v : _unreached)
-            _dist_map[v] = _inf;
+        {
+            if (_dist_map[v] > _max_dist)
+                _dist_map[v] = _inf;
+        }
     }
 
     template <class Graph>
     void examine_vertex(typename graph_traits<Graph>::vertex_descriptor u,
                         Graph&)
     {
-        if (_dist_map[u] > _max_dist)
-            throw stop_search();
-
-        if (u == _target)
+        if (_dist_map[u] > _max_dist || u == _target)
             throw stop_search();
     }
 
@@ -208,7 +208,13 @@ public:
     {
         if (_dist_map[u] > _max_dist)
             _unreached.push_back(u);
-        else
+    }
+
+    template <class Graph>
+    void finish_vertex(typename graph_traits<Graph>::vertex_descriptor u,
+                       Graph&)
+    {
+        if (_dist_map[u] <= _max_dist)
             _reached.push_back(u);
     }
 
@@ -238,7 +244,10 @@ public:
     ~djk_max_multiple_targets_visitor()
     {
         for (auto v : _unreached)
-            _dist_map[v] = _inf;
+        {
+            if (_dist_map[v] > _max_dist)
+                _dist_map[v] = _inf;
+        }
     }
 
     template <class Graph>
@@ -263,7 +272,13 @@ public:
     {
         if (_dist_map[u] > _max_dist)
             _unreached.push_back(u);
-        else
+    }
+
+    template <class Graph>
+    void finish_vertex(typename graph_traits<Graph>::vertex_descriptor u,
+                       Graph&)
+    {
+        if (_dist_map[u] <= _max_dist)
             _reached.push_back(u);
     }
 
