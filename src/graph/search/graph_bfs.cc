@@ -115,6 +115,9 @@ void do_bfs(Graph& g, size_t s, Visitor&& vis)
     if (v == graph_traits<Graph>::null_vertex())
     {
         for (auto u : vertices_range(g))
+            vis.initialize_vertex(u, g);
+
+        for (auto u : vertices_range(g))
         {
             if (color[u] == color_traits<default_color_type>::black())
                 continue;
@@ -123,7 +126,7 @@ void do_bfs(Graph& g, size_t s, Visitor&& vis)
     }
     else
     {
-        breadth_first_visit(g, v, visitor(vis).color_map(color));
+        breadth_first_search(g, v, visitor(vis).color_map(color));
     }
 }
 
