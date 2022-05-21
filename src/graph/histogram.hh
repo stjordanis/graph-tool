@@ -183,17 +183,19 @@ public:
 
     void gather()
     {
-        if (_sum != 0)
+        #pragma omp critical
         {
-            #pragma omp critical
+            if (_sum != nullptr)
             {
                 typename Histogram::bin_t idx;
 
                 typename Histogram::bin_t shape;
-                for (size_t i = 0; i <  this->_counts.num_dimensions(); ++i)
+                for (size_t i = 0; i < this->_counts.num_dimensions(); ++i)
                     shape[i] = std::max(this->_counts.shape()[i],
                                         _sum->get_array().shape()[i]);
+
                 _sum->get_array().resize(shape);
+
                 for (size_t i = 0; i < this->_counts.num_elements(); ++i)
                 {
                     size_t offset = 1;
@@ -210,8 +212,9 @@ public:
                     if (_sum->get_bins()[i].size() < this->_bins[i].size())
                         _sum->get_bins()[i] = this->_bins[i];
                 }
+
+                _sum = nullptr;
             }
-            _sum = 0;
         }
     }
 private:

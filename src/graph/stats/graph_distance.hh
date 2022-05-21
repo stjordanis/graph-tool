@@ -115,8 +115,8 @@ struct get_distance_histogram
     {
         template <class Graph, class Vertex, class VertexIndex,
                   class DistanceMap, class WeightMap>
-        void operator()(const Graph& g, Vertex s, VertexIndex vertex_index,
-                        DistanceMap dist_map, WeightMap weights) const
+        void operator()(const Graph& g, Vertex s, VertexIndex& vertex_index,
+                        DistanceMap& dist_map, WeightMap& weights) const
         {
             dijkstra_shortest_paths(g, s, vertex_index_map(vertex_index).
                                     weight_map(weights).distance_map(dist_map));
@@ -128,8 +128,8 @@ struct get_distance_histogram
     {
         template <class Graph, class Vertex, class VertexIndex,
                   class DistanceMap>
-        void operator()(const Graph& g, Vertex s, VertexIndex vertex_index,
-                        DistanceMap dist_map, no_weightS) const
+        void operator()(const Graph& g, Vertex s, VertexIndex& vertex_index,
+                        DistanceMap& dist_map, no_weightS) const
         {
             typedef typename graph_traits<Graph>::vertex_descriptor vertex_t;
             typedef gt_hash_map<vertex_t,default_color_type,

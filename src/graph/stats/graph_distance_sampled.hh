@@ -132,8 +132,8 @@ struct get_sampled_distance_histogram
     {
         template <class Graph, class Vertex, class VertexIndex,
                   class DistanceMap, class WeightMap>
-        void operator()(const Graph& g, Vertex s, VertexIndex vertex_index,
-                        DistanceMap dist_map, WeightMap weights) const
+        void operator()(const Graph& g, Vertex s, VertexIndex& vertex_index,
+                        DistanceMap& dist_map, WeightMap& weights) const
         {
             dijkstra_shortest_paths(g, s, vertex_index_map(vertex_index).
                                     weight_map(weights).distance_map(dist_map));
@@ -145,8 +145,8 @@ struct get_sampled_distance_histogram
     {
         template <class Graph, class Vertex, class VertexIndex,
                   class DistanceMap>
-        void operator()(const Graph& g, Vertex s, VertexIndex vertex_index,
-                        DistanceMap dist_map, no_weightS) const
+        void operator()(const Graph& g, Vertex s, VertexIndex& vertex_index,
+                        DistanceMap& dist_map, no_weightS) const
         {
             typedef typename vprop_map_t<default_color_type>::type::unchecked_t vmap_t;
             vmap_t color_map(vertex_index, num_vertices(g));
