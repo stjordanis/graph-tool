@@ -105,7 +105,8 @@ public:
     }
 
     partition_stats(const partition_stats& o)
-        : _bmap(o._bmap),
+        : _directed(o._directed),
+          _bmap(o._bmap),
           _N(o._N),
           _E(o._E),
           _actual_B(o._actual_B),
@@ -145,7 +146,7 @@ public:
     template <bool out, bool create=true>
     auto& get_hist(size_t r)
     {
-        auto h = (out) ? _hist_out[r] : _hist_in[r];
+        auto& h = (out) ? _hist_out[r] : _hist_in[r];
         if (h == nullptr)
         {
             if constexpr (!create)
@@ -492,16 +493,20 @@ public:
         int nr = _total[r];
         auto get_Sk = [&](size_t s, pair<size_t, size_t>& deg, int delta)
             {
+                double S = 0;
                 int nd = 0;
-                if (_directed && _hist_in[s] != nullptr)
+                if (_directed)
                 {
-                    auto& h = *_hist_in[s];
-                    auto iter = h.find(get<0>(deg));
-                    if (iter != h.end())
-                        nd = iter->second;
+                    if (_hist_in[s] != nullptr)
+                    {
+                        auto& h = *_hist_in[s];
+                        auto iter = h.find(get<0>(deg));
+                        if (iter != h.end())
+                            nd = iter->second;
+                    }
+                    assert(nd + delta >= 0);
+                    S -= xlogx_fast(nd + delta);
                 }
-                assert(nd + delta >= 0);
-                double S = -xlogx_fast(nd + delta);
 
                 nd = 0;
                 if (_hist_out[s] != nullptr)
@@ -512,7 +517,7 @@ public:
                         nd = iter->second;
                 }
 
-                return S -xlogx_fast(nd + delta);
+                return S - xlogx_fast(nd + delta);
             };
 
         double S_b = 0, S_a = 0;
@@ -590,20 +595,27 @@ public:
         auto get_Sr = [&](int delta)
             {
                 assert(total_r + delta + 1 >= 0);
-                return lgamma_fast(total_r + delta + 1);
+                if (_directed)
+                    return 2 * lgamma_fast(total_r + delta + 1);
+                else
+                    return lgamma_fast(total_r + delta + 1);
             };
 
         auto get_Sk = [&](pair<size_t, size_t>& deg, int delta)
             {
+                double S = 0;
                 int nd = 0;
-                if (_directed && _hist_in[r] != nullptr)
+                if (_directed)
                 {
-                    auto& h = *_hist_in[r];
-                    auto iter = h.find(get<0>(deg));
-                    if (iter != h.end())
-                        nd = iter->second;
+                    if (_hist_in[r] != nullptr)
+                    {
+                        auto& h = *_hist_in[r];
+                        auto iter = h.find(get<0>(deg));
+                        if (iter != h.end())
+                            nd = iter->second;
+                    }
+                    S -= lgamma_fast(nd + delta + 1);
                 }
-                double S = -lgamma_fast(nd + delta + 1);
 
                 nd = 0;
                 if (_hist_out[r] != nullptr)
@@ -614,7 +626,7 @@ public:
                         nd = iter->second;
                 }
 
-                return S -lgamma_fast(nd + delta + 1);
+                return S - lgamma_fast(nd + delta + 1);
             };
 
         double S_b = 0, S_a = 0;
@@ -671,11 +683,13 @@ public:
                 auto iter = h.insert({k, 0}).first;
                 iter->second += dk;
                 if (iter->second == 0)
-                    h.erase(iter);
-                if (h.empty())
                 {
-                    delete hist[r];
-                    hist[r] = nullptr;
+                    h.erase(iter);
+                    if (h.empty())
+                    {
+                        delete hist[r];
+                        hist[r] = nullptr;
+                    }
                 }
             };
 
