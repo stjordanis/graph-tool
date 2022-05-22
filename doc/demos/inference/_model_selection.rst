@@ -10,7 +10,7 @@ we have
 
 .. testsetup:: model-selection
 
-   gt.seed_rng(43)
+   gt.seed_rng(44)
 
 .. testcode:: model-selection
 
@@ -25,10 +25,10 @@ we have
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   Non-degree-corrected DL:	 8550.039909...
-   Degree-corrected DL:	 8204.289347...
+   Non-degree-corrected DL:	 8526.689850...
+   Degree-corrected DL:	 8667.387042...
 
-Since it yields the smallest description length, the degree-corrected
+Since it yields the smallest description length, the non-degree-corrected
 fit should be preferred. The statistical significance of the choice can
 be accessed by inspecting the posterior odds ratio
 [peixoto-nonparametric-2017]_
@@ -52,13 +52,13 @@ fits. In our particular case, we have
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  -345.750561...
+   ln Λ:  140.697191...
 
 The precise threshold that should be used to decide when to `reject a
 hypothesis <https://en.wikipedia.org/wiki/Hypothesis_testing>`_ is
 subjective and context-dependent, but the value above implies that the
-particular degree-corrected fit is around :math:`\mathrm{e}^{345}
-\approx 10^{149}` times more likely than the non-degree corrected one,
+particular non-degree-corrected fit is around :math:`\mathrm{e}^{140}
+\approx 10^{60}` times more likely than the non-degree corrected one,
 and hence it can be safely concluded that it provides a substantially
 better fit.
 
@@ -80,9 +80,9 @@ example, for the American football network above, we have:
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   Non-degree-corrected DL:     1733.525685...
-   Degree-corrected DL:         1780.964656...
-   ln Λ:                        -47.438970...
+   Non-degree-corrected DL:	 1733.525685...
+   Degree-corrected DL:	 1780.576716...
+   ln Λ:			 -47.051031...
 
 Hence, with a posterior odds ratio of :math:`\Lambda \approx
 \mathrm{e}^{-47} \approx 10^{-21}` in favor of the non-degree-corrected
