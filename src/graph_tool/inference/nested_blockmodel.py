@@ -892,12 +892,16 @@ def get_hierarchy_tree(state, empty_branches=False):
 
     if not empty_branches:
         vmask = t.new_vertex_property("bool", True)
-        for vi in range(state.g.num_vertices(ignore_filter=True),
-                        t.num_vertices(ignore_filter=True)):
-            v = t.vertex(vi)
+        t = GraphView(t, vfilt=vmask)
+        vmask = t.get_vertex_filter()[0]
+        N = t.num_vertices()
+        for vi, v in enumerate(list(t.vertices())):
+            if vi < state.g.num_vertices():
+                continue
             if v.out_degree() == 0:
                 vmask[v] = False
-        t = GraphView(t, vfilt=vmask)
+        label = t.own_property(label)
+        order = t.own_property(order)
 
     return t, label, order
 
