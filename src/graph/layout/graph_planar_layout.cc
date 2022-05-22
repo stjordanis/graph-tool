@@ -71,8 +71,7 @@ void planar_layout(GraphInterface& gi, boost::any aembed_map, boost::any apos)
                  pos(get(vertex_index_t(), g), num_vertices(g));
 
              chrobak_payne_straight_line_drawing(g, embed, ordering.begin(),
-                                                 ordering.end(), pos,
-                                                 get(vertex_index, g));
+                                                 ordering.end(), pos);
              parallel_vertex_loop
                  (g,
                   [&](auto& v)

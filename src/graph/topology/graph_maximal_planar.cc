@@ -39,13 +39,28 @@ struct mark_planar_edge
 
 struct do_maximal_planar
 {
-    template <class Graph, class VertexIndex, class EdgeIndex>
-    void operator()(Graph& g, VertexIndex vertex_index, EdgeIndex edge_index) const
+    typedef typename eprop_map_t<size_t>::type::unchecked_t eimap_t;
+    typedef typename vprop_map_t<size_t>::type::unchecked_t vimap_t;
+
+    template <class Graph>
+    eimap_t get_edge_index(const Graph& g) const
+    {
+        eimap_t::checked_t eidx;
+        size_t E = 0;
+        for (auto e : edges_range(g))
+            eidx[e] = E++;
+        return eidx.get_unchecked();
+    }
+
+    template <class Graph>
+    void operator()(Graph& g) const
     {
 
-        unchecked_vector_property_map
-            <vector<typename graph_traits<Graph>::edge_descriptor>, VertexIndex>
-            embedding(vertex_index, num_vertices(g));
+        typename vprop_map_t<vector<typename graph_traits<Graph>::edge_descriptor>>::type::unchecked_t
+            embedding(num_vertices(g));
+
+        eimap_t edge_index = get_edge_index(g);
+
         bool is_planar = boyer_myrvold_planarity_test
             (boyer_myrvold_params::graph = g,
              boyer_myrvold_params::edge_index_map = edge_index,
@@ -60,7 +75,7 @@ struct do_maximal_planar
             (boyer_myrvold_params::graph = g,
              boyer_myrvold_params::edge_index_map = edge_index,
              boyer_myrvold_params::embedding = embedding);
-        make_maximal_planar(g, embedding, vertex_index, edge_index, vis);
+        make_maximal_planar(g, embedding, get(vertex_index, g), edge_index, vis);
     }
 
 };
@@ -73,7 +88,6 @@ void maximal_planar(GraphInterface& gi)
          [&](auto&& graph)
          {
              return do_maximal_planar()
-                 (std::forward<decltype(graph)>(graph), gi.get_vertex_index(),
-                  gi.get_edge_index());
+                 (std::forward<decltype(graph)>(graph));
          })();
 }

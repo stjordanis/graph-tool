@@ -48,37 +48,51 @@ struct get_planar_embedding
         EdgeMap _edge_map;
     };
 
-    template <class Graph, class VertexIndex, class EdgeIndex, class EmbedMap,
+    typedef typename eprop_map_t<size_t>::type::unchecked_t eimap_t;
+    typedef typename vprop_map_t<size_t>::type::unchecked_t vimap_t;
+
+    template <class Graph>
+    eimap_t get_edge_index(const Graph& g) const
+    {
+        eimap_t::checked_t eidx;
+        size_t E = 0;
+        for (auto e : edges_range(g))
+            eidx[e] = E++;
+        return eidx.get_unchecked();
+    }
+
+    template <class Graph, class EmbedMap,
               class KurMap>
-    void operator()(Graph& g, VertexIndex vertex_index, EdgeIndex edge_index,
-                    EmbedMap embed_map, KurMap kur_map, bool& is_planar) const
+    void operator()(Graph& g, EmbedMap embed_map,
+                    KurMap kur_map, bool& is_planar) const
     {
         edge_inserter<KurMap> kur_insert(kur_map);
-        unchecked_vector_property_map
-            <vector<typename graph_traits<Graph>::edge_descriptor>, VertexIndex>
-            embedding(vertex_index, num_vertices(g));
+        typename vprop_map_t<vector<typename graph_traits<Graph>::edge_descriptor>>::type::unchecked_t
+            embedding(num_vertices(g));
+        eimap_t edge_index = get_edge_index(g);
         is_planar = boyer_myrvold_planarity_test
             (boyer_myrvold_params::graph = g,
              boyer_myrvold_params::edge_index_map = edge_index,
              boyer_myrvold_params::embedding = embedding,
              boyer_myrvold_params::kuratowski_subgraph = kur_insert);
 
+        auto eidx = get(boost::edge_index, g);
         parallel_vertex_loop
             (g,
              [&](auto v)
              {
                  embed_map[v].clear();
                  for (auto& e : embedding[v])
-                     embed_map[v].push_back(edge_index[e]);
+                     embed_map[v].push_back(eidx[e]);
              });
     }
 
-    template <class Graph, class VertexIndex, class EdgeIndex, class KurMap>
-    void operator()(Graph& g, VertexIndex, EdgeIndex edge_index,
-                    dummy_property_map, KurMap kur_map,
+    template <class Graph, class KurMap>
+    void operator()(Graph& g, dummy_property_map, KurMap kur_map,
                     bool& is_planar) const
     {
         edge_inserter<KurMap> kur_insert(kur_map);
+        eimap_t edge_index = get_edge_index(g);
         is_planar = boyer_myrvold_planarity_test
             (boyer_myrvold_params::graph = g,
              boyer_myrvold_params::edge_index_map = edge_index,
@@ -101,8 +115,8 @@ bool is_planar(GraphInterface& gi, boost::any embed_map, boost::any kur_map)
                            dummy_property_map>::type vertex_map_types;
 
     run_action<graph_tool::detail::never_directed>()
-        (gi, std::bind(get_planar_embedding(), std::placeholders::_1, gi.get_vertex_index(),
-                       gi.get_edge_index(), std::placeholders::_2, std::placeholders::_3,
+        (gi, std::bind(get_planar_embedding(), std::placeholders::_1,
+                       std::placeholders::_2, std::placeholders::_3,
                        std::ref(is_planar)),
          vertex_map_types(), edge_map_types())
         (embed_map, kur_map);

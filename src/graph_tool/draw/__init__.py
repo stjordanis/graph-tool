@@ -212,7 +212,6 @@ def planar_layout(g, pos=None):
         pos = u.new_vp("vector<double>")
     else:
         pos = u.own_property(pos)
-    make_maximal_planar(u)
     libgraph_tool_layout.planar_layout(u._Graph__graph,
                                        _prop("v", u, embed),
                                        _prop("v", u, pos))
