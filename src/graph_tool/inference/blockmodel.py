@@ -254,7 +254,9 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
             # if a partition is available, we will incorporate it.
             if isinstance(b, numpy.ndarray):
                 self.b = g.new_vp("int")
-                self.b.fa = b
+                ba = numpy.zeros(len(self.b.fa), dtype="int")
+                ba[:min(len(ba), len(b))] = b[:min(len(ba), len(b))]
+                self.b.fa = ba
             else:
                 self.b = b = g.own_property(b.copy(value_type="int32_t"))
             if B is None:
