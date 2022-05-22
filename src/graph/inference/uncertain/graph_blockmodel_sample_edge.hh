@@ -133,15 +133,19 @@ public:
         auto me = _state._emat.get_me(r, s);
         if (me != _state._emat.get_null_edge())
         {
-            auto ers = _state._mrs[me] + delta;
+            int ers = _state._mrs[me] + (delta < 0) ? delta : 0;
             if (ers == 0)
             {
                 _rs_sampler.remove(_rs_pos[me]);
                 _rs_pos[me] = std::numeric_limits<size_t>::max();
             }
-            else
+            else if (delta == ers)
             {
                 _rs_pos[me] = _rs_sampler.insert({r,s}, ers);
+            }
+            else
+            {
+                _rs_sampler.update(_rs_pos[me], delta, true);
             }
         }
 
@@ -152,15 +156,18 @@ public:
                 get<0>(get_deg(v, _state._eweight, _state._degs, _state._g)) :
                 get<1>(get_deg(v, _state._eweight, _state._degs, _state._g));
 
-            if (u != v || graph_tool::is_directed(_state._g))
+            if (delta < 0)
             {
-                ku += delta;
-                kv += delta;
-            }
-            else
-            {
-                ku += 2 * delta;
-                kv += 2 * delta;
+                if (u != v || graph_tool::is_directed(_state._g))
+                {
+                    ku += delta;
+                    kv += delta;
+                }
+                else
+                {
+                    ku += 2 * delta;
+                    kv += 2 * delta;
+                }
             }
 
             _v_out_sampler[r].remove(_v_out_pos[u]);

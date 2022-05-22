@@ -338,17 +338,21 @@ struct MCMC
                 {
                     if (l == 0)
                         _edge_sampler.update_edge(u, v, m, -1);
-                    if (nl == 0)
-                        _edge_sampler.update_edge(u, v, m, 1);
                 }
                 for (size_t i = 0; i < m; ++i)
                     _state.remove_edge(l, u, v);
                 for (size_t i = 0; i < m; ++i)
                     _state.add_edge(nl, u, v);
+
+                if (_measured)
+                {
+                    if (nl == 0)
+                        _edge_sampler.update_edge(u, v, m, 1);
+                }
             }
             else
             {
-                if (_measured && l == 0)
+                if (_measured && l == 0 && dm < 0)
                     _edge_sampler.update_edge(u, v, m, dm);
 
                 if (dm < 0)
@@ -361,6 +365,9 @@ struct MCMC
                     for (int i = 0; i < dm; ++i)
                         _state.add_edge(l, u, v);
                 }
+
+                if (_measured && l == 0 && dm > 0)
+                    _edge_sampler.update_edge(u, v, m, dm);
             }
         }
 

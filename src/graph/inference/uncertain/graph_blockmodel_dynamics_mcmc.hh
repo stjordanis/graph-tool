@@ -260,11 +260,16 @@ struct MCMC
             else
             {
                 size_t m = get<0>(node_state(u, v));
-                _edge_sampler.update_edge(u, v, m, dm);
                 if (dm < 0)
+                {
+                    _edge_sampler.update_edge(u, v, m, dm);
                     _state.remove_edge(u, v, -dm);
+                }
                 else
+                {
                     _state.add_edge(u, v, dm, dx);
+                    _edge_sampler.update_edge(u, v, m, dm);
+                }
             }
         }
 

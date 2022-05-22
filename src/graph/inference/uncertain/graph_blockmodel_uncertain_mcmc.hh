@@ -147,12 +147,16 @@ struct MCMC
             std::tie(u, v) = get_edge();
             size_t m = node_state(u, v);
 
-            _edge_sampler.update_edge(u, v, m, dm);
-
             if (dm < 0)
+            {
+                _edge_sampler.update_edge(u, v, m, dm);
                 _state.remove_edge(u, v, -dm);
+            }
             else
+            {
                 _state.add_edge(u, v, dm);
+                _edge_sampler.update_edge(u, v, m, dm);
+            }
         }
 
         bool is_deterministic()

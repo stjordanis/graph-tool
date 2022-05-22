@@ -365,6 +365,8 @@ public:
             _emat.remove_me(me, _bg);
             if (_coupled_state != nullptr)
                 _coupled_state->remove_edge(me);
+            else
+                boost::remove_edge(me, _bg);
         }
         assert(e != _emat.get_null_edge());
         boost::remove_edge(e, _g);
@@ -787,12 +789,12 @@ public:
 
     void add_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
     {
-        modify_edge<true, false>(u, v, e, dw);
+        modify_edge<true, true>(u, v, e, dw);
     }
 
     void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
     {
-        modify_edge<false, false>(u, v, e, dw);
+        modify_edge<false, true>(u, v, e, dw);
     }
 
     void set_vertex_weight(size_t v, int w)

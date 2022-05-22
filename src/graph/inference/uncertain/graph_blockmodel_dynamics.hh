@@ -238,7 +238,7 @@ struct Dynamics
                     _dstate.template update_edge<false>(v, u, x);
             }
 
-            _E--;
+            _E -= dw;
         }
 
         void add_edge(size_t u, size_t v, int dw, double x)
@@ -256,7 +256,8 @@ struct Dynamics
                 if (u != v && !graph_tool::is_directed(_u))
                     _dstate.template update_edge<true>(v, u, x);
             }
-            _E++;
+
+            _E += dw;
         }
 
         void update_edge(size_t u, size_t v, double dx)
