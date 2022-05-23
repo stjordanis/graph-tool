@@ -55,6 +55,7 @@ State classes
    LayeredBlockState
    NestedBlockState
    PPBlockState
+   RankedBlockState
    ModularityState
    NormCutState
    TemperingState
