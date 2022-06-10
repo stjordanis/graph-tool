@@ -1091,10 +1091,10 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         l, r = x.a.min(), x.a.max()
         b, t = y.a.min(), y.a.max()
 
-        adjust_default_sizes(g, (r - l, t - b), vprops, eprops)
+        adjust_default_sizes(g, (r - l, t - b), vprops, eprops, min_pen_width=0)
 
         if ink_scale != 1:
-            scale_ink(ink_scale, vprops, eprops)
+            scale_ink(ink_scale, vprops, eprops, min_pen_width=0)
 
         artist = GraphArtist(g, pos, vprops, eprops, ax, vorder=vorder,
                              eorder=eorder, nodesfirst=nodesfirst, **kwargs)
@@ -1236,9 +1236,8 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         del srf
         return pos
 
-_min_pen_width = 0.05
-
-def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
+def adjust_default_sizes(g, geometry, vprops, eprops, force=False,
+                         min_pen_width=0.05):
     if "size" not in vprops or force:
         A = geometry[0] * geometry[1]
         N = max(g.num_vertices(), 1)
@@ -1248,9 +1247,9 @@ def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
         size = vprops["size"]
         if isinstance(vprops["size"], PropertyMap):
             size = vprops["size"].fa.mean()
-        vprops["pen_width"] = max(size / 10, _min_pen_width)
+        vprops["pen_width"] = max(size / 10, min_pen_width)
         if "pen_width" not in eprops or force:
-            eprops["pen_width"] = max(size / 10, _min_pen_width)
+            eprops["pen_width"] = max(size / 10, min_pen_width)
         if "marker_size" not in eprops or force:
             eprops["marker_size"] = size * 0.8
 
@@ -1267,7 +1266,7 @@ def adjust_default_sizes(g, geometry, vprops, eprops, force=False):
         eprops["font_size"] =  size * .6
 
 
-def scale_ink(scale, vprops, eprops, copy=True):
+def scale_ink(scale, vprops, eprops, copy=True, min_pen_width=0.05):
     vink_props = ["size", "pen_width", "font_size", "text_out_width"]
     eink_props = ["marker_size", "pen_width", "font_size", "text_distance",
                   "text_out_width"]
@@ -1283,13 +1282,16 @@ def scale_ink(scale, vprops, eprops, copy=True):
                 props[p].fa *= scale
                 if p == "pen_width":
                     x = props[p].fa
-                    x[x<_min_pen_width] = _min_pen_width
+                    x[x<min_pen_width] = min_pen_width
                     props[p].fa = x
             else:
-                props[p] *= scale
+                if copy:
+                    props[p] = props[p] * scale
+                else:
+                    props[p] *= scale
                 if p == "pen_width":
                     props[p] = max(props[p],
-                                   _min_pen_width)
+                                   min_pen_width)
 
 def get_bb(g, pos):
     pos_x, pos_y = ungroup_vector_property(pos, [0, 1])
@@ -1570,7 +1572,7 @@ class GraphArtist(matplotlib.artist.Artist):
             ctx.clip()
             ctx.set_matrix(m_s)
 
-            scale_ink(np.mean([m[0,0], m[1,1]]), vprops, eprops)
+            scale_ink(np.mean([m[0,0], m[1,1]]), vprops, eprops, min_pen_width=0)
 
             x = np.ones(3)
             for v in self.g.vertices():
