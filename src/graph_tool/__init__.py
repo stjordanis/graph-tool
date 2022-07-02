@@ -3598,6 +3598,15 @@ def load_graph_from_csv(file_name, directed=False, eprop_types=None,
                 row[1] = int(row[1])
                 yield row
         r = conv(r)
+    elif hash_type != "string":
+        tp = _python_type(hash_type)
+        def conv(r):
+            for row in r:
+                row = list(row)
+                row[0] = tp(row[0])
+                row[1] = tp(row[1])
+                yield row
+        r = conv(r)
 
     line = list(next(r))
     g = Graph(directed=directed)
