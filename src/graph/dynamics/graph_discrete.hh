@@ -440,29 +440,31 @@ public:
     bool update_node(Graph& g, size_t v, smap_t& s_out, RNG& rng)
     {
         auto s = _s[v];
+        std::uniform_int_distribution<int32_t> sample_q(0, _q - 1);
+
         std::bernoulli_distribution random(_r);
         if (_r > 0 && random(rng))
         {
-            std::uniform_int_distribution<int32_t> sample(0, _q - 1);
-            auto t = sample(rng);
+            auto t = sample_q(rng);
             s_out[v] = t;
             return s != t;
         }
 
-        size_t w;
+        int32_t t;
         if (graph_tool::is_directed(g))
         {
             if (in_degreeS()(v, g) == 0)
-                return 0;
-            w = random_in_neighbor(v, g, rng);
+                t = s;
+            else
+                t = _s[random_in_neighbor(v, g, rng)];
         }
         else
         {
             if (out_degree(v, g) == 0)
-                return 0;
-            w = random_out_neighbor(v, g, rng);
+                t = s;
+            else
+                t = _s[random_out_neighbor(v, g, rng)];
         }
-        auto t = _s[w];
         s_out[v] = t;
         return s != t;
     }
