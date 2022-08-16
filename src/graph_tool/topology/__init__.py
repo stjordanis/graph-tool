@@ -1044,7 +1044,7 @@ def dominator_tree(g, root, dom_map=None):
         Graph to be used.
     root : :class:`~graph_tool.Vertex`
         The root vertex.
-    dom_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    dom_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         If provided, the dominator map will be written in this property map.
 
     Returns
@@ -1446,10 +1446,10 @@ def label_biconnected_components(g, eprop=None, vprop=None):
     g : :class:`~graph_tool.Graph`
         Graph to be used.
 
-    eprop : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
+    eprop : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property to label the biconnected components.
 
-    vprop : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    vprop : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property to mark the articulation points. If none is supplied,
         one is created.
 
@@ -2037,11 +2037,11 @@ def shortest_path(g, source, target, weights=None, negative_weights=False,
         Source vertex of the search.
     target : :class:`~graph_tool.Vertex`
         Target vertex of the search.
-    weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
+    weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         The edge weights.
     negative_weights : ``bool`` (optional, default: ``False``)
         If ``True``, this will trigger the use of the Bellman-Ford algorithm.
-    pred_map :  :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    pred_map :  :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the predecessors in the search tree. If this is
         provided, the shortest paths are not computed, and are obtained directly
         from this map.
@@ -2151,7 +2151,7 @@ def all_predecessors(g, dist_map, pred_map, weights=None, epsilon=1e-8):
         vertices.
     pred_map : :class:`~graph_tool.VertexPropertyMap`
         Vertex property map with the predecessors in the search tree.
-    weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
+    weights : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         The edge weights.
     epsilon : ``float`` (optional, default: ``1e-8``)
         Maximum relative difference between distances to be considered "equal",
@@ -2186,14 +2186,14 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
         Source vertex of the search.
     target : :class:`~graph_tool.Vertex`
         Target vertex of the search.
-    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the distances from ``source`` to all other
         vertices.
-    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the predecessors in the search tree. If this is
         provided, the shortest paths are not computed, and are obtained directly
         from this map.
-    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vector-valued vertex property map with all possible predecessors in the
         search tree. If this is provided, the shortest paths are obtained
         directly from this map.
@@ -2269,14 +2269,14 @@ def random_shortest_path(g, source, target, dist_map=None, pred_map=None,
         Source vertex of the search.
     target : :class:`~graph_tool.Vertex`
         Target vertex of the search.
-    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the distances from ``source`` to all other
         vertices.
-    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the predecessors in the search tree. If this is
         provided, the shortest paths are not computed, and are obtained directly
         from this map.
-    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vector-valued vertex property map with all possible predecessors in the
         search tree. If this is provided, the shortest paths are obtained
         directly from this map.
@@ -2372,14 +2372,14 @@ def count_shortest_paths(g, source, target, dist_map=None, pred_map=None,
         Source vertex of the search.
     target : :class:`~graph_tool.Vertex`
         Target vertex of the search.
-    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    dist_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the distances from ``source`` to all other
         vertices.
-    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    pred_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex property map with the predecessors in the search tree. If this is
         provided, the shortest paths are not computed, and are obtained directly
         from this map.
-    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    all_preds_map : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vector-valued vertex property map with all possible predecessors in the
         search tree. If this is provided, the shortest paths are obtained
         directly from this map.
@@ -2503,7 +2503,7 @@ def all_circuits(g, unique=False):
         A directed graph to be used. (Undirected graphs are also accepted, in
         which case each undirected edge is assumed to be equivalent to two
         directed edges in both directions.)
-    unique : ``bool`` (optional, default: None)
+    unique : ``bool`` (optional, default: ``None``)
         If ``True``, parallel edges and self-loops will be ignored.
 
     Returns
@@ -3119,7 +3119,7 @@ def max_independent_vertex_set(g, high_deg=False, mivs=None):
     return mivs
 
 
-def edge_reciprocity(g):
+def edge_reciprocity(g, weight=None):
     r"""Calculate the edge reciprocity of the graph.
 
     Parameters
@@ -3127,6 +3127,8 @@ def edge_reciprocity(g):
     g : :class:`~graph_tool.Graph`
         Graph to be used
         edges.
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        Edge weights.
 
     Returns
     -------
@@ -3140,7 +3142,12 @@ def edge_reciprocity(g):
     :math:`E^\leftrightarrow` and :math:`E` are the number of bidirectional and
     all edges in the graph, respectively.
 
+    If weights are provided, the number of edges is replaced by the sum of edge
+    weights.
+
     The algorithm runs with complexity :math:`O(E + V)`.
+
+    If enabled during compilation, this algorithm runs in parallel.
 
     Examples
     --------
@@ -3190,7 +3197,7 @@ def tsp_tour(g, src, weight=None):
         Graph to be used. The graph must be undirected.
     src : :class:`~graph_tool.Vertex`
         The source (and target) of the tour.
-    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: None)
+    weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge weights.
 
     Returns
@@ -3234,9 +3241,9 @@ def sequential_vertex_coloring(g, order=None, color=None):
     ----------
     g : :class:`~graph_tool.Graph`
         Graph to be used.
-    order : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    order : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Order with which the vertices will be colored.
-    color : :class:`~graph_tool.VertexPropertyMap` (optional, default: None)
+    color : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Integer-valued vertex property map to store the colors.
 
     Returns
