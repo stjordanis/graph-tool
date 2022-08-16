@@ -27,10 +27,11 @@ using namespace graph_tool;
 
 struct get_reciprocity
 {
-    template <class Graph>
-    void operator()(const Graph& g, double& reciprocity) const
+    template <class Graph, class Weight>
+    void operator()(const Graph& g, Weight w, double& reciprocity) const
     {
-        size_t L = 0, Lbd = 0;
+        typedef typename property_traits<Weight>::value_type val_t;
+        val_t L = 0, Lbd = 0;
 
         #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \
             reduction(+: L, Lbd)
@@ -38,31 +39,40 @@ struct get_reciprocity
             (g,
              [&](auto e)
              {
+                 auto we = w[e];
                  auto v = source(e, g);
                  auto t = target(e, g);
-                 for (auto a : adjacent_vertices_range(t, g))
+                 for (auto er : out_edges_range(t, g))
                  {
-                     if (a == v)
+                     auto u = target(er, g);
+                     if (u == v)
                      {
-                         Lbd++;
+                         Lbd += std::min(w[er], we);
                          break;
                      }
                  }
-                 L++;
+                 L += w[e];
              });
         reciprocity = Lbd / double(L);
     }
 };
 
-double reciprocity(GraphInterface& gi)
+double reciprocity(GraphInterface& gi, boost::any aw)
 {
+    typedef UnityPropertyMap<int,GraphInterface::edge_t> weight_map_t;
+    typedef boost::mpl::push_back<edge_scalar_properties, weight_map_t>::type
+        weight_props_t;
+
+    if (aw.empty())
+        aw = weight_map_t();
+
     double reciprocity;
     run_action<>()
         (gi,
-         [&](auto&& graph)
+         [&](auto&& graph, auto w)
          {
              return get_reciprocity()
-                 (std::forward<decltype(graph)>(graph), reciprocity);
-         })();
+                 (std::forward<decltype(graph)>(graph), w, reciprocity);
+         }, weight_props_t())(aw);
     return reciprocity;
 }

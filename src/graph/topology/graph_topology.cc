@@ -43,7 +43,7 @@ python::object subgraph_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
                                     boost::any edge_label1,
                                     boost::any edge_label2, size_t max_n,
                                     bool induced, bool iso, bool generator);
-double reciprocity(GraphInterface& gi);
+double reciprocity(GraphInterface& gi, boost::any aw);
 size_t sequential_coloring(GraphInterface& gi, boost::any order,
                            boost::any color);
 bool is_bipartite(GraphInterface& gi, boost::any part_map, bool find_cycle,

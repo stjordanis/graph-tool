@@ -3171,7 +3171,12 @@ def edge_reciprocity(g):
 
     """
 
-    r = libgraph_tool_topology.reciprocity(g._Graph__graph)
+    if weight is None:
+        ew = ibcore.any()
+    else:
+        _check_prop_scalar(weight, name="eweight")
+        ew = _prop("e", g, weight)
+    r = libgraph_tool_topology.reciprocity(g._Graph__graph, ew)
     return r
 
 
