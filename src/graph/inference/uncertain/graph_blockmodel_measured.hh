@@ -45,6 +45,7 @@ using namespace std;
     ((lq,, double, 0))                                                         \
     ((aE,, double, 0))                                                         \
     ((E_prior,, bool, 0))                                                      \
+    ((max_w,, int, 0))                                                         \
     ((self_loops,, bool, 0))
 
 template <class BlockState>
@@ -257,6 +258,11 @@ struct Measured
         double add_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
+
+            auto w = (e == _null_edge) ? 0 : _eweight[e];
+            if (w + dw > _max_w)
+                return numeric_limits<double>::infinity();
+
             double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw,
                                                                    ea);
             if (ea.density && _E_prior)
