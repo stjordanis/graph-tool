@@ -34,6 +34,8 @@ extern vector<double> __safelog_cache;
 extern vector<double> __xlogx_cache;
 extern vector<double> __lgamma_cache;
 
+constexpr size_t __max_size = (500 * (1 << 20)) / sizeof(double);
+
 void init_safelog(size_t x);
 
 template <class T>
@@ -51,7 +53,7 @@ inline double safelog_fast(T x)
 {
     if (size_t(x) >= __safelog_cache.size())
     {
-        if constexpr (Init)
+        if (Init && size_t(x) < __max_size)
             init_safelog(x);
         else
             return safelog(x);
@@ -74,7 +76,7 @@ inline double xlogx_fast(T x)
 {
     if (size_t(x) >= __xlogx_cache.size())
     {
-        if constexpr (Init)
+        if (Init && size_t(x) < __max_size)
             init_xlogx(x);
         else
             return xlogx(x);
@@ -90,7 +92,7 @@ inline double lgamma_fast(T x)
 {
     if (size_t(x) >= __lgamma_cache.size())
     {
-        if constexpr (Init)
+        if (Init && size_t(x) < __max_size)
             init_lgamma(x);
         else
             return lgamma(x);
