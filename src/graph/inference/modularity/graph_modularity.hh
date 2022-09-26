@@ -39,11 +39,13 @@ struct modularity_entropy_args_t
 
 
 typedef vprop_map_t<int32_t>::type vmap_t;
+typedef eprop_map_t<int32_t>::type emap_t;
 
 #define BLOCK_STATE_params                                                     \
     ((g, &, never_directed, 1))                                                \
     ((_abg, &, boost::any&, 0))                                                \
     ((b,, vmap_t, 0))                                                          \
+    ((eweight,, emap_t, 0))                                                    \
     ((er, &, vector<size_t>&, 0))                                              \
     ((err, &, vector<size_t>&, 0))
 
@@ -65,7 +67,7 @@ public:
         : ModularityStateBase<Ts...>(std::forward<ATs>(args)...),
         _bg(boost::any_cast<std::reference_wrapper<bg_t>>(__abg)),
         _N(HardNumVertices()(_g)),
-        _E(HardNumEdges()(_g)),
+        _E(0),
         _bclabel(_N),
         _pclabel(_N),
         _wr(_N)
@@ -77,7 +79,7 @@ public:
         for (auto v : vertices_range(_g))
         {
             auto r = _b[v];
-            _er[r] += out_degree(v, _g);
+            _er[r] += out_degreeS()(v, _g, _eweight);
             _wr[r]++;
         }
 
@@ -94,7 +96,8 @@ public:
             auto r = _b[source(e, _g)];
             auto s = _b[target(e, _g)];
             if (r == s)
-                _err[r] += 2;
+                _err[r] += 2 * _eweight[e];
+            _E += _eweight[e];
         }
     }
 
@@ -120,7 +123,6 @@ public:
     typedef int m_entries_t;
 
     UnityPropertyMap<int,GraphInterface::vertex_t> _vweight;
-    UnityPropertyMap<int,GraphInterface::edge_t> _eweight;
     simple_degs_t _degs;
 
     typedef modularity_entropy_args_t _entropy_args_t;
@@ -139,18 +141,19 @@ public:
         size_t m = 0;
         for (auto e : out_edges_range(v, _g))
         {
-            ++k;
+            auto ew = _eweight[e];
+            k += ew;
             auto u = target(e, _g);
             if (u == v)
             {
-                ++m;
+                m += ew;
                 continue;
             }
             size_t s = _b[u];
             if (s == r)
-                _err[r] -= 2;
+                _err[r] -= 2 * ew;
             else if (s == nr)
-                _err[nr] += 2;
+                _err[nr] += 2 * ew;
         }
 
         _err[r] -= m;
@@ -197,18 +200,19 @@ public:
         size_t m = 0;
         for (auto e : out_edges_range(v, _g))
         {
-            ++k;
+            auto ew = _eweight[e];
+            k += ew;
             auto u = target(e, _g);
             if (u == v)
             {
-                ++m;
+                m += ew;
                 continue;
             }
             size_t s = _b[u];
             if (s == r)
-                derr[0] -= 2;
+                derr[0] -= 2 * ew;
             else if (s == nr)
-                derr[1] += 2;
+                derr[1] += 2 * ew;
         }
         derr[0] -= m;
         derr[1] += m;

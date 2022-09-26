@@ -110,10 +110,11 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     b : :class:`~graph_tool.PropertyMap` (optional, default: ``None``)
         Initial partition. If not supplied, a partition into a single group will
         be used.
-
+    eweight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
+        Edge multiplicities (for multigraphs).
     """
 
-    def __init__(self, g, b=None):
+    def __init__(self, g, b=None, eweight=None):
 
         self.g = GraphView(g, directed=False)
         if b is None:
@@ -122,6 +123,14 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
             self.b = self.g.own_property(b).copy("int32_t")
         else:
             self.b = self.g.new_vp("int32_t", vals=b)
+
+        if eweight is None:
+            eweight = g.new_ep("int", 1)
+        elif eweight.value_type() != "int32_t":
+            eweight = g.own_property(eweight.copy(value_type="int32_t"))
+        else:
+            eweight = g.own_property(eweight)
+        self.eweight = eweight
 
         self.er = Vector_size_t()
         self.err = Vector_size_t()
