@@ -3172,7 +3172,7 @@ def edge_reciprocity(g):
     """
 
     if weight is None:
-        ew = ibcore.any()
+        ew = libcore.any()
     else:
         _check_prop_scalar(weight, name="eweight")
         ew = _prop("e", g, weight)

@@ -51,7 +51,7 @@ struct get_reciprocity
                          break;
                      }
                  }
-                 L += w[e];
+                 L += we;
              });
         reciprocity = Lbd / double(L);
     }
