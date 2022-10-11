@@ -19,6 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from .. import Graph, _get_rng, Vector_size_t
+from .. decorators import _limit_args
 from . blockmodel import DictState
 from . base_states import *
 from . partition_modes import contingency_graph
@@ -205,7 +206,8 @@ def variation_information(x, y, norm=False):
         VI /= np.log(N)
     return float(VI)
 
-def mutual_information(x, y, norm=False):
+@_limit_args({"avg_method": ["min", "max", "arithmetic", "geometric"]})
+def mutual_information(x, y, norm=False, adjusted=False, avg_method="arithmetic"):
     r"""Returns the mutual information between two partitions.
 
     Parameters
@@ -216,6 +218,13 @@ def mutual_information(x, y, norm=False):
         Second partition.
     norm : (optional, default: ``True``)
         If ``True``, the result will be normalized in the range :math:`[0,1]`.
+    adjusted : (optional, default: ``False``)
+        If ``True``, the adjusted mutual information will be computed. Note that
+        if ``adjusted == True``, the parameter ``norm`` is ignored.
+    avg_method : (optional, default: ``"arithmetic"``)
+        Determines how the adjusted normalization average should be
+        computed. Must be one of: ``"min"``, ``"max"``, ``"arithmethic"``, or
+        ``"geometric"``. This option has an effect only if ``adjusted == True``.
 
     Returns
     -------
@@ -246,8 +255,33 @@ def mutual_information(x, y, norm=False):
     -\frac{1}{N}\sum_rn_r\ln\frac{n_r}{N}` and :math:`H_x =
     -\frac{1}{N}\sum_rn'_r\ln\frac{n'_r}{N}`.
 
+    If ``adjusted == True``, the adjusted mutual information is returned, defined
+    as [vinh_information_2009]_:
+
+    .. math::
+
+       \text{AMI}(\boldsymbol x,\boldsymbol y) =
+       \frac{\text{MI}(\boldsymbol x,\boldsymbol y) - E[\text{MI}(\boldsymbol x,\boldsymbol y)]}
+       {\text{avg}(H_x, H_y) - E[\text{MI}(\boldsymbol x,\boldsymbol y)]},
+
+    where
+
+    .. math::
+
+        E[\text{MI}(\boldsymbol x,\boldsymbol y)] =
+        \sum_r\sum_s\sum_{m=\max(1,n_r+n'_s-N)}^{\min(n_r, n'_s)}
+        \frac{m}{N} \ln \left( \frac{Nm}{n_rn'_s}\right) \times \\
+        \frac{n_r!n'_s!(N-n_r)!(N-n'_s)!}{N!m!(n_r-m)!(n'_s-m)!(N-n_r-n'_s+m)!}
+
+    is the expected value of :math:`\text{MI}(\boldsymbol x,\boldsymbol y)` if
+    either partition has its labels randomly permuted, and :math:`\text{avg}` is the
+    function corresponding to the parameter ``avg_methdod``.
+
     This algorithm runs in time :math:`O(N)` where :math:`N` is
     the length of :math:`\boldsymbol x` and :math:`\boldsymbol y`.
+
+    If ``adjusted == True``, the algorithm runs in parallel if this was enabled
+    during compilation.
 
     Examples
     --------
@@ -255,6 +289,15 @@ def mutual_information(x, y, norm=False):
     >>> y = np.random.randint(0, 10, 1000)
     >>> gt.mutual_information(x, y)
     0.050321...
+
+    References
+    ----------
+    .. [vinh_information_209] Nguyen Xuan Vinh, Julien Epps, and James
+       Bailey. 2009. “Information theoretic measures for clusterings comparison:
+       is a correction for chance necessary?”, In Proceedings of the 26th Annual
+       International Conference on Machine Learning (ICML '09). Association for
+       Computing Machinery, New York, NY, USA,
+       1073–1080. :doi:`10.1145/1553374.1553511`.
 
     """
     g = contingency_graph(x, y)
@@ -268,7 +311,27 @@ def mutual_information(x, y, norm=False):
     MI = (mrs * np.log(mrs)).sum() - (nr * np.log(nr)).sum()
     MI /= N
     MI += np.log(N)
-    if norm:
+    if adjusted:
+        n1 = nr[part == 0].copy()
+        n2 = nr[part == 1].copy()
+        EMI = libinference.expected_MI(n1, n2)
+        H1 = -(n1 * np.log(n1)).sum() / N + np.log(N)
+        H2 = -(n2 * np.log(n2)).sum() / N + np.log(N)
+        if avg_method == "max":
+            avg = max(H1, H2)
+        elif avg_method == "min":
+            avg = min(H1, H2)
+        elif avg_method == "arithmetic":
+            avg = (H1 + H2) / 2
+        elif avg_method == "geometric":
+            avg = sqrt(H1 * H2)
+        R = avg - EMI
+        if R < 0:
+            R = min(R, -np.finfo("float64").eps)
+        else:
+            R = max(R, np.finfo("float64").eps)
+        MI = (MI - EMI)/ R
+    elif norm:
         Hx = -((nr * np.log(nr))[part == 0]).sum() / N + np.log(N)
         Hy = -((nr * np.log(nr))[part == 1]).sum() / N + np.log(N)
         MI /= (Hx + Hy)/2

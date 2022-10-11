@@ -65,4 +65,43 @@ void export_rmi_center_state()
              auto ns = get_array<int32_t, 1>(ons);
              return log_omega(nr, ns, [](auto& x) {return x;});
          });
+
+    def("expected_MI",
+        +[](python::object onr, python::object ons) -> double
+         {
+             auto nr = get_array<int32_t, 1>(onr);
+             auto ns = get_array<int32_t, 1>(ons);
+
+             int32_t N = 0;
+             for (auto c : nr)
+                 N += c;
+
+
+             double EMI = 0;
+
+             init_safelog(2 * N + 1);
+             init_lgamma(2 * N + 1);
+
+             #pragma omp parallel for reduction(+:EMI) collapse(2)
+             for (size_t r = 0; r < nr.size(); ++r)
+             {
+                 for (size_t s = 0; s < ns.size(); ++s)
+                 {
+                     auto a = nr[r];
+                     auto b = ns[s];
+                     for (int32_t m = max(1, a + b - N); m <= min(a, b); ++m)
+                     {
+                         double T = (m * (safelog_fast<false>(m) + safelog_fast<false>(N) - safelog_fast<false>(a) - safelog_fast<false>(b))) / N;
+                         double lT = lgamma_fast<false>(a + 1) + lgamma_fast<false>(b + 1);
+                         lT += lgamma_fast<false>(N - a + 1) + lgamma_fast<false>(N - b + 1);
+                         lT -= lgamma_fast<false>(N + 1) + lgamma_fast<false>(m + 1);
+                         lT -= lgamma_fast<false>(a - m + 1) + lgamma_fast<false>(b - m + 1);
+                         lT -= lgamma_fast<false>(N - a - b + m + 1);
+                         EMI += T * exp(lT);
+                     }
+                 }
+             }
+
+             return EMI;
+         });
 }
