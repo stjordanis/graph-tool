@@ -211,14 +211,16 @@ public:
         if constexpr (Add)
         {
             _delta[f] += d;
-            tuple_op(_edelta[f], [&](auto&& r, auto&& v){ r += v; },
-                     std::forward<DVals>(delta)...);
+            if constexpr (sizeof...(delta) > 0)
+                tuple_op(_edelta[f], [&](auto&& r, auto&& v){ r += v; },
+                         std::forward<DVals>(delta)...);
         }
         else
         {
             _delta[f] -= d;
-            tuple_op(_edelta[f], [&](auto&& r, auto&& v){ r -= v; },
-                     std::forward<DVals>(delta)...);
+            if constexpr (sizeof...(delta) > 0)
+                tuple_op(_edelta[f], [&](auto&& r, auto&& v){ r -= v; },
+                         std::forward<DVals>(delta)...);
         }
     }
 
