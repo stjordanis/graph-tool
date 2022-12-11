@@ -89,7 +89,6 @@ in_hist = vertex_hist(g, "in")
 
 y = in_hist[0]
 err = sqrt(in_hist[0])
-err[err >= y] = y[err >= y] - 1e-2
 
 figure(figsize=(6,4))
 errorbar(in_hist[1][:-1], in_hist[0], fmt="o", yerr=err,
