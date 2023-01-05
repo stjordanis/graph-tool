@@ -748,6 +748,7 @@ struct Multilevel: public State
         double S_best = std::numeric_limits<double>::infinity();
 
         map<size_t, std::pair<double, std::vector<Group>>> cache;
+
         auto put_cache = [&](size_t B, double S)
         {
             assert(cache.find(B) == cache.end());
@@ -837,7 +838,7 @@ struct Multilevel: public State
             {
                 push_b(vs);
                 double S = 0;
-                if (rs.size() > B_min)
+                if (rs.size() != B_min)
                 {
                     for (auto& v : vs)
                     {
@@ -857,7 +858,7 @@ struct Multilevel: public State
         {
             push_b(vs);
             double S = 0;
-            if (rs.size() > B_min)
+            if (rs.size() > 1)
             {
                 auto u = uniform_sample(vs, rng);
                 auto t = State::get_group(u);
@@ -923,7 +924,7 @@ struct Multilevel: public State
             State::relax_update(false);
             get_cache(rs.size(), rs);
         }
-        else
+        else if (B_max != B_min)
         {
             double S = 0;
             for (auto& v : vs)
