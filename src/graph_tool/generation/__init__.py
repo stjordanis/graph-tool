@@ -357,7 +357,7 @@ def random_graph(N, deg_sampler, directed=True,
         type(block_membership) is types.LambdaType):
         btype = block_type
         bm = []
-        if len(inspect.getargspec(block_membership)[0]) == 0:
+        if len(inspect.getfullargspec(block_membership)[0]) == 0:
             for i in range(N):
                 bm.append(block_membership())
         else:
@@ -367,7 +367,7 @@ def random_graph(N, deg_sampler, directed=True,
     elif block_membership is not None:
         btype = _gt_type(block_membership[0])
 
-    if len(inspect.getargspec(deg_sampler)[0]) > 0:
+    if len(inspect.getfullargspec(deg_sampler)[0]) > 0:
         if block_membership is not None:
             sampler = lambda i: deg_sampler(i, block_membership[i])
         else:
