@@ -67,6 +67,8 @@ dnl set default visibility
 dnl set default optimizations
 [CXXFLAGS="-O3 ${CXXFLAGS}"]
 
+dnl disable annoying boost warnings
+[CPPFLAGS="-DBOOST_ALLOW_DEPRECATED_HEADERS ${CPPFLAGS}"]
 
 dnl OpenMP
 AC_DEFINE([OPENMP_MIN_THRESH], 300, [default minimum number of vertices for parallel loops])
@@ -217,8 +219,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#include "Python.h"]]
 
 dnl cairo
 if test "$USING_CAIRO" = "yes"; then
-   PKG_CHECK_MODULES(CAIROMM, [cairomm-1.0], AC_DEFINE([HAVE_CAIROMM], [1],
-                     [Cairomm is available]), [])
+   PKG_CHECK_MODULES(CAIROMM, [cairomm-1.16],
+                     [AC_DEFINE([HAVE_CAIROMM], [1], [Cairomm is available]),
+                      AC_DEFINE([HAVE_CAIROMM_1_16], [1], [Cairomm 1.16 is available])],
+                     [PKG_CHECK_MODULES(CAIROMM, [cairomm-1.0],
+                                        AC_DEFINE([HAVE_CAIROMM], [1], [Cairomm is available]), [])])
    # Workaround for buggy cairomm installs (see #410)
    CAIROMM_CFLAGS=`echo $CAIROMM_CFLAGS | sed s/-std=c++11//`
    AC_SUBST(CAIROMM_CFLAGS)

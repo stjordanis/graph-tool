@@ -40,6 +40,20 @@
 #include <cairomm/surface.h>
 #include PYCAIRO_HEADER
 
+#ifdef HAVE_CAIROMM_1_16
+using FontSlant = Cairo::ToyFontFace::Slant;
+using FontWeight = Cairo::ToyFontFace::Weight;
+#define FILL_RULE_EVEN_ODD Cairo::Context::FillRule::EVEN_ODD
+#define OPERATOR_SOURCE Cairo::Context::Operator::SOURCE
+#define OPERATOR_OVER Cairo::Context::Operator::OVER
+#else
+using FontSlant = Cairo::FontSlant;
+using FontWeight = Cairo::FontWeight;
+#define FILL_RULE_EVEN_ODD Cairo::FILL_RULE_EVEN_ODD
+#define OPERATOR_SOURCE Cairo::OPERATOR_SOURCE
+#define OPERATOR_OVER Cairo::OPERATOR_OVER
+#endif
+
 #include <boost/mpl/map/map50.hpp>
 
 #include <chrono>
@@ -634,8 +648,8 @@ public:
             if (text_pos == -1)
             {
                 cr.select_font_face(_attrs.template get<string>(VERTEX_FONT_FAMILY),
-                                    static_cast<Cairo::FontSlant>(_attrs.template get<int32_t>(VERTEX_FONT_SLANT)),
-                                    static_cast<Cairo::FontWeight>(_attrs.template get<int32_t>(VERTEX_FONT_WEIGHT)));
+                                    static_cast<FontSlant>(_attrs.template get<int32_t>(VERTEX_FONT_SLANT)),
+                                    static_cast<FontWeight>(_attrs.template get<int32_t>(VERTEX_FONT_WEIGHT)));
                 cr.set_font_size(get_user_dist(cr, _attrs.template get<double>(VERTEX_FONT_SIZE)));
                 Cairo::TextExtents extents;
                 cr.get_text_extents(text, extents);
@@ -968,8 +982,8 @@ public:
                 vector<double> text_offset;
 
                 cr.select_font_face(_attrs.template get<string>(VERTEX_FONT_FAMILY),
-                                    static_cast<Cairo::FontSlant>(_attrs.template get<int32_t>(VERTEX_FONT_SLANT)),
-                                    static_cast<Cairo::FontWeight>(_attrs.template get<int32_t>(VERTEX_FONT_WEIGHT)));
+                                    static_cast<FontSlant>(_attrs.template get<int32_t>(VERTEX_FONT_SLANT)),
+                                    static_cast<FontWeight>(_attrs.template get<int32_t>(VERTEX_FONT_WEIGHT)));
                 cr.set_font_size(get_user_dist(cr, _attrs.template get<double>(VERTEX_FONT_SIZE)));
                 text_pos = _attrs.template get<double>(VERTEX_TEXT_POSITION);
                 text_rotation = _attrs.template get<double>(VERTEX_TEXT_ROTATION);
@@ -1226,12 +1240,12 @@ public:
             _s.draw(cr, true);
             if (pos_begin != pos_end)
                 _t.draw(cr, true);
-            cr.set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+            cr.set_fill_rule(FILL_RULE_EVEN_ODD);
             cr.clip();
 
             // seamlessly blend in separate surface
             cr.push_group();
-            cr.set_operator(Cairo::OPERATOR_SOURCE);
+            cr.set_operator(OPERATOR_SOURCE);
             draw_edge_markers(pos_begin_marker, pos_begin_d, pos_end_marker,
                               pos_end_d, controls, marker_size, cr);
             if (has_gradient)
@@ -1275,7 +1289,7 @@ public:
             vector<double> empty;
             cr.set_dash(empty, 0);
             cr.pop_group_to_source();
-            cr.set_operator(Cairo::OPERATOR_OVER);
+            cr.set_operator(OPERATOR_OVER);
             cr.reset_clip();
             if (!has_gradient)
                 cr.paint_with_alpha(get<3>(color));
@@ -1298,7 +1312,7 @@ public:
                 cr.rectangle(sx1, sy1, sx2 - sx1, sy2 - sy1);
                 draw_edge_markers(pos_begin_marker, pos_begin_d, pos_end_marker,
                                   pos_end_d, controls, marker_size, cr);
-                cr.set_fill_rule(Cairo::FILL_RULE_EVEN_ODD);
+                cr.set_fill_rule(FILL_RULE_EVEN_ODD);
                 cr.clip();
 
                 cr.rectangle(sx1, sy1, sx2 - sx1, sy2 - sy1);
@@ -1363,8 +1377,8 @@ public:
         {
             cr.save();
             cr.select_font_face(_attrs.template get<string>(EDGE_FONT_FAMILY),
-                                static_cast<Cairo::FontSlant>(_attrs.template get<int32_t>(EDGE_FONT_SLANT)),
-                                static_cast<Cairo::FontWeight>(_attrs.template get<int32_t>(EDGE_FONT_WEIGHT)));
+                                static_cast<FontSlant>(_attrs.template get<int32_t>(EDGE_FONT_SLANT)),
+                                static_cast<FontWeight>(_attrs.template get<int32_t>(EDGE_FONT_WEIGHT)));
             cr.set_font_size(get_user_dist(cr, _attrs.template get<double>(EDGE_FONT_SIZE)));
             double text_dist = _attrs.template get<double>(EDGE_TEXT_DISTANCE);
             text_dist = get_user_dist(cr, text_dist);
