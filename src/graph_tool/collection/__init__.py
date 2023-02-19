@@ -318,7 +318,7 @@ class LazyDataDict(dict):
             return os.path.exists(fname)
         return True
     def __getitem__(self, k):
-        if k not in self:
+        if not super().__contains__(k):
             fname = get_data_path(k)
             if not os.path.exists(fname):
                 raise KeyError(k)
