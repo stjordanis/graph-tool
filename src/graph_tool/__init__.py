@@ -246,7 +246,7 @@ def _gt_type(obj):
         return "int32_t"
     if issubclass(t, (numpy.longlong, numpy.uint64, numpy.int64)):
         return "int64_t"
-    if issubclass(t, (float, numpy.float, numpy.float16, numpy.float32, numpy.float64)):
+    if issubclass(t, (float, numpy.float16, numpy.float32, numpy.float64)):
         return "double"
     if issubclass(t, numpy.float128):
         return "long double"
