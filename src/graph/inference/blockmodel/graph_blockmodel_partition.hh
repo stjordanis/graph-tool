@@ -183,6 +183,8 @@ public:
 
     double get_partition_dl()
     {
+        if (_N == 0)
+            return 0;
         double S = 0;
         S += lbinom_fast(_N - 1, _actual_B - 1);
         S += lgamma_fast(_N + 1);
@@ -312,6 +314,9 @@ public:
     template <class Rs, class Ks>
     double get_deg_dl(int kind, Rs&& rs, Ks&& ks)
     {
+        if (_N == 0)
+            return 0;
+
         switch (kind)
         {
         case deg_dl_kind::ENT:
