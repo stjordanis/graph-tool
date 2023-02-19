@@ -2204,7 +2204,7 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
         If ``True``, the returned iterator is over edge descriptors.
     **kwargs : Keyword parameter list
         The remaining parameters will be passed to
-        :func:`~graph_tool.topology.shortest_path`.
+        :func:`~graph_tool.topology.shortest_distance`.
 
     Returns
     -------
@@ -2217,10 +2217,10 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
     -----
 
     The paths are computed in the same manner as in
-    :func:`~graph_tool.topology.shortest_path`, which is used internally.
+    :func:`~graph_tool.topology.shortest_distance`, which is used internally.
 
     If both ``dist_map`` and ``pred_map`` are provided, the
-    :func:`~graph_tool.topology.shortest_path` is not called.
+    :func:`~graph_tool.topology.shortest_distance` is not called.
 
     Examples
     --------
@@ -2251,6 +2251,7 @@ def all_shortest_paths(g, source, target, dist_map=None, pred_map=None,
                                                       int(source),
                                                       int(target),
                                                       _prop("v", g, all_preds_map),
+                                                      _prop("e", g, kwargs.get("weights", None)),
                                                       edges)
     for p in path_iterator:
         yield p

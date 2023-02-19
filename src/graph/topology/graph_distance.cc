@@ -582,9 +582,9 @@ void do_get_all_preds(GraphInterface& gi, boost::any adist, boost::any apred,
 }
 
 
-template <class Graph, class Pred, class Yield>
+template <class Graph, class Pred, class Weight, class Yield>
 void get_all_shortest_paths(GraphInterface& gi, Graph& g, size_t s, size_t t,
-                            Pred pred, bool edges, Yield& yield)
+                            Pred pred, Weight weight, bool edges, Yield& yield)
 {
     vector<size_t> path;
     vector<pair<size_t, size_t>> stack = {{t, 0}};
@@ -611,8 +611,22 @@ void get_all_shortest_paths(GraphInterface& gi, Graph& g, size_t s, size_t t,
                     auto t = iter->first;
                     if (s != graph_traits<Graph>::null_vertex())
                     {
-                        auto e = edge(s, t, g).first;
-                        opath.append(PythonEdge<Graph>(gp, e));
+                        typedef typename property_traits<Weight>::value_type val_t;
+                        val_t best_w = numeric_limits<val_t>::max();
+                        typename graph_traits<Graph>::edge_descriptor best_e;
+                        for (auto e : out_edges_range(s, g))
+                        {
+                            if (target(e, g) == t)
+                            {
+                                auto w = get(weight, e);
+                                if (w < best_w)
+                                {
+                                    best_w = w;
+                                    best_e = e;
+                                }
+                            }
+                        }
+                        opath.append(PythonEdge<Graph>(gp, best_e));
                     }
                     s = t;
                 }
@@ -633,15 +647,25 @@ void get_all_shortest_paths(GraphInterface& gi, Graph& g, size_t s, size_t t,
 };
 
 python::object do_get_all_shortest_paths(GraphInterface& gi, size_t s, size_t t,
-                                         boost::any apred, bool edges)
+                                         boost::any apred, boost::any aweight,
+                                         bool edges)
 {
 #ifdef HAVE_BOOST_COROUTINE
+    typedef UnityPropertyMap<int,GraphInterface::edge_t> weight_map_t;
+    typedef boost::mpl::push_back<edge_scalar_properties, weight_map_t>::type
+        weight_props_t;
+
+    if (aweight.empty())
+        aweight = weight_map_t();
+
     auto dispatch = [&](auto& yield)
         {
             run_action<>()
-                (gi, [&](auto& g, auto pred)
-                     {get_all_shortest_paths(gi, g, s, t, pred, edges, yield);},
-                 vertex_scalar_vector_properties())(apred);
+                (gi, [&](auto& g, auto pred, auto weight)
+                     {get_all_shortest_paths(gi, g, s, t, pred, weight, edges,
+                                             yield);},
+                    vertex_scalar_vector_properties(),
+                    weight_props_t())(apred, aweight);
         };
     return python::object(CoroGenerator(dispatch));
 #else
