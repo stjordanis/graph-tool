@@ -32,8 +32,7 @@ url_prefix = "https://networks.skewed.de"
 username = None
 password = None
 
-@contextlib.contextmanager
-def open_ns_file(url, token=None):
+def make_ns_req(url, token=None, method="GET"):
     global username, password
 
     if username is not None:
@@ -44,15 +43,20 @@ def open_ns_file(url, token=None):
         urllib.request.install_opener(opener)
 
     if token is None:
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(url, method=method)
     else:
-        req = urllib.request.Request(url, headers={"WWW-Authenticate" : token})
+        req = urllib.request.Request(url, method=method,
+                                     headers={"WWW-Authenticate" : token})
 
+    return req
+
+@contextlib.contextmanager
+def open_ns_file(url, token=None):
+    req = make_ns_req(url, token)
     with urllib.request.urlopen(req) as f:
         yield f
 
-def get_ns_network(k, token=None):
-
+def get_net_url(k):
     if isinstance(k, str):
         net = k.split("/")
         if len(net) == 1:
@@ -61,9 +65,10 @@ def get_ns_network(k, token=None):
             url = f"net/{net[0]}/files/{net[1]}.gt.zst"
     else:
         url = f"net/{k[0]}/files/{k[1]}.gt.zst"
+    return f"{url_prefix}/{urllib.parse.quote(url)}"
 
-    url = f"{url_prefix}/{urllib.parse.quote(url)}"
-
+def get_ns_network(k, token=None):
+    url = get_net_url(k)
     with open_ns_file(url, token) as f:
         try:
             cctx = zstandard.ZstdDecompressor()
@@ -71,8 +76,19 @@ def get_ns_network(k, token=None):
             raise NotImplementedError("zstandard module not installed, but it's required for zstd de-compression")
         with cctx.stream_reader(f) as fc:
             g = load_graph(fc, fmt="gt")
-
     return g
+
+def check_ns_network(k, token=None):
+    url = get_net_url(k)
+    req = make_ns_req(url, token, method="HEAD")
+    try:
+        with urllib.request.urlopen(req) as f:
+            pass
+    except urllib.request.HTTPError as e:
+        if e.code == 404:
+            return False
+        raise
+    return True
 
 def get_ns_info(k):
     url = f"{url_prefix}/api/net/{urllib.parse.quote(k)}"
@@ -103,6 +119,7 @@ class LazyNSDataDict(dict):
                 else:
                     for net in v["nets"]:
                         self._keys.append(f"{k}/{net}")
+            self._key_set = set(self._keys)
 
     def keys(self):
         if self._keys is None:
@@ -113,8 +130,15 @@ class LazyNSDataDict(dict):
         for k in self.keys():
             yield k, self[k]
 
+    def __contains__(self, k):
+        if self._keys is not None:
+            return k in self._key_set
+        if not super().__contains__(k):
+            return check_ns_network(k, self.token)
+        return True
+
     def __getitem__(self, k):
-        if k not in self:
+        if not super().__contains__(k):
             try:
                 g = get_ns_network(k, self.token)
             except urllib.error.URLError as e:

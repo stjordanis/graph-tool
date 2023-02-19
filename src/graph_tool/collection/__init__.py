@@ -312,6 +312,11 @@ def get_data_path(name):
     return base_dir + "/" + name + ".gt.gz"
 
 class LazyDataDict(dict):
+    def __contains__(self, k):
+        if not super().__contains__(k):
+            fname = get_data_path(k)
+            return os.path.exists(fname)
+        return True
     def __getitem__(self, k):
         if k not in self:
             fname = get_data_path(k)
