@@ -546,7 +546,7 @@ class NestedBlockState(object):
             if l > 0:
                 if "beta_dl" in entropy_args:
                     args = dict(args, beta=args.get("beta", 1.) * entropy_args["beta_dl"])
-                for p in ["B_max", "B_min", "b_max", "b_min"]:
+                for p in ["B_max", "B_min", "b_max", "b_min", "vertices"]:
                     args.pop(p, None)
 
             yield l, self.levels[l], args
