@@ -1491,7 +1491,10 @@ def get_hierarchy_control_points(g, t, tpos, beta=0.8, cts=None, is_tree=True,
 
 try:
     import gi
-    gi.require_version('Gtk', '3.0')
+    try:
+        gi.require_version('Gtk', '3.0')
+    except ValueError:
+        raise ImportError
     from gi.repository import Gtk, Gdk, GdkPixbuf
     from gi.repository import GObject as gobject
     from .gtk_draw import *
