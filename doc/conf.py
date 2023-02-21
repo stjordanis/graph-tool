@@ -112,8 +112,48 @@ doctest_global_setup += "os.chdir('%s')\n" % os.getcwd()
 # given in html_static_path.
 # html_style = 'default.css'
 
-html_theme = "gt_theme"
-html_theme_path = ["."]
+html_theme = "pydata_sphinx_theme"
+#html_theme = "gt_theme"
+#html_theme_path = ["."]
+
+html_theme_options = {
+    "gitlab_url": "https://git.skewed.de/count0/graph-tool",
+    "icon_links": [
+        {
+            "name": "Mastodon",
+            "url": "https://social.skewed.de/@graph_tool",
+            "icon": "fa-brands fa-mastodon",
+        },
+        {
+            "name": "Discourse",
+            "url": "https://forum.skewed.de/c/graph-tool/5",
+            "icon": "fa-brands fa-discourse",
+        },
+        {
+            "name": "graph-tool",
+            "url": "https://graph-tool.skewed.de",
+            "icon": "_static/graph-tool-logo.svg",
+            "type": "local",
+        },
+    ],
+    "primary_sidebar_end": ["indices.html"],
+    "use_edit_page_button": True,
+    "logo": {
+        "image_light": "graph-tool-logo.svg",
+        "image_dark": "graph-tool-logo.svg",
+        "text": f"graph-tool docs ({version})"
+    }
+}
+
+html_context = {
+    "gitlab_url": "https://git.skewed.de",
+    "gitlab_user": "count0",
+    "gitlab_repo": "graph-tool",
+    "gitlab_version": "master",
+    "doc_path": "/doc"
+}
+
+html_logo = "graph-tool-logo.svg"
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -183,7 +223,7 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
 extlinks_fancy = {'issue': (['https://git.skewed.de/count0/graph-tool/issues/{0}'],
                              ['issue #{0}']),
                   'doi': (['https://dx.doi.org/{0}',
-                           'https://sci-hub.tw/{0}',
+                           'https://sci-hub.ru/{0}',
                            'https://scihub22266oqcxt.onion.link/{0}'],
                           ['DOI: {0}', "sci-hub", "@tor"]),
                   'arxiv': (['https://arxiv.org/abs/{0}'], ['arXiv: {0}']),

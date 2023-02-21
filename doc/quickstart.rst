@@ -1,5 +1,5 @@
-Quick start using `graph-tool`
-==============================
+Quick start
+===========
 
 The :mod:`graph_tool` module provides a :class:`~graph_tool.Graph` class
 and several algorithms that operate on it. The internals of this class,
@@ -185,8 +185,8 @@ Edges and vertices can also be removed at any time with the
 .. warning::
 
    Because of the above, removing a vertex with an index smaller than
-   :math:`N-1` will **invalidate either the last** (``fast = True``)
-   **or all** (``fast = False``) **descriptors pointing to vertices with
+   :math:`N-1` will **invalidate either the last** (``fast == True``)
+   **or all** (``fast == False``) **descriptors pointing to vertices with
    higher index**.
 
    As a consequence, if more than one vertex is to be removed at a given

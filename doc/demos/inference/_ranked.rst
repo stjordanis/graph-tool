@@ -1,4 +1,4 @@
-.. _planted_partition:
+.. _ranked:
 
 Ordered community structure
 ---------------------------

@@ -1,7 +1,7 @@
 .. _sec_faq:
 
-Frequently Asked Questions (FAQ)
-================================
+FAQ
+===
 
 How do I cite graph-tool?
 -------------------------

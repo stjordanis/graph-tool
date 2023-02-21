@@ -8,9 +8,9 @@ Contents:
    :glob:
 
    quickstart
-   gt_format
    demos/index
    modules
+   gt_format
    faq
 
 Indexes and tables
