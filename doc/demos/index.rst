@@ -1,5 +1,5 @@
-Cookbook
-========
+Cookbook guides
+===============
 
 Contents:
 

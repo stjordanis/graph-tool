@@ -239,8 +239,8 @@ Edges and vertices can also be removed at any time with the
    <http://en.wikipedia.org/wiki/Vector_%28STL%29>`_, so removing an
    element somewhere in the middle of the list requires the shifting of
    the rest of the list. Thus, fast :math:`O(1)` removals are only
-   possible either if one can guarantee that only vertices in the end of
-   the list are removed (the ones last added to the graph), or if the
+   possible if one can guarantee that only vertices in the end of the
+   list are removed (the ones last added to the graph), or if the
    relative vertex ordering is invalidated. The latter behavior can be
    achieved by passing the option ``fast = True``, to
    :meth:`~graph_tool.Graph.remove_vertex`, which causes the vertex
@@ -530,7 +530,7 @@ Property maps
 
 Property maps are a way of associating additional information to the
 vertices, edges or to the graph itself. There are thus three types of
-property maps: vertex, edge and graph. They are handled by the
+property maps: vertex, edge, and graph. They are handled by the
 classes :class:`~graph_tool.VertexPropertyMap`,
 :class:`~graph_tool.EdgePropertyMap`, and
 :class:`~graph_tool.GraphPropertyMap`. Each created property map has an
