@@ -90,7 +90,7 @@ Contents
 """
 
 __author__ = "Tiago de Paula Peixoto <tiago@skewed.de>"
-__copyright__ = "Copyright 2006-2022 Tiago de Paula Peixoto"
+__copyright__ = "Copyright 2006-2023 Tiago de Paula Peixoto"
 __license__ = "LGPL version 3 or above"
 __URL__ = "https://graph-tool.skewed.de"
 
