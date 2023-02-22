@@ -41,7 +41,7 @@ graphs, one must pass a value to the ``directed`` parameter:
 A graph can always be switched *on-the-fly* from directed to undirected
 (and vice versa), with the :meth:`~graph_tool.Graph.set_directed`
 method. The "directedness" of the graph can be queried with the
-:meth:`~graph_tool.Graph.is_directed` method,
+:meth:`~graph_tool.Graph.is_directed` method:
 
 .. doctest::
 
@@ -153,14 +153,42 @@ calling :meth:`~graph_tool.Graph.add_edge_list` afterward.
    >>> print(g.vp.ids[0])
    foo
 
-   See :ref:`sec_property_maps` for more details.
+   See :ref:`sec_property_maps` below for more details.
 
+Edge properties can also be initialized together with the edges by using
+tuples ``(source, target, property_1, property_2, ...)``, e.g.
 
-It is possible also to pass an adjacency list in this case, which is a
-dictionary of out-neighbors for every vertex key:
+   >>> g = Graph([('foo', 'bar', .5, 1), ('gnu', 'gnat', .78, 2)], hashed=True,
+   ...           eprops=[('weight','double'), ('time', 'int')])
+
+The ``eprops`` parameter lists the name and value types of the
+properties, which are used to create internal property maps (see
+:ref:`sec_property_maps` below for more details).
+
+It is possible also to pass an adjacency list to construct a graph,
+which is a dictionary of out-neighbors for every vertex key:
 
    >>> g = Graph({0: [2, 3], 1: [4], 3: [4, 5], 6: []})
 
+The above functionality also means that you can easily construct graphs
+from adjacency matrices. This can be done via the :func:`numpy.nonzero`
+function to extract an edge list from a matrix, e.g.:
+
+   >>> m = np.array([[0, 1, 0],
+   ...               [0, 0, 1],
+   ...               [0, 1, 0]])
+   >>> g = Graph(np.array(np.nonzero(m)).T)  # we need to transpose
+
+If you wish to store also the non-zero values as a edge properties, you
+need only to add them to the list:
+
+   >>> m = np.array([[0, 1.2, 0],
+   ...               [0, 0, 10],
+   ...               [0, 7, 0]])
+   >>> es = np.nonzero(m)
+   >>> g = Graph(np.array([es[0], es[1], m[es]]).T, eprops=[("weight", "double")])
+   >>> print(g.ep.weight.a)
+   [ 1.2 10.   7. ]
    
 Manipulating graphs
 -------------------
@@ -529,7 +557,7 @@ Property maps
 -------------
 
 Property maps are a way of associating additional information to the
-vertices, edges or to the graph itself. There are thus three types of
+vertices, edges, or to the graph itself. There are thus three types of
 property maps: vertex, edge, and graph. They are handled by the
 classes :class:`~graph_tool.VertexPropertyMap`,
 :class:`~graph_tool.EdgePropertyMap`, and

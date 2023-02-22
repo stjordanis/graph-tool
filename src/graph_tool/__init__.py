@@ -1561,8 +1561,14 @@ class Graph(object):
 
            This is equivalent to calling:
 
-           >>> ng = Graph()
-           >>> ng.add_edge_list(g)
+           .. testsetup:: init_list
+
+              g = [(0, 1), (0, 2)]
+
+           .. doctest:: init_list
+
+              >>> ng = gt.Graph()
+              >>> ng.add_edge_list(g)
 
 
         3. An adjacency list, i.e. a dictionary with vertex keys mapping to an
@@ -1571,16 +1577,22 @@ class Graph(object):
 
            This is equivalent to calling:
 
-           >>> ng = Graph()
-           >>> def elist():
-           ...     for u, vw in g.items():
-           ...         k = 0
-           ...         for v in vw:
-           ...             k += 1
-           ...             yield u, v
-           ...         if k == 0:
-           ...             yield u, None
-           >>> ng.add_edge_list(elist())
+           .. testsetup:: init_adj
+
+              g = {0: [1,2], 2: [3], 4: []}
+
+           .. doctest:: init_adj
+
+              >>> ng = gt.Graph()
+              >>> def elist():
+              ...     for u, vw in g.items():
+              ...         k = 0
+              ...         for v in vw:
+              ...             k += 1
+              ...             yield u, v
+              ...         if k == 0:
+              ...             yield u, None
+              >>> ng.add_edge_list(elist())
 
            .. note::
 
@@ -2532,7 +2544,9 @@ class Graph(object):
 
         If given, ``eprops`` should specify an iterable containing edge property
         maps that will be filled with the remaining values at each row, if there
-        are more than two.
+        are more than two. Alternatively, ``eprops`` can contain a list of
+        ``(name, value_type)`` pairs, in which case new internal dege property
+        maps will be created with the corresponding name name and value type.
 
         .. note::
 
@@ -2558,6 +2572,10 @@ class Graph(object):
         if eprops is None:
             eprops = ()
         else:
+            for i in range(len(eprops)):
+                if not isinstance(eprops[i], EdgePropertyMap):
+                    name, val_type = eprops[i]
+                    eprops[i] = self.ep[name] = self.new_ep(val_type)
             convert = [_converter(x.value_type()) for x in eprops]
             eprops = [_prop("e", self, x) for x in eprops]
             if not isinstance(edge_list, numpy.ndarray):
