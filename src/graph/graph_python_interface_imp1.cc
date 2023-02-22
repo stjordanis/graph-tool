@@ -75,6 +75,14 @@ struct add_edge_list
                 {
                     size_t s = e[0];
                     size_t t = e[1];
+                    if (t == numeric_limits<size_t>::max() ||
+                        e[1] == numeric_limits<Value>::max() ||
+                        std::isnan(e[1]) || std::isinf(e[1]))
+                    {
+                        while (s >= num_vertices(g))
+                            add_vertex(g);
+                        continue;
+                    }
                     while (s >= num_vertices(g) || t >= num_vertices(g))
                         add_vertex(g);
                     auto ne = add_edge(vertex(s, g), vertex(t, g), g).first;
@@ -154,6 +162,16 @@ struct add_edge_list_iter
                         add_vertex(g);
                     break;
                 case 1:
+                    if (val == python::object() ||
+                        python::extract<size_t>(val) == numeric_limits<size_t>::max() ||
+                        python::extract<double>(val) == numeric_limits<double>::max() ||
+                        std::isnan(python::extract<double>(val)) ||
+                        std::isinf(python::extract<double>(val)))
+
+                    {
+                        i = eprops.size() + 2;
+                        break;
+                    }
                     t = python::extract<size_t>(val);
                     while (t >= num_vertices(g))
                         add_vertex(g);
@@ -251,6 +269,8 @@ struct add_edge_list_hash
         for (const auto& e : edge_list)
         {
             size_t s = get_vertex(e[0]);
+            if (std::is_same_v<val_t,python::object> && e[1] == python::object())
+                continue;
             size_t t = get_vertex(e[1]);
             auto ne = add_edge(vertex(s, g), vertex(t, g), g).first;
             for (size_t i = 0; i < n_props; ++i)
@@ -315,6 +335,8 @@ struct add_edge_list_hash
                 const auto& val = *eiter;
                 if (i < 2)
                 {
+                    if (i == 1 && val == python::object())
+                        break;
                     val_t x;
                     if constexpr (std::is_same_v<val_t, python::object>)
                         x = val;

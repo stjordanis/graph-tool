@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-graph_tool - efficient graph analysis and manipulation
-======================================================
+``graph_tool`` - Core module
+============================
 
 Summary
 -------
@@ -1545,33 +1545,77 @@ from .libgraph_tool_core import Vertex, EdgeBase, Vector_bool, Vector_int16_t, \
 
 
 class Graph(object):
-    """Generic multigraph class.
+    """General multigraph class.
 
     This class encapsulates either a directed multigraph (default or if
-    ``directed=True``) or an undirected multigraph (if ``directed=False``),
-    with optional internal edge, vertex or graph properties.
+    ``directed == True``) or an undirected multigraph (if ``directed ==
+    False``), with optional internal edge, vertex or graph properties.
 
-    If ``g`` is specified, the graph (and its internal properties) will be
-    copied.
+    If ``g`` is specified, it can be one of:
 
-    If ``prune`` is set to ``True``, and ``g`` is specified, only the filtered
-    graph will be copied, and the new graph object will not be
-    filtered. Optionally, a tuple of three booleans can be passed as value to
-    ``prune``, to specify a different behavior to vertex, edge, and reversal
-    filters, respectively.
+        1. Another :class:`Graph` object, in which case the corresponding graph
+           (and its internal properties) will be copied.
+
+        2. An edge list, i.e. an iterable over (source, target) pairs, which
+           will be used to populate the graph.
+
+           This is equivalent to calling:
+
+           >>> ng = Graph()
+           >>> ng.add_edge_list(g)
+
+
+        3. An adjacency list, i.e. a dictionary with vertex keys mapping to an
+           interable of vertices, which will be used to populate the graph. For
+           directed graphs, the adjacency should list the out-neighbors.
+
+           This is equivalent to calling:
+
+           >>> ng = Graph()
+           >>> def elist():
+           ...     for u, vw in g.items():
+           ...         k = 0
+           ...         for v in vw:
+           ...             k += 1
+           ...             yield u, v
+           ...         if k == 0:
+           ...             yield u, None
+           >>> ng.add_edge_list(elist())
+
+           .. note::
+
+              For undirected graphs, if a vertex ``u`` appears in the adjacency
+              list of ``v`` and vice versa, then the edge ``(u,v)`` is added
+              twice in the graph. To prevent this from happening the adjancecy
+              list should mention an edge only once.
+
+    In cases 2 and 3 above, all remaining paramters passed to :class:`Graph`
+    will be passed to the :meth:`Graph.add_edge_list` function. If the option
+    ``hashed == True`` is passed, the vertex ids will be stored in an internal
+    :class:`~graph_tool.VertexPropertyMap` called ``"ids"``.
+
+    In case ``g`` is specified and points to a :class:`Graph` object, the
+    following options take effect:
+
+    If ``prune`` is set to ``True``, only the filtered graph will be copied, and
+    the new graph object will not be filtered. Optionally, a tuple of three
+    booleans can be passed as value to ``prune``, to specify a different
+    behavior to vertex, edge, and reversal filters, respectively.
 
     If ``vorder`` is specified, it should correspond to a vertex
-    :class:`~graph_tool.VertexPropertyMap` specifying the ordering of the vertices in
-    the copied graph.
+    :class:`~graph_tool.VertexPropertyMap` specifying the ordering of the
+    vertices in the copied graph.
 
-    The graph is implemented as an `adjacency list`_, where both vertex and edge
-    lists are C++ STL vectors.
+    .. note::
+
+       The graph is implemented internally as an `adjacency list`_, where both
+       vertex and edge lists are C++ STL vectors.
 
     .. _adjacency list: http://en.wikipedia.org/wiki/Adjacency_list
 
     """
 
-    def __init__(self, g=None, directed=True, prune=False, vorder=None):
+    def __init__(self, g=None, directed=True, prune=False, vorder=None, **kwargs):
         self.__properties = InternalPropertyDict(self)
         self.__graph_properties = PropertyDict(self.__properties, "g")
         self.__vertex_properties = PropertyDict(self.__properties, "v")
@@ -1581,7 +1625,7 @@ class Graph(object):
                                "edge_filter": (None, False),
                                "vertex_filter": (None, False),
                                "directed": True}
-        if g is None:
+        if g is None or isinstance(g, collections.abc.Iterable):
             self.__graph = libcore.GraphInterface()
             self.set_directed(directed)
 
@@ -1591,6 +1635,21 @@ class Graph(object):
             self.__edge_index = \
                      EdgePropertyMap(libcore.get_edge_index(self.__graph), self)
 
+            if g is not None:
+                if isinstance(g, dict):
+                    def elist():
+                        for u, vw in g.items():
+                            k = 0
+                            for v in vw:
+                                k += 1
+                                yield u, v
+                            if k == 0:
+                                yield u, None
+                    vids = self.add_edge_list(elist(), **kwargs)
+                else:
+                    vids = self.add_edge_list(g, **kwargs)
+                if vids is not None:
+                    self.vp.ids = vids
         else:
             if isinstance(prune, bool):
                 vprune = eprune = rprune = prune
@@ -2462,9 +2521,23 @@ class Graph(object):
         in which case the value of this option is ignored, and the type is
         determined automatically.
 
+        If ``hashed == False`` and the target value of an edge corresponds to
+        the maximum interger value (:data:`sys.maxsize`, or the maximum integer
+        type of the :class:`numpy.array` object), or is a :data:`numpy.nan` or
+        :data:`numpy.inf` value, then only the source vertex will be added to
+        the graph.
+
+        If ``hashed == True``, and the target value corresponds to ``None``,
+        then only the source vertex will be added to the graph.
+
         If given, ``eprops`` should specify an iterable containing edge property
         maps that will be filled with the remaining values at each row, if there
         are more than two.
+
+        .. note::
+
+           If ``edge_list`` is a :class:`numpy.array` object, the execution of
+           this function will be done entirely in C++, and hence much faster.
 
         Examples
         --------

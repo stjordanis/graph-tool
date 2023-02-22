@@ -21,8 +21,8 @@ can do:
 
 In the following, it will always be assumed that the previous line was run.
 
-Creating and manipulating graphs
---------------------------------
+Creating graphs
+---------------
 
 An empty graph can be created by instantiating a :class:`~graph_tool.Graph`
 class:
@@ -82,8 +82,9 @@ descriptor (an instance of the :class:`~graph_tool.Edge` class):
 
    >>> e = g.add_edge(v1, v2)
 
-The above code creates a directed edge from ``v1`` to ``v2``. We can
-visualize the graph we created so far with the
+The above code creates a directed edge from ``v1`` to ``v2``.
+
+We can visualize the graph we created so far with the
 :func:`~graph_tool.draw.graph_draw` function.
 
 .. doctest::
@@ -95,7 +96,6 @@ visualize the graph we created so far with the
 
     conv_png("two-nodes.pdf")
 
-   
 .. figure:: two-nodes.png
    :align: center
    :width: 200px
@@ -103,13 +103,79 @@ visualize the graph we created so far with the
    A simple directed graph with two vertices and one edge, created by
    the commands above.
 
-With vertex and edge descriptors, one can examine and manipulate the
-graph in an arbitrary manner. For instance, in order to obtain the
+Adding many edges and vertices at once
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is also possible to add many edges and vertices at once using the
+:meth:`~graph_tool.Graph.add_edge_list` method, which accepts any iterable of
+``(source, target)`` pairs, and automatically adds any new vertex seen:
+
+.. doctest::
+
+   >>> g.add_edge_list([(0, 1), (2, 3)])
+
+The vertex values passed to :meth:`~graph_tool.Graph.add_edge_list` need to be
+integers per default, but arbitrary objects can be passed as well if the
+option ``hashed = True`` is passed, e.g. for string values:
+
+   >>> g.add_edge_list([('foo', 'bar'), ('gnu', 'gnat')], hashed=True,
+   ...                 hash_type="string")
+   <...>
+
+or for arbitrary (hashable) Python objects:
+
+   >>> g.add_edge_list([((2, 3), 'foo'), (3, 42.3)], hashed=True,
+   ...                 hash_type="object")
+   <...>
+
+.. note::
+
+   If ``hashed = True`` is passed, the function
+   :meth:`~graph_tool.Graph.add_edge_list` returns a
+   :class:`~graph_tool.VertexPropertyMap` object that maps vertex
+   descriptors to their id values in the list. See
+   :ref:`sec_property_maps` below.
+   
+It is possible to construct graphs directly from a list of edges, e.g.
+
+   >>> g = Graph([('foo', 'bar'), ('gnu', 'gnat')], hashed=True)
+
+which is just a convenience shortcut to creating an empty graph and
+calling :meth:`~graph_tool.Graph.add_edge_list` afterward.
+
+.. note::
+
+   If ``hashed = True`` is passed, the mapping of vertex descriptors to
+   vertex ids is obtained via an internal
+   :class:`~graph_tool.VertexPropertyMap` called ``"ids"``. E.g. in the
+   example above we have
+
+   >>> print(g.vp.ids[0])
+   foo
+
+   See :ref:`sec_property_maps` for more details.
+
+
+It is possible also to pass an adjacency list in this case, which is a
+dictionary of out-neighbors for every vertex key:
+
+   >>> g = Graph({0: [2, 3], 1: [4], 3: [4, 5], 6: []})
+
+   
+Manipulating graphs
+-------------------
+   
+With vertex and edge descriptors at hand, one can examine and manipulate
+the graph in an arbitrary manner. For instance, in order to obtain the
 out-degree of a vertex, we can simply call the
 :meth:`~graph_tool.Vertex.out_degree` method:
 
 .. doctest::
 
+   >>> g = Graph()
+   >>> v1 = g.add_vertex()
+   >>> v2 = g.add_vertex()
+   >>> e = g.add_edge(v1, v2)
    >>> print(v1.out_degree())
    1
 
@@ -176,7 +242,7 @@ Edges and vertices can also be removed at any time with the
    possible either if one can guarantee that only vertices in the end of
    the list are removed (the ones last added to the graph), or if the
    relative vertex ordering is invalidated. The latter behavior can be
-   achieved by passing the option ``fast == True``, to
+   achieved by passing the option ``fast = True``, to
    :meth:`~graph_tool.Graph.remove_vertex`, which causes the vertex
    being deleted to be 'swapped' with the last vertex (i.e. with the
    largest index), which will in turn inherit the index of the vertex
