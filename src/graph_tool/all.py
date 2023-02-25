@@ -62,3 +62,4 @@ from graph_tool.util import *
 import graph_tool.util
 import graph_tool.collection
 import graph_tool.collection as collection
+from graph_tool.collection.small import *

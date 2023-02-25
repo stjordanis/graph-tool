@@ -731,7 +731,8 @@ graph_tool_generationdir = $(MOD_DIR)/generation
 
 graph_tool_collection_PYTHON = \
 	src/graph_tool/collection/__init__.py \
-	src/graph_tool/collection/netzschleuder.py
+	src/graph_tool/collection/netzschleuder.py \
+	src/graph_tool/collection/small.py
 dist_graph_tool_collection_DATA = \
 	src/graph_tool/collection/adjnoun.gt.gz \
 	src/graph_tool/collection/as-22july06.gt.gz \

@@ -23,15 +23,6 @@
 
 This module contains an assortment of useful networks.
 
-.. data:: data
-
-    Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
-    name of the graph. This is a "lazy" dictionary, i.e. it only loads the
-    graphs from disk when the items are accessed for the first time.  The
-    description for each graph is given in the :data:`descriptions` dictionary,
-    or alternatively in the ``"description"`` graph property which accompanies
-    each graph object.
-
 .. data:: ns
 
     Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
@@ -44,24 +35,6 @@ This module contains an assortment of useful networks.
     each graph are given in the :data:`ns_info` dictionary, or alternatively in
     the graph properties which accompanies each graph object.
 
-Examples
-========
-
-    >>> g = gt.collection.data["karate"]
-    >>> print(g)
-    <Graph object, undirected, with 34 vertices and 78 edges, 1 internal vertex property, 2 internal graph properties, at 0x...>
-    >>> print(g.gp.readme)
-    The file karate.gml contains the network of friendships between the 34
-    members of a karate club at a US university, as described by Wayne Zachary
-    in 1977.  If you use these data in your work, please cite W. W. Zachary, An
-    information flow model for conflict and fission in small groups, Journal of
-    Anthropological Research 33, 452-473 (1977).
-    <BLANKLINE>
-
-    >>> g = gt.collection.ns["advogato"]
-    >>> print(g.gp.description)
-    A network of trust relationships among users on Advogato, an online community of open source software developers. Edge direction indicates that node i trusts node j, and edge weight denotes one of four increasing levels of declared trust from i to j: observer (0.4), apprentice (0.6), journeyer (0.8), and master (1.0).
-
 .. data:: ns_info
 
     Dictionary containing descriptions and other summary information for
@@ -71,9 +44,19 @@ Examples
     ``("<entry>", "<network>")``. The information is downloaded on-the-fly via
     the available JSON API.
 
+.. data:: data
+
+    Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
+    name of the graph. This is a "lazy" dictionary, i.e. it only loads the
+    graphs from disk when the items are accessed for the first time.  The
+    description for each graph is given in the :data:`descriptions` dictionary,
+    or alternatively in the ``"description"`` graph property which accompanies
+    each graph object.
+
 .. data:: descriptions
 
-    Dictionary with a short description and source information on each graph.
+    Dictionary with a short description and source information on each graph
+    contained in :data:`data`.
 
     A summary, with some extra information, is available in the following table.
 
@@ -271,6 +254,52 @@ Examples
                                                                  :doi:`10.1371/journal.pcbi.1002321`
         ===================  ===========  ===========  ========  ================================================
 
+Small graphs
+============
+
+.. autosummary::
+   :nosignatures:
+
+   LCF_graph
+   bull_graph
+   chvatal_graph
+   cubical_graph
+   desargues_graph
+   diamond_graph
+   dodecahedral_graph
+   frucht_graph
+   heawood_graph
+   hoffman_singleton_graph
+   house_graph
+   icosahedral_graph
+   krackhardt_kite_graph
+   moebius_kantor_graph
+   octahedral_graph
+   pappus_graph
+   petersen_graph
+   sedgewick_maze_graph
+   tetrahedral_graph
+   truncated_cube_graph
+   truncated_tetrahedron_graph
+   tutte_graph
+
+Examples
+========
+
+    >>> g = gt.collection.data["karate"]
+    >>> print(g)
+    <Graph object, undirected, with 34 vertices and 78 edges, 1 internal vertex property, 2 internal graph properties, at 0x...>
+    >>> print(g.gp.readme)
+    The file karate.gml contains the network of friendships between the 34
+    members of a karate club at a US university, as described by Wayne Zachary
+    in 1977.  If you use these data in your work, please cite W. W. Zachary, An
+    information flow model for conflict and fission in small groups, Journal of
+    Anthropological Research 33, 452-473 (1977).
+    <BLANKLINE>
+
+    >>> g = gt.collection.ns["advogato"]
+    >>> print(g.gp.description)
+    A network of trust relationships among users on Advogato, an online community of open source software developers. Edge direction indicates that node i trusts node j, and edge weight denotes one of four increasing levels of declared trust from i to j: observer (0.4), apprentice (0.6), journeyer (0.8), and master (1.0).
 
 Contents
 ========
@@ -281,7 +310,14 @@ import os.path
 import textwrap
 from .. import load_graph
 
-__all__ = ["data", "descriptions", "get_data_path"]
+__all__ = ["data", "descriptions", "get_data_path", "ns", "ns_info",
+           "LCF_graph", "bull_graph", "chvatal_graph", "cubical_graph",
+           "desargues_graph", "diamond_graph", "dodecahedral_graph",
+           "frucht_graph", "heawood_graph", "hoffman_singleton_graph",
+           "house_graph", "icosahedral_graph", "krackhardt_kite_graph",
+           "moebius_kantor_graph", "octahedral_graph", "pappus_graph",
+           "petersen_graph", "sedgewick_maze_graph", "tetrahedral_graph",
+           "truncated_cube_graph", "truncated_tetrahedron_graph", "tutte_graph"]
 
 base_dir = os.path.dirname(__file__)
 
@@ -356,3 +392,4 @@ def _print_table():
     print("===================  ===========  ===========  ========  ================================================")
 
 from . netzschleuder import *
+from . small import *
