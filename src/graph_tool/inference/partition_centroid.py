@@ -292,7 +292,7 @@ def mutual_information(x, y, norm=False, adjusted=False, avg_method="arithmetic"
 
     References
     ----------
-    .. [vinh_information_209] Nguyen Xuan Vinh, Julien Epps, and James
+    .. [vinh_information_2009] Nguyen Xuan Vinh, Julien Epps, and James
        Bailey. 2009. “Information theoretic measures for clusterings comparison:
        is a correction for chance necessary?”, In Proceedings of the 26th Annual
        International Conference on Machine Learning (ICML '09). Association for

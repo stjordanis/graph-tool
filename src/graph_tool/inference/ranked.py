@@ -115,9 +115,8 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
             self._state.couple_state(state._state, eargs)
 
     def get_block_state(self, b=None, vweight=None, deg_corr=False, **kwargs):
-        r"""Returns a :class:`~graph_tool.inference.reciprocal.ReciprocalBlockState`
-        corresponding to the block graph (i.e. the blocks of the current state
-        become the nodes).
+        r"""Returns a :class:`~graph_tool.inference.BlockState` corresponding to
+        the block graph (i.e. the blocks of the current state become the nodes).
         """
 
         bstate = self.ustate.get_block_state(b=b, vweight=vweight,
@@ -131,7 +130,7 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         return self.b
 
     def get_state(self):
-        """Alias to :meth:`~ReciprocalBlockState.get_blocks`."""
+        """Alias to :meth:`~RankedBlockState.get_blocks`."""
         return self.g.own_property(self.ustate.get_blocks())
 
     def get_block_order(self):
@@ -222,7 +221,7 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         return self.ustate.get_nonempty_B()
 
     def get_nonempty_B(self):
-        r"Alias to :meth:`~ReciprocalBlockState.get_B`."
+        r"Alias to :meth:`~RankedBlockState.get_B`."
         return self.get_B()
 
     def get_Be(self):
@@ -235,7 +234,7 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
     def virtual_vertex_move(self, v, s, **kwargs):
         r"""Computes the entropy difference if vertex ``v`` is moved to block ``s``. The
         remaining parameters are the same as in
-        :meth:`~graph_tool.inference.reciprocal.ReciprocalBlockState.entropy`."""
+        :meth:`~graph_tool.inference.RankedBlockState.entropy`."""
         return self._state.virtual_move(int(v), self.b[v], s,
                                         self._get_entropy_args(dict(self._entropy_args,
                                                                     **kwargs)))

@@ -2540,7 +2540,7 @@ class Graph(object):
 
         If ``hashed == False`` and the target value of an edge corresponds to
         the maximum interger value (:data:`sys.maxsize`, or the maximum integer
-        type of the :class:`numpy.array` object), or is a :data:`numpy.nan` or
+        type of the :class:`numpy.ndarray` object), or is a :data:`numpy.nan` or
         :data:`numpy.inf` value, then only the source vertex will be added to
         the graph.
 
@@ -2555,7 +2555,7 @@ class Graph(object):
 
         .. note::
 
-           If ``edge_list`` is a :class:`numpy.array` object, the execution of
+           If ``edge_list`` is a :class:`numpy.ndarray` object, the execution of
            this function will be done entirely in C++, and hence much faster.
 
         Examples
