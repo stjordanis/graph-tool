@@ -1556,7 +1556,10 @@ class Graph(object):
         1. Another :class:`Graph` object, in which case the corresponding graph
            (and its internal properties) will be copied.
 
-        2. An edge list, i.e. an iterable over (source, target) pairs, which
+        2. An integer, in wich case it corresponds to the number of vertices in
+           the graph.
+
+        3. An edge list, i.e. an iterable over (source, target) pairs, which
            will be used to populate the graph.
 
            This is equivalent to calling:
@@ -1570,7 +1573,7 @@ class Graph(object):
               >>> ng = gt.Graph()
               >>> ng.add_edge_list(g)
 
-        3. An adjacency list, i.e. a dictionary with vertex keys mapping to an
+        4. An adjacency list, i.e. a dictionary with vertex keys mapping to an
            interable of vertices, which will be used to populate the graph. For
            directed graphs, the adjacency should list the out-neighbors.
 
@@ -1600,7 +1603,7 @@ class Graph(object):
               twice in the graph. To prevent this from happening the adjancecy
               list should mention an edge only once.
 
-    In cases 2 and 3 above, all remaining keyword parameters passed to
+    In cases 3 and 4 above, all remaining keyword parameters passed to
     :class:`Graph` will be passed along to the :meth:`Graph.add_edge_list`
     function. If the option ``hashed == True`` is passed, the vertex ids will be
     stored in an internal :class:`~graph_tool.VertexPropertyMap` called
@@ -1637,7 +1640,7 @@ class Graph(object):
                                "edge_filter": (None, False),
                                "vertex_filter": (None, False),
                                "directed": True}
-        if g is None or isinstance(g, collections.abc.Iterable):
+        if g is None or isinstance(g, (collections.abc.Iterable, int)):
             self.__graph = libcore.GraphInterface()
             self.set_directed(directed)
 
@@ -1648,20 +1651,23 @@ class Graph(object):
                      EdgePropertyMap(libcore.get_edge_index(self.__graph), self)
 
             if g is not None:
-                if isinstance(g, dict):
-                    def elist():
-                        for u, vw in g.items():
-                            k = 0
-                            for v in vw:
-                                k += 1
-                                yield u, v
-                            if k == 0:
-                                yield u, None
-                    vids = self.add_edge_list(elist(), **kwargs)
+                if isinstance(g, int):
+                    self.add_vertex(g)
                 else:
-                    vids = self.add_edge_list(g, **kwargs)
-                if vids is not None:
-                    self.vp.ids = vids
+                    if isinstance(g, dict):
+                        def elist():
+                            for u, vw in g.items():
+                                k = 0
+                                for v in vw:
+                                    k += 1
+                                    yield u, v
+                                if k == 0:
+                                    yield u, None
+                        vids = self.add_edge_list(elist(), **kwargs)
+                    else:
+                        vids = self.add_edge_list(g, **kwargs)
+                    if vids is not None:
+                        self.vp.ids = vids
             elif len(kwargs) > 0:
                 raise ValueError("unrecognized keyword arguments: " +
                                  str(list(kwargs.keys())))
