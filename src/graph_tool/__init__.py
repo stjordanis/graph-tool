@@ -1570,7 +1570,6 @@ class Graph(object):
               >>> ng = gt.Graph()
               >>> ng.add_edge_list(g)
 
-
         3. An adjacency list, i.e. a dictionary with vertex keys mapping to an
            interable of vertices, which will be used to populate the graph. For
            directed graphs, the adjacency should list the out-neighbors.
@@ -1579,7 +1578,7 @@ class Graph(object):
 
            .. testsetup:: init_adj
 
-              g = {0: [1,2], 2: [3], 4: []}
+              g = {0: [1, 2], 2: [3], 4: []}
 
            .. doctest:: init_adj
 
@@ -1601,10 +1600,11 @@ class Graph(object):
               twice in the graph. To prevent this from happening the adjancecy
               list should mention an edge only once.
 
-    In cases 2 and 3 above, all remaining paramters passed to :class:`Graph`
-    will be passed to the :meth:`Graph.add_edge_list` function. If the option
-    ``hashed == True`` is passed, the vertex ids will be stored in an internal
-    :class:`~graph_tool.VertexPropertyMap` called ``"ids"``.
+    In cases 2 and 3 above, all remaining keyword parameters passed to
+    :class:`Graph` will be passed along to the :meth:`Graph.add_edge_list`
+    function. If the option ``hashed == True`` is passed, the vertex ids will be
+    stored in an internal :class:`~graph_tool.VertexPropertyMap` called
+    ``"ids"``.
 
     In case ``g`` is specified and points to a :class:`Graph` object, the
     following options take effect:
@@ -1662,6 +1662,9 @@ class Graph(object):
                     vids = self.add_edge_list(g, **kwargs)
                 if vids is not None:
                     self.vp.ids = vids
+            elif len(kwargs) > 0:
+                raise ValueError("unrecognized keyword arguments: " +
+                                 str(list(kwargs.keys())))
         else:
             if isinstance(prune, bool):
                 vprune = eprune = rprune = prune
