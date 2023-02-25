@@ -46,6 +46,41 @@ vertices to property values, e.g.:
    library would incur a prohibitive performance cost — not to mention
    a significant increase in complexity.
 
+
+Is it possible to perform modularity maximization with ``graph-tool``?
+----------------------------------------------------------------------
+
+It is in fact possible to perform modularity maximization with
+``graph-tool``. For that you need to use the
+:class:`~graph_tool.inference.ModularityState` object instead
+of :class:`graph_tool.inference.BlockState`, as documented in
+the section :ref:`inference-howto`, e.g.
+
+   >>> g = gt.collection.data["football"]
+   >>> state = gt.minimize_blockmodel_dl(g, state=gt.ModularityState)
+
+.. danger:: Using modularity maximization is almost always **a terrible idea**.
+
+   Modularity maximization is a substantially inferior method to the
+   inference-based ones that are implemented in ``graph-tool``, since it
+   does not possess any kind of statistical regularization. Among many
+   other problems, the method tends to massively overfit in empirical
+   data.
+
+   For a more detailed explanation see `“Modularity maximization
+   considered harmful”
+   <https://skewed.de/tiago/blog/modularity-harmful>`_, as well as
+   [peixoto-descriptive-2021]_.
+
+   Do not use this approach in the analysis of networks without
+   understanding the consequences. This algorithm is included only for
+   comparison purposes. In general, the inference-based approaches based
+   on :class:`~graph_tool.inference.BlockState`,
+   :class:`~graph_tool.inference.NestedBlockState`, and
+   :class:`~graph_tool.inference.PPBlockState` should be universally
+   preferred.
+
+   
 How do I cite graph-tool?
 -------------------------
 
@@ -72,5 +107,9 @@ More information can be found at the `figshare site
 <http://figshare.com/articles/graph_tool/1164194>`_.
 
 
+References
+----------
 
-
+.. [peixoto-descriptive-2021] Tiago P. Peixoto, “Descriptive
+   vs. inferential community detection: pitfalls, myths and half-truths”,
+   :arxiv:`2112.00183`

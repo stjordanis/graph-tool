@@ -91,17 +91,28 @@ def modularity(g, b, gamma=1., weight=None):
 
 class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                       GibbsMCMCState, DrawBlockState):
-    r"""Obtain the partition of a network according to Newman's modularity.
+    r"""Obtain the partition of a network according to the maximization of Newman's modularity.
 
-    .. warning::
+    .. danger:: Using modularity maximization is almost always **a terrible idea**.
+
+       Modularity maximization is a substantially inferior method to the
+       inference-based ones that are implemented in ``graph-tool``, since it
+       does not possess any kind of statistical regularization. Among many
+       other problems, the method tends to massively overfit in empirical
+       data.
+
+       For a more detailed explanation see `“Modularity maximization
+       considered harmful”
+       <https://skewed.de/tiago/blog/modularity-harmful>`_, as well as
+       [peixoto-descriptive-2021]_.
 
        Do not use this approach in the analysis of networks without
        understanding the consequences. This algorithm is included only for
-       comparison purposes. In general, the inference-based approaches based on
-       :class:`~graph_tool.inference.BlockState`,
+       comparison purposes. In general, the inference-based approaches based
+       on :class:`~graph_tool.inference.BlockState`,
        :class:`~graph_tool.inference.NestedBlockState`, and
-       :class:`~graph_tool.inference.PPBlockState` should be
-       universally preferred.
+       :class:`~graph_tool.inference.PPBlockState` should be universally
+       preferred.
 
     Parameters
     ----------
