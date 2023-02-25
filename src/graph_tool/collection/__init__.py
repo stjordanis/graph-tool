@@ -18,10 +18,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""``graph_tool.collection`` - Dataset collection
+"""
+``graph_tool.collection`` - Dataset collection
 ----------------------------------------------
 
 This module contains an assortment of useful networks.
+
+Interface to the Netzschleuder online network repository
+========================================================
 
 .. data:: ns
 
@@ -35,6 +39,14 @@ This module contains an assortment of useful networks.
     each graph are given in the :data:`ns_info` dictionary, or alternatively in
     the graph properties which accompanies each graph object.
 
+
+    Examples
+    ++++++++
+    >>> g = gt.collection.ns["advogato"]
+    >>> print(g.gp.description)
+    A network of trust relationships among users on Advogato, an online community of open source software developers. Edge direction indicates that node i trusts node j, and edge weight denotes one of four increasing levels of declared trust from i to j: observer (0.4), apprentice (0.6), journeyer (0.8), and master (1.0).
+
+
 .. data:: ns_info
 
     Dictionary containing descriptions and other summary information for
@@ -44,6 +56,9 @@ This module contains an assortment of useful networks.
     ``("<entry>", "<network>")``. The information is downloaded on-the-fly via
     the available JSON API.
 
+Built-in collection of empirical network data
+=============================================
+
 .. data:: data
 
     Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
@@ -52,6 +67,20 @@ This module contains an assortment of useful networks.
     description for each graph is given in the :data:`descriptions` dictionary,
     or alternatively in the ``"description"`` graph property which accompanies
     each graph object.
+
+    Examples
+    ++++++++
+    >>> g = gt.collection.data["karate"]
+    >>> print(g)
+    <Graph object, undirected, with 34 vertices and 78 edges, 1 internal vertex property, 2 internal graph properties, at 0x...>
+    >>> print(g.gp.readme)
+    The file karate.gml contains the network of friendships between the 34
+    members of a karate club at a US university, as described by Wayne Zachary
+    in 1977.  If you use these data in your work, please cite W. W. Zachary, An
+    information flow model for conflict and fission in small groups, Journal of
+    Anthropological Research 33, 452-473 (1977).
+    <BLANKLINE>
+
 
 .. data:: descriptions
 
@@ -254,8 +283,9 @@ This module contains an assortment of useful networks.
                                                                  :doi:`10.1371/journal.pcbi.1002321`
         ===================  ===========  ===========  ========  ================================================
 
-Small graphs
-============
+
+Functions returning small graphs
+================================
 
 .. autosummary::
    :nosignatures:
@@ -283,41 +313,53 @@ Small graphs
    truncated_tetrahedron_graph
    tutte_graph
 
-Examples
-========
+Small graph atlas
+=================
 
-    >>> g = gt.collection.data["karate"]
-    >>> print(g)
-    <Graph object, undirected, with 34 vertices and 78 edges, 1 internal vertex property, 2 internal graph properties, at 0x...>
-    >>> print(g.gp.readme)
-    The file karate.gml contains the network of friendships between the 34
-    members of a karate club at a US university, as described by Wayne Zachary
-    in 1977.  If you use these data in your work, please cite W. W. Zachary, An
-    information flow model for conflict and fission in small groups, Journal of
-    Anthropological Research 33, 452-473 (1977).
-    <BLANKLINE>
+.. data:: atlas
 
-    >>> g = gt.collection.ns["advogato"]
-    >>> print(g.gp.description)
-    A network of trust relationships among users on Advogato, an online community of open source software developers. Edge direction indicates that node i trusts node j, and edge weight denotes one of four increasing levels of declared trust from i to j: observer (0.4), apprentice (0.6), journeyer (0.8), and master (1.0).
+    Lazy list of of all graphs with up to seven nodes named in the
+    Graph Atlas [atlas]_.
+
+    The graphs are listed in increasing according to
+
+    1. number of nodes,
+    2. number of edges,
+    3. degree sequence (for example 111223 < 112222),
+    4. number of automorphisms,
+
+    in that order, with three exceptions:
+
+    - graphs 55 and 56, with degree sequences 001111 and 000112,
+    - graphs 1007 and 1008, with degree sequences 3333444 and 3333336,
+    - graphs 1012 and 1213, with degree sequences 1244555 and 1244456.
+
+    These errors are kept in this list so that the indexes match those of
+    [atlas]_.
+
+    References
+    ++++++++++
+    .. [atlas] Ronald C. Read and Robin J. Wilson, “An Atlas of Graphs". Oxford
+       University Press, 1998.
 
 Contents
 ========
-
 """
 
 import os.path
 import textwrap
+import gzip
+import io
 from .. import load_graph
 
-__all__ = ["data", "descriptions", "get_data_path", "ns", "ns_info",
-           "LCF_graph", "bull_graph", "chvatal_graph", "cubical_graph",
-           "desargues_graph", "diamond_graph", "dodecahedral_graph",
-           "frucht_graph", "heawood_graph", "hoffman_singleton_graph",
-           "house_graph", "icosahedral_graph", "krackhardt_kite_graph",
-           "moebius_kantor_graph", "octahedral_graph", "pappus_graph",
-           "petersen_graph", "sedgewick_maze_graph", "tetrahedral_graph",
-           "truncated_cube_graph", "truncated_tetrahedron_graph", "tutte_graph"]
+__all__ = ["data", "descriptions", "ns", "ns_info", "atlas", "LCF_graph",
+           "bull_graph", "chvatal_graph", "cubical_graph", "desargues_graph",
+           "diamond_graph", "dodecahedral_graph", "frucht_graph",
+           "heawood_graph", "hoffman_singleton_graph", "house_graph",
+           "icosahedral_graph", "krackhardt_kite_graph", "moebius_kantor_graph",
+           "octahedral_graph", "pappus_graph", "petersen_graph",
+           "sedgewick_maze_graph", "tetrahedral_graph", "truncated_cube_graph",
+           "truncated_tetrahedron_graph", "tutte_graph" ]
 
 base_dir = os.path.dirname(__file__)
 
@@ -369,7 +411,6 @@ class LazyDataDict(dict):
             self[k]  # force loading of lazy items
         return dict.items(self)
 
-
 data = LazyDataDict()
 
 def _update_descriptions():
@@ -390,6 +431,33 @@ def _print_table():
         for line in d[1:]:
             print(" " * 57 + line)
     print("===================  ===========  ===========  ========  ================================================")
+
+
+class LazyList(list):
+    def _populate(self):
+        if super().__len__() == 0:
+            with gzip.open(base_dir + "/atlas.dat.gz", "rb") as f:
+                while True:
+                    s = int.from_bytes(f.read(4), 'little')
+                    b = f.read(s)
+                    if len(b) == 0:
+                        break
+                    g = load_graph(io.BytesIO(b), fmt="gt")
+                    self.append(g)
+
+    def __len__(self):
+        self._populate()
+        return super().__len__()
+
+    def __getitem__(self, i):
+        self._populate()
+        return super().__getitem__(i)
+
+    def __iter__(self):
+        self._populate()
+        return super().__iter__()
+
+atlas = LazyList()
 
 from . netzschleuder import *
 from . small import *
