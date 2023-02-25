@@ -2512,6 +2512,8 @@ class Graph(object):
            unchanged, unless :meth:`~Graph.set_fast_edge_removal` is set to
            `True`, in which case it can change.
         """
+        if isinstance(edge, (tuple, list)):
+            edge = self.edge(edge[0], edge[1])
         return libcore.remove_edge(self.__graph, edge)
 
     def add_edge_list(self, edge_list, hashed=False, hash_type="string",
