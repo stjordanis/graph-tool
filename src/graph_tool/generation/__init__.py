@@ -30,6 +30,8 @@ Summary
 
    random_graph
    random_rewire
+   add_random_edges
+   remove_random_edges
    generate_sbm
    generate_maxent_sbm
    solve_sbm_fugacities
@@ -63,12 +65,12 @@ import numpy.random
 import scipy.optimize
 import scipy.sparse
 
-__all__ = ["random_graph", "random_rewire", "generate_sbm",
-           "solve_sbm_fugacities", "generate_maxent_sbm", "generate_knn",
-           "generate_triadic_closure", "predecessor_tree", "line_graph",
-           "graph_union", "triangulation", "lattice", "geometric_graph",
-           "price_network", "complete_graph", "circular_graph",
-           "condensation_graph"]
+__all__ = ["random_graph", "random_rewire", "add_random_edges",
+           "remove_random_edges", "generate_sbm", "solve_sbm_fugacities",
+           "generate_maxent_sbm", "generate_knn", "generate_triadic_closure",
+           "predecessor_tree", "line_graph", "graph_union", "triangulation",
+           "lattice", "geometric_graph", "price_network", "complete_graph",
+           "circular_graph", "condensation_graph"]
 
 def random_graph(N, deg_sampler, directed=True,
                  parallel_edges=False, self_loops=False, block_membership=None,
@@ -1380,6 +1382,105 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
                        _prop("v", g, in_theta), _prop("v", g, out_theta),
                        multigraph, self_loops, _get_rng())
     return g
+
+
+def add_random_edges(g, M, parallel=False, self_loops=False, weight=None):
+    r"""Add new edges to a graph, chosen uniformly at random.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be modified.
+    M : ``int``
+        Number of edges to be added.
+    parallel : ``bool`` (optional, default: ``False``)
+        Wheter to allow parallel edges to be added.
+    self_loops : ``bool`` (optional, default: ``False``)
+        Wheter to allow self_loops to be added.
+    weight : :class:`~graph_tool.EdgePropertyMap`, optional (default: ``None``)
+        Integer edge multiplicities. If supplied, this will be incremented for
+        edges already in the graph, instead of new edges being added.
+
+    See Also
+    --------
+    remove_random_edges: remove random edges to the graph
+
+    Notes
+    -----
+    If the graph is not being filtered, this algorithm runs in time :math:`O(M)`
+    if ``parallel == True`` or :math:`O(M\left<k\right>)` if ``parallel ==
+    False``, where :math:`\left<k\right>` is the average degree of the graph.
+
+    For filtered graphs, this algorithm runs in time :math:`O(M + E)` if
+    ``parallel == True`` or :math:`O(M\left<k\right> + E)` if ``parallel ==
+    False``, where :math:`E` is the number of edges in the graph.
+
+    Examples
+    --------
+    Generating a Newman–Watts–Strogatz small-world graph:
+
+    >>> g = gt.circular_graph(100)
+    >>> gt.add_random_edges(g, 30)
+
+    """
+
+    vfilt = g.get_vertex_filter()[0]
+    filtered = vfilt is not None and vfilt.a.sum() < len(vfilt.a)
+
+    libgraph_tool_generation.\
+        add_random_edges(g._Graph__graph, M, parallel, self_loops, filtered,
+                         _prop("e", g, weight), _get_rng())
+
+def remove_random_edges(g, M, weight=None, counts=True):
+    r"""Remove edges from the graph, chosen uniformly at random.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be modified.
+    M : ``int``
+        Number of edges to be removed.
+    weight : :class:`~graph_tool.EdgePropertyMap`, optional (default: ``None``)
+        Integer edge multipliciites or edge removal probabilities. If supplied,
+        and ``counts == True`` this will be decremented for edges removed.
+    counts : ``bool``, optional (default: ``True``)
+        If ``True``, the values given by ``weight`` are assumed to be integer
+        edge multiplicities. Otherwise, they will be only considered to be
+        proportional to the probability of an edge being removed.
+
+    See Also
+    --------
+    add_random_edges: add random edges to the graph
+
+    Notes
+    -----
+
+    This algorithm runs in time :math:`O(E\left<k\right>)` if
+    ``weight is None``, otherwise :math:`O(E + \left<k\right>M\log E)`.
+
+    .. note::
+
+       The complexity can be improved to :math:`O(E)` and :math:`O(E + M\log
+       E)`, respectively, if fast edge removal is activated via
+       :meth:`~graph_tool.Graph.set_fast_edge_removal` prior to running this
+       function.
+
+    Examples
+    --------
+    .. testcode::
+       :hide:
+
+       gt.seed_rng(42)
+
+    >>> g = gt.lattice([100, 100])
+    >>> gt.remove_random_edges(g, 10000)
+    >>> gt.label_components(g)[1].max()
+    4450
+    """
+
+    libgraph_tool_generation.\
+        remove_random_edges(g._Graph__graph, M, _prop("e", g, weight), counts,
+                            _get_rng())
 
 def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
                  directed=False, cache_dist=True):

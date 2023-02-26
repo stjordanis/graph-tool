@@ -313,6 +313,7 @@ libgraph_tool_generation_la_SOURCES = \
 	src/graph/generation/graph_maxent_sbm.cc \
 	src/graph/generation/graph_predecessor.cc \
 	src/graph/generation/graph_price.cc \
+	src/graph/generation/graph_random_edges.cc \
 	src/graph/generation/graph_rewiring.cc \
 	src/graph/generation/graph_sbm.cc \
 	src/graph/generation/graph_triadic_closure.cc \
@@ -331,6 +332,7 @@ libgraph_tool_generation_la_include_HEADERS = \
 	src/graph/generation/graph_maxent_sbm.hh \
 	src/graph/generation/graph_predecessor.hh \
 	src/graph/generation/graph_price.hh \
+	src/graph/generation/graph_random_edges.hh \
 	src/graph/generation/graph_rewiring.hh \
 	src/graph/generation/graph_sbm.hh \
 	src/graph/generation/graph_triadic_closure.hh \
