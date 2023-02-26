@@ -185,6 +185,21 @@ build_jammy:
     paths:
       - release/debian/build/*
 
+build_kinetic:
+  script:
+    - BASE=ubuntu:kinetic
+    - img=`echo $BASE | sed s/:/_/`
+    - cd release/debian
+    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
+    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
+    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
+    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
+  only:
+    - tags
+  artifacts:
+    paths:
+      - release/debian/build/*
+
 build_docker:
   script:
     - cd release/docker
