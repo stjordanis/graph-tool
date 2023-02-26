@@ -1011,6 +1011,14 @@ def generate_sbm(b, probs, out_degs=None, in_degs=None, directed=False,
     g.add_vertex(len(b))
     b = g.new_vp("int", b)
 
+    if micro_degs:
+        if (out_degs is not None and
+            not numpy.equal(numpy.mod(out_degs, 1), 0).all()):
+            raise ValueError("The 'out_degs' parameter must contain only integer values if 'micro_degs' is set to True.")
+        if (in_degs is not None and
+            not numpy.equal(numpy.mod(in_degs, 1), 0).all()):
+            raise ValueError("The 'out_degs' parameter must contain only integer values if 'micro_degs' is set to True.")
+
     deg_type = "double" if not micro_degs else "int64_t"
     p_type = "double" if not micro_degs else "uint64"
     if not directed:
@@ -1037,6 +1045,10 @@ def generate_sbm(b, probs, out_degs=None, in_degs=None, directed=False,
 
     if len(p.shape) == 0: # B == 1 special case
         p = numpy.array([p])
+
+    if micro_ers:
+        if not numpy.equal(numpy.mod(p, 1), 0).all():
+            raise ValueError("The 'probs' parameter must contain only integer values if 'micro_ers' is set to True.")
 
     g.set_directed(directed)
 
