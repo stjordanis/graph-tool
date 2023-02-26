@@ -1,0 +1,90 @@
+// graph-tool -- a general graph modification and manipulation thingy
+//
+// Copyright (C) 2006-2023 Tiago de Paula Peixoto <tiago@skewed.de>
+//
+// This program is free software; you can redistribute it and/or modify it under
+// the terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation; either version 3 of the License, or (at your option) any
+// later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef GRAPH_CONTRACT_EDGES_HH
+#define GRAPH_CONTRACT_EDGES_HH
+
+#include "graph.hh"
+#include "graph_util.hh"
+#include "random.hh"
+#include "sampler.hh"
+#include "idx_map.hh"
+
+namespace graph_tool
+{
+using namespace std;
+using namespace boost;
+
+template <class Graph, class EWeight>
+void contract_parallel_edges(Graph& g, EWeight eweight)
+{
+    typedef typename graph_traits<Graph>::edge_descriptor edge_t;
+    idx_map<size_t, edge_t> emap;
+    std::vector<edge_t> remove;
+    for (auto v : vertices_range(g))
+    {
+        emap.clear();
+        remove.clear();
+        for (auto e : out_edges_range(v, g))
+        {
+            auto u = target(e, g);
+            auto iter = emap.find(u);
+            if (iter == emap.end())
+            {
+                emap[u] = e;
+            }
+            else
+            {
+                if (e == iter->second) // self-loops
+                    continue;
+                auto w = eweight[iter->second];
+                put(eweight, iter->second, eweight[e] + w);
+                remove.push_back(e);
+            }
+        }
+        for (auto& e : remove)
+            remove_edge(e, g);
+    }
+}
+
+template <class Graph, class EWeight>
+void expand_parallel_edges(Graph& g, EWeight eweight)
+{
+    typedef typename graph_traits<Graph>::edge_descriptor edge_t;
+    std::vector<edge_t> edges;
+    for (auto e : edges_range(g))
+        edges.push_back(e);
+    for (auto& e : edges)
+    {
+        size_t w = eweight[e];
+        if (w == 0)
+        {
+            remove_edge(e, g);
+        }
+        else
+        {
+            auto v = source(e, g);
+            auto u = target(e, g);
+            for (size_t m = 0; m < w - 1; ++m)
+                add_edge(v, u, g);
+        }
+    }
+}
+
+} // graph_tool namespace
+
+#endif // GRAPH_CONTRACT_EDGES_HH

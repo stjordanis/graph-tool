@@ -20,8 +20,8 @@
 
 from .. import _prop, Graph, GraphView, _get_rng, PropertyMap, \
     edge_endpoint_property, Vector_size_t
-from .. generation import generate_triadic_closure
-from .. stats import remove_parallel_edges,  remove_self_loops
+from .. generation import generate_triadic_closure, remove_parallel_edges, \
+    remove_self_loops
 from .. spectral import adjacency
 
 from .. dl_import import dl_import

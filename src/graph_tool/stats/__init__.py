@@ -33,9 +33,7 @@ Summary
    vertex_average
    edge_average
    label_parallel_edges
-   remove_parallel_edges
    label_self_loops
-   remove_self_loops
    remove_labeled_edges
    distance_histogram
 
@@ -48,11 +46,11 @@ from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_stats")
 
 from .. import _degree, _prop, _get_rng, GraphView, PropertyMap
+from .. generation import libgraph_tool_generation
 from numpy import *
 
 __all__ = ["vertex_hist", "edge_hist", "vertex_average", "edge_average",
-           "label_parallel_edges", "remove_parallel_edges",
-           "label_self_loops", "remove_self_loops", "remove_labeled_edges",
+           "label_parallel_edges", "label_self_loops", "remove_labeled_edges",
            "distance_histogram"]
 
 
@@ -333,13 +331,6 @@ def label_parallel_edges(g, mark_only=False, eprop=None):
     return eprop
 
 
-def remove_parallel_edges(g):
-    """Remove all parallel edges from the graph. Only one edge from each
-    parallel edge set is left."""
-    eprop = label_parallel_edges(g)
-    remove_labeled_edges(g, eprop)
-
-
 def label_self_loops(g, mark_only=False, eprop=None):
     """Label edges which are self-loops, i.e, the source and target vertices are
     the same. For each self-loop edge set :math:`SL`, the labelling starts from 0
@@ -356,13 +347,6 @@ def label_self_loops(g, mark_only=False, eprop=None):
           label_self_loops(g._Graph__graph, _prop("e", g, eprop),
                            mark_only)
     return eprop
-
-
-def remove_self_loops(g):
-    """Remove all self-loops edges from the graph."""
-    eprop = label_self_loops(g)
-    remove_labeled_edges(g, eprop)
-
 
 def distance_histogram(g, weight=None, bins=[0, 1], samples=None,
                        float_count=True):

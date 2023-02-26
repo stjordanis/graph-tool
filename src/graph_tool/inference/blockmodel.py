@@ -22,8 +22,8 @@ from .. import _prop, Graph, libcore, _get_rng, PropertyMap, \
     VertexPropertyMap, Vector_size_t, Vector_double, group_vector_property, \
     perfect_prop_hash
 from .. generation import condensation_graph, random_rewire, generate_sbm, \
-    solve_sbm_fugacities, generate_maxent_sbm
-from .. stats import remove_parallel_edges, remove_self_loops
+    solve_sbm_fugacities, generate_maxent_sbm, remove_parallel_edges, \
+    remove_self_loops
 from .. spectral import adjacency
 import random
 from numpy import *

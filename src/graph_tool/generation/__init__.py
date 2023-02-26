@@ -47,6 +47,10 @@ Summary
    complete_graph
    circular_graph
    condensation_graph
+   contract_parallel_edges
+   remove_parallel_edges
+   expand_parallel_edges
+   remove_self_loops
 
 Contents
 ++++++++
@@ -57,7 +61,7 @@ dl_import("from . import libgraph_tool_generation")
 
 from .. import Graph, GraphView, _check_prop_scalar, _prop, _limit_args, \
     _gt_type, _get_rng, Vector_double, VertexPropertyMap
-from .. stats import remove_parallel_edges
+from .. import stats
 import inspect
 import types
 import numpy
@@ -70,7 +74,8 @@ __all__ = ["random_graph", "random_rewire", "add_random_edges",
            "generate_maxent_sbm", "generate_knn", "generate_triadic_closure",
            "predecessor_tree", "line_graph", "graph_union", "triangulation",
            "lattice", "geometric_graph", "price_network", "complete_graph",
-           "circular_graph", "condensation_graph"]
+           "circular_graph", "condensation_graph", "contract_parallel_edges",
+           "expand_parallel_edges", "remove_parallel_edges", "remove_self_loops"]
 
 def random_graph(N, deg_sampler, directed=True,
                  parallel_edges=False, self_loops=False, block_membership=None,
@@ -2630,6 +2635,93 @@ def condensation_graph(g, prop, vweight=None, eweight=None, avprops=None,
                                                     aep, self_loops,
                                                     parallel_edges)
     return gp, cprop, vcount, ecount, r_avp, r_aep
+
+def contract_parallel_edges(g, weight=None):
+    r"""Contract all parallel edges into simple edges.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be modified.
+    weight : :class:`~graph_tool.EdgePropertyMap`, optional (default: ``None``)
+        Edge multiplicities.
+
+    Returns
+    -------
+    weight : :class:`~graph_tool.EdgePropertyMap`
+        Edge multiplicities.
+
+    See Also
+    --------
+    expand_parallel_edges: expand edge multiplicities into parallel edges.
+
+    Notes
+    -----
+    This algorithm runs in time :math:`O(N + E)` where :math:`N` and :math:`E`
+    are the number of nodes and edges in the graph, respectively.
+
+    Examples
+    --------
+
+    >>> u = gt.collection.data["polblogs"].copy()
+    >>> u.set_directed(False)
+    >>> g = u.copy()
+    >>> w = gt.contract_parallel_edges(g)
+    >>> gt.expand_parallel_edges(g, w)
+    >>> gt.similarity(g, u)
+    1.0
+    """
+
+    if weight is None:
+        weight = g.new_ep("int", val=1)
+    libgraph_tool_generation.\
+        contract_parallel_edges(g._Graph__graph, _prop("e", g, weight))
+    return weight
+
+def remove_parallel_edges(g):
+    """Remove all parallel edges from the graph. Only one edge from each
+    parallel edge set is left."""
+    libgraph_tool_generation.\
+        contract_parallel_edges(g._Graph__graph, _prop("e", g, None))
+
+def remove_self_loops(g):
+    """Remove all self-loops edges from the graph."""
+    eprop = stats.label_self_loops(g)
+    stats.remove_labeled_edges(g, eprop)
+
+def expand_parallel_edges(g, weight):
+    r"""Expand edge multiplicities into parallel edges.
+
+    Parameters
+    ----------
+    g : :class:`~graph_tool.Graph`
+        Graph to be modified.
+    weight : :class:`~graph_tool.EdgePropertyMap`
+        Edge multiplicities.
+
+    See Also
+    --------
+    contract_random_edges: contract all parallel edges into simple edges.
+
+    Notes
+    -----
+
+    This algorithm runs in time :math:`O(N + E)` where :math:`N` is the number
+    of nodes and :math:`E` is the final number of edges in the graph.
+
+    Examples
+    --------
+    >>> u = gt.collection.data["polblogs"].copy()
+    >>> u.set_directed(False)
+    >>> g = u.copy()
+    >>> w = gt.contract_parallel_edges(g)
+    >>> gt.expand_parallel_edges(g, w)
+    >>> gt.similarity(g, u)
+    1.0
+
+    """
+    libgraph_tool_generation.\
+        expand_parallel_edges(g._Graph__graph, _prop("e", g, weight))
 
 class Sampler(libgraph_tool_generation.Sampler):
     def __init__(self, values, probs):

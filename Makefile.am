@@ -305,6 +305,7 @@ libgraph_tool_generation_la_SOURCES = \
 	src/graph/generation/graph_community_network_edges.cc \
 	src/graph/generation/graph_community_network_vavg.cc \
 	src/graph/generation/graph_complete.cc \
+	src/graph/generation/graph_contract_edges.cc \
 	src/graph/generation/graph_generation.cc \
 	src/graph/generation/graph_geometric.cc \
 	src/graph/generation/graph_knn.cc \
@@ -325,6 +326,7 @@ libgraph_tool_generation_la_include_HEADERS = \
 	src/graph/generation/dynamic_sampler.hh \
 	src/graph/generation/graph_community_network.hh \
 	src/graph/generation/graph_complete.hh \
+	src/graph/generation/graph_contract_edges.hh \
 	src/graph/generation/graph_generation.hh \
 	src/graph/generation/graph_geometric.hh \
 	src/graph/generation/graph_knn.hh \

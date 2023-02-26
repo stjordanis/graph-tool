@@ -139,6 +139,7 @@ void community_network_eavg(GraphInterface& gi, GraphInterface& cgi,
 
 void export_maxent_sbm();
 void export_random_edges();
+void export_contract_edges();
 
 using namespace boost::python;
 
@@ -167,6 +168,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_generation)
     def("community_network_eavg", &community_network_eavg);
     export_maxent_sbm();
     export_random_edges();
+    export_contract_edges();
 
     class_<Sampler<int, boost::mpl::false_>>("Sampler",
                                              init<const vector<int>&, const vector<double>&>())
