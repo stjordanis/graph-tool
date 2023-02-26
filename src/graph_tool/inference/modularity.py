@@ -97,9 +97,8 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
        Modularity maximization is a substantially inferior method to the
        inference-based ones that are implemented in ``graph-tool``, since it
-       does not possess any kind of statistical regularization. Among many
-       other problems, the method tends to massively overfit in empirical
-       data.
+       does not possess any kind of statistical regularization. Among many other
+       problems, the method tends to massively overfit empirical data.
 
        For a more detailed explanation see `“Modularity maximization
        considered harmful”
@@ -123,6 +122,7 @@ class ModularityState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         be used.
     eweight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge multiplicities (for multigraphs).
+
     """
 
     def __init__(self, g, b=None, eweight=None):

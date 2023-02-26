@@ -64,8 +64,7 @@ the section :ref:`inference-howto`, e.g.
    Modularity maximization is a substantially inferior method to the
    inference-based ones that are implemented in ``graph-tool``, since it
    does not possess any kind of statistical regularization. Among many
-   other problems, the method tends to massively overfit in empirical
-   data.
+   other problems, the method tends to massively overfit empirical data.
 
    For a more detailed explanation see `“Modularity maximization
    considered harmful”
