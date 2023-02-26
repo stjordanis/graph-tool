@@ -92,6 +92,12 @@ public:
             return _items[_alias[i]];
     }
 
+    template <class RNG>
+    const Value& operator()(RNG& rng)
+    {
+        return sample(rng);
+    }
+
     size_t size() const { return _items.size(); }
     bool empty() const { return _S == 0; }
     bool has_n(size_t n) const { return (n == 0 || !empty()); }

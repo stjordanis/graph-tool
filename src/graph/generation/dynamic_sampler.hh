@@ -76,6 +76,12 @@ public:
         return _items[sample_idx(rng)];
     }
 
+    template <class RNG>
+    const Value& operator()(RNG& rng)
+    {
+        return sample(rng);
+    }
+
     size_t insert(const Value& v, double w)
     {
         size_t pos;
