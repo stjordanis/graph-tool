@@ -104,11 +104,3 @@ Here is a more convenient `BibTeX <http://www.bibtex.org>`_ entry:
 
 More information can be found at the `figshare site
 <http://figshare.com/articles/graph_tool/1164194>`_.
-
-
-References
-----------
-
-.. [peixoto-descriptive-2021] Tiago P. Peixoto, “Descriptive
-   vs. inferential community detection: pitfalls, myths and half-truths”,
-   :arxiv:`2112.00183`

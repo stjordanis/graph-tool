@@ -4,10 +4,16 @@ Inferring modular network structure
 ===================================
 
 ``graph-tool`` includes algorithms to identify the large-scale structure
-of networks in the :mod:`~graph_tool.inference` submodule. Here we
-explain the basic functionality with self-contained examples. For a more
-thorough theoretical introduction to the methods described here, the
-reader is referred to [peixoto-bayesian-2019]_.
+of networks via statistical inference in the
+:mod:`~graph_tool.inference` submodule. Here we explain the basic
+functionality with self-contained examples. For a more thorough
+theoretical introduction to the methods described here, the reader is
+referred to [peixoto-bayesian-2019]_.
+
+See also [peixoto-descriptive-2021]_ and the corresponding `blog post
+<https://skewed.de/tiago/blog/descriptive-inferential>`_ for an overall
+discussion about inferential approaches to structure identification in
+networks, and how it contrasts with descriptive approaches.
 
 .. include:: _background.rst
 .. include:: _minimization.rst
@@ -28,6 +34,10 @@ References
    Advances in Network Clustering and Blockmodeling, edited
    by P. Doreian, V. Batagelj, A. Ferligoj, (Wiley, New York, 2019)
    :doi:`10.1002/9781119483298.ch11`, :arxiv:`1705.10225`
+
+.. [peixoto-descriptive-2021] Tiago P. Peixoto, “Descriptive
+   vs. inferential community detection: pitfalls, myths and half-truths”,
+   :arxiv:`2112.00183`
 
 .. [holland-stochastic-1983] Paul W. Holland, Kathryn Blackmond Laskey,
    Samuel Leinhardt, "Stochastic blockmodels: First steps", Social Networks
