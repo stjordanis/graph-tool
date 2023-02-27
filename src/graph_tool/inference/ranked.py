@@ -51,8 +51,9 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
     References
     ----------
-    .. [peixoto-ordered-2022] Tiago P. Peixoto, "Ordered community detection
-       in directed networks", :arxiv:`2203.16460`
+    .. [peixoto-ordered-2022] Tiago P. Peixoto, "Ordered community detection in
+       directed networks", Phys. Rev. E 106, 024305 (2022),
+       :doi:`10.1103/PhysRevE.106.024305`, :arxiv:`2203.16460`
 
     """
 

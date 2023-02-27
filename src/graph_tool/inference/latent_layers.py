@@ -251,8 +251,9 @@ class LatentClosureBlockState(LatentLayerBaseState):
 
     References
     ----------
-    .. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
-       community structure and triadic closure in networks", :arxiv:`2101.02510`
+    .. [peixoto-disentangling-2022] Tiago P. Peixoto, "Disentangling homophily,
+       community structure and triadic closure in networks", Phys. Rev. X 12,
+       011004 (2022), :doi:`10.1103/PhysRevX.12.011004`, :arxiv:`2101.02510`
     """
 
     def __init__(self, g, L=1, b=None, aE=numpy.nan, nested=True,
@@ -604,8 +605,9 @@ class MeasuredClosureBlockState(LatentClosureBlockState, UncertainBaseState):
 
     References
     ----------
-    .. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
-       community structure and triadic closure in networks", :arxiv:`2101.02510`
+    .. [peixoto-disentangling-2022] Tiago P. Peixoto, "Disentangling homophily,
+       community structure and triadic closure in networks", Phys. Rev. X 12,
+       011004 (2022), :doi:`10.1103/PhysRevX.12.011004`, :arxiv:`2101.02510`
     """
 
     def __init__(self, g, n, x, n_default=1, x_default=0, L=1, b=None,

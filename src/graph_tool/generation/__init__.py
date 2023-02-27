@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.s
 
 """
-``graph_tool.generation`` - Random graph generation
----------------------------------------------------
+``graph_tool.generation`` - Graph generation
+--------------------------------------------
 
 Summary
 +++++++
@@ -1143,7 +1143,8 @@ def solve_sbm_fugacities(b, ers, out_degs=None, in_degs=None, multigraph=False,
     References
     ----------
     .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-       networks with heterogeneous density", :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
+       networks with heterogeneous density", Phys. Rev. E 102 012309 (2020)
+       :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
     """
 
     b = numpy.asarray(b, dtype="int32")
@@ -1341,23 +1342,25 @@ def generate_maxent_sbm(b, mrs, out_theta, in_theta=None, directed=False,
     Examples
     --------
 
-    >>> g = gt.collection.data["polblogs"]
-    >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))
-    >>> g = gt.Graph(g, prune=True)
-    >>> gt.remove_self_loops(g)
-    >>> gt.remove_parallel_edges(g)
-    >>> state = gt.minimize_blockmodel_dl(g)
-    >>> ers = gt.adjacency(state.get_bg(), state.get_ers()).T
-    >>> out_degs = g.degree_property_map("out").a
-    >>> in_degs = g.degree_property_map("in").a
-    >>> mrs, theta_out, theta_in = gt.solve_sbm_fugacities(state.b.a, ers, out_degs, in_degs)
-    >>> u = gt.generate_maxent_sbm(state.b.a, mrs, theta_out, theta_in, directed=True)
-    >>> gt.graph_draw(g, g.vp.pos, output="polblogs-maxent-sbm.pdf")
-    <...>
-    >>> gt.graph_draw(u, u.own_property(g.vp.pos), output="polblogs-maxent-sbm-generated.pdf")
-    <...>
+    .. doctest:: max_ent_sbm
 
-    .. testcleanup::
+       >>> g = gt.collection.data["polblogs"]
+       >>> g = gt.GraphView(g, vfilt=gt.label_largest_component(g))
+       >>> g = gt.Graph(g, prune=True)
+       >>> gt.remove_self_loops(g)
+       >>> gt.remove_parallel_edges(g)
+       >>> state = gt.minimize_blockmodel_dl(g)
+       >>> ers = gt.adjacency(state.get_bg(), state.get_ers()).T
+       >>> out_degs = g.degree_property_map("out").a
+       >>> in_degs = g.degree_property_map("in").a
+       >>> mrs, theta_out, theta_in = gt.solve_sbm_fugacities(state.b.a, ers, out_degs, in_degs)
+       >>> u = gt.generate_maxent_sbm(state.b.a, mrs, theta_out, theta_in, directed=True)
+       >>> gt.graph_draw(g, g.vp.pos, output="polblogs-maxent-sbm.pdf")
+       <...>
+       >>> gt.graph_draw(u, u.own_property(g.vp.pos), output="polblogs-maxent-sbm-generated.pdf")
+       <...>
+
+    .. testcleanup:: max_ent_sbm
 
        conv_png("polblogs-maxent-sbm.pdf")
        conv_png("polblogs-maxent-sbm-generated.pdf")
@@ -1622,7 +1625,7 @@ def generate_triadic_closure(g, t, probs=True, curr=None, ego=None):
     Notes
     -----
 
-    This algorithm [peixoto-disentangling-2021]_ consist in, for each node
+    This algorithm [peixoto-disentangling-2022]_ consist in, for each node
     ``u``, connecting all its neighbors with probability given by ``t[u]``. In
     case ``probs == False``, then ``t[u]`` indicates the number of random pairs
     of neighbors of ``u`` that are connected. This algorithm may generate
@@ -1633,8 +1636,9 @@ def generate_triadic_closure(g, t, probs=True, curr=None, ego=None):
 
     References
     ----------
-    .. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
-       community structure and triadic closure in networks", :arxiv:`2101.02510`
+    .. [peixoto-disentangling-2022] Tiago P. Peixoto, "Disentangling homophily,
+       community structure and triadic closure in networks", Phys. Rev. X 12,
+       011004 (2022), :doi:`10.1103/PhysRevX.12.011004`, :arxiv:`2101.02510`
 
     Examples
     --------
@@ -2142,13 +2146,14 @@ def complete_graph(N, self_loops=False, directed=False):
 
     Examples
     --------
+    .. doctest:: complete
 
-    >>> g = gt.complete_graph(30)
-    >>> pos = gt.sfdp_layout(g, cooling_step=0.95, epsilon=1e-2)
-    >>> gt.graph_draw(g, pos=pos, output="complete.pdf")
-    <...>
+       >>> g = gt.complete_graph(30)
+       >>> pos = gt.sfdp_layout(g, cooling_step=0.95, epsilon=1e-2)
+       >>> gt.graph_draw(g, pos=pos, output="complete.pdf")
+       <...>
 
-    .. testcleanup::
+    .. testcleanup:: complete
 
        conv_png("complete.pdf")
 
@@ -2713,7 +2718,7 @@ def expand_parallel_edges(g, weight):
 
     See Also
     --------
-    contract_random_edges: contract all parallel edges into simple edges.
+    contract_parallel_edges: contract all parallel edges into simple edges.
 
     Notes
     -----

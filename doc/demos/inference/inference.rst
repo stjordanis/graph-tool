@@ -13,7 +13,7 @@ referred to [peixoto-bayesian-2019]_.
 See also [peixoto-descriptive-2021]_ and the corresponding `blog post
 <https://skewed.de/tiago/blog/descriptive-inferential>`_ for an overall
 discussion about inferential approaches to structure identification in
-networks, and how it contrasts with descriptive approaches.
+networks, and how they contrast with descriptive approaches.
 
 .. include:: _background.rst
 .. include:: _minimization.rst
@@ -98,21 +98,24 @@ References
    043271 (2020), :doi:`10.1103/PhysRevResearch.2.043271`, :arxiv:`2006.14493`
 
 .. [peixoto-ordered-2022] Tiago P. Peixoto, "Ordered community detection
-   in directed networks", :arxiv:`2203.16460`
+   in directed networks", Phys. Rev. E 106, 024305 (2022),
+   :doi:`10.1103/PhysRevE.106.024305`, :arxiv:`2203.16460`
 
 .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
    networks with unknown and heterogeneous errors", Phys. Rev. X 8
    041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
 
-.. [peixoto-disentangling-2021] Tiago P. Peixoto, "Disentangling homophily,
-   community structure and triadic closure in networks", :arxiv:`2101.02510`
+.. [peixoto-disentangling-2022] Tiago P. Peixoto, "Disentangling homophily,
+   community structure and triadic closure in networks", Phys. Rev. X 12,
+   011004 (2022), :doi:`10.1103/PhysRevX.12.011004`, :arxiv:`2101.02510`
 
 .. [peixoto-network-2019] Tiago P. Peixoto, "Network reconstruction and
    community detection from dynamics", Phys. Rev. Lett. 123 128301
    (2019), :doi:`10.1103/PhysRevLett.123.128301`, :arxiv:`1903.10833`
 
 .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-   networks with heterogeneous density", :arxiv:`2002.07803`
+   networks with heterogeneous density", Phys. Rev. E 102 012309 (2020)
+   :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
 
 .. [martin-structural-2015] Travis Martin, Brian Ball, M. E. J. Newman,
    "Structural inference for uncertain networks", Phys. Rev. E 93,

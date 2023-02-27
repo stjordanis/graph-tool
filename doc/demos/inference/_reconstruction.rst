@@ -570,7 +570,7 @@ Latent triadic closures
 Another useful reconstruction scenario is when we assume our observed
 network is the outcome of a mixture of different edge placement
 mechanisms. One example is the combination of triadic closure with
-community structure [peixoto-disentangling-2021]_. This approach can be
+community structure [peixoto-disentangling-2022]_. This approach can be
 used to separate the effects of triangle formation from node homophily,
 which are typically conflated. We proceed in same way as in the previous
 reconstruction scenarios, but using instead

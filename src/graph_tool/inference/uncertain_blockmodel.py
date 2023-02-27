@@ -445,7 +445,8 @@ class LatentMultigraphBlockState(UncertainBaseState):
     References
     ----------
     .. [peixoto-latent-2020] Tiago P. Peixoto, "Latent Poisson models for
-       networks with heterogeneous density", :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
+       networks with heterogeneous density", Phys. Rev. E 102 012309 (2020)
+       :doi:`10.1103/PhysRevE.102.012309`, :arxiv:`2002.07803`
     """
 
     def __init__(self, g, aE=numpy.nan, nested=True, state_args={},
