@@ -8,7 +8,7 @@ RUN pacman -S pacman-contrib --noconfirm --disable-download-timeout
 RUN curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 - > /etc/pacman.d/mirrorlist
 
 RUN pacman -Syu --noconfirm --disable-download-timeout
-RUN pacman -S binutils make gcc fakeroot --noconfirm --needed
+RUN pacman -S binutils make gcc fakeroot libtool --noconfirm --needed
 RUN pacman -S expac yajl git --noconfirm --needed
 RUN pacman -S sudo grep file --noconfirm --needed
 
