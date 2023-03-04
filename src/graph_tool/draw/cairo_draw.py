@@ -783,8 +783,8 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
     inline_scale : float (optional, default: ``2.``):
         Resolution scaling factor for inline images.
     mplfig : :mod:`matplotlib` container object (optional, default: ``None``)
-        The ``mplfig`` object needs to have an ``artists`` attribute. This can
-        for example be a :class:`matplotlib.figure.Figure` or
+        The ``mplfig`` object needs to have an ``add_artist()`` function. This
+        can for example be a :class:`matplotlib.figure.Figure` or
         :class:`matplotlib.axes.Axes`. Only the cairo backend is supported; use
         ``switch_backend('cairo')``.
     output : string or file object (optional, default: ``None``)
@@ -1099,7 +1099,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         artist = GraphArtist(g, pos, vprops, eprops, ax, vorder=vorder,
                              eorder=eorder, nodesfirst=nodesfirst, **kwargs)
 
-        ctr.artists.append(artist)
+        ctr.add_artist(artist)
 
         if fit_view != False and ax is not None:
             try:
