@@ -76,7 +76,7 @@ inline auto lbeta(T x, T y)
 
 template <class T>
 [[gnu::const]]
-inline T log_sum_exp(T a, T b)
+inline auto log_sum_exp(T a, T b)
 {
     if (a == b)  // handles infinity
         return a + std::log(2);
