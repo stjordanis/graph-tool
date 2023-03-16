@@ -165,8 +165,11 @@ bool bellman_ford_search(GraphInterface& g, size_t source, boost::any dist_map,
     return ret;
 }
 
-void export_bellman_ford()
-{
+#define __MOD__ search
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     using namespace boost::python;
     def("bellman_ford_search", &bellman_ford_search);
-}
+ });

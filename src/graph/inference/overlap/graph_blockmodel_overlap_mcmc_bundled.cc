@@ -57,8 +57,11 @@ python::object do_overlap_mcmc_bundled_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_overlap_blockmodel_mcmc_bundled()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("overlap_mcmc_bundled_sweep", &do_overlap_mcmc_bundled_sweep);
-}
+});

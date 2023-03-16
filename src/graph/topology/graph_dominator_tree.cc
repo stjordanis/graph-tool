@@ -51,3 +51,15 @@ void dominator_tree(GraphInterface& gi, size_t entry, boost::any pred_map)
          },
          pred_properties())(pred_map);
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("dominator_tree", &dominator_tree);
+ });

@@ -95,7 +95,6 @@ struct add_ptr
     };
 };
 
-
 template <class State>
 static void export_cstate()
 {
@@ -107,8 +106,11 @@ static void export_cstate()
          });
 }
 
-void export_continuous()
-{
-    export_cstate<kuramoto_state>();
-    def("make_kuramoto_state", &make_state<kuramoto_state>);
-}
+#define __MOD__ dynamics
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     export_cstate<kuramoto_state>();
+     def("make_kuramoto_state", &make_state<kuramoto_state>);
+ });

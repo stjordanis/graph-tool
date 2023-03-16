@@ -95,3 +95,14 @@ void get_residual_graph(GraphInterface& gi, boost::any capacity,
          },
          edge_scalar_properties(), edge_scalar_properties())(capacity, res);
 }
+
+using namespace boost::python;
+
+#define __MOD__ flow
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("min_cut", &min_cut);
+     def("residual_graph", &get_residual_graph);
+ });

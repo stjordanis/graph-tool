@@ -36,7 +36,10 @@ python::object make_vi_center_state(boost::python::object ostate)
     return state;
 }
 
-void export_vi_center_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_vi_center_state", &make_vi_center_state);
@@ -57,4 +60,4 @@ void export_vi_center_state()
                  .def("virtual_move", virtual_move)
                  .def("entropy", &state_t::entropy);
          });
-}
+});

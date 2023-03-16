@@ -122,3 +122,15 @@ bool is_planar(GraphInterface& gi, boost::any embed_map, boost::any kur_map)
         (embed_map, kur_map);
     return is_planar;
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("is_planar", &is_planar);
+ });

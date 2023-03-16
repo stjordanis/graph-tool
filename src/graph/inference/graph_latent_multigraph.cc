@@ -40,7 +40,13 @@ void latent_multigraph(GraphInterface& gi, boost::any aw, boost::any atheta_out,
 
 using namespace boost::python;
 
-void export_latent_multigraph()
-{
-    def("latent_multigraph", &latent_multigraph);
-}
+
+using namespace boost::python;
+
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("latent_multigraph", &latent_multigraph);
+ });

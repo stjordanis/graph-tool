@@ -50,7 +50,10 @@ void arf_layout(GraphInterface& g, boost::any pos, boost::any weight, double d,
 
 #include <boost/python.hpp>
 
-void export_arf()
-{
-    boost::python::def("arf_layout", &arf_layout);
-}
+#define __MOD__ layout
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     boost::python::def("arf_layout", &arf_layout);
+ });

@@ -35,7 +35,10 @@ python::object make_modularity_state(boost::python::object ostate)
     return state;
 }
 
-void export_modularity_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_modularity_state", &make_modularity_state);
@@ -60,4 +63,4 @@ void export_modularity_state()
 
     class_<modularity_entropy_args_t>("modularity_entropy_args")
         .def_readwrite("gamma", &modularity_entropy_args_t::gamma);
-}
+});

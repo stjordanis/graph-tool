@@ -93,8 +93,11 @@ python::object multicanonical_layered_sweep(python::object omulticanonical_state
 #endif
 }
 
-void export_layered_blockmodel_multicanonical()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multicanonical_layered_sweep", &multicanonical_layered_sweep);
-}
+});

@@ -57,8 +57,11 @@ python::object vacate_overlap_sweep(python::object omerge_state,
     return ret;
 }
 
-void export_overlap_blockmodel_vacate()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("vacate_overlap_sweep", &vacate_overlap_sweep);
-}
+});

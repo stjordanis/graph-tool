@@ -154,3 +154,17 @@ void get_prim_spanning_tree(GraphInterface& gi, size_t root,
          },
          weight_maps(), tree_properties())(weight_map, tree_map);
 }
+
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("get_kruskal_spanning_tree", &get_kruskal_spanning_tree);
+     def("get_prim_spanning_tree", &get_prim_spanning_tree);
+ });

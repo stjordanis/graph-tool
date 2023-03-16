@@ -36,3 +36,13 @@ void price(GraphInterface& gi, size_t N, double gamma, double c, size_t m,
                  (std::forward<decltype(graph)>(graph), N, gamma, c, m, rng);
          })();
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("price", &price);
+ });

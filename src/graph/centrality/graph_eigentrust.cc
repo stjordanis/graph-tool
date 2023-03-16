@@ -48,8 +48,11 @@ size_t eigentrust(GraphInterface& g, boost::any c, boost::any t,
     return iter;
 }
 
-void export_eigentrust()
-{
-    using namespace boost::python;
-    def("get_eigentrust", &eigentrust);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("get_eigentrust", &eigentrust);
+ });

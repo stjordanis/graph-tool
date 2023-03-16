@@ -69,9 +69,11 @@ size_t pagerank(GraphInterface& g, boost::any rank, boost::any pers,
     return iter;
 }
 
-
-void export_pagerank()
-{
-    using namespace boost::python;
-    def("get_pagerank", &pagerank);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("get_pagerank", &pagerank);
+ });

@@ -60,7 +60,10 @@ make_layered_overlap_block_state(boost::python::object oblock_state,
 #endif
 }
 
-void export_layered_overlap_blockmodel_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -129,4 +132,4 @@ void export_layered_overlap_blockmodel_state()
          });
 
     def("make_layered_overlap_block_state", &make_layered_overlap_block_state);
-}
+});

@@ -55,8 +55,11 @@ python::object modularity_gibbs_sweep(python::object ogibbs_state,
     return ret;
 }
 
-void export_modularity_gibbs()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("modularity_gibbs_sweep", &modularity_gibbs_sweep);
-}
+});

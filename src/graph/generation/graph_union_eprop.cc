@@ -51,3 +51,13 @@ void edge_property_union(GraphInterface& ugi, GraphInterface& gi,
          always_directed(),
          writable_edge_properties())(gi.get_graph_view(), uprop);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("edge_property_union", &edge_property_union);
+ });

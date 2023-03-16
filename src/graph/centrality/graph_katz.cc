@@ -67,8 +67,11 @@ void katz(GraphInterface& g, boost::any w, boost::any c, boost::any beta,
          beta_props_t())(w, c, beta);
 }
 
-void export_katz()
-{
-    using namespace boost::python;
-    def("get_katz", &katz);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("get_katz", &katz);
+ });

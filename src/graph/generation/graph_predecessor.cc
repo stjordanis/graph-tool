@@ -36,3 +36,13 @@ void predecessor_graph(GraphInterface& gi, GraphInterface& gpi,
          },
          vertex_scalar_properties())(pred_map);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("predecessor_graph", &predecessor_graph);
+ });

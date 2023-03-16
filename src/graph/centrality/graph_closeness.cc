@@ -59,7 +59,10 @@ void do_get_closeness(GraphInterface& gi, boost::any weight,
     }
 }
 
-void export_closeness()
-{
-    boost::python::def("closeness", &do_get_closeness);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     boost::python::def("closeness", &do_get_closeness);
+ });

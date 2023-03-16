@@ -55,8 +55,11 @@ python::object modularity_multiflip_mcmc_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_modularity_multiflip_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("modularity_multiflip_mcmc_sweep", &modularity_multiflip_mcmc_sweep);
-}
+});

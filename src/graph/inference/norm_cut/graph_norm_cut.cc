@@ -35,7 +35,10 @@ python::object make_norm_cut_state(boost::python::object ostate)
     return state;
 }
 
-void export_norm_cut_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_norm_cut_state", &make_norm_cut_state);
@@ -59,4 +62,4 @@ void export_norm_cut_state()
          });
 
     class_<norm_cut_entropy_args_t>("norm_cut_entropy_args");
-}
+});

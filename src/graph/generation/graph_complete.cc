@@ -37,3 +37,14 @@ void circular(GraphInterface& gi, size_t N, size_t k, bool directed,
 {
     get_circular()(gi.get_graph(), N, k, directed, self_loops);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("complete", &complete);
+     def("circular", &circular);
+ });

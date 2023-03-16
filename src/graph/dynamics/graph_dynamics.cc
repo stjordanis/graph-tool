@@ -15,18 +15,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "graph.hh"
+#define __MOD__ dynamics
+#define DEF_REGISTRY
+#include "module_registry.hh"
+
 #include <boost/python.hpp>
-
-using namespace std;
-using namespace boost;
-using namespace graph_tool;
-
-extern void export_continuous();
-extern void export_discrete();
 
 BOOST_PYTHON_MODULE(libgraph_tool_dynamics)
 {
-    export_continuous();
-    export_discrete();
+    __MOD__::EvokeRegistry();
 }

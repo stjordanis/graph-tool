@@ -39,3 +39,13 @@ void generate_triadic_closure(GraphInterface& gi,
                                                                probs, rng); },
                    vertex_scalar_properties())(aEs);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("gen_triadic_closure", &generate_triadic_closure);
+ });

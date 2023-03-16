@@ -59,8 +59,10 @@ python::object make_cising_glauber_state(boost::python::object oblock_state,
     return state;
 }
 
-
-void export_cising_glauber_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -104,4 +106,4 @@ void export_cising_glauber_state()
                   });
          });
 
-}
+});

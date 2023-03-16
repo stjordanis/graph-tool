@@ -33,7 +33,10 @@ GEN_DISPATCH(block_state, BlockState, BLOCK_STATE_params)
 
 using namespace boost::python;
 
-void export_sbm_state_rmap()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     block_state::dispatch
         ([&](auto* s)
@@ -93,4 +96,4 @@ void export_sbm_state_rmap()
              //     .def("sync_emat",
              //          &state_t::sync_emat);
          });
-}
+});

@@ -124,9 +124,12 @@ python::object overlap_multiflip_mcmc_sweep_parallel(python::object omcmc_states
     return std::move(orets);
 }
 
-void export_overlap_blockmodel_multiflip_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("overlap_multiflip_mcmc_sweep", &overlap_multiflip_mcmc_sweep);
     def("overlap_multiflip_mcmc_sweep_parallel", &overlap_multiflip_mcmc_sweep_parallel);
-}
+});

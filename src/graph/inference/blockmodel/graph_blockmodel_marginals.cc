@@ -354,7 +354,10 @@ double partitions_entropy(PartitionHist& h, bool unlabeled)
     return S;
 }
 
-void export_marginals()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -387,4 +390,4 @@ void export_marginals()
     def("collect_partitions", &collect_partitions);
     def("collect_hierarchical_partitions", &collect_hierarchical_partitions);
     def("partitions_entropy", &partitions_entropy);
-}
+});

@@ -84,8 +84,11 @@ void a_star_search_implicit(GraphInterface& g, size_t source,
          writable_vertex_properties())(dist_map);
 }
 
-void export_astar_implicit()
-{
-    using namespace boost::python;
-    def("astar_search_implicit", &a_star_search_implicit);
-}
+#define __MOD__ search
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("astar_search_implicit", &a_star_search_implicit);
+ });

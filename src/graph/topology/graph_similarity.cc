@@ -75,8 +75,11 @@ python::object similarity_fast(GraphInterface& gi1, GraphInterface& gi2,
                                boost::any label1, boost::any label2,
                                double norm, bool asym);
 
-void export_similarity()
-{
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     python::def("similarity", &similarity);
     python::def("similarity_fast", &similarity_fast);
-};
+ });

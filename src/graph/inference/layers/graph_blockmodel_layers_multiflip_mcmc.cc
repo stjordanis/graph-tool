@@ -148,9 +148,12 @@ python::object multiflip_mcmc_layered_sweep_parallel(python::object omcmc_states
 #endif
 }
 
-void export_layered_blockmodel_multiflip_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multiflip_mcmc_layered_sweep", &multiflip_mcmc_layered_sweep);
     def("multiflip_mcmc_layered_sweep_parallel", &multiflip_mcmc_layered_sweep_parallel);
-}
+});

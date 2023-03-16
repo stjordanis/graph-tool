@@ -75,8 +75,11 @@ python::object mcmc_cising_glauber_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_cising_glauber_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_cising_glauber_sweep", &mcmc_cising_glauber_sweep);
-}
+});

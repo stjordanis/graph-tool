@@ -125,11 +125,13 @@ void do_exhaustive_dens(python::object oexhaustive_state,
     block_state::dispatch(oblock_state, dispatch);
 }
 
-
-void export_blockmodel_exhaustive()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("exhaustive_sweep", &do_exhaustive_sweep);
     def("exhaustive_sweep_iter", &do_exhaustive_sweep_iter);
     def("exhaustive_dens", &do_exhaustive_dens);
-}
+});

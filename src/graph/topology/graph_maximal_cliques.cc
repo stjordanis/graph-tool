@@ -48,7 +48,10 @@ boost::python::object get_max_cliques(GraphInterface& gi)
 #endif // HAVE_BOOST_COROUTINE
 }
 
-void export_max_cliques()
-{
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     boost::python::def("max_cliques", &get_max_cliques);
-};
+ });

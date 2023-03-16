@@ -69,8 +69,11 @@ python::object ranked_gibbs_sweep(python::object ogibbs_state,
     return ret;
 }
 
-void export_ranked_gibbs()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("ranked_gibbs_sweep", &ranked_gibbs_sweep);
-}
+});

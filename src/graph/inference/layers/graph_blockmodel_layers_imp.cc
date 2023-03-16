@@ -38,7 +38,10 @@ template <class BaseState>
 GEN_DISPATCH(layered_block_state, Layers<BaseState>::template LayeredBlockState,
              LAYERED_BLOCK_STATE_params)
 
-void export_lsbm()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
 #ifdef GRAPH_BLOCKMODEL_LAYERS_ENABLE
     using namespace boost::python;
@@ -118,4 +121,4 @@ void export_lsbm()
                   });
          });
 #endif
-}
+});

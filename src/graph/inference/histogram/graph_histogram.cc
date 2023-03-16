@@ -101,8 +101,10 @@ void dispatch_state_def(State*)
              });
 }
 
-
-void export_hist_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_hist_state", &make_hist_state);
@@ -127,4 +129,4 @@ void export_hist_state()
         hist_state<Vec>::dispatch
             ([&](auto* s){ dispatch_state_def(s);});
     }
-}
+});

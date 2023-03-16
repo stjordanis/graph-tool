@@ -149,9 +149,12 @@ python::object mcmc_layered_sweep_parallel(python::object omcmc_states,
 #endif
 }
 
-void export_layered_blockmodel_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_layered_sweep", &mcmc_layered_sweep);
     def("mcmc_layered_sweep_parallel", &mcmc_layered_sweep_parallel);
-}
+});

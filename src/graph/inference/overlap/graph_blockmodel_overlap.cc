@@ -161,8 +161,10 @@ void get_nodeset_overlap(GraphInterface& gi, boost::any onode_index,
                    })();
 }
 
-
-void export_overlap_blockmodel_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -294,4 +296,4 @@ void export_overlap_blockmodel_state()
     def("get_be_from_b_overlap", &get_be_from_b_overlap);
     def("get_eg_overlap", &get_eg_overlap);
     def("get_nodeset_overlap", &get_nodeset_overlap);
-}
+});

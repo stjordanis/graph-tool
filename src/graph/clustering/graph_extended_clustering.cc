@@ -107,3 +107,11 @@ void extended_clustering(GraphInterface& g, boost::python::list props)
          },
          properties_vector())(vprop);
 }
+
+#define __MOD__ clustering
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+    def("extended_clustering", &extended_clustering);
+ });

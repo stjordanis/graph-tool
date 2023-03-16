@@ -110,3 +110,13 @@ void community_network_eavg(GraphInterface& gi, GraphInterface& cgi,
 
     }
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("community_network_eavg", &community_network_eavg);
+ });

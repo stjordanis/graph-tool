@@ -145,3 +145,11 @@ void get_motifs(GraphInterface& g, size_t k, boost::python::list subgraph_list,
         subgraph_list.reverse();
     }
 }
+
+#define __MOD__ clustering
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+         def("get_motifs", &get_motifs);
+ });

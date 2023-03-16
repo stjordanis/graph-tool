@@ -55,8 +55,11 @@ python::object norm_cut_multilevel_mcmc_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_norm_cut_multilevel_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("norm_cut_multilevel_mcmc_sweep", &norm_cut_multilevel_mcmc_sweep);
-}
+});

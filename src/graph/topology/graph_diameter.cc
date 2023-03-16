@@ -173,7 +173,10 @@ python::object get_diam(GraphInterface& gi, size_t source, boost::any weight)
     return python::make_tuple(target, max_dist);
 }
 
-void export_diam()
-{
-    python::def("get_diam", &get_diam);
-};
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("get_diam", &get_diam);
+ });

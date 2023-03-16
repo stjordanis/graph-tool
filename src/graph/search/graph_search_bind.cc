@@ -15,26 +15,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "graph.hh"
+#define __MOD__ search
+#define DEF_REGISTRY
+#include "module_registry.hh"
 
 #include <boost/python.hpp>
 
 using namespace boost;
 
-void export_bfs();
-void export_dfs();
-void export_dijkstra();
-void export_bellman_ford();
-void export_astar();
-void export_astar_implicit();
-
 BOOST_PYTHON_MODULE(libgraph_tool_search)
 {
     python::docstring_options dopt(true, false);
-    export_bfs();
-    export_dfs();
-    export_dijkstra();
-    export_bellman_ford();
-    export_astar();
-    export_astar_implicit();
+    __MOD__::EvokeRegistry();
 }

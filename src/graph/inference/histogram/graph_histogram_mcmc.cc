@@ -105,8 +105,11 @@ ostream& operator<<(ostream& s, hmove_t v)
 }
 }
 
-void export_hist_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("hist_mcmc_sweep", &hist_mcmc_sweep);
-}
+});

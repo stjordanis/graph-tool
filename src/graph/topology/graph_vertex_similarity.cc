@@ -368,25 +368,28 @@ void get_leicht_holme_newman_similarity_pairs(GraphInterface& gi,
         (gi.get_graph_view(), weight);
 }
 
-void export_vertex_similarity()
-{
-    python::def("dice_similarity", &get_dice_similarity);
-    python::def("dice_similarity_pairs", &get_dice_similarity_pairs);
-    python::def("salton_similarity", &get_salton_similarity);
-    python::def("salton_similarity_pairs", &get_salton_similarity_pairs);
-    python::def("hub_promoted_similarity", &get_hub_promoted_similarity);
-    python::def("hub_promoted_similarity_pairs", &get_hub_promoted_similarity_pairs);
-    python::def("hub_suppressed_similarity", &get_hub_suppressed_similarity);
-    python::def("hub_suppressed_similarity_pairs", &get_hub_suppressed_similarity_pairs);
-    python::def("jaccard_similarity", &get_jaccard_similarity);
-    python::def("jaccard_similarity_pairs", &get_jaccard_similarity_pairs);
-    python::def("inv_log_weight_similarity", &get_inv_log_weight_similarity);
-    python::def("inv_log_weight_similarity_pairs",
-                &get_inv_log_weight_similarity_pairs);
-    python::def("r_allocation_similarity", &get_r_allocation_similarity);
-    python::def("r_allocation_similarity_pairs",
-                &get_r_allocation_similarity_pairs);
-    python::def("leicht_holme_newman_similarity", &get_leicht_holme_newman_similarity);
-    python::def("leicht_holme_newman_similarity_pairs",
-                &get_leicht_holme_newman_similarity_pairs);
-};
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("dice_similarity", &get_dice_similarity);
+     python::def("dice_similarity_pairs", &get_dice_similarity_pairs);
+     python::def("salton_similarity", &get_salton_similarity);
+     python::def("salton_similarity_pairs", &get_salton_similarity_pairs);
+     python::def("hub_promoted_similarity", &get_hub_promoted_similarity);
+     python::def("hub_promoted_similarity_pairs", &get_hub_promoted_similarity_pairs);
+     python::def("hub_suppressed_similarity", &get_hub_suppressed_similarity);
+     python::def("hub_suppressed_similarity_pairs", &get_hub_suppressed_similarity_pairs);
+     python::def("jaccard_similarity", &get_jaccard_similarity);
+     python::def("jaccard_similarity_pairs", &get_jaccard_similarity_pairs);
+     python::def("inv_log_weight_similarity", &get_inv_log_weight_similarity);
+     python::def("inv_log_weight_similarity_pairs",
+                 &get_inv_log_weight_similarity_pairs);
+     python::def("r_allocation_similarity", &get_r_allocation_similarity);
+     python::def("r_allocation_similarity_pairs",
+                 &get_r_allocation_similarity_pairs);
+     python::def("leicht_holme_newman_similarity", &get_leicht_holme_newman_similarity);
+     python::def("leicht_holme_newman_similarity_pairs",
+                 &get_leicht_holme_newman_similarity_pairs);
+ });

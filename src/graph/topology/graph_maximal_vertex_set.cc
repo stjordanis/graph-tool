@@ -186,7 +186,10 @@ void maximal_vertex_set(GraphInterface& gi, boost::any mvs, bool high_deg,
          writable_vertex_scalar_properties())(mvs);
 }
 
-void export_maximal_vertex_set()
-{
-    python::def("maximal_vertex_set", &maximal_vertex_set);
-}
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("maximal_vertex_set", &maximal_vertex_set);
+ });

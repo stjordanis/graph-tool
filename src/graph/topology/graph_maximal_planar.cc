@@ -91,3 +91,15 @@ void maximal_planar(GraphInterface& gi)
                  (std::forward<decltype(graph)>(graph));
          })();
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("maximal_planar", &maximal_planar);
+ });

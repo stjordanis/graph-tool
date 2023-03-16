@@ -120,3 +120,15 @@ bool check_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
 
     return result;
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+    def("check_isomorphism", &check_isomorphism);
+ });

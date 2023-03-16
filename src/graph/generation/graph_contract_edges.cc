@@ -61,8 +61,11 @@ void _expand_parallel_edges(GraphInterface& gi, boost::any w)
 
 using namespace boost::python;
 
-void export_contract_edges()
-{
-    def("contract_parallel_edges", &_contract_parallel_edges);
-    def("expand_parallel_edges", &_expand_parallel_edges);
-}
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("contract_parallel_edges", &_contract_parallel_edges);
+     def("expand_parallel_edges", &_expand_parallel_edges);
+ });

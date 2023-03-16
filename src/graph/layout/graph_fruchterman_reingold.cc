@@ -192,7 +192,10 @@ void fruchterman_reingold_layout(GraphInterface& g, boost::any pos,
 
 #include <boost/python.hpp>
 
-void export_fruchterman_reingold()
-{
-    python::def("fruchterman_reingold_layout", &fruchterman_reingold_layout);
-}
+#define __MOD__ layout
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("fruchterman_reingold_layout", &fruchterman_reingold_layout);
+ });

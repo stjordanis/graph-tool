@@ -113,3 +113,13 @@ void community_network(GraphInterface& gi, GraphInterface& cgi,
                             condensed_community_property, edge_count,
                             eweight, self_loops, parallel_edges);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("community_network", &community_network);
+ });

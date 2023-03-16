@@ -139,11 +139,14 @@ scalar_assortativity_coefficient(GraphInterface& gi, GraphInterface::deg_t deg,
 
 using namespace boost::python;
 
-void export_assortativity()
-{
-    def("assortativity_coefficient", &assortativity_coefficient);
-    def("scalar_assortativity_coefficient", &scalar_assortativity_coefficient);
+#define __MOD__ correlations
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("assortativity_coefficient", &assortativity_coefficient);
+     def("scalar_assortativity_coefficient", &scalar_assortativity_coefficient);
 
-    class_<empty_object>("empty_object");
-    class_<deleted_object>("deleted_object");
-}
+     class_<empty_object>("empty_object");
+     class_<deleted_object>("deleted_object");
+ });

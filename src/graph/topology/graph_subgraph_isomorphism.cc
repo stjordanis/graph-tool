@@ -272,3 +272,15 @@ subgraph_isomorphism(GraphInterface& gi1, GraphInterface& gi2,
 #endif
     }
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("subgraph_isomorphism", &subgraph_isomorphism);
+ });

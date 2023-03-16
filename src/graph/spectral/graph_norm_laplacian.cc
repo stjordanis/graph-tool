@@ -134,3 +134,14 @@ void norm_laplacian_matmat(GraphInterface& g, boost::any index,
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }
+
+#define __MOD__ spectral
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("norm_laplacian", &norm_laplacian);
+     def("norm_laplacian_matvec", &norm_laplacian_matvec);
+     def("norm_laplacian_matmat", &norm_laplacian_matmat);
+ });

@@ -120,9 +120,12 @@ python::object do_gibbs_sweep_parallel(python::object ogibbs_states,
     return std::move(orets);
 }
 
-void export_blockmodel_gibbs()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("gibbs_sweep", &do_gibbs_sweep);
     def("gibbs_sweep_parallel", &do_gibbs_sweep_parallel);
-}
+});

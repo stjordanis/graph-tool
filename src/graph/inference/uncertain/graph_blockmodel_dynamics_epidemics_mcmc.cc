@@ -45,8 +45,8 @@ GEN_DISPATCH(mcmc_dynamics_state, MCMC<State>::template MCMCDynamicsState,
              MCMC_DYNAMICS_STATE_params(State))
 
 python::object mcmc_epidemics_sweep(python::object omcmc_state,
-                              python::object odynamics_state,
-                              rng_t& rng)
+                                    python::object odynamics_state,
+                                    rng_t& rng)
 {
     python::object ret;
     auto dispatch = [&](auto* block_state)
@@ -75,8 +75,11 @@ python::object mcmc_epidemics_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_epidemics_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_epidemics_sweep", &mcmc_epidemics_sweep);
-}
+});

@@ -116,7 +116,12 @@ void random_matching(GraphInterface& gi, boost::any weight, boost::any match,
          edge_props_t(), writable_vertex_scalar_properties())(weight, match);
 }
 
-void export_random_matching()
-{
+#include <boost/python.hpp>
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     python::def("random_matching", &random_matching);
-}
+ });

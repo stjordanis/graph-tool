@@ -34,7 +34,7 @@ struct get_transitive_closure
 };
 
 
-void transitive_closure(GraphInterface& gi, GraphInterface& tcgi)
+void transitive_closure_dispatch(GraphInterface& gi, GraphInterface& tcgi)
 {
     run_action<graph_tool::detail::always_directed>()
         (gi,
@@ -44,3 +44,15 @@ void transitive_closure(GraphInterface& gi, GraphInterface& tcgi)
                  (std::forward<decltype(graph)>(graph), tcgi.get_graph());
          })();
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("transitive_closure", &transitive_closure_dispatch);
+ });

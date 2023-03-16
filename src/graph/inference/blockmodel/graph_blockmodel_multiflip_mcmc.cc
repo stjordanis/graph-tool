@@ -120,9 +120,12 @@ python::object do_multiflip_mcmc_sweep_parallel(python::object omcmc_states,
     return std::move(orets);
 }
 
-void export_blockmodel_multiflip_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multiflip_mcmc_sweep", &do_multiflip_mcmc_sweep);
     def("multiflip_mcmc_sweep_parallel", &do_multiflip_mcmc_sweep_parallel);
-}
+});

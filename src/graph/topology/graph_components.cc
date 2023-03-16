@@ -93,11 +93,14 @@ void do_label_attractors(GraphInterface& gi, boost::any cprop, python::object oa
          vertex_scalar_properties())(cprop);
 }
 
-void export_components()
-{
-    python::def("label_components", &do_label_components);
-    python::def("label_biconnected_components",
-                &do_label_biconnected_components);
-    python::def("label_out_component", &do_label_out_component);
-    python::def("label_attractors", &do_label_attractors);
-};
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("label_components", &do_label_components);
+     python::def("label_biconnected_components",
+                 &do_label_biconnected_components);
+     python::def("label_out_component", &do_label_out_component);
+     python::def("label_attractors", &do_label_attractors);
+ });

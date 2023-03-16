@@ -16,29 +16,16 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "graph.hh"
+#define __MOD__ centrality
+#define DEF_REGISTRY
+#include "module_registry.hh"
 
 #include <boost/python.hpp>
 
 using namespace boost;
 
-void export_betweenness();
-void export_closeness();
-void export_eigentrust();
-void export_eigenvector();
-void export_hits();
-void export_katz();
-void export_trust_transitivity();
-void export_pagerank();
-
 BOOST_PYTHON_MODULE(libgraph_tool_centrality)
 {
     python::docstring_options dopt(true, false);
-    export_betweenness();
-    export_closeness();
-    export_eigentrust();
-    export_eigenvector();
-    export_hits();
-    export_katz();
-    export_trust_transitivity();
-    export_pagerank();
+    __MOD__::EvokeRegistry();
 }

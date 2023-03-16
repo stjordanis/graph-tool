@@ -54,7 +54,10 @@ python::object make_ranked_state(boost::python::object oustate,
     return state;
 }
 
-void export_ranked_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_ranked_state", &make_ranked_state);
@@ -90,4 +93,4 @@ void export_ranked_state()
                               });
                  });
          });
-}
+});

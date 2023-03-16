@@ -37,7 +37,10 @@ python::object make_em_block_state(boost::python::object ostate, rng_t& rng)
     return state;
 }
 
-void export_em_blockmodel_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -55,4 +58,4 @@ void export_em_blockmodel_state()
          });
 
     def("make_em_block_state",  make_em_block_state);
-}
+});

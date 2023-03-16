@@ -59,7 +59,10 @@ python::object make_pseudo_cising_state(boost::python::object oblock_state,
     return state;
 }
 
-void export_pseudo_cising_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -103,4 +106,4 @@ void export_pseudo_cising_state()
                   });
          });
 
-}
+});

@@ -73,33 +73,36 @@ SBMFugacities get_sbm_fugacities(boost::python::object ors,
 
 using namespace boost::python;
 
-void export_maxent_sbm()
-{
-    def("get_sbm_fugacities", &get_sbm_fugacities);
-    def("gen_maxent_sbm", &generate_maxent_sbm);
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("get_sbm_fugacities", &get_sbm_fugacities);
+     def("gen_maxent_sbm", &generate_maxent_sbm);
 
-    class_<SBMFugacities>("SBMFugacities", no_init)
-        .def("pack", &SBMFugacities::pack)
-        .def("unpack", &SBMFugacities::unpack)
-        .def("get_f", &SBMFugacities::get_f)
-        .def("get_diff", &SBMFugacities::get_diff)
-        .def("new_x", &SBMFugacities::new_x)
-        .def("norm", &SBMFugacities::norm)
-        .def("export_args",
-             +[](SBMFugacities& state, python::object ors, python::object oss,
-                 python::object omrs, python::object odegs_in,
-                 python::object odegs_out, python::object otheta_in,
-                 python::object otheta_out, python::object ob)
-              {
-                  auto rs = get_array<int64_t,1>(ors);
-                  auto ss = get_array<int64_t,1>(oss);
-                  auto mrs = get_array<double,1>(omrs);
-                  auto degs_in = get_array<double,1>(odegs_in);
-                  auto degs_out = get_array<double,1>(odegs_out);
-                  auto theta_in = get_array<double,1>(otheta_in);
-                  auto theta_out = get_array<double,1>(otheta_out);
-                  auto b = get_array<int32_t,1>(ob);
-                  state.export_args(rs, ss, mrs, degs_in, degs_out, theta_in,
+     class_<SBMFugacities>("SBMFugacities", no_init)
+         .def("pack", &SBMFugacities::pack)
+         .def("unpack", &SBMFugacities::unpack)
+         .def("get_f", &SBMFugacities::get_f)
+         .def("get_diff", &SBMFugacities::get_diff)
+         .def("new_x", &SBMFugacities::new_x)
+         .def("norm", &SBMFugacities::norm)
+         .def("export_args",
+              +[](SBMFugacities& state, python::object ors, python::object oss,
+                  python::object omrs, python::object odegs_in,
+                  python::object odegs_out, python::object otheta_in,
+                  python::object otheta_out, python::object ob)
+               {
+                   auto rs = get_array<int64_t,1>(ors);
+                   auto ss = get_array<int64_t,1>(oss);
+                   auto mrs = get_array<double,1>(omrs);
+                   auto degs_in = get_array<double,1>(odegs_in);
+                   auto degs_out = get_array<double,1>(odegs_out);
+                   auto theta_in = get_array<double,1>(otheta_in);
+                   auto theta_out = get_array<double,1>(otheta_out);
+                   auto b = get_array<int32_t,1>(ob);
+                   state.export_args(rs, ss, mrs, degs_in, degs_out, theta_in,
                                     theta_out, b);
-              });
-}
+               });
+ });

@@ -221,10 +221,13 @@ double central_point(GraphInterface& g,
     return c;
 }
 
-void export_betweenness()
-{
-    using namespace boost::python;
-    def("get_betweenness", &betweenness);
-    def("norm_betweenness", &norm_betweenness);
-    def("get_central_point_dominance", &central_point);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("get_betweenness", &betweenness);
+     def("norm_betweenness", &norm_betweenness);
+     def("get_central_point_dominance", &central_point);
+ });

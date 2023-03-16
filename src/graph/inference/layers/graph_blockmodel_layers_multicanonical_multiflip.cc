@@ -93,8 +93,11 @@ python::object multicanonical_layered_multiflip_sweep(python::object omulticanon
 #endif
 }
 
-void export_layered_blockmodel_multicanonical_multiflip()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multicanonical_layered_multiflip_sweep", &multicanonical_layered_multiflip_sweep);
-}
+});

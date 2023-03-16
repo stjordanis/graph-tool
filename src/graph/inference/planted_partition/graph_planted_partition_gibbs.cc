@@ -55,8 +55,11 @@ python::object pp_gibbs_sweep(python::object ogibbs_state,
     return ret;
 }
 
-void export_pp_gibbs()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("pp_gibbs_sweep", &pp_gibbs_sweep);
-}
+});

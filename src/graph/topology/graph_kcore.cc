@@ -39,7 +39,10 @@ void do_kcore_decomposition(GraphInterface& gi, boost::any prop)
         (gi.get_graph_view(), prop);
 }
 
-void export_kcore()
-{
-    python::def("kcore_decomposition", &do_kcore_decomposition);
-};
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("kcore_decomposition", &do_kcore_decomposition);
+ });

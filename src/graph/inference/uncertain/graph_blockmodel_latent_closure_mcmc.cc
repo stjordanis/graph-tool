@@ -82,8 +82,11 @@ python::object mcmc_latent_closure_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_latent_closure_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_latent_closure_sweep", &mcmc_latent_closure_sweep);
-}
+});

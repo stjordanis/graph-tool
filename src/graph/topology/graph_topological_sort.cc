@@ -35,7 +35,7 @@ struct get_topological_sort
     }
 };
 
-bool topological_sort(GraphInterface& gi, vector<int32_t>& sort)
+bool topological_sort_dispatch(GraphInterface& gi, vector<int32_t>& sort)
 {
     try
     {
@@ -53,3 +53,15 @@ bool topological_sort(GraphInterface& gi, vector<int32_t>& sort)
         return false;
     }
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("topological_sort", &topological_sort_dispatch);
+ });

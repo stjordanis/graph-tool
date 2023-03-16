@@ -55,8 +55,11 @@ python::object rmi_multiflip_mcmc_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_rmi_multiflip_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("rmi_multiflip_mcmc_sweep", &rmi_multiflip_mcmc_sweep);
-}
+});

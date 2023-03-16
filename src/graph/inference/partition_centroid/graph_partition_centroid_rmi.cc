@@ -36,7 +36,10 @@ python::object make_rmi_center_state(boost::python::object ostate)
     return state;
 }
 
-void export_rmi_center_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_rmi_center_state", &make_rmi_center_state);
@@ -104,4 +107,4 @@ void export_rmi_center_state()
 
              return EMI;
          });
-}
+});

@@ -75,8 +75,11 @@ python::object mcmc_pseudo_ising_sweep_h(python::object omcmc_state,
     return ret;
 }
 
-void export_pseudo_ising_mcmc_h()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_pseudo_ising_sweep_h", &mcmc_pseudo_ising_sweep_h);
-}
+});

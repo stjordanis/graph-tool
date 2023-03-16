@@ -70,9 +70,12 @@ void do_remove_labeled_edges(GraphInterface& gi, boost::any property)
 
 using namespace boost::python;
 
-void export_parallel()
-{
-    def("label_parallel_edges", &do_label_parallel_edges);
-    def("label_self_loops", &do_label_self_loops);
-    def("remove_labeled_edges", &do_remove_labeled_edges);
-}
+#define __MOD__ stats
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("label_parallel_edges", &do_label_parallel_edges);
+     def("label_self_loops", &do_label_self_loops);
+     def("remove_labeled_edges", &do_remove_labeled_edges);
+ });

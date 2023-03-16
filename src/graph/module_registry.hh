@@ -15,15 +15,52 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef MODULE_REGISTRY_HH
+#define MODULE_REGISTRY_HH
 
-#define __MOD__ layout
-#define DEF_REGISTRY
-#include "module_registry.hh"
-
+#include <functional>
+#include <vector>
 #include <boost/python.hpp>
-using namespace boost::python;
-BOOST_PYTHON_MODULE(libgraph_tool_layout)
+#include <iostream>
+
+#ifndef __MOD__
+#error "__MOD__ needs to be defined"
+#endif
+
+#define REGISTER_MOD \
+    __attribute__((init_priority(300))) static __MOD__::RegisterMod __reg
+
+namespace __MOD__
 {
-    docstring_options dopt(true, false);
-    __MOD__::EvokeRegistry();
-}
+
+#ifndef DEF_REGISTRY
+extern
+#else
+__attribute__((init_priority(200)))
+#endif
+std::vector<std::function<void()>> __module_registry;
+
+class RegisterMod
+{
+public:
+    RegisterMod(std::function<void()> f)
+    {
+        __module_registry.push_back(f);
+    }
+};
+
+class EvokeRegistry
+{
+public:
+    EvokeRegistry()
+    {
+        for (auto& f : __module_registry)
+            f();
+        __module_registry.clear();
+        __module_registry.shrink_to_fit();
+    }
+};
+
+} // namespace __MOD__
+
+#endif // MODULE_REGISTRY_HH

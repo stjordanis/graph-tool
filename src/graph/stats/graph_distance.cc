@@ -60,7 +60,10 @@ python::object distance_histogram(GraphInterface& gi, boost::any weight,
     return ret;
 }
 
-void export_distance()
-{
-    python::def("distance_histogram", &distance_histogram);
-}
+#define __MOD__ stats
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("distance_histogram", &distance_histogram);
+ });

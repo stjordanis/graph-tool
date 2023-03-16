@@ -158,62 +158,65 @@ python::object make_SI_state(GraphInterface& gi, boost::any as,
     }
 }
 
-void export_discrete()
-{
-    export_SI_state<SI_state,false>();
-    def("make_SI_state", &make_SI_state<SI_state,false>);
+#define __MOD__ dynamics
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     export_SI_state<SI_state,false>();
+     def("make_SI_state", &make_SI_state<SI_state,false>);
 
-    export_SI_state<SIS_state,false,false>();
-    def("make_SIS_state", &make_SI_state<SIS_state,false,false>);
+     export_SI_state<SIS_state,false,false>();
+     def("make_SIS_state", &make_SI_state<SIS_state,false,false>);
 
-    export_SI_state<SIS_state,false,true>();
-    def("make_SIR_state", &make_SI_state<SIS_state,false,true>);
+     export_SI_state<SIS_state,false,true>();
+     def("make_SIR_state", &make_SI_state<SIS_state,false,true>);
 
-    export_SI_state<SIRS_state,false>();
-    def("make_SIRS_state", &make_SI_state<SIRS_state,false>);
+     export_SI_state<SIRS_state,false>();
+     def("make_SIRS_state", &make_SI_state<SIRS_state,false>);
 
-    export_SI_state<SI_state,true>();
-    def("make_SEI_state", &make_SI_state<SI_state,true>);
+     export_SI_state<SI_state,true>();
+     def("make_SEI_state", &make_SI_state<SI_state,true>);
 
-    export_SI_state<SIS_state,true,false>();
-    def("make_SEIS_state", &make_SI_state<SIS_state,true,false>);
+     export_SI_state<SIS_state,true,false>();
+     def("make_SEIS_state", &make_SI_state<SIS_state,true,false>);
 
-    export_SI_state<SIS_state,true,true>();
-    def("make_SEIR_state", &make_SI_state<SIS_state,true,true>);
+     export_SI_state<SIS_state,true,true>();
+     def("make_SEIR_state", &make_SI_state<SIS_state,true,true>);
 
-    export_SI_state<SIRS_state,true>();
-    def("make_SEIRS_state", &make_SI_state<SIRS_state,true>);
+     export_SI_state<SIRS_state,true>();
+     def("make_SEIRS_state", &make_SI_state<SIRS_state,true>);
 
-    export_state<voter_state>();
-    def("make_voter_state", &make_state<voter_state>);
+     export_state<voter_state>();
+     def("make_voter_state", &make_state<voter_state>);
 
-    export_state<majority_voter_state>();
-    def("make_majority_voter_state", &make_state<majority_voter_state>);
+     export_state<majority_voter_state>();
+     def("make_majority_voter_state", &make_state<majority_voter_state>);
 
-    export_state<binary_threshold_state>();
-    def("make_binary_threshold_state", &make_state<binary_threshold_state>);
+     export_state<binary_threshold_state>();
+     def("make_binary_threshold_state", &make_state<binary_threshold_state>);
 
-    export_state<ising_glauber_state>();
-    def("make_ising_glauber_state", &make_state<ising_glauber_state>);
+     export_state<ising_glauber_state>();
+     def("make_ising_glauber_state", &make_state<ising_glauber_state>);
 
-    export_state<cising_glauber_state>();
-    def("make_cising_glauber_state", &make_state<cising_glauber_state>);
+     export_state<cising_glauber_state>();
+     def("make_cising_glauber_state", &make_state<cising_glauber_state>);
 
-    export_state<ising_metropolis_state>();
-    def("make_ising_metropolis_state", &make_state<ising_metropolis_state>);
+     export_state<ising_metropolis_state>();
+     def("make_ising_metropolis_state", &make_state<ising_metropolis_state>);
 
-    export_state<potts_glauber_state>();
-    def("make_potts_glauber_state", &make_state<potts_glauber_state>);
+     export_state<potts_glauber_state>();
+     def("make_potts_glauber_state", &make_state<potts_glauber_state>);
 
-    export_state<potts_metropolis_state>();
-    def("make_potts_metropolis_state", &make_state<potts_metropolis_state>);
+     export_state<potts_metropolis_state>();
+     def("make_potts_metropolis_state", &make_state<potts_metropolis_state>);
 
-    export_state<axelrod_state>();
-    def("make_axelrod_state", &make_state<axelrod_state>);
+     export_state<axelrod_state>();
+     def("make_axelrod_state", &make_state<axelrod_state>);
 
-    export_state<boolean_state>();
-    def("make_boolean_state", &make_state<boolean_state>);
+     export_state<boolean_state>();
+     def("make_boolean_state", &make_state<boolean_state>);
 
-    export_state<kirman_state>();
-    def("make_kirman_state", &make_state<kirman_state>);
-}
+     export_state<kirman_state>();
+     def("make_kirman_state", &make_state<kirman_state>);
+ });

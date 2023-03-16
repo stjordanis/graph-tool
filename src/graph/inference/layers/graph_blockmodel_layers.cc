@@ -460,13 +460,12 @@ ldegs_map_t ldegs_map_copy(ldegs_map_t& ldegs)
     return ldegs;
 }
 
-void export_lsbm();
-
-void export_layered_blockmodel_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
-
-    export_lsbm();
 
     def("make_layered_block_state", &make_layered_block_state);
     def("split_layers", &split_layers);
@@ -486,4 +485,4 @@ void export_layered_blockmodel_state()
         .def("del_c", bmap_del_c)
         .def("copy", bmap_copy)
         .def("size", bmap_size);
-}
+});

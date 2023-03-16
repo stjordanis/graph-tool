@@ -138,3 +138,17 @@ void compact_nonbacktracking_matmat(GraphInterface& g, boost::any index,
          },
          vertex_scalar_properties())(index);
 }
+
+#define __MOD__ spectral
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("nonbacktracking", &nonbacktracking);
+     def("nonbacktracking_matvec", &nonbacktracking_matvec);
+     def("nonbacktracking_matmat", &nonbacktracking_matmat);
+     def("compact_nonbacktracking", &compact_nonbacktracking);
+     def("compact_nonbacktracking_matvec", &compact_nonbacktracking_matvec);
+     def("compact_nonbacktracking_matmat", &compact_nonbacktracking_matmat);
+ });

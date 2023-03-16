@@ -53,10 +53,11 @@ long double eigenvector(GraphInterface& g, boost::any w, boost::any c,
     return eig;
 }
 
-#include <boost/python.hpp>
-
-void export_eigenvector()
-{
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     using namespace boost::python;
     def("get_eigenvector", &eigenvector);
-}
+ });

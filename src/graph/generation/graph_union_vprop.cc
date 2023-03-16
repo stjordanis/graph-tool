@@ -46,3 +46,13 @@ void vertex_property_union(GraphInterface& ugi, GraphInterface& gi,
             always_directed(), always_directed(), writable_vertex_properties())(
             ugi.get_graph_view(), gi.get_graph_view(), uprop);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("vertex_property_union", &vertex_property_union);
+ });

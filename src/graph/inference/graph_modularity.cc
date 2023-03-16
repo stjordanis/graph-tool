@@ -46,7 +46,10 @@ double modularity(GraphInterface& gi, double gamma, boost::any weight,
 
 using namespace boost::python;
 
-void export_modularity()
-{
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     def("modularity", &modularity);
-}
+ });

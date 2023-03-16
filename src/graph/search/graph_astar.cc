@@ -259,12 +259,15 @@ boost::python::object astar_search_array_fast(GraphInterface& g,
     return wrap_vector_owned<size_t,2>(edges);
 }
 
-void export_astar()
-{
-    using namespace boost::python;
-    def("astar_search", &a_star_search);
-    def("astar_generator", &astar_search_generator);
-    def("astar_generator_fast", &astar_search_generator_fast);
-    def("astar_array", &astar_search_array);
-    def("astar_array_fast", &astar_search_array_fast);
-}
+#define __MOD__ search
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("astar_search", &a_star_search);
+     def("astar_generator", &astar_search_generator);
+     def("astar_generator_fast", &astar_search_generator_fast);
+     def("astar_array", &astar_search_array);
+     def("astar_array_fast", &astar_search_array_fast);
+ });

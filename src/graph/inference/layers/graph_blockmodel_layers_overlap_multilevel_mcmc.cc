@@ -146,11 +146,15 @@ python::object multilevel_mcmc_layered_overlap_sweep_parallel(python::object omc
     return std::move(orets);
 }
 
-void export_layered_overlap_blockmodel_multilevel_mcmc()
+
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multilevel_mcmc_layered_overlap_sweep",
         &multilevel_mcmc_layered_overlap_sweep);
     def("multilevel_mcmc_layered_overlap_sweep_parallel",
         &multilevel_mcmc_layered_overlap_sweep_parallel);
-}
+});

@@ -285,11 +285,14 @@ void sanitize_pos(GraphInterface& gi, boost::any pos)
 
 #include <boost/python.hpp>
 
-void export_sfdp()
-{
-    python::def("sfdp_layout", &sfdp_layout);
-    python::def("propagate_pos", &propagate_pos);
-    python::def("propagate_pos_mivs", &propagate_pos_mivs);
-    python::def("avg_dist", &avg_dist);
-    python::def("sanitize_pos", &sanitize_pos);
-}
+#define __MOD__ layout
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("sfdp_layout", &sfdp_layout);
+     python::def("propagate_pos", &propagate_pos);
+     python::def("propagate_pos_mivs", &propagate_pos_mivs);
+     python::def("avg_dist", &avg_dist);
+     python::def("sanitize_pos", &sanitize_pos);
+ });

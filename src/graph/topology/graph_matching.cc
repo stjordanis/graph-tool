@@ -165,10 +165,13 @@ void match_edges(GraphInterface& gi, boost::any omatching,
 #include <boost/python.hpp>
 using namespace boost::python;
 
-void export_matching()
-{
-    def("get_max_matching", &get_max_matching);
-    def("get_max_weighted_matching", &get_max_weighted_matching);
-    def("get_max_bip_weighted_matching", &get_max_bip_weighted_matching);
-    def("match_edges", &match_edges);
-}
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("get_max_matching", &get_max_matching);
+     def("get_max_weighted_matching", &get_max_weighted_matching);
+     def("get_max_bip_weighted_matching", &get_max_bip_weighted_matching);
+     def("match_edges", &match_edges);
+ });

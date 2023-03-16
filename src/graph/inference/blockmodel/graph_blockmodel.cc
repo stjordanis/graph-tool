@@ -51,17 +51,14 @@ simple_degs_t copy_simple_degs(simple_degs_t& degs)
     return degs;
 }
 
-void export_sbm_state();
-void export_sbm_state_rmap();
-
 double spence(double);
 
-void export_blockmodel_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
-
-    export_sbm_state();
-    export_sbm_state_rmap();
 
     class_<vcmap_t>("unity_vprop_t").def("_get_any", &get_any<vcmap_t>);
     class_<ecmap_t>("unity_eprop_t").def("_get_any", &get_any<ecmap_t>);
@@ -120,4 +117,4 @@ void export_blockmodel_state()
     def("geometric_w_log_P", geometric_w_log_P<size_t>);
     def("binomial_w_log_P", binomial_w_log_P<size_t>);
     def("poisson_w_log_P", poisson_w_log_P<size_t>);
-}
+});

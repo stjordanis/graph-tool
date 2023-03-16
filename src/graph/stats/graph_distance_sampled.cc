@@ -64,7 +64,10 @@ python::object sampled_distance_histogram(GraphInterface& gi, boost::any weight,
     return ret;
 }
 
-void export_sampled_distance()
-{
+#define __MOD__ stats
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     python::def("sampled_distance_histogram", &sampled_distance_histogram);
-}
+ });

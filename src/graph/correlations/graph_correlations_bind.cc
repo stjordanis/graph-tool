@@ -15,24 +15,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "graph.hh"
+#define __MOD__ correlations
+#define DEF_REGISTRY
+#include "module_registry.hh"
 
 #include <boost/python.hpp>
 
 using namespace boost;
 
-void export_assortativity();
-void export_vertex_correlations();
-void export_combined_vertex_correlations();
-void export_avg_correlations();
-void export_avg_combined_correlations();
-
 BOOST_PYTHON_MODULE(libgraph_tool_correlations)
 {
     python::docstring_options dopt(true, false);
-    export_assortativity();
-    export_vertex_correlations();
-    export_combined_vertex_correlations();
-    export_avg_correlations();
-    export_avg_combined_correlations();
+    __MOD__::EvokeRegistry();
 }

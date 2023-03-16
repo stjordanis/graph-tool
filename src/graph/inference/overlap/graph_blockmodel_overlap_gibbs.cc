@@ -122,9 +122,12 @@ python::object gibbs_overlap_sweep_parallel(python::object ogibbs_states,
     return std::move(orets);
 }
 
-void export_overlap_blockmodel_gibbs()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("gibbs_overlap_sweep", &gibbs_overlap_sweep);
     def("gibbs_overlap_sweep_parallel", &gibbs_overlap_sweep_parallel);
-}
+});

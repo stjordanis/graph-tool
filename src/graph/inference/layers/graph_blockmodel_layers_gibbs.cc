@@ -149,9 +149,12 @@ python::object gibbs_layered_sweep_parallel(python::object ogibbs_states,
 #endif
 }
 
-void export_layered_blockmodel_gibbs()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("gibbs_layered_sweep", &gibbs_layered_sweep);
     def("gibbs_layered_sweep_parallel", &gibbs_layered_sweep_parallel);
-}
+});

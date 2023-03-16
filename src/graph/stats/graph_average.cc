@@ -84,8 +84,11 @@ get_edge_average(GraphInterface& gi, boost::any prop)
 
 using namespace boost::python;
 
-void export_average()
-{
-    def("get_vertex_average", &get_vertex_average);
-    def("get_edge_average", &get_edge_average);
-}
+#define __MOD__ stats
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("get_vertex_average", &get_vertex_average);
+     def("get_edge_average", &get_edge_average);
+ });

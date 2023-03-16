@@ -76,3 +76,15 @@ double reciprocity(GraphInterface& gi, boost::any aw)
          }, weight_props_t())(aw);
     return reciprocity;
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("reciprocity", &reciprocity);
+ });

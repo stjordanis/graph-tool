@@ -160,10 +160,13 @@ void do_exhaustive_layered_overlap_dens(python::object oexhaustive_state,
 }
 
 
-void export_layered_overlap_blockmodel_exhaustive()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("exhaustive_layered_overlap_sweep", &do_exhaustive_layered_overlap_sweep);
     def("exhaustive_layered_overlap_sweep_iter", &do_exhaustive_layered_overlap_sweep_iter);
     def("exhaustive_layered_overlap_dens", &do_exhaustive_layered_overlap_dens);
-}
+});

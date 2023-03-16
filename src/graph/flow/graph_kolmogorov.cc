@@ -86,8 +86,8 @@ struct get_kolmogorov_max_flow
 };
 
 
-void kolmogorov_max_flow(GraphInterface& gi, size_t src, size_t sink,
-                         boost::any capacity, boost::any res)
+void kolmogorov_max_flow_dispatch(GraphInterface& gi, size_t src, size_t sink,
+                                  boost::any capacity, boost::any res)
 {
     run_action<graph_tool::detail::always_directed, boost::mpl::true_>()
         (gi,
@@ -102,3 +102,13 @@ void kolmogorov_max_flow(GraphInterface& gi, size_t src, size_t sink,
          writable_edge_scalar_properties(),
          writable_edge_scalar_properties())(capacity, res);
 }
+
+using namespace boost::python;
+
+#define __MOD__ flow
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("kolmogorov_max_flow", &kolmogorov_max_flow_dispatch);
+ });

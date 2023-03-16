@@ -74,8 +74,11 @@ python::object multicanonical_overlap_sweep(python::object omulticanonical_state
     return ret;
 }
 
-void export_overlap_blockmodel_multicanonical()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multicanonical_overlap_sweep", &multicanonical_overlap_sweep);
-}
+});

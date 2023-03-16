@@ -79,8 +79,11 @@ long double hits(GraphInterface& g, boost::any w, boost::any x, boost::any y,
     return eig;
 }
 
-void export_hits()
-{
-    using namespace boost::python;
-    def("get_hits", &hits);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("get_hits", &hits);
+ });

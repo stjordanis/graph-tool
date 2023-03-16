@@ -65,8 +65,11 @@ void _remove_random_edges(GraphInterface& gi, size_t E, boost::any w,
 
 using namespace boost::python;
 
-void export_random_edges()
-{
-    def("add_random_edges", &_add_random_edges);
-    def("remove_random_edges", &_remove_random_edges);
-}
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("add_random_edges", &_add_random_edges);
+     def("remove_random_edges", &_remove_random_edges);
+ });

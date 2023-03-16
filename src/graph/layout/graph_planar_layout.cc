@@ -88,7 +88,10 @@ void planar_layout(GraphInterface& gi, boost::any aembed_map, boost::any apos)
 
 #include <boost/python.hpp>
 
-void export_planar()
-{
-    boost::python::def("planar_layout", &planar_layout);
-}
+#define __MOD__ layout
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     boost::python::def("planar_layout", &planar_layout);
+ });

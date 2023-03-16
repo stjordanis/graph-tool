@@ -37,7 +37,10 @@ PartitionModeState::bv_t get_bv(python::object ob)
     return bv;
 }
 
-void export_partition_mode()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -382,4 +385,4 @@ void export_partition_mode()
                       get_contingency_graph<false>(g, partition, label, mrs, x, y);
                   })();
          });
-}
+});

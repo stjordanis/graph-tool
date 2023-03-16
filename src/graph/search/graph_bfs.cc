@@ -199,11 +199,13 @@ boost::python::object bfs_search_array(GraphInterface& g, size_t s)
     return wrap_vector_owned<size_t,2>(edges);
 }
 
-
-void export_bfs()
-{
+#define __MOD__ search
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     using namespace boost::python;
     def("bfs_search", &bfs_search);
     def("bfs_search_generator", &bfs_search_generator);
     def("bfs_search_array", &bfs_search_array);
-}
+ });

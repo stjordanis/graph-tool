@@ -74,8 +74,11 @@ python::object vacate_layered_overlap_sweep(python::object ovacate_state,
 #endif
 }
 
-void export_layered_overlap_blockmodel_vacate()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("vacate_layered_overlap_sweep", &vacate_layered_overlap_sweep);
-}
+});

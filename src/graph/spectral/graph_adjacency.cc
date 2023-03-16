@@ -118,3 +118,14 @@ void adjacency_matmat(GraphInterface& g, boost::any index, boost::any weight,
          },
          vertex_scalar_properties(), weight_props_t())(index, weight);
 }
+
+#define __MOD__ spectral
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("adjacency", &adjacency);
+     def("adjacency_matvec", &adjacency_matvec);
+     def("adjacency_matmat", &adjacency_matmat);
+ });

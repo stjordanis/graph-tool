@@ -33,3 +33,13 @@ void lattice(GraphInterface& gi, boost::python::object oshape, bool periodic)
         shape[i] = python::extract<size_t>(oshape[i]);
     get_lattice()(gi.get_graph(), shape, periodic);
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("lattice", &lattice);
+ });

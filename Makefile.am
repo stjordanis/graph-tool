@@ -125,6 +125,7 @@ libgraph_tool_core_la_include_HEADERS = \
 	src/graph/hash_map_wrap.hh \
 	src/graph/histogram.hh \
 	src/graph/idx_map.hh \
+	src/graph/module_registry.hh \
 	src/graph/mpl_nested_loop.hh \
 	src/graph/numpy_bind.hh \
 	src/graph/openmp_lock.hh \

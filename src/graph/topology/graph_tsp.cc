@@ -61,3 +61,15 @@ vector<int32_t> get_tsp(GraphInterface& gi, size_t src, boost::any weight_map)
 
     return tour;
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("get_tsp", &get_tsp);
+ });

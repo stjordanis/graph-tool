@@ -87,8 +87,11 @@ python::object mcmc_epidemics_sweep_r(python::object omcmc_state,
     return ret;
 }
 
-void export_epidemics_mcmc_r()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_epidemics_sweep_r", &mcmc_epidemics_sweep_r);
-}
+});

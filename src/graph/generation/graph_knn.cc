@@ -157,3 +157,14 @@ void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
                                               k, w); })();
     }
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("gen_knn", &generate_knn);
+     def("gen_knn_exact", &generate_knn_exact);
+ });

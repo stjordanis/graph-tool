@@ -118,3 +118,13 @@ void triangulation(GraphInterface& gi, boost::python::object points,
         }
     }
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("triangulation", &triangulation);
+ });

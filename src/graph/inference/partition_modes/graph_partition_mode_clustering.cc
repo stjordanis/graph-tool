@@ -38,7 +38,10 @@ python::object make_mode_cluster_state(boost::python::object ostate)
 
 PartitionModeState::bv_t get_bv(python::object ob);
 
-void export_mode_cluster_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("make_mode_cluster_state", &make_mode_cluster_state);
@@ -114,4 +117,4 @@ void export_mode_cluster_state()
                            return python::make_tuple(rbv.first, obv);
                        });
          });
-}
+});

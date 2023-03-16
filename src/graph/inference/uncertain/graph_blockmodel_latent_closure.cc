@@ -92,8 +92,10 @@ python::object make_latent_closure_state(boost::python::object oeblock_state,
     return state;
 }
 
-
-void export_latent_closure_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
 
@@ -134,4 +136,4 @@ void export_latent_closure_state()
                            });
                   });
          });
-}
+});

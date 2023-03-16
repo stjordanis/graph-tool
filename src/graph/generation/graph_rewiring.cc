@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#define BOOST_PYTHON_MAX_ARITY 20
+
 #include "graph.hh"
 #include "graph_filtering.hh"
 #include "graph_python_interface.hh"
@@ -236,3 +238,13 @@ size_t random_rewire(GraphInterface& gi, string strat, size_t niter,
     }
     return pcount;
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("random_rewire", &random_rewire);
+ });

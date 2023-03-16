@@ -180,10 +180,13 @@ boost::python::object dfs_search_array(GraphInterface& g, size_t s)
     return wrap_vector_owned<size_t,2>(edges);
 }
 
-void export_dfs()
-{
+#define __MOD__ search
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
     using namespace boost::python;
     def("dfs_search", &dfs_search);
     def("dfs_search_generator", &dfs_search_generator);
     def("dfs_search_array", &dfs_search_array);
-}
+ });

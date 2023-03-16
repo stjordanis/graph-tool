@@ -54,3 +54,13 @@ void generate_sbm(GraphInterface& gi, boost::any ab, boost::python::object ors,
                                                out_deg, micro_ers, rng); })();
     }
 }
+
+using namespace boost::python;
+
+#define __MOD__ generation
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("gen_sbm", &generate_sbm);
+ });

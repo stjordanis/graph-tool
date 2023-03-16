@@ -47,8 +47,11 @@ void trust_transitivity(GraphInterface& g, int64_t source, int64_t target,
          edge_floating_properties(), vertex_floating_vector_properties())(c, t);
 }
 
-void export_trust_transitivity()
-{
-    using namespace boost::python;
-    def("get_trust_transitivity", &trust_transitivity);
-}
+#define __MOD__ centrality
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("get_trust_transitivity", &trust_transitivity);
+ });

@@ -90,3 +90,14 @@ void incidence_matmat(GraphInterface& g, boost::any vindex, boost::any eindex,
          },
          vertex_scalar_properties(), edge_scalar_properties())(vindex, eindex);
 }
+
+#define __MOD__ spectral
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("incidence", &incidence);
+     def("incidence_matvec", &incidence_matvec);
+     def("incidence_matmat", &incidence_matmat);
+ });

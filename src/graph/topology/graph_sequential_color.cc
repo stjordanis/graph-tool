@@ -55,3 +55,15 @@ size_t sequential_coloring(GraphInterface& gi, boost::any order,
          vertex_integer_properties(), int_properties())(order, color);
     return nc;
 }
+
+#include <boost/python.hpp>
+
+using namespace boost::python;
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("sequential_coloring", &sequential_coloring);
+ });

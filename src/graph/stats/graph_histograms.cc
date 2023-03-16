@@ -79,8 +79,11 @@ get_edge_histogram(GraphInterface& gi, boost::any prop,
 
 using namespace boost::python;
 
-void export_histograms()
-{
-    def("get_vertex_histogram", &get_vertex_histogram);
-    def("get_edge_histogram", &get_edge_histogram);
-}
+#define __MOD__ stats
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("get_vertex_histogram", &get_vertex_histogram);
+     def("get_edge_histogram", &get_edge_histogram);
+ });

@@ -832,13 +832,16 @@ python::object do_get_all_paths(GraphInterface& gi, size_t s, size_t t,
 #endif // HAVE_BOOST_COROUTINE
 }
 
-void export_dists()
-{
-    python::def("get_dists", &get_dists);
-    python::def("get_all_preds", &do_get_all_preds);
-    python::def("get_all_shortest_paths", &do_get_all_shortest_paths);
-    python::def("get_all_paths", &do_get_all_paths);
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("get_dists", &get_dists);
+     python::def("get_all_preds", &do_get_all_preds);
+     python::def("get_all_shortest_paths", &do_get_all_shortest_paths);
+     python::def("get_all_paths", &do_get_all_paths);
 
-    python::def("get_weighted_succs", &get_weighted_succs);
-    python::def("get_random_shortest_path", &get_random_shortest_path);
-};
+     python::def("get_weighted_succs", &get_weighted_succs);
+     python::def("get_random_shortest_path", &get_random_shortest_path);
+ });

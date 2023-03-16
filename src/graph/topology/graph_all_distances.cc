@@ -157,7 +157,10 @@ void get_all_dists(GraphInterface& gi, boost::any dist_map, boost::any weight,
     }
 }
 
-void export_all_dists()
-{
-    python::def("get_all_dists", &get_all_dists);
-};
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("get_all_dists", &get_all_dists);
+ });

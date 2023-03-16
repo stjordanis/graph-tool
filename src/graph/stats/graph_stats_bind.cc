@@ -15,23 +15,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-#include "graph.hh"
+#define __MOD__ stats
+#define DEF_REGISTRY
+#include "module_registry.hh"
+
 #include <boost/python.hpp>
 
 using namespace boost;
 
-void export_parallel();
-void export_histograms();
-void export_average();
-void export_distance();
-void export_sampled_distance();
-
 BOOST_PYTHON_MODULE(libgraph_tool_stats)
 {
     python::docstring_options dopt(true, false);
-    export_parallel();
-    export_histograms();
-    export_average();
-    export_distance();
-    export_sampled_distance();
+    __MOD__::EvokeRegistry();
 }

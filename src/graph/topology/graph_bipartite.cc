@@ -68,8 +68,8 @@ struct get_bipartite
     }
 };
 
-bool is_bipartite(GraphInterface& gi, boost::any part_map, bool find_cycle,
-                  boost::python::list cycle)
+bool is_bipartite_dispatch(GraphInterface& gi, boost::any part_map, bool find_cycle,
+                           boost::python::list cycle)
 {
     bool is_bip;
     vector<size_t> vcycle;
@@ -91,3 +91,11 @@ bool is_bipartite(GraphInterface& gi, boost::any part_map, bool find_cycle,
 
     return is_bip;
 }
+
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("is_bipartite", &is_bipartite_dispatch);
+ });

@@ -53,8 +53,11 @@ get_vertex_avg_combined_correlation(GraphInterface& gi,
 
 using namespace boost::python;
 
-void export_avg_combined_correlations()
-{
-    def("vertex_avg_combined_correlation",
-        &get_vertex_avg_combined_correlation);
-}
+#define __MOD__ correlations
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("vertex_avg_combined_correlation",
+         &get_vertex_avg_combined_correlation);
+ });

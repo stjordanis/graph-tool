@@ -25,6 +25,10 @@
 
 #include "random.hh"
 
+#define __MOD__ clustering
+#define DEF_REGISTRY
+#include "module_registry.hh"
+
 #include <boost/python.hpp>
 
 using namespace std;
@@ -82,16 +86,10 @@ void local_clustering(GraphInterface& g, boost::any prop, boost::any weight)
 
 using namespace boost::python;
 
-void extended_clustering(GraphInterface& g, boost::python::list props);
-void get_motifs(GraphInterface& g, size_t k, boost::python::list subgraph_list,
-                boost::python::list hist, boost::python::list pvmaps, bool collect_vmaps,
-                boost::python::list p, bool comp_iso, bool fill_list, rng_t& rng);
-
 BOOST_PYTHON_MODULE(libgraph_tool_clustering)
 {
     docstring_options dopt(true, false);
     def("global_clustering", &global_clustering);
     def("local_clustering", &local_clustering);
-    def("extended_clustering", &extended_clustering);
-    def("get_motifs", &get_motifs);
+    __MOD__::EvokeRegistry();
 }

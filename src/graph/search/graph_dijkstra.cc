@@ -376,12 +376,15 @@ boost::python::object dijkstra_search_array_fast(GraphInterface& g,
     return wrap_vector_owned<size_t,2>(edges);
 }
 
-void export_dijkstra()
-{
-    using namespace boost::python;
-    def("dijkstra_search", &dijkstra_search);
-    def("dijkstra_generator", &dijkstra_search_generator);
-    def("dijkstra_generator_fast", &dijkstra_search_generator_fast);
-    def("dijkstra_array", &dijkstra_search_array);
-    def("dijkstra_array_fast", &dijkstra_search_array_fast);
-}
+#define __MOD__ search
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
+     def("dijkstra_search", &dijkstra_search);
+     def("dijkstra_generator", &dijkstra_search_generator);
+     def("dijkstra_generator_fast", &dijkstra_search_generator_fast);
+     def("dijkstra_array", &dijkstra_search_array);
+     def("dijkstra_array_fast", &dijkstra_search_array_fast);
+ });

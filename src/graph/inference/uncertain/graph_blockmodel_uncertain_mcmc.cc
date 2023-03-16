@@ -71,8 +71,11 @@ python::object mcmc_uncertain_sweep(python::object omcmc_state,
     return ret;
 }
 
-void export_uncertain_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("mcmc_uncertain_sweep", &mcmc_uncertain_sweep);
-}
+});

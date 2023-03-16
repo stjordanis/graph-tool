@@ -125,11 +125,13 @@ void do_exhaustive_overlap_dens(python::object oexhaustive_state,
     overlap_block_state::dispatch(oblock_state, dispatch);
 }
 
-
-void export_overlap_blockmodel_exhaustive()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("exhaustive_overlap_sweep", &do_exhaustive_overlap_sweep);
     def("exhaustive_overlap_sweep_iter", &do_exhaustive_overlap_sweep_iter);
     def("exhaustive_overlap_dens", &do_exhaustive_overlap_dens);
-}
+});

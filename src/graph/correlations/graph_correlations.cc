@@ -88,7 +88,10 @@ get_vertex_correlation_histogram(GraphInterface& gi,
 
 using namespace boost::python;
 
-void export_vertex_correlations()
-{
-    def("vertex_correlation_histogram", &get_vertex_correlation_histogram);
-}
+#define __MOD__ correlations
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("vertex_correlation_histogram", &get_vertex_correlation_histogram);
+ });

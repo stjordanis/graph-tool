@@ -65,8 +65,10 @@ boost::python::object get_all_circuits(GraphInterface& gi, bool unique)
 #endif // HAVE_BOOST_COROUTINE
 }
 
-
-void export_all_circuits()
-{
-    boost::python::def("get_all_circuits", &get_all_circuits);
-};
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     boost::python::def("get_all_circuits", &get_all_circuits);
+ });

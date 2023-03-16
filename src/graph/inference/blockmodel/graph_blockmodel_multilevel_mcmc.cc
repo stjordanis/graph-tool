@@ -120,9 +120,12 @@ python::object do_multilevel_mcmc_sweep_parallel(python::object omcmc_states,
     return std::move(orets);
 }
 
-void export_blockmodel_multilevel_mcmc()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     using namespace boost::python;
     def("multilevel_mcmc_sweep", &do_multilevel_mcmc_sweep);
     def("multilevel_mcmc_sweep_parallel", &do_multilevel_mcmc_sweep_parallel);
-}
+});

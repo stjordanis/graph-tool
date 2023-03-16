@@ -64,8 +64,8 @@ struct get_edmonds_karp_max_flow
 };
 
 
-void edmonds_karp_max_flow(GraphInterface& gi, size_t src, size_t sink,
-                           boost::any capacity, boost::any res)
+void edmonds_karp_max_flow_dispatch(GraphInterface& gi, size_t src, size_t sink,
+                                    boost::any capacity, boost::any res)
 {
     run_action<graph_tool::detail::always_directed>()
         (gi,
@@ -80,3 +80,14 @@ void edmonds_karp_max_flow(GraphInterface& gi, size_t src, size_t sink,
          writable_edge_scalar_properties(),
          writable_edge_scalar_properties())(capacity, res);
 }
+
+#include <boost/python.hpp>
+using namespace boost::python;
+
+#define __MOD__ flow
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     def("edmonds_karp_max_flow", &edmonds_karp_max_flow_dispatch);
+ });

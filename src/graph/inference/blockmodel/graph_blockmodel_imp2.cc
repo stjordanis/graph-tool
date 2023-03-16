@@ -32,7 +32,10 @@ GEN_DISPATCH(block_state, BlockState, BLOCK_STATE_params)
 
 using namespace boost::python;
 
-void export_sbm_state()
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
 {
     class_<BlockStateVirtualBase, boost::noncopyable>
         ("BlockStateVirtualBase", no_init);
@@ -115,4 +118,4 @@ void export_sbm_state()
                           return es.log_prob(u, v, m, 0);
                       });
          });
-}
+});

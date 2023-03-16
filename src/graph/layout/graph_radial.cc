@@ -217,7 +217,10 @@ void get_radial(GraphInterface& gi, boost::any otpos, boost::any olevels,
 
 #include <boost/python.hpp>
 
-void export_radial()
-{
-    python::def("get_radial", &get_radial);
-}
+#define __MOD__ layout
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     python::def("get_radial", &get_radial);
+ });

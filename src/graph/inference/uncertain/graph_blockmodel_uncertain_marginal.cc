@@ -214,3 +214,21 @@ double marginal_graph_lprob(GraphInterface& gi, boost::any ap,
         (gi.get_graph_view(), ap, ax);
     return L;
 }
+
+#include <boost/python.hpp>
+
+#define __MOD__ inference
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+{
+    using namespace boost::python;
+    def("collect_marginal", &collect_marginal_dispatch);
+    def("collect_xmarginal", &collect_xmarginal_dispatch);
+    def("collect_marginal_count", &collect_marginal_count_dispatch);
+    def("marginal_count_entropy", &marginal_count_entropy);
+    def("marginal_multigraph_sample", &marginal_multigraph_sample);
+    def("marginal_multigraph_lprob", &marginal_multigraph_lprob);
+    def("marginal_graph_sample", &marginal_graph_sample);
+    def("marginal_graph_lprob", &marginal_graph_lprob);
+});

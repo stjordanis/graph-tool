@@ -109,10 +109,13 @@ void percolate_vertex(GraphInterface& gi, boost::any tree, boost::any size,
 
 #include <boost/python.hpp>
 
-void export_percolation()
-{
-    using namespace boost::python;
+#define __MOD__ topology
+#include "module_registry.hh"
+REGISTER_MOD
+([]
+ {
+     using namespace boost::python;
 
-    def("percolate_edge", percolate_edge);
-    def("percolate_vertex", percolate_vertex);
-};
+     def("percolate_edge", percolate_edge);
+     def("percolate_vertex", percolate_vertex);
+ });
