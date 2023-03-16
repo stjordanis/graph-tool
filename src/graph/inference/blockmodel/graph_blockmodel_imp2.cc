@@ -118,4 +118,4 @@ REGISTER_MOD
                           return es.log_prob(u, v, m, 0);
                       });
          });
-});
+}, 0);

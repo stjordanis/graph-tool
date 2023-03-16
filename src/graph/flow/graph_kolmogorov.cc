@@ -103,6 +103,7 @@ void kolmogorov_max_flow_dispatch(GraphInterface& gi, size_t src, size_t sink,
          writable_edge_scalar_properties())(capacity, res);
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ flow

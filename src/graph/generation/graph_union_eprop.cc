@@ -52,6 +52,7 @@ void edge_property_union(GraphInterface& ugi, GraphInterface& gi,
          writable_edge_properties())(gi.get_graph_view(), uprop);
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ generation

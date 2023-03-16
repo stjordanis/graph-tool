@@ -20,8 +20,9 @@
 
 #include <functional>
 #include <vector>
-#include <boost/python.hpp>
-#include <iostream>
+#include <tuple>
+#include <algorithm>
+#include <limits>
 
 #ifndef __MOD__
 #error "__MOD__ needs to be defined"
@@ -38,14 +39,14 @@ extern
 #else
 __attribute__((init_priority(200)))
 #endif
-std::vector<std::function<void()>> __module_registry;
+std::vector<std::tuple<int,std::function<void()>>> __module_registry;
 
 class RegisterMod
 {
 public:
-    RegisterMod(std::function<void()> f)
+    RegisterMod(std::function<void()> f, int p = std::numeric_limits<int>::max())
     {
-        __module_registry.push_back(f);
+        __module_registry.emplace_back(p, f);
     }
 };
 
@@ -54,7 +55,10 @@ class EvokeRegistry
 public:
     EvokeRegistry()
     {
-        for (auto& f : __module_registry)
+        std::sort(__module_registry.begin(), __module_registry.end(),
+                  [](const auto& a, const auto& b)
+                  { return std::get<0>(a) < std::get<0>(b); });
+        for (auto& [p, f] : __module_registry)
             f();
         __module_registry.clear();
         __module_registry.shrink_to_fit();

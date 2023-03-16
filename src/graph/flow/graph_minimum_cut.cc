@@ -96,6 +96,7 @@ void get_residual_graph(GraphInterface& gi, boost::any capacity,
          edge_scalar_properties(), edge_scalar_properties())(capacity, res);
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ flow

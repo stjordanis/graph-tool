@@ -117,4 +117,4 @@ REGISTER_MOD
     def("geometric_w_log_P", geometric_w_log_P<size_t>);
     def("binomial_w_log_P", binomial_w_log_P<size_t>);
     def("poisson_w_log_P", poisson_w_log_P<size_t>);
-});
+}, 3);

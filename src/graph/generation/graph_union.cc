@@ -46,6 +46,7 @@ boost::python::tuple graph_union_dispatch(GraphInterface& ugi, GraphInterface& g
     return boost::python::make_tuple(avprop, boost::any(eprop));
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ generation

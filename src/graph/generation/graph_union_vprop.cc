@@ -47,6 +47,7 @@ void vertex_property_union(GraphInterface& ugi, GraphInterface& gi,
             ugi.get_graph_view(), gi.get_graph_view(), uprop);
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ generation

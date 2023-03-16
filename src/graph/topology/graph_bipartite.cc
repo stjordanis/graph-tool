@@ -92,10 +92,13 @@ bool is_bipartite_dispatch(GraphInterface& gi, boost::any part_map, bool find_cy
     return is_bip;
 }
 
+#include <boost/python.hpp>
+
 #define __MOD__ topology
 #include "module_registry.hh"
 REGISTER_MOD
 ([]
  {
+     using namespace boost::python;
      def("is_bipartite", &is_bipartite_dispatch);
  });

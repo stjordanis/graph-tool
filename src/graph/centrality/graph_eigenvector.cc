@@ -53,6 +53,8 @@ long double eigenvector(GraphInterface& g, boost::any w, boost::any c,
     return eig;
 }
 
+#include <boost/python.hpp>
+
 #define __MOD__ centrality
 #include "module_registry.hh"
 REGISTER_MOD

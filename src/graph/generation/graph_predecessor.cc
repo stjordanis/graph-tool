@@ -37,6 +37,8 @@ void predecessor_graph(GraphInterface& gi, GraphInterface& gpi,
          vertex_scalar_properties())(pred_map);
 }
 
+#include <boost/python.hpp>
+
 using namespace boost::python;
 
 #define __MOD__ generation

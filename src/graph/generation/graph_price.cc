@@ -37,6 +37,7 @@ void price(GraphInterface& gi, size_t N, double gamma, double c, size_t m,
          })();
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ generation

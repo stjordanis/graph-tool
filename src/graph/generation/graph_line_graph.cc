@@ -104,6 +104,7 @@ void line_graph(GraphInterface& gi, GraphInterface& lgi,
          vertex_properties())(edge_index);
 }
 
+#include <boost/python.hpp>
 using namespace boost::python;
 
 #define __MOD__ generation
