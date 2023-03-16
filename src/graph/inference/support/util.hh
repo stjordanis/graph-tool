@@ -59,7 +59,7 @@ inline double lbinom_careful(T1 N, T2 k)
     {
         // We have N >> k. Use Stirling's approximation: ln N! ~ N ln N - N
         // and reorder
-        return - N * log1p(-k / N) - k * log1p(-k / N) - k - lgk + k * log(N);
+        return - N * std::log1p(-k / N) - k * std::log1p(-k / N) - k - lgk + k * std::log(N);
     }
     else
     {
@@ -74,16 +74,35 @@ inline auto lbeta(T x, T y)
     return (std::lgamma(x) + std::lgamma(y)) - std::lgamma(x + y);
 }
 
-template <class T>
+template <class T1, class T2>
 [[gnu::const]]
-inline auto log_sum_exp(T a, T b)
+inline auto log_sum_exp(T1 a, T2 b)
 {
     if (a == b)  // handles infinity
         return a + std::log(2);
     else if (a > b)
-        return a + std::log1p(exp(b-a));
+        return a + std::log1p(std::exp(b-a));
     else
-        return b + std::log1p(exp(a-b));
+        return b + std::log1p(std::exp(a-b));
+}
+
+template <class T1, class T2, class... Ts>
+[[gnu::const]]
+inline auto log_sum_exp(T1 a, T2 b, Ts... cs)
+{
+    if constexpr (sizeof...(Ts) == 0)
+        return log_sum_exp(a, b);
+    else
+        return log_sum_exp(log_sum_exp(a, b), cs...);
+}
+
+template <class V>
+inline auto log_sum_exp(const V& v)
+{
+    double ret = -std::numeric_limits<double>::infinity();
+    for (double x : v)
+        ret = log_sum_exp(ret, x);
+    return ret;
 }
 
 namespace detail {
