@@ -2529,10 +2529,11 @@ class Graph(object):
                       eprops=None):
         """Add a list of edges to the graph, given by ``edge_list``, which can
         be an iterator of ``(source, target)`` pairs where both ``source`` and
-        ``target`` are vertex indexes, or a :class:`numpy.ndarray` of shape
-        ``(E,2)``, where ``E`` is the number of edges, and each line specifies a 
-        ``(source, target)`` pair. If the list references vertices which do not
-        exist in the graph, they will be created.
+        ``target`` are vertex indexes (or can be so converted), or a
+        :class:`numpy.ndarray` of shape ``(E,2)``, where ``E`` is the number of
+        edges, and each line specifies a ``(source, target)`` pair. If the list
+        references vertices which do not exist in the graph, they will be
+        created.
 
         Optionally, if ``hashed == True``, the vertex values in the edge list
         are not assumed to correspond to vertex indices directly. In this case
@@ -2582,6 +2583,11 @@ class Graph(object):
 
         if eprops is None:
             eprops = ()
+            if not isinstance(edge_list, numpy.ndarray):
+                def wrap(elist):
+                    for row in elist:
+                        yield (int(x) for x in row)
+                edge_list = wrap(edge_list)
         else:
             for i in range(len(eprops)):
                 if not isinstance(eprops[i], EdgePropertyMap):
@@ -2592,7 +2598,7 @@ class Graph(object):
             if not isinstance(edge_list, numpy.ndarray):
                 def wrap(elist):
                     for row in elist:
-                        yield (val if i < 2 else convert[i - 2](val)
+                        yield (int(val) if i < 2 else convert[i - 2](val)
                                for (i, val) in enumerate(row)
                                if len(convert) > i - 2)
                 edge_list = wrap(edge_list)
