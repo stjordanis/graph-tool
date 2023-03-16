@@ -2583,10 +2583,10 @@ class Graph(object):
 
         if eprops is None:
             eprops = ()
-            if not isinstance(edge_list, numpy.ndarray):
+            if not isinstance(edge_list, numpy.ndarray) and not hashed:
                 def wrap(elist):
                     for row in elist:
-                        yield (int(x) for x in row)
+                        yield (int(x) if x is not None else None for x in row)
                 edge_list = wrap(edge_list)
         else:
             for i in range(len(eprops)):
@@ -2597,8 +2597,12 @@ class Graph(object):
             eprops = [_prop("e", self, x) for x in eprops]
             if not isinstance(edge_list, numpy.ndarray):
                 def wrap(elist):
+                    if hashed:
+                        conv = lambda x: x
+                    else:
+                        conv = lambda x: int(x) if x is not None else None
                     for row in elist:
-                        yield (int(val) if i < 2 else convert[i - 2](val)
+                        yield (conv(val) if i < 2 else convert[i - 2](val)
                                for (i, val) in enumerate(row)
                                if len(convert) > i - 2)
                 edge_list = wrap(edge_list)
