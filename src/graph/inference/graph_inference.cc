@@ -91,6 +91,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
 
     def("lbinom", lbinom<size_t, size_t>);
     def("lbinom_fast", lbinom_fast<true, size_t, size_t>);
+    def("log_sum_exp", +[](double x, double y){ return log_sum_exp(x, y); });
 
     __MOD__::EvokeRegistry();
 }
