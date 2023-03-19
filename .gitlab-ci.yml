@@ -50,125 +50,124 @@ build_tarball:
       - graph-tool*xz
       - graph-tool*zst
 
-build_sid:
+.build_deb:
+  variables:
+    BASE: ""
+    PLATFORM: ""
   script:
-    - BASE=debian:sid
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
+    - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
+    - docker run --platform linux/$PLATFORM -v $PWD:/mount $img tar -c build | tar x
   only:
     - tags
   artifacts:
     paths:
       - release/debian/build/*
+
+build_sid:
+  extends: .build_deb
+  variables:
+    BASE: debian:sid
+    PLATFORM: amd64
+
+build_sid_arm:
+  extends: .build_deb
+  variables:
+    BASE: debian:sid
+    PLATFORM: arm64
+  needs: ["build_sid"]
 
 build_bookworm:
-  script:
-    - BASE=debian:bookworm
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: debian:bookworm
+    PLATFORM: amd64
+
+build_bookworm_arm:
+  extends: .build_deb
+  variables:
+    BASE: debian:bookworm
+    PLATFORM: arm64
+  needs: ["build_bookworm"]
 
 build_bullseye:
-  script:
-    - BASE=debian:bullseye
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: debian:bullseye
+    PLATFORM: amd64
+
+build_bullseye_arm:
+  extends: .build_deb
+  variables:
+    BASE: debian:bullseye
+    PLATFORM: arm64
+  needs: ["build_bullseye"]
 
 build_buster:
-  script:
-    - BASE=debian:buster
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: debian:buster
+    PLATFORM: amd64
+
+build_buster_arm:
+  extends: .build_deb
+  variables:
+    BASE: debian:buster
+    PLATFORM: arm64
+  needs: ["build_buster"]
 
 build_bionic:
-  script:
-    - BASE=ubuntu:bionic
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:bionic
+    PLATFORM: amd64
+
+build_bionic_arm:
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:bionic
+    PLATFORM: arm64
+  needs: ["build_bionic"]
 
 build_focal:
-  script:
-    - BASE=ubuntu:focal
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:focal
+    PLATFORM: amd64
+
+build_focal_arm:
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:focal
+    PLATFORM: arm64
+  needs: ["build_focal"]
 
 build_jammy:
-  script:
-    - BASE=ubuntu:jammy
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:jammy
+    PLATFORM: amd64
+
+build_jammy_arm:
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:jammy
+    PLATFORM: arm64
+  needs: ["build_jammy"]
 
 build_kinetic:
-  script:
-    - BASE=ubuntu:kinetic
-    - img=`echo $BASE | sed s/:/_/`
-    - cd release/debian
-    - docker buildx build --platform linux/amd64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/amd64 -v $PWD:/mount $img tar -c build | tar x
-    - docker buildx build --platform linux/arm64 --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
-    - docker run --platform linux/arm64 -v $PWD:/mount $img tar -c build | tar x
-  only:
-    - tags
-  artifacts:
-    paths:
-      - release/debian/build/*
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:kinetic
+    PLATFORM: amd64
+
+build_kinetic_arm:
+  extends: .build_deb
+  variables:
+    BASE: ubuntu:kinetic
+    PLATFORM: arm64
+  needs: ["build_kinetic"]
 
 build_docker:
   script:
