@@ -28,25 +28,30 @@
 #error "__MOD__ needs to be defined"
 #endif
 
-#define REGISTER_MOD \
-    __attribute__((init_priority(300))) static __MOD__::RegisterMod __reg
+#define REGISTER_MOD static __MOD__::RegisterMod __reg
 
 namespace __MOD__
 {
 
-#ifndef DEF_REGISTRY
-extern
+typedef std::vector<std::tuple<int,std::function<void()>>> reg_t;
+
+reg_t& get_module_registry()
+#ifdef DEF_REGISTRY
+{
+    static reg_t* reg = new reg_t();
+    return *reg;
+}
 #else
-__attribute__((init_priority(200)))
+;
 #endif
-std::vector<std::tuple<int,std::function<void()>>> __module_registry;
+
 
 class RegisterMod
 {
 public:
     RegisterMod(std::function<void()> f, int p = std::numeric_limits<int>::max())
     {
-        __module_registry.emplace_back(p, f);
+        get_module_registry().emplace_back(p, f);
     }
 };
 
@@ -55,13 +60,13 @@ class EvokeRegistry
 public:
     EvokeRegistry()
     {
-        std::sort(__module_registry.begin(), __module_registry.end(),
+        reg_t& reg = get_module_registry();
+        std::sort(reg.begin(), reg.end(),
                   [](const auto& a, const auto& b)
                   { return std::get<0>(a) < std::get<0>(b); });
-        for (auto& [p, f] : __module_registry)
+        for (auto& [p, f] : reg)
             f();
-        __module_registry.clear();
-        __module_registry.shrink_to_fit();
+        delete &reg;
     }
 };
 
