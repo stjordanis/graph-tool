@@ -20,22 +20,8 @@
 
 import sys
 
-try:
-    from os import RTLD_LAZY, RTLD_GLOBAL
-    dl_flags = RTLD_LAZY | RTLD_GLOBAL
-except ImportError:
-    try:
-        from DLFCN import RTLD_LAZY, RTLD_GLOBAL
-        dl_flags = RTLD_LAZY | RTLD_GLOBAL
-    except ImportError:
-        # handle strange python installations, by importing from the deprecated dl
-        # module, otherwise from ctypes
-        try:
-            from dl import RTLD_LAZY, RTLD_GLOBAL
-            dl_flags = RTLD_LAZY | RTLD_GLOBAL
-        except ImportError:
-            from ctypes import RTLD_GLOBAL
-            dl_flags = RTLD_GLOBAL
+from os import RTLD_LAZY, RTLD_GLOBAL
+dl_flags = RTLD_LAZY | RTLD_GLOBAL
 
 __all__ = ["dl_import"]
 
