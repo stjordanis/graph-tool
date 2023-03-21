@@ -3435,6 +3435,10 @@ class Graph(object):
         """
         return self.__graph.get_num_vertices(not ignore_filter)
 
+    def __len__(self):
+        """Alias to :meth:`Graph.num_vertices()`."""
+        return self.num_vertices()
+
     def num_edges(self, ignore_filter=False):
         """Get the number of edges.
 
