@@ -206,7 +206,8 @@ public:
     typedef std::vector<std::pair<size_t, edge_list_t>> vertex_list_t;
     typedef typename integer_range<Vertex>::iterator vertex_iterator;
 
-    adj_list(): _n_edges(0), _edge_index_range(0), _keep_epos(false) {}
+    adj_list(size_t n = 0): _edges(n), _n_edges(0), _edge_index_range(0),
+                            _keep_epos(false) {}
 
     struct get_vertex
     {
