@@ -1502,9 +1502,11 @@ def remove_random_edges(g, M, weight=None, counts=True):
         remove_random_edges(g._Graph__graph, M, _prop("e", g, weight), counts,
                             _get_rng())
 
-def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
-                 directed=False, cache_dist=True):
-    r"""Generate a graph of k-nearest neighbors from a set of multidimensional points.
+
+def generate_knn(points, k, dist=None, pairs=False, exact=False, r=.5,
+                 epsilon=.001, directed=False, cache_dist=True):
+    r"""Generate a graph of k-nearest neighbors from a set of multidimensional
+    points.
 
     Parameters
     ----------
@@ -1512,13 +1514,16 @@ def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
         Points of dimension :math:`D` to be considered. If the parameter `dist`
         is passed, this should be just an `int` containing the number of points.
     k : ``int``
-        Number of nearest neighbors.
+        Number of nearest neighbors per node (or number of pairs if ``pairs is True``).
     dist : function (optional, default: ``None``)
         If given, this should be a function that returns the distance between
         two points. The arguments of this function should just be two integers,
         corresponding to the vertex index. In this case the value of ``points``
         should just be the total number of points. If ``dist is None``, then the
         L2-norm (Euclidean distance) is used.
+    pairs : ``bool`` (optional, default: ``False``)
+        If ``True``, the ``k`` closest pairs of nodes will be returned, otherwise
+        the ``k`` nearest neighbors for every edge is returned.
     exact : ``bool`` (optional, default: ``False``)
         If ``False``, an fast approximation will be used, otherwise an exact but
         slow algorithm will be used.
@@ -1547,18 +1552,24 @@ def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
     -----
 
     The approximate version of this algorithm is based on
-    [dong-efficient-2020]_, and has an (empirical) run-time of
+    [dong-efficient-2011]_, and has an (empirical) run-time of
     :math:`O(N^{1.14})`. The exact version has a complexity of :math:`O(N^2)`.
+
+    If ``pairs is True``, the :math:`k` closest pairs are found from the nearest
+    neighbors problem as described in [lenhof-k-closest]_.
 
     If enabled during compilation, this algorithm runs in parallel.
 
     References
     ----------
-    .. [dong-efficient-2020] Wei Dong, Charikar Moses, and Kai Li, "Efficient
+    .. [dong-efficient-2011] Wei Dong, Charikar Moses, and Kai Li, "Efficient
        k-nearest neighbor graph construction for generic similarity measures",
        In Proceedings of the 20th international conference on World wide web
        (WWW '11). Association for Computing Machinery, New York, NY, USA,
        577–586, (2011) :doi:`https://doi.org/10.1145/1963405.1963487`
+    .. [lenhof-k-closest] HP Lenhof, M Smid, "The k closest pairs problem",
+       https://people.scs.carleton.ca/~michiel/k-closestnote.pdf
+
 
     Examples
     --------
@@ -1575,16 +1586,29 @@ def generate_knn(points, k, dist=None, exact=False, r=.5, epsilon=.001,
         points = numpy.asarray(points, dtype="float")
         N = points.shape[0]
 
-    g = Graph()
-    g.add_vertex(N)
+    g = Graph(N, fast_edge_removal=True)
     w = g.new_ep("double")
 
     if exact:
-        libgraph_tool_generation.gen_knn_exact(g._Graph__graph, points, k,
-                                               _prop("e", g, w))
+        if pairs:
+            libgraph_tool_generation.gen_k_nearest_exact(g._Graph__graph,
+                                                         points, k,
+                                                         _prop("e", g, w),
+                                                         directed)
+        else:
+            libgraph_tool_generation.gen_knn_exact(g._Graph__graph, points, k,
+                                                   _prop("e", g, w))
     else:
-        libgraph_tool_generation.gen_knn(g._Graph__graph, points, k, r, epsilon,
-                                         cache_dist, _prop("e", g, w), _get_rng())
+        if pairs:
+            libgraph_tool_generation.gen_k_nearest(g._Graph__graph, points, k,
+                                                   r, epsilon, cache_dist,
+                                                   _prop("e", g, w), directed,
+                                                   _get_rng())
+        else:
+            libgraph_tool_generation.gen_knn(g._Graph__graph, points, k, r,
+                                             epsilon, cache_dist,
+                                             _prop("e", g, w), _get_rng())
+
 
     if not directed:
         g.set_directed(False)

@@ -51,8 +51,12 @@ void contract_parallel_edges(Graph& g, EWeight eweight)
             {
                 if (e == iter->second) // self-loops
                     continue;
-                auto w = eweight[iter->second];
-                put(eweight, iter->second, eweight[e] + w);
+                if constexpr (is_convertible_v<typename boost::property_traits<EWeight>::category,
+                                               boost::writable_property_map_tag>)
+                {
+                    auto w = eweight[iter->second];
+                    put(eweight, iter->second, eweight[e] + w);
+                }
                 remove.push_back(e);
             }
         }

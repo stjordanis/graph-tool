@@ -22,41 +22,6 @@ using namespace std;
 using namespace boost;
 using namespace graph_tool;
 
-template <class D>
-class CachedDist
-{
-public:
-    CachedDist(GraphInterface& gi, D& d)
-        : _d(d)
-    {
-        run_action<>()
-            (gi, [&](auto& g) { _dist_cache.resize(num_vertices(g)); })();
-    }
-
-    double operator()(size_t v, size_t u)
-    {
-        auto& cache = _dist_cache[v];
-        auto iter = cache.find(u);
-        if (iter == cache.end())
-        {
-            double d = _d(v, u);
-            cache[u] = d;
-            return d;
-        }
-        return iter->second;
-    }
-
-private:
-    std::vector<gt_hash_map<size_t, double>> _dist_cache;
-    D& _d;
-};
-
-template <class D>
-auto make_cached_dist(GraphInterface& gi, D& d)
-{
-    return CachedDist<D>(gi, d);
-}
-
 void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                   double r, double epsilon, bool cache, boost::any aw,
                   rng_t& rng)
@@ -82,14 +47,20 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
 
         if (!cache)
         {
-            run_action<>()
-                (gi, [&](auto& g) { gen_knn<true>(g, d_e, k, r, epsilon, w, rng); })();
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         gen_knn<true>(g, d_e, k, r, epsilon, w, rng);
+                     })();
         }
         else
         {
-            auto d = make_cached_dist(gi, d_e);
-            run_action<>()
-                (gi, [&](auto& g) { gen_knn<true>(g, d, k, r, epsilon, w, rng); })();
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         auto d = make_cached_dist(g, d_e);
+                         gen_knn<true>(g, d, k, r, epsilon, w, rng);
+                     })();
         }
     }
     catch (InvalidNumpyConversion&)
@@ -103,8 +74,11 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                     return d;
                 };
 
-            run_action<>()
-                (gi, [&](auto& g) { gen_knn<false>(g, d_e, k, r, epsilon, w, rng); })();
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         gen_knn<false>(g, d_e, k, r, epsilon, w, rng);
+                     })();
         }
         else
         {
@@ -117,11 +91,28 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                     return d;
                 };
 
-            auto d = make_cached_dist(gi, d_e);
-            run_action<>()
-                (gi, [&](auto& g) { gen_knn<true>(g, d, k, r, epsilon, w, rng); })();
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         auto d = make_cached_dist(g, d_e);
+                         gen_knn<true>(g, d, k, r, epsilon, w, rng);
+                     })();
         }
     }
+}
+
+template <class T, class M>
+double euclidean(T u, T v, const M& m)
+{
+    double d = 0;
+    auto mu = m[u];
+    auto mv = m[v];
+    for (size_t i = 0; i < m.shape()[1]; ++i)
+    {
+        auto x = mu[i] - mv[i];
+        d += x * x;
+    }
+    return sqrt(d);
 }
 
 void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
@@ -133,20 +124,15 @@ void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
     try
     {
         auto m = get_array<double, 2>(om);
-        run_action<>()
+        run_action<always_directed_never_filtered_never_reversed>()
             (gi, [&](auto& g) { gen_knn_exact<true>(g,
                                                     [&](auto u, auto v)
-                                                    {
-                                                        double d = 0;
-                                                        for (size_t i = 0; i < m.shape()[1]; ++i)
-                                                            d += pow(m[u][i] - m[v][i], 2);
-                                                        return sqrt(d);
-                                                    },
+                                                    { return euclidean(u, v, m); },
                                                     k, w); })();
     }
     catch (InvalidNumpyConversion&)
     {
-        run_action<>()
+        run_action<always_directed_never_filtered_never_reversed>()
             (gi, [&](auto& g) { gen_knn_exact<false>(g,
                                               [&](auto u, auto v)
                                               {
@@ -158,6 +144,114 @@ void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
     }
 }
 
+void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
+                        double r, double epsilon, bool cache, boost::any aw,
+                        bool directed, rng_t& rng)
+
+{
+    typedef eprop_map_t<double>::type emap_t;
+    auto w = any_cast<emap_t>(aw);
+
+    try
+    {
+        auto m = get_array<double, 2>(om);
+
+        auto d_e =
+            [&](auto u, auto v)
+            {
+                return euclidean(u, v, m);
+            };
+
+        if (!cache)
+        {
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         gen_k_nearest<true>(g, d_e, k, r, epsilon, w, directed,
+                                             rng);
+                     })();
+        }
+        else
+        {
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         auto d = make_cached_dist(g, d_e);
+                         gen_k_nearest<true>(g, d, k, r, epsilon, w, directed,
+                                             rng);
+                     })();
+        }
+    }
+    catch (InvalidNumpyConversion&)
+    {
+        if (!cache)
+        {
+            auto d_e =
+                [&](auto v, auto u)
+                {
+                    double d = python::extract<double>(om(v, u));
+                    return d;
+                };
+
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         gen_k_nearest<false>(g, d_e, k, r, epsilon, w,
+                                              directed, rng);
+                     })();
+        }
+        else
+        {
+            auto d_e =
+                [&](auto v, auto u)
+                {
+                    double d;
+                    #pragma omp critical
+                    d = python::extract<double>(om(v, u));
+                    return d;
+                };
+
+            run_action<always_directed_never_filtered_never_reversed>()
+                (gi, [&](auto& g)
+                     {
+                         auto d = make_cached_dist(g, d_e);
+                         gen_k_nearest<true>(g, d, k, r, epsilon, w, directed,
+                                             rng);
+                     })();
+        }
+    }
+}
+
+void generate_k_nearest_exact(GraphInterface& gi, boost::python::object om, size_t k,
+                              boost::any aw, bool directed)
+{
+    typedef eprop_map_t<double>::type emap_t;
+    auto w = any_cast<emap_t>(aw);
+
+    try
+    {
+        auto m = get_array<double, 2>(om);
+        run_action<always_directed_never_filtered_never_reversed>()
+            (gi, [&](auto& g) { gen_k_nearest_exact<true>(g,
+                                                          [&](auto u, auto v)
+                                                          { return euclidean(u, v, m); },
+                                                          k, directed, w); })();
+    }
+    catch (InvalidNumpyConversion&)
+    {
+        run_action<always_directed_never_filtered_never_reversed>()
+            (gi, [&](auto& g) { gen_k_nearest_exact<false>(g,
+                                                           [&](auto u, auto v)
+                                                           {
+                                                               double d;
+                                                               d = python::extract<double>(om(u, v));
+                                                               return d;
+                                                           },
+                                                           k, directed, w); })();
+    }
+}
+
+
 using namespace boost::python;
 
 #define __MOD__ generation
@@ -167,4 +261,6 @@ REGISTER_MOD
  {
      def("gen_knn", &generate_knn);
      def("gen_knn_exact", &generate_knn_exact);
+     def("gen_k_nearest", &generate_k_nearest);
+     def("gen_k_nearest_exact", &generate_k_nearest_exact);
  });

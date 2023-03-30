@@ -37,13 +37,11 @@ public:
     {
         if (_sum != 0)
         {
-            for (decltype(this->begin()) iter = this->begin();
-                 iter != this->end(); ++iter)
+           #pragma omp critical
             {
-                #pragma omp critical
-                {
+                for (decltype(this->begin()) iter = this->begin();
+                     iter != this->end(); ++iter)
                     (*_sum)[iter->first] += iter->second;
-                }
             }
             _sum = 0;
         }

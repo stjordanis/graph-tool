@@ -133,6 +133,7 @@ libgraph_tool_core_la_include_HEADERS = \
 	src/graph/random.hh \
 	src/graph/str_repr.hh \
 	src/graph/shared_map.hh \
+	src/graph/shared_heap.hh \
 	src/graph/transform_iterator.hh
 libgraph_tool_core_la_workarounddir = $(MOD_DIR)/include/boost-workaround/boost/graph/
 libgraph_tool_core_la_workaround_HEADERS = \
