@@ -121,7 +121,7 @@ struct MCMC
 
         void perform_move(size_t v, size_t nr)
         {
-            _state.move_vertex(v, nr);
+            _state.move_vertex(v, nr, _m_entries);
         }
 
         bool is_deterministic()

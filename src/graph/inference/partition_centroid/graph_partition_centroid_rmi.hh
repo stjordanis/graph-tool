@@ -204,6 +204,12 @@ public:
         _b[v] = nr;
     }
 
+    template <class ME>
+    void move_vertex(size_t v, size_t nr, ME&)
+    {
+        move_vertex(v, nr);
+    }
+
     size_t virtual_remove_size(size_t v)
     {
         return _wr[_b[v]] - 1;

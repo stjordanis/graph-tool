@@ -65,13 +65,16 @@ struct MCMC
                                             sizeof...(Ts)>* = nullptr>
         MCMCBlockState(ATs&&... as)
            : MCMCBlockStateBase<Ts...>(as...),
+            _m_entries(num_vertices(_state._ustate._bg)),
             _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
         {
             _state.init_mcmc(*this);
         }
 
         constexpr static size_t _null_move = null_group;
+        typename State::m_entries_t _m_entries;
         typename State::_entropy_args_t& _entropy_args;
+
 
         size_t node_state(size_t v)
         {
@@ -101,7 +104,7 @@ struct MCMC
             if (r == nr)
                 return std::make_tuple(0., 0.);
 
-            double dS = _state.virtual_move(v, r, nr, _entropy_args);
+            double dS = _state.virtual_move(v, r, nr, _entropy_args, _m_entries);
             double a = 0;
             if (!std::isinf(_beta))
             {
@@ -114,7 +117,7 @@ struct MCMC
 
         void perform_move(size_t v, size_t nr)
         {
-            _state.move_vertex(v, nr);
+            _state.move_vertex(v, nr, _m_entries);
         }
 
         bool is_deterministic()

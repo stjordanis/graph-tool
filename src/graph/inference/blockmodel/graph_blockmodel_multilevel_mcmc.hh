@@ -83,6 +83,7 @@ struct MCMC
                                             sizeof...(Ts)>* = nullptr>
         MCMCBlockStateImp(ATs&&... as)
            : MCMCBlockStateBase<Ts...>(as...),
+             _m_entries(num_vertices(_state._bg)),
              _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
         {
             _state.init_mcmc(*this);
@@ -110,6 +111,7 @@ struct MCMC
         bool _has_b_max = false;
         bool _has_b_min = false;
 
+        typename State::m_entries_t _m_entries;
         typename State::_entropy_args_t& _entropy_args;
 
         vprop_map_t<int32_t>::type::unchecked_t _bh;
@@ -169,9 +171,12 @@ struct MCMC
             return t;
         }
 
-        void move_node(size_t v, size_t r)
+        void move_node(size_t v, size_t r, bool cache)
         {
-            _state.move_vertex(v, r);
+            if (cache)
+                _state.move_vertex(v, r, _m_entries);
+            else
+                _state.move_vertex(v, r);
         }
 
         double virtual_move(size_t v, size_t r, size_t s)
@@ -181,7 +186,7 @@ struct MCMC
                 if (_bh[r] != _bh[s])
                     return numeric_limits<double>::infinity();
             }
-            return _state.virtual_move(v, r, s, _entropy_args);
+            return _state.virtual_move(v, r, s, _entropy_args, _m_entries);
         }
 
         template <class VS>

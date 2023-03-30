@@ -90,6 +90,8 @@ REGISTER_MOD
                       void (state_t::*move_vertices)(python::object,
                                                      python::object) =
                           &state_t::move_vertices;
+                      void (state_t::*move_vertex)(size_t, size_t) =
+                          &state_t::move_vertex;
                       void (state_t::*couple_state)(LayeredBlockStateVirtualBase&,
                                                     const entropy_args_t&) =
                           &state_t::couple_state;
@@ -98,7 +100,7 @@ REGISTER_MOD
                                         no_init);
                       c.def("remove_vertex", &state_t::remove_vertex)
                           .def("add_vertex", &state_t::add_vertex)
-                          .def("move_vertex", &state_t::move_vertex)
+                          .def("move_vertex", move_vertex)
                           .def("move_vertices", move_vertices)
                           .def("virtual_move", virtual_move)
                           .def("sample_block", sample_block)

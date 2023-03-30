@@ -88,6 +88,8 @@ struct MCMC
         constexpr static double _psscatter = 1;
         constexpr static double _pscoalesce = 1;
 
+        typename State::m_entries_t _m_entries;
+
         template <class F>
         void iter_nodes(F&& f)
         {
@@ -152,9 +154,12 @@ struct MCMC
             return t;
         }
 
-        void move_node(size_t v, size_t r)
+        void move_node(size_t v, size_t r, bool cache)
         {
-            _state.move_vertex(v, r);
+            if (cache)
+                _state.move_vertex(v, r, _m_entries);
+            else
+                _state.move_vertex(v, r);
         }
 
         void reserve_empty_groups(size_t nB)
@@ -170,7 +175,7 @@ struct MCMC
 
         double virtual_move(size_t v, size_t r, size_t s)
         {
-            return _state.virtual_move(v, r, s, _entropy_args);
+            return _state.virtual_move(v, r, s, _entropy_args, _m_entries);
         }
 
         template <class RNG>

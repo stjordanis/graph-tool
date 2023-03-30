@@ -139,10 +139,10 @@ struct MergeSplit: public State
         return false;
     }
 
-    void move_node(const Node& v, const Group& r)
+    void move_node(const Node& v, const Group& r, bool cache=false)
     {
         Group s = State::get_group(v);
-        State::move_node(v, r);
+        State::move_node(v, r, cache);
         if (s == r)
             return;
         auto& vs = _groups[s];
@@ -212,7 +212,7 @@ struct MergeSplit: public State
             std::bernoulli_distribution sample(exp(p[0]));
             if (sample(rng))
             {
-                move_node(v, nbv);
+                move_node(v, nbv, true);
                 lp += p[0];
                 dS += ddS;
             }
@@ -243,7 +243,7 @@ struct MergeSplit: public State
             {
                 rt[0] = r;
                 dS += State::virtual_move(v, State::get_group(v), rt[0]);
-                move_node(v, rt[0]);
+                move_node(v, rt[0], true);
                 continue;
             }
 
@@ -254,19 +254,19 @@ struct MergeSplit: public State
                 else
                     rt[1] = s;
                 dS += State::virtual_move(v, State::get_group(v), rt[1]);
-                move_node(v, rt[1]);
+                move_node(v, rt[1], true);
                 continue;
             }
 
             if (sample(rng))
             {
                 dS += State::virtual_move(v, State::get_group(v), rt[0]);
-                move_node(v, rt[0]);
+                move_node(v, rt[0], true);
             }
             else
             {
                 dS += State::virtual_move(v, State::get_group(v), rt[1]);
-                move_node(v, rt[1]);
+                move_node(v, rt[1], true);
             }
         }
 
@@ -297,7 +297,7 @@ struct MergeSplit: public State
         for (const auto& v : vrs)
         {
             dS += State::virtual_move(v, State::get_group(v), t);
-            move_node(v, t);
+            move_node(v, t, true);
         }
 
         if constexpr (!forward)
@@ -307,7 +307,7 @@ struct MergeSplit: public State
             for (const auto& v : vrs)
             {
                 dS += State::virtual_move(v, State::get_group(v), t);
-                move_node(v, t);
+                move_node(v, t, true);
             }
         }
 
@@ -318,7 +318,7 @@ struct MergeSplit: public State
             {
                 rt[0] = r;
                 dS += State::virtual_move(v, State::get_group(v), rt[0]);
-                move_node(v, rt[0]);
+                move_node(v, rt[0], true);
                 continue;
             }
 
@@ -329,7 +329,7 @@ struct MergeSplit: public State
                 else
                     rt[1] = s;
                 dS += State::virtual_move(v, State::get_group(v), rt[1]);
-                move_node(v, rt[1]);
+                move_node(v, rt[1], true);
                 continue;
             }
 
@@ -347,7 +347,7 @@ struct MergeSplit: public State
             else
             {
                 dS += ps[1];
-                move_node(v, rt[1]);
+                move_node(v, rt[1], true);
             }
         }
 
@@ -386,7 +386,7 @@ struct MergeSplit: public State
             else
                 t = r;
             dS += State::virtual_move(v, State::get_group(v), t);
-            move_node(v, t);
+            move_node(v, t, true);
             ++pos;
         }
 
@@ -402,7 +402,7 @@ struct MergeSplit: public State
                 else
                     t = s;
                 dS += State::virtual_move(v, State::get_group(v), t);
-                move_node(v, t);
+                move_node(v, t, true);
                 ++pos;
             }
         }
@@ -414,7 +414,7 @@ struct MergeSplit: public State
             {
                 rt[0] = r;
                 dS += State::virtual_move(v, State::get_group(v), rt[0]);
-                move_node(v, rt[0]);
+                move_node(v, rt[0], true);
                 continue;
             }
 
@@ -425,7 +425,7 @@ struct MergeSplit: public State
                 else
                     rt[1] = s;
                 dS += State::virtual_move(v, State::get_group(v), rt[1]);
-                move_node(v, rt[1]);
+                move_node(v, rt[1], true);
                 continue;
             }
 
@@ -443,7 +443,7 @@ struct MergeSplit: public State
             else
             {
                 dS += ps[1];
-                move_node(v, rt[1]);
+                move_node(v, rt[1], true);
             }
         }
 
@@ -658,7 +658,7 @@ struct MergeSplit: public State
         for (const auto& v : vrs)
         {
             dS += State::virtual_move(v, State::get_group(v), s); // FIXME: State::get_group(v) -> r
-            move_node(v, s);
+            move_node(v, s, true);
         }
 
         return dS;

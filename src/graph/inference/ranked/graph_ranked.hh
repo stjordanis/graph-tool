@@ -80,6 +80,8 @@ public:
         typename bstate_t::b_t& _b;
         typename bstate_t::eweight_t& _eweight;
 
+        typedef typename bstate_t::m_entries_t m_entries_t;
+
         std::array<size_t, 3> _E = {0, 0, 0};
 
         typename u_t::checked_t _u_c;
@@ -101,37 +103,45 @@ public:
         }
 
         gt_hash_map<size_t, int> _delta;
+        std::array<int, 3> _dE = {0, 0, 0}; // FIXME: should go in m_entries!
 
-        double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t& ea)
+        void get_dE(size_t v, size_t r, size_t nr)
         {
-            entropy_args_t uea = ea;
-            uea.edges_dl = false;
-
-            double dS = _ustate.virtual_move(v, r, nr, uea);
-
-            std::array<int, 3> dE = {0, 0, 0};
-
-            dS -= get_edges_dl(dE, 0);
+            _dE = {0, 0, 0};
 
             for (auto e : out_edges_range(v, _g))
             {
                 auto s = _b[target(e, _g)];
                 auto w = _eweight[e];
-                dE[stream_dir(r, s)] -= w;
+                _dE[stream_dir(r, s)] -= w;
                 if (target(e, _g) == v)
                     s = nr;
-                dE[stream_dir(nr, s)] += w;
+                _dE[stream_dir(nr, s)] += w;
             }
 
             for (auto e : in_edges_range(v, _g))
             {
                 auto s = _b[source(e, _g)];
                 auto w = _eweight[e];
-                dE[stream_dir(s, r)] -= w;
+                _dE[stream_dir(s, r)] -= w;
                 if (source(e, _g) == v)
                     s = nr;
-                dE[stream_dir(s, nr)] += w;
+                _dE[stream_dir(s, nr)] += w;
             }
+        }
+
+        template <class ME>
+        double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t& ea,
+                            ME& m_entries)
+        {
+            entropy_args_t uea = ea;
+            uea.edges_dl = false;
+
+            double dS = _ustate.virtual_move(v, r, nr, uea, m_entries);
+
+            get_dE(v, r, nr);
+
+            dS -= get_edges_dl(_dE, 0);
 
             int dB = 0;
             if (_ustate._wr[r] == 1)
@@ -139,11 +149,11 @@ public:
             if (_ustate._wr[nr] == 0)
                 dB++;
 
-            dS += get_edges_dl(dE, dB);
+            dS += get_edges_dl(_dE, dB);
 
             _delta.clear();
             size_t B = num_vertices(_ustate._bg) + 1;
-            entries_op(_ustate._m_entries, _ustate._emat,
+            entries_op(m_entries, _ustate._emat,
                        [&](auto t, auto u, auto&, auto delta)
                        {
                            if (delta == 0 || t == u)
@@ -151,7 +161,7 @@ public:
                            _delta[t + B * u] = delta;
                        });
 
-            entries_op(_ustate._m_entries, _ustate._emat,
+            entries_op(m_entries, _ustate._emat,
                        [&](auto t, auto u, auto& me, auto delta)
                        {
                            if (delta == 0 || t == u)
@@ -177,29 +187,28 @@ public:
             return dS;
         }
 
+        double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t& ea)
+        {
+            return virtual_move(v, r, nr, ea, _ustate._m_entries);
+        }
+
+        template <class ME>
+        void move_vertex(size_t v, size_t nr, ME& m_entries)
+        {
+            for (size_t i = 0; i < 3; ++i)     // FIXME: should go in m_entries!
+                _E[i] += _dE[i];
+
+            _ustate.move_vertex(v, nr, m_entries);
+        }
+
         void move_vertex(size_t v, size_t nr)
         {
             auto r = _b[v];
 
-            for (auto e : out_edges_range(v, _g))
-            {
-                auto s = _b[target(e, _g)];
-                auto w = _eweight[e];
-                _E[stream_dir(r, s)] -= w;
-                if (target(e, _g) == v)
-                    s = nr;
-                _E[stream_dir(nr, s)] += w;
-            }
+            get_dE(v, r, nr);
 
-            for (auto e : in_edges_range(v, _g))
-            {
-                auto s = _b[source(e, _g)];
-                auto w = _eweight[e];
-                _E[stream_dir(s, r)] -= w;
-                if (source(e, _g) == v)
-                    s = nr;
-                _E[stream_dir(s, nr)] += w;
-            }
+            for (size_t i = 0; i < 3; ++i)
+                _E[i] += _dE[i];
 
             _ustate.move_vertex(v, nr);
         }

@@ -147,12 +147,12 @@ struct Multilevel: public State
         return false;
     }
 
-    void move_node(const Node& v, const Group& r)
+    void move_node(const Node& v, const Group& r, bool cache = false)
     {
         Group s = State::get_group(v);
         if (s == r)
             return;
-        State::move_node(v, r);
+        State::move_node(v, r, cache);
         auto& vs = _groups[s];
         vs.erase(v);
         if (vs.empty())
@@ -261,7 +261,7 @@ struct Multilevel: public State
 
             if (accept)
             {
-                move_node(v, s);
+                move_node(v, s, true);
                 S += dS;
                 lp += ap;
 
@@ -358,7 +358,7 @@ struct Multilevel: public State
 
             if (accept)
             {
-                move_node(v, s);
+                move_node(v, s, true);
                 lp += ap;
             }
             else
@@ -559,12 +559,12 @@ struct Multilevel: public State
             dS += ddS;
             if (std::isinf(ddS))
                 break;
-            State::move_node(v, s);
+            State::move_node(v, s, true);
             _mvs.push_back(v);
         }
 
         for (auto& v : _mvs)
-            State::move_node(v, r);
+            State::move_node(v, r, false);
 
         State::relax_update(false);
 
@@ -847,7 +847,7 @@ struct Multilevel: public State
                         if (r == t)
                             continue;
                         S += State::virtual_move(v, r, t);
-                        move_node(v, t);
+                        move_node(v, t, true);
                     }
                 }
                 put_cache(B_min, S);
@@ -868,7 +868,7 @@ struct Multilevel: public State
                     if (r == t)
                         continue;
                     S += State::virtual_move(v, r, t);
-                    move_node(v, t);
+                    move_node(v, t, true);
                 }
             }
             put_cache(B_min, S);
@@ -891,7 +891,7 @@ struct Multilevel: public State
                 }
                 auto t = State::get_new_group(v, true, rng);
                 S += State::virtual_move(v, s, t);
-                move_node(v, t);
+                move_node(v, t, true);
                 rs.insert(t);
             }
 
@@ -934,7 +934,7 @@ struct Multilevel: public State
                 if (r == t)
                     continue;
                 S += State::virtual_move(v, r, t);
-                move_node(v, t);
+                move_node(v, t, true);
             }
             put_cache(B_max, S);
         }

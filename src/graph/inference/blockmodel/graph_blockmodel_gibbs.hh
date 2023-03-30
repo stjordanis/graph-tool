@@ -63,12 +63,11 @@ struct Gibbs
                                             sizeof...(Ts)>* = nullptr>
         GibbsBlockState(ATs&&... as)
            : GibbsBlockStateBase<Ts...>(as...),
-            _m_entries(num_vertices(_state._bg)),
-            _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))        {
+            _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
+        {
             _state.init_mcmc(*this);
         }
 
-        typename state_t::m_entries_t _m_entries;
         typename State::_entropy_args_t& _entropy_args;
 
         double _c = numeric_limits<double>::infinity();
@@ -115,7 +114,7 @@ struct Gibbs
                 _state._bclabel[nr] = _state._bclabel[r];
 
             }
-            return _state.virtual_move(v, r, nr, _entropy_args, _m_entries);
+            return _state.virtual_move(v, r, nr, _entropy_args);
         }
 
         void perform_move(size_t v, size_t nr)

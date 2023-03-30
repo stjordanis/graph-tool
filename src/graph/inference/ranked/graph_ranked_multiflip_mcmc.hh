@@ -74,11 +74,13 @@ struct MCMC
                                             sizeof...(Ts)>* = nullptr>
         MCMCBlockStateImp(ATs&&... as)
            : MCMCBlockStateBase<Ts...>(as...),
-             _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
+            _m_entries(num_vertices(_state._ustate._bg)),
+            _entropy_args(python::extract<typename State::_entropy_args_t&>(_oentropy_args))
         {
             _state.init_mcmc(*this);
         }
 
+        typename State::m_entries_t _m_entries;
         typename State::_entropy_args_t& _entropy_args;
 
         constexpr static size_t _null_group = null_group;
@@ -130,39 +132,15 @@ struct MCMC
             auto r = _state._ustate._b[v];
             _state._ustate._bclabel[t] = _state._ustate._bclabel[r];
 
-            // auto ucstate = _state._ustate._coupled_state;
-            // auto dcstate = _state._ustate._coupled_state;
-            // if (dcstate != nullptr)
-            // {
-            //     if constexpr (sample_branch)
-            //     {
-            //         do
-            //         {
-            //             dcstate->sample_branch(t, r, rng);
-            //             _state._rstate.copy_branch(t, _state._ustate);
-            //         }
-            //         while(!_state.allow_move(r, t));
-            //     }
-            //     else
-            //     {
-            //         auto& dbh = dcstate->get_b();
-            //         dbh[t] = dbh[r];
-
-            //         auto& rbh = rcstate->get_b();
-            //         rbh[t] = rbh[r];
-            //     }
-            //     auto& dhpclabel = dcstate->get_pclabel();
-            //     dhpclabel[t] = _state._ustate._pclabel[v];
-
-            //     auto& rhpclabel = rcstate->get_pclabel();
-            //     rhpclabel[t] = _state._rstate._pclabel[v];
-            // }
             return t;
         }
 
-        void move_node(size_t v, size_t r)
+        void move_node(size_t v, size_t r, bool cache)
         {
-            _state.move_vertex(v, r);
+            if (cache)
+                _state.move_vertex(v, r, _m_entries);
+            else
+                _state.move_vertex(v, r);
         }
 
         void reserve_empty_groups(size_t nB)
@@ -178,7 +156,7 @@ struct MCMC
 
         double virtual_move(size_t v, size_t r, size_t s)
         {
-            return _state.virtual_move(v, r, s, _entropy_args);
+            return _state.virtual_move(v, r, s, _entropy_args, _m_entries);
         }
 
         template <class RNG>

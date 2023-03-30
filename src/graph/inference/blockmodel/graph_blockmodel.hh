@@ -276,8 +276,27 @@ public:
         return _bclabel[r] == _bclabel[nr];
     }
 
-    template <class EFilt>
-    void move_vertex(size_t v, size_t r, size_t nr, EFilt&& efilt)
+    template <class MEntries>
+    void move_vertex(size_t v, size_t r, size_t nr, MEntries& m_entries)
+    {
+        if (r == nr)
+            return;
+
+        apply_delta<true, true>(*this, m_entries);
+
+        BlockState::remove_partition_node(v, r);
+        BlockState::add_partition_node(v, nr);
+    }
+
+    template <class MEntries>
+    void move_vertex(size_t v,  size_t nr, MEntries& m_entries)
+    {
+        size_t r = _b[v];
+        move_vertex(v, r, nr, m_entries);
+    }
+
+    // move a vertex from its current block to block nr
+    void move_vertex(size_t v, size_t r, size_t nr)
     {
         if (r == nr)
             return;
@@ -285,18 +304,11 @@ public:
         if (!allow_move(r, nr))
             throw ValueException("cannot move vertex across clabel barriers");
 
-        get_move_entries(v, r, nr, _m_entries, std::forward<EFilt>(efilt));
+        get_move_entries(v, r, nr, _m_entries,
+                         [](auto&) constexpr {return false;});
 
-        apply_delta<true, true>(*this, _m_entries);
-
-        BlockState::remove_partition_node(v, r);
-        BlockState::add_partition_node(v, nr);
-    }
-
-    // move a vertex from its current block to block nr
-    void move_vertex(size_t v, size_t r, size_t nr)
-    {
-        move_vertex(v, r, nr, [](auto&) constexpr {return false;});
+        move_vertex(v, r, nr, _m_entries);
+        //move_vertex(v, r, nr, [](auto&) constexpr {return false;});
     }
 
     void move_vertex(size_t v, size_t nr)
@@ -638,9 +650,9 @@ public:
     }
 
     template <bool Add, bool Deplete=true>
-    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
+    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dm)
     {
-        if (dw == 0)
+        if (dm == 0)
             return;
 
         size_t r = _b[u];
@@ -670,17 +682,17 @@ public:
             }
 
             if (_coupled_state == nullptr)
-                _mrs[me] += dw;
+                _mrs[me] += dm;
 
-            _mrp[r] += dw;
-            _mrm[s] += dw;
+            _mrp[r] += dm;
+            _mrm[s] += dm;
         }
         else
         {
             assert(me != _emat.get_null_edge());
             if (_coupled_state == nullptr)
             {
-                _mrs[me] -= dw;
+                _mrs[me] -= dm;
                 if (_mrs[me] == 0)
                 {
                     _emat.remove_me(me, _bg);
@@ -689,14 +701,14 @@ public:
             }
             else
             {
-                if (_mrs[me] == dw)
+                if (_mrs[me] == dm)
                     _emat.remove_me(me, _bg);
             }
-            _mrp[r] -= dw;
-            _mrm[s] -= dw;
+            _mrp[r] -= dm;
+            _mrm[s] -= dm;
         }
 
-        modify_edge<Add, Deplete>(u, v, e, dw, _is_weighted);
+        modify_edge<Add, Deplete>(u, v, e, dm, _is_weighted);
 
         get_partition_stats(u).add_vertex(u, r, _deg_corr, _g,
                                           _vweight, _eweight,
@@ -706,14 +718,15 @@ public:
                                               _vweight, _eweight,
                                               _degs);
 
-        get_partition_stats(u).change_E(Add ? dw : -dw); // FIXME: wrong for multiple partition stats
+        for (auto& ps : _partition_stats)
+            ps.change_E(Add ? dm : -dm);
 
         if (_coupled_state != nullptr)
         {
             if constexpr (Add)
-                _coupled_state->add_edge(r, s, me, dw);
+                _coupled_state->add_edge(r, s, me, dm);
             else
-                _coupled_state->remove_edge(r, s, me, dw);
+                _coupled_state->remove_edge(r, s, me, dm);
         }
 
         if (!_egroups.empty())
@@ -738,7 +751,7 @@ public:
     }
 
     template <bool Add, bool Deplete>
-    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw,
+    void modify_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dm,
                      std::true_type)
     {
         if constexpr (Add)
@@ -747,27 +760,27 @@ public:
             {
                 e = boost::add_edge(u, v, _g).first;
                 auto c_eweight = _eweight.get_checked();
-                c_eweight[e] = dw;
+                c_eweight[e] = dm;
             }
             else
             {
-                _eweight[e] += dw;
+                _eweight[e] += dm;
             }
 
             if (_deg_corr)
             {
-                get<1>(_degs[u]) += dw;
+                get<1>(_degs[u]) += dm;
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v]) += dw;
+                    get<0>(_degs[v]) += dm;
                 else
-                    get<1>(_degs[v]) += dw;
+                    get<1>(_degs[v]) += dm;
             }
 
-            _E += dw;
+            _E += dm;
         }
         else
         {
-            _eweight[e] -= dw;
+            _eweight[e] -= dm;
             if (_eweight[e] == 0 && Deplete)
             {
                 boost::remove_edge(e, _g);
@@ -776,25 +789,25 @@ public:
 
             if (_deg_corr)
             {
-                get<1>(_degs[u]) -= dw;
+                get<1>(_degs[u]) -= dm;
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v]) -= dw;
+                    get<0>(_degs[v]) -= dm;
                 else
-                    get<1>(_degs[v]) -= dw;
+                    get<1>(_degs[v]) -= dm;
             }
 
-            _E -= dw;
+            _E -= dm;
         }
     }
 
-    void add_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
+    void add_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dm)
     {
-        modify_edge<true, true>(u, v, e, dw);
+        modify_edge<true, true>(u, v, e, dm);
     }
 
-    void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dw)
+    void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dm)
     {
-        modify_edge<false, true>(u, v, e, dw);
+        modify_edge<false, true>(u, v, e, dm);
     }
 
     void set_vertex_weight(size_t v, int w)
@@ -1149,13 +1162,13 @@ public:
     {
         assert(size_t(_b[v]) == r || r == null_group);
 
+        if (r == nr || _vweight[v] == 0)
+            return 0;
+
         if (r != null_group && nr != null_group && !allow_move(r, nr))
             return std::numeric_limits<double>::infinity();
 
         get_move_entries(v, r, nr, m_entries, [](auto) constexpr { return false; });
-
-        if (r == nr || _vweight[v] == 0)
-            return 0;
 
         double dS = 0;
         if (ea.adjacency)

@@ -278,6 +278,12 @@ public:
         get_partition_stats(v).move_vertex(v, r, nr, _g);
     }
 
+    template <class ME>
+    void move_vertex(size_t v, size_t nr, ME&)
+    {
+        move_vertex(v, nr);
+    }
+
     template <class Vec>
     void move_vertices(Vec& v, Vec& nr)
     {
