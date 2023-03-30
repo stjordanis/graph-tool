@@ -80,7 +80,7 @@ AC_ARG_ENABLE([openmp], [AS_HELP_STRING([--disable-openmp],[disable openmp [defa
                   [AX_OPENMP([], [USING_OPENMP=no]
                                  [OPENMP_CXXFLAGS="-Wno-unknown-pragmas"])]
               else
-                  [AC_MSG_RESULT(no)]              
+                  [AC_MSG_RESULT(no)]
                   [USING_OPENMP=no]
                   [OPENMP_CXXFLAGS="-Wno-unknown-pragmas"]
               fi,
@@ -182,7 +182,7 @@ AC_ARG_ENABLE([valgrind], [AS_HELP_STRING([--enable-valgrind],[enable valgrind d
                  [CGAL_FLAGS="${CGAL_FLAGS} -DCGAL_DISABLE_ROUNDING_MATH_CHECK=ON"]
                  [CPPFLAGS="${CPPFLAGS} -DBOOST_USE_VALGRIND"]
               else
-                 [AC_MSG_RESULT(no)]    
+                 [AC_MSG_RESULT(no)]
               fi,
               [AC_MSG_RESULT(no)])
 AC_SUBST(CGAL_FLAGS)
