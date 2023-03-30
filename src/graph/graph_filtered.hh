@@ -553,8 +553,11 @@ add_edge(typename graph_traits
          filt_graph<G,EP,VP>& g)
 {
     auto ret = add_edge(u, v, const_cast<G&>(g._g));
-    auto filt = g._edge_pred.get_filter().get_checked();
-    filt[ret.first] = !g._edge_pred.is_inverted();
+    if constexpr (!std::is_same_v<EP, boost::keep_all>)
+    {
+        auto filt = g._edge_pred.get_filter().get_checked();
+        filt[ret.first] = !g._edge_pred.is_inverted();
+    }
     return ret;
 }
 
@@ -618,9 +621,12 @@ inline
 typename boost::graph_traits<filt_graph<G,EP,VP>>::vertex_descriptor
 add_vertex(filt_graph<G,EP,VP>& g)
 {
-    auto filt = g._vertex_pred.get_filter().get_checked();
     auto v = add_vertex(const_cast<G&>(g._g));
-    filt[v] = !g._vertex_pred.is_inverted();
+    if constexpr (!std::is_same_v<VP, boost::keep_all>)
+    {
+        auto filt = g._vertex_pred.get_filter().get_checked();
+        filt[v] = !g._vertex_pred.is_inverted();
+    }
     return v;
 }
 
