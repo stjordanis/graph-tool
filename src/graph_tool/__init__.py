@@ -1630,7 +1630,8 @@ class Graph(object):
 
     """
 
-    def __init__(self, g=None, directed=True, prune=False, vorder=None, **kwargs):
+    def __init__(self, g=None, directed=True, prune=False, vorder=None,
+                 fast_edge_removal=False, **kwargs):
         self.__properties = InternalPropertyDict(self)
         self.__graph_properties = PropertyDict(self.__properties, "g")
         self.__vertex_properties = PropertyDict(self.__properties, "v")
@@ -1798,6 +1799,7 @@ class Graph(object):
 
             # directedness is always a filter
             self.set_directed(g.is_directed())
+        self.set_fast_edge_removal(fast_edge_removal)
 
     def _get_any(self):
         return self.__graph.get_graph_view()
@@ -3039,24 +3041,28 @@ class Graph(object):
                                                     ignore_vp, ignore_ep,
                                                     ignore_gp)
         for name, prop in props[0].items():
-            self.vertex_properties[name] = VertexPropertyMap(prop, self)
+            self.vp[name] = VertexPropertyMap(prop, self)
         for name, prop in props[1].items():
-            self.edge_properties[name] = EdgePropertyMap(prop, self)
+            self.ep[name] = EdgePropertyMap(prop, self)
         for name, prop in props[2].items():
-            self.graph_properties[name] = GraphPropertyMap(prop, self)
-        if "_Graph__save__vfilter" in self.graph_properties:
-            self.set_vertex_filter(self.vertex_properties["_Graph__save__vfilter"],
-                                   self.graph_properties["_Graph__save__vfilter"])
-            del self.vertex_properties["_Graph__save__vfilter"]
-            del self.graph_properties["_Graph__save__vfilter"]
-        if "_Graph__save__efilter" in self.graph_properties:
-            self.set_edge_filter(self.edge_properties["_Graph__save__efilter"],
-                                 self.graph_properties["_Graph__save__efilter"])
-            del self.edge_properties["_Graph__save__efilter"]
-            del self.graph_properties["_Graph__save__efilter"]
-        if "_Graph__reversed" in self.graph_properties:
+            self.gp[name] = GraphPropertyMap(prop, self)
+        if "_Graph__save__vfilter" in self.gp:
+            self.set_vertex_filter(self.vp["_Graph__save__vfilter"],
+                                   self.gp["_Graph__save__vfilter"])
+            del self.vp["_Graph__save__vfilter"]
+            del self.gp["_Graph__save__vfilter"]
+        if "_Graph__save__efilter" in self.gp:
+            self.set_edge_filter(self.ep["_Graph__save__efilter"],
+                                 self.gp["_Graph__save__efilter"])
+            del self.ep["_Graph__save__efilter"]
+            del self.gp["_Graph__save__efilter"]
+        if "_Graph__reversed" in self.gp:
             self.set_reversed(True)
-            del self.graph_properties["_Graph__reversed"]
+            del self.gp["_Graph__reversed"]
+        if "_Graph__fast_edge_removal" in self.gp:
+            self.set_fast_edge_removal(self.gp["_Graph__fast_edge_removal"])
+            del self.gp["_Graph__fast_edge_removal"]
+
         self.shrink_to_fit()
 
     def save(self, file_name, fmt="auto"):
@@ -3077,17 +3083,19 @@ class Graph(object):
                       skip_efilt=True)
 
         if self.get_vertex_filter()[0] is not None:
-            u.graph_properties["_Graph__save__vfilter"] = self.new_graph_property("bool")
-            u.vertex_properties["_Graph__save__vfilter"] =  self.get_vertex_filter()[0]
-            u.graph_properties["_Graph__save__vfilter"] = self.get_vertex_filter()[1]
+            u.gp["_Graph__save__vfilter"] = \
+                self.new_gp("bool", val= self.get_vertex_filter()[1])
+            u.vp["_Graph__save__vfilter"] = self.get_vertex_filter()[0]
         if self.get_edge_filter()[0] is not None:
-            u.graph_properties["_Graph__save__efilter"] = self.new_graph_property("bool")
-            u.edge_properties["_Graph__save__efilter"] = self.get_edge_filter()[0]
-            u.graph_properties["_Graph__save__efilter"] = self.get_edge_filter()[1]
+            u.gp["_Graph__save__efilter"] = \
+                self.new_gp("bool", val=self.get_edge_filter()[1])
+            u.ep["_Graph__save__efilter"] = self.get_edge_filter()[0]
 
         if self.is_reversed():
-            u.graph_properties["_Graph__reversed"] = self.new_graph_property("bool")
-            u.graph_properties["_Graph__reversed"] = True
+            u.gp["_Graph__reversed"] = self.new_gp("bool", val=True)
+
+        if self.get_fast_edge_removal():
+            u.gp["_Graph__fast_edge_removal"] = self.new_gp("bool", val=True)
 
         if isinstance(file_name, str):
             file_name = os.path.expanduser(file_name)
