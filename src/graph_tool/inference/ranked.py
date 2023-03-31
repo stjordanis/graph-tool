@@ -81,6 +81,10 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         self._entropy_args = self.ustate._entropy_args
 
+        self.eweight = self.ustate.eweight
+        self.vweight = self.ustate.vweight
+        self.is_weighted = True
+        self.overlap = False
 
     def __copy__(self):
         return self.copy()
