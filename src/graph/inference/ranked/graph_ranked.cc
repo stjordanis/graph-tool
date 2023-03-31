@@ -22,7 +22,7 @@
 
 #include "../support/graph_state.hh"
 
-#define GRAPH_RANGE never_filtered_never_reversed
+#define GRAPH_VIEWS never_filtered_never_reversed
 #include "../blockmodel/graph_blockmodel.hh"
 
 #include "graph_ranked.hh"

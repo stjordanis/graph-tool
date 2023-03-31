@@ -72,12 +72,12 @@ typedef mpl::vector1<std::true_type> rmap_tr;
 typedef mpl::vector1<std::false_type> rmap_tr;
 #endif
 
-#ifndef GRAPH_RANGE
-#define GRAPH_RANGE all_graph_views
+#ifndef GRAPH_VIEWS
+#define GRAPH_VIEWS all_graph_views
 #endif
 
-#define BLOCK_STATE_params                                                     \
-    ((g, &, GRAPH_RANGE, 1))                                                   \
+#define BLOCK_STATE_params_gen(GVIEWS)                                         \
+    ((g, &, GVIEWS, 1))                                                        \
     ((is_weighted,, mpl::vector1<std::true_type>, 1))                          \
     ((use_hash,, bool_tr, 1))                                                  \
     ((use_rmap,, rmap_tr, 1))                                                  \
@@ -104,6 +104,8 @@ typedef mpl::vector1<std::false_type> rmap_tr;
     ((recdx, &, std::vector<double>&, 0))                                      \
     ((Lrecdx, &, std::vector<double>&, 0))                                     \
     ((epsilon, &, std::vector<double>&, 0))
+
+#define BLOCK_STATE_params BLOCK_STATE_params_gen(GRAPH_VIEWS)
 
 GEN_STATE_BASE(BlockStateBase, BLOCK_STATE_params)
 

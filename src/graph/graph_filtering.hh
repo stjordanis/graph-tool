@@ -348,6 +348,16 @@ struct never_filtered_never_reversed:
                                boost::mpl::bool_<false>,boost::mpl::bool_<false>,
                                boost::mpl::bool_<true>,boost::mpl::bool_<true> >::type {};
 
+struct always_directed_never_filtered_never_reversed:
+    get_all_graph_views::apply<filt_scalar_type,boost::mpl::bool_<true>,
+                               boost::mpl::bool_<false>,boost::mpl::bool_<false>,
+                               boost::mpl::bool_<true>,boost::mpl::bool_<true> >::type {};
+
+struct never_directed_never_filtered_never_reversed:
+    get_all_graph_views::apply<filt_scalar_type,boost::mpl::bool_<false>,
+                               boost::mpl::bool_<true>,boost::mpl::bool_<false>,
+                               boost::mpl::bool_<true>,boost::mpl::bool_<true> >::type {};
+
 // sanity check
 typedef boost::mpl::size<all_graph_views>::type n_views;
 BOOST_MPL_ASSERT_RELATION(n_views::value, == , boost::mpl::int_<6>::value);
@@ -554,6 +564,9 @@ typedef detail::never_reversed never_reversed;
 typedef detail::always_directed_never_reversed always_directed_never_reversed;
 typedef detail::never_filtered never_filtered;
 typedef detail::never_filtered_never_reversed never_filtered_never_reversed;
+typedef detail::always_directed_never_filtered_never_reversed always_directed_never_filtered_never_reversed;
+typedef detail::never_directed_never_filtered_never_reversed never_directed_never_filtered_never_reversed;
+
 
 // returns true if graph filtering was enabled at compile time
 bool graph_filtering_enabled();
