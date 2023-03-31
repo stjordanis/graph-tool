@@ -36,7 +36,7 @@ Below we show how this model can be inferred for a :ns:`faculty_hiring` network.
    # weighted graph than with a multigraph, but the results are
    # insensitive to this.
 
-   g, _, _, ew, *_ = gt.condensation_graph(g, g.vertex_index, self_loops=True)
+   g, ew = contract_parallel_edges(g)
 
    # We will use a nested SBM, with the base state being the ordered SBM.
    
