@@ -97,6 +97,7 @@ inline auto log_sum_exp(T1 a, T2 b, Ts... cs)
 }
 
 template <class V>
+[[gnu::const]]
 inline auto log_sum_exp(const V& v)
 {
     double ret = -std::numeric_limits<double>::infinity();
