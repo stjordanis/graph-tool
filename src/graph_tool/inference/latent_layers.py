@@ -334,6 +334,8 @@ class LatentClosureBlockState(LatentLayerBaseState):
         self.beta = fn_params.get("beta", 1)
         self.mu = fp_params.get("mu", 1)
         self.nu = fp_params.get("nu", 1)
+        self.lp = kwargs.get("lp", numpy.nan)
+        self.lq = kwargs.get("lq", numpy.nan)
         self.self_loops = True
 
         if nested:

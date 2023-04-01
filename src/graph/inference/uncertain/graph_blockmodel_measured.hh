@@ -37,10 +37,12 @@ using namespace std;
     ((x,, eprop_map_t<int>::type, 0))                                          \
     ((n_default,, int, 0))                                                     \
     ((x_default,, int, 0))                                                     \
-    ((alpha,, long double, 0))                                                 \
-    ((beta,, long double, 0))                                                  \
-    ((mu,, long double, 0))                                                    \
-    ((nu,, long double, 0))                                                    \
+    ((alpha,, double, 0))                                                      \
+    ((beta,, double, 0))                                                       \
+    ((mu,, double, 0))                                                         \
+    ((nu,, double, 0))                                                         \
+    ((lp,, double, 0))                                                         \
+    ((lq,, double, 0))                                                         \
     ((aE,, double, 0))                                                         \
     ((E_prior,, bool, 0))                                                      \
     ((self_loops,, bool, 0))
@@ -100,6 +102,14 @@ struct Measured
 
             _N += (_NP - gE) * _n_default;
             _X += (_NP - gE) * _x_default;
+
+            if (!std::isnan(_lp))
+                _logit1mp = log1p(-exp(_lp)) - _lp;
+            if (!std::isnan(_lq))
+            {
+                _l1mq = log1p(-exp(_lq));
+                _logitq = _lq - _l1mq;
+            }
         }
 
         typedef BlockState block_state_t;
@@ -119,6 +129,10 @@ struct Measured
         uint64_t _X = 0;
         uint64_t _T = 0;
         uint64_t _M = 0;
+
+        double _logit1mp = std::numeric_limits<double>::quiet_NaN();
+        double _l1mq = std::numeric_limits<double>::quiet_NaN();
+        double _logitq = std::numeric_limits<double>::quiet_NaN();
 
         template <bool insert, class Graph, class Elist>
         auto& _get_edge(size_t u, size_t v, Graph& g, Elist& edges)
@@ -146,16 +160,41 @@ struct Measured
             return _get_edge<insert>(u, v, _g, _edges);
         }
 
-        long double get_MP(size_t T, size_t M, bool complete = true)
+        double get_MP(size_t T, size_t M, bool complete = true)
         {
-            long double S = 0;
-            S += lbeta((M - T) + _alpha, T + _beta);
-            S += lbeta((_X - T) + _mu, ((_N - _X) - (M - T)) + _nu);
-            if (complete)
+            double S = 0;
+            if (std::isnan(_lp))
             {
-                S -= lbeta(_alpha, _beta);
-                S -= lbeta(_mu, _nu);
+                S += lbeta((M - T) + _alpha, T + _beta);
+                if (complete)
+                    S -= lbeta(_alpha, _beta);
             }
+            else
+            {
+                if (_lp == 0)
+                    S -= (T == 0) ? 0 : std::numeric_limits<double>::infinity();
+                else if (std::isinf(_lp))
+                    S -= (M == T) ? 0 : std::numeric_limits<double>::infinity();
+                else
+                    S += _logit1mp * T + _lp * M;
+            }
+
+            if (std::isnan(_lq))
+            {
+                S += lbeta((_X - T) + _mu, ((_N - _X) - (M - T)) + _nu);
+                if (complete)
+                    S -= lbeta(_mu, _nu);
+            }
+            else
+            {
+                if (std::isinf(_lq))
+                    S -= (_X == T) ? 0 : std::numeric_limits<double>::infinity();
+                else if (_lq == 0)
+                    S -= (_X - T == _N - M) ? 0 : std::numeric_limits<double>::infinity();
+                else
+                    S += _logitq * (_X - T) + _l1mq * (_N - M);
+            }
+
             return S;
         }
 
@@ -184,8 +223,8 @@ struct Measured
         double get_dS(int dT, int dM)
         {
             // FIXME: Can be faster!
-            long double Si = get_MP(_T, _M, false);
-            long double Sf = get_MP(_T + dT, _M + dM, false);
+            double Si = get_MP(_T, _M, false);
+            double Sf = get_MP(_T + dT, _M + dM, false);
             return -(Sf - Si);
         }
 

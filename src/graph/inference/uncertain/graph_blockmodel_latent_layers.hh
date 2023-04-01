@@ -49,7 +49,9 @@ typedef eprop_map_t<int32_t>::type emap_t;
     ((alpha,, long double, 0))                                                 \
     ((beta,, long double, 0))                                                  \
     ((mu,, long double, 0))                                                    \
-    ((nu,, long double, 0))
+    ((nu,, long double, 0))                                                    \
+    ((lp,, long double, 0))                                                    \
+    ((lq,, long double, 0))
 
 
 template <class Graph, class EW>
@@ -132,7 +134,8 @@ struct LatentLayers
                 _dummy = std::make_shared<DummyBlockState<g_t, eweight_t>>(_g, _eweight);
                 _mstate.emplace_back(*_dummy, _g_orig, _n.get_checked(),
                                      _x.get_checked(), _n_default, _x_default,
-                                     _alpha, _beta, _mu, _nu, false, false, false);
+                                     _alpha, _beta, _mu, _nu, _lp, _lq, false,
+                                     false, false);
             }
         }
 

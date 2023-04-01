@@ -513,6 +513,16 @@ class MeasuredBlockState(UncertainBaseState):
         Total number of measurements for each non-edge.
     x_default : ``int`` (optional, default: ``0``)
         Total number of positive measurements for each non-edge.
+    lp : ``float`` (optional, default: ``NaN``)
+        Log-probability of missing edges (false negatives). If given as ``NaN``,
+        it is assumed this is an unknown sampled from a Beta distribution, with
+        hyperparameters given by ``fn_params`.  Otherwise the  values of
+        ``fn_params`` are ignored.
+    lq : ``float`` (optional, default: ``NaN``)
+        Log-probability of spurious edges (false positives). If given as
+        ``NaN``, it is assumed this is an unknown sampled from a Beta
+        distribution, with hyperparameters given by ``fp_params`. Otherwise the
+        values of ``fp_params`` are ignored.
     fn_params : ``dict`` (optional, default: ``dict(alpha=1, beta=1)``)
         Beta distribution hyperparameters for the probability of missing
         edges (false negatives).
@@ -530,7 +540,7 @@ class MeasuredBlockState(UncertainBaseState):
         Arguments to be passed to
         :class:`~graph_tool.inference.NestedBlockState` or
         :class:`~graph_tool.inference.BlockState`.
-    bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState`  (optional, default: ``None``)
+    bstate : :class:`~graph_tool.inference.NestedBlockState` or :class:`~graph_tool.inference.BlockState` (optional, default: ``None``)
         If passed, this will be used to initialize the block state
         directly.
     self_loops : bool (optional, default: ``False``)
@@ -542,12 +552,13 @@ class MeasuredBlockState(UncertainBaseState):
     .. [peixoto-reconstructing-2018] Tiago P. Peixoto, "Reconstructing
        networks with unknown and heterogeneous errors", Phys. Rev. X 8
        041011 (2018). :doi:`10.1103/PhysRevX.8.041011`, :arxiv:`1806.07956`
+
     """
 
-    def __init__(self, g, n, x, n_default=1, x_default=0,
-                 fn_params=dict(alpha=1, beta=1), fp_params=dict(mu=1, nu=1),
-                 aE=numpy.nan, nested=True, state_args={}, bstate=None,
-                 self_loops=False, **kwargs):
+    def __init__(self, g, n, x, n_default=1, x_default=0, lp=numpy.nan,
+                 lq=numpy.nan, fn_params=dict(alpha=1, beta=1),
+                 fp_params=dict(mu=1, nu=1), aE=numpy.nan, nested=True,
+                 state_args={}, bstate=None, self_loops=False, **kwargs):
 
         super().__init__(g, nested=nested, state_args=state_args, bstate=bstate,
                          **kwargs)
@@ -566,6 +577,8 @@ class MeasuredBlockState(UncertainBaseState):
         self.beta = fn_params.get("beta", 1)
         self.mu = fp_params.get("mu", 1)
         self.nu = fp_params.get("nu", 1)
+        self.lp = lp
+        self.lq = lq
 
         self._state = libinference.make_measured_state(self.bstate._state,
                                                        self)
@@ -575,7 +588,8 @@ class MeasuredBlockState(UncertainBaseState):
         return dict(state, n=self.n, x=self.x, n_default=self.n_default,
                     x_default=self.x_default,
                     fn_params=dict(alpha=self.alpha, beta=self.beta),
-                    fp_params=dict(mu=self.mu, nu=self.nu), aE=self.aE)
+                    fp_params=dict(mu=self.mu, nu=self.nu), lp=self.lp,
+                    lq=self.lq, aE=self.aE)
 
     def copy(self, **kwargs):
         """Return a copy of the state."""
