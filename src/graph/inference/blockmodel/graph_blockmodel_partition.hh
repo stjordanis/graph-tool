@@ -195,14 +195,14 @@ public:
     }
 
     template <class Rs, class Ks>
-    double get_deg_dl_ent(Rs&& rs, Ks&& ks)
+    double get_deg_dl_ent(Rs&& rs, Ks&& kins, Ks&& kouts)
     {
         double S = 0;
         for (auto r : rs)
         {
             r = get_r(r);
             size_t total = 0;
-            if (ks.empty())
+            if (kins.empty() && kouts.empty())
             {
                 if (_directed)
                 {
@@ -221,19 +221,23 @@ public:
                 auto& h_out = get_hist<true, false>(r);
                 auto& h_in = (_directed) ? get_hist<false, false>(r) : h_out;
 
-                for (auto& k : ks)
+                if (_directed)
                 {
-                    if (_directed)
+                    for (auto& kin : kins)
                     {
-                        auto iter = h_in.find(get<0>(k));
+                        auto iter = h_in.find(kin);
                         auto k_c = (iter != h_in.end()) ? iter->second : 0;
                         S -= xlogx(k_c);
                     }
+                }
 
-                    auto iter = h_out.find(get<0>(k));
+                for (auto& kout : kouts)
+                {
+                    auto iter = h_out.find(kout);
                     auto k_c = (iter != h_out.end()) ? iter->second : 0;
                     S -= xlogx(k_c);
                 }
+
                 total = _total[r];
             }
             if (_directed)
@@ -245,7 +249,7 @@ public:
     }
 
     template <class Rs, class Ks>
-    double get_deg_dl_uniform(Rs&& rs, Ks&&)
+    double get_deg_dl_uniform(Rs&& rs, Ks&&, Ks&&)
     {
         double S = 0;
         for (auto r : rs)
@@ -258,7 +262,7 @@ public:
     }
 
     template <class Rs, class Ks>
-    double get_deg_dl_dist(Rs&& rs, Ks&& ks)
+    double get_deg_dl_dist(Rs&& rs, Ks&& kins, Ks&& kouts)
     {
         double S = 0;
         for (auto r : rs)
@@ -268,7 +272,7 @@ public:
             S += log_q(_em[r], _total[r]);
 
             size_t total = 0;
-            if (ks.empty())
+            if (kins.empty() && kouts.empty())
             {
                 if (_directed)
                 {
@@ -287,19 +291,23 @@ public:
                 auto& h_out = get_hist<true, false>(r);
                 auto& h_in = (_directed) ? get_hist<false, false>(r) : h_out;
 
-                for (auto& k : ks)
+                if (_directed)
                 {
-                    if (_directed)
+                    for (auto& kin : kins)
                     {
-                        auto iter = h_in.find(get<0>(k));
+                        auto iter = h_in.find(kin);
                         auto k_c = (iter != h_in.end()) ? iter->second : 0;
                         S -= lgamma_fast(k_c + 1);
                     }
+                }
 
-                    auto iter = h_out.find(get<1>(k));
+                for (auto& kout : kouts)
+                {
+                    auto iter = h_out.find(kout);
                     auto k_c = (iter != h_out.end()) ? iter->second : 0;
                     S -= lgamma_fast(k_c + 1);
                 }
+
                 total = _total[r];
             }
 
@@ -312,7 +320,7 @@ public:
     }
 
     template <class Rs, class Ks>
-    double get_deg_dl(int kind, Rs&& rs, Ks&& ks)
+    double get_deg_dl(int kind, Rs&& rs, Ks&& kins, Ks&& kouts)
     {
         if (_N == 0)
             return 0;
@@ -320,11 +328,11 @@ public:
         switch (kind)
         {
         case deg_dl_kind::ENT:
-            return get_deg_dl_ent(rs, ks);
+            return get_deg_dl_ent(rs, kins, kouts);
         case deg_dl_kind::UNIFORM:
-            return get_deg_dl_uniform(rs, ks);
+            return get_deg_dl_uniform(rs, kins, kouts);
         case deg_dl_kind::DIST:
-            return get_deg_dl_dist(rs, ks);
+            return get_deg_dl_dist(rs, kins, kouts);
         default:
             return numeric_limits<double>::quiet_NaN();
         }
@@ -333,7 +341,8 @@ public:
     double get_deg_dl(int kind)
     {
         return get_deg_dl(kind, boost::counting_range(size_t(0), _total_B),
-                          std::array<std::pair<size_t,size_t>,0>());
+                          std::array<size_t,0>(),
+                          std::array<size_t,0>());
     }
 
     template <class Graph>

@@ -166,7 +166,7 @@ class UncertainBaseState(object):
         verbose = kwargs.get("verbose", False)
         slist = self.slist
         tlist = self.tlist
-        entropy_args = kwargs.get("entropy_args", {})
+        entropy_args = kwargs["entropy_args"] = kwargs.get("entropy_args", {}).copy()
         entropy_args = self._get_entropy_args(entropy_args)
         kwargs.get("entropy_args", {}).pop("latent_edges", None)
         kwargs.get("entropy_args", {}).pop("density", None)
@@ -202,7 +202,6 @@ class UncertainBaseState(object):
         :meth:`~graph_tool.inference.BlockState.multiflip_mcmc_sweep`,
         if ``multiflip=True``.
         """
-
         if multiflip:
             return self._algo_sweep(lambda s, **kw: s.multiflip_mcmc_sweep(**kw),
                                     r=r, **kwargs)

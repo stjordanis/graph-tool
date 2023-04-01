@@ -1978,113 +1978,136 @@ public:
 
         if (ea.degree_dl && _deg_corr)
         {
+            constexpr size_t null = numeric_limits<size_t>::max() - 2;
+
             if (r != s || u == v)
             {
-                std::array<std::pair<size_t, size_t>, 2> degs;
+                std::array<size_t, 2> kins, kouts;
 
                 auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
 
-                degs[0] = {kin, kout};
+                if constexpr (is_directed_::apply<g_t>::type::value)
+                    kins = {kin, null};
+                kouts = {kout, null};
 
                 if (u != v)
                 {
                     if constexpr (Add)
-                        degs[1] = {kin, kout + dw};
+                        kouts[1] = kout + dw;
                     else
-                        degs[1] = {kin, kout - dw};
+                        kouts[1] = kout - dw;
                 }
                 else
                 {
                     if constexpr (!is_directed_::apply<g_t>::type::value)
                     {
                         if constexpr (Add)
-                            degs[1] = {kin, kout + 2 * dw};
+                            kouts[1] = kout + 2*dw;
                         else
-                            degs[1] = {kin, kout - 2 * dw};
+                            kouts[1] = kout - 2*dw;
                     }
                     else
                     {
                         if constexpr (Add)
-                            degs[1] = {kin + dw, kout + dw};
+                        {
+                            kins[1] = kin + dw;
+                            kouts[1] = kout + dw;
+                        }
                         else
-                            degs[1] = {kin - dw, kout - dw};
+                        {
+                            kins[1] = kin - dw;
+                            kouts[1] = kout - dw;
+                        }
                     }
                 }
 
                 S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
                                                           std::array<size_t,1>({r}),
-                                                          degs);
+                                                          kins, kouts);
 
                 if (u != v) // r != s
                 {
-                    std::array<std::pair<size_t, size_t>, 2> degs;
-
                     auto [kin, kout] = get_deg(v, _eweight, _degs, _g);
 
-                    degs[0] = {kin, kout};
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                        kins = {kin, null};
+                    kouts = {kout, null};
+
                     if constexpr (!is_directed_::apply<g_t>::type::value)
                     {
                         if constexpr (Add)
-                            degs[1] = {kin, kout + dw};
+                            kouts[1] = kout + dw;
                         else
-                            degs[1] = {kin, kout - dw};
+                            kouts[1] = kout - dw;
                     }
                     else
                     {
                         if constexpr (Add)
-                            degs[1] = {kin + dw, kout};
+                            kins[1] = kin + dw;
                         else
-                            degs[1] = {kin - dw, kout};
+                            kins[1] = kin - dw;
                     }
 
                     S_dl += get_partition_stats(v).get_deg_dl(ea.degree_dl_kind,
                                                               std::array<size_t,1>({s}),
-                                                              degs);
+                                                              kins, kouts);
                 }
             }
             else // r == s && u != v
             {
-                std::array<std::pair<size_t, size_t>, 4> degs;
+
+                std::array<size_t, 4> kins, kouts;
 
                 auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
 
-                degs[0] = {kin, kout};
+                kouts = {kout, null, null, null};
+                if constexpr (is_directed_::apply<g_t>::type::value)
+                    kins = {kin, null, null, null};
 
                 if constexpr (Add)
-                    degs[1] = {kin, kout + dw};
+                    kouts[1] = kout + dw;
                 else
-                    degs[1] = {kin, kout - dw};
+                    kouts[1] = kout - dw;
 
                 std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
 
-                degs[2] = {kin, kout};
+                kouts[2] = kout;
+                if constexpr (is_directed_::apply<g_t>::type::value)
+                    kins[2] = kin;
 
                 if constexpr (!is_directed_::apply<g_t>::type::value)
                 {
                     if constexpr (Add)
-                        degs[3] = {kin, kout + dw};
+                        kouts[3] = kout + dw;
                     else
-                        degs[3] = {kin, kout - dw};
+                        kouts[3] = kout - dw;
                 }
                 else
                 {
                     if constexpr (Add)
-                        degs[3] = {kin + dw, kout};
+                        kins[3] = kin + dw;
                     else
-                        degs[3] = {kin - dw, kout};
+                        kins[3] = kin - dw;
                 }
 
                 for (size_t i = 0; i < 2; ++i)
                 {
-                    if (degs[2] == degs[i])
-                        degs[2] = {0, numeric_limits<size_t>::max()};
-                    if (degs[3] == degs[i])
-                        degs[3] = {0, numeric_limits<size_t>::max()};
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                    {
+                        if (kins[2] == kins[i])
+                            kins[2] = null;
+                        if (kins[3] == kins[i])
+                            kins[3] = null;
+                    }
+                    if (kouts[2] == kouts[i])
+                        kouts[2] = null;
+                    if (kouts[3] == kouts[i])
+                        kouts[3] = null;
                 }
 
                 S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
                                                           std::array<size_t,1>({r}),
-                                                          degs);
+                                                          kins, kouts);
             }
         }
 
