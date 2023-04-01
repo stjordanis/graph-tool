@@ -310,7 +310,6 @@ public:
                          [](auto&) constexpr {return false;});
 
         move_vertex(v, r, nr, _m_entries);
-        //move_vertex(v, r, nr, [](auto&) constexpr {return false;});
     }
 
     void move_vertex(size_t v, size_t nr)
@@ -769,14 +768,11 @@ public:
                 _eweight[e] += dm;
             }
 
-            if (_deg_corr)
-            {
-                get<1>(_degs[u]) += dm;
-                if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v]) += dm;
-                else
-                    get<1>(_degs[v]) += dm;
-            }
+            get<1>(_degs[u]) += dm;
+            if constexpr (is_directed_::apply<g_t>::type::value)
+                get<0>(_degs[v]) += dm;
+            else
+                get<1>(_degs[v]) += dm;
 
             _E += dm;
         }
@@ -789,14 +785,11 @@ public:
                 e = GraphInterface::edge_t();
             }
 
-            if (_deg_corr)
-            {
-                get<1>(_degs[u]) -= dm;
-                if constexpr (is_directed_::apply<g_t>::type::value)
-                    get<0>(_degs[v]) -= dm;
-                else
-                    get<1>(_degs[v]) -= dm;
-            }
+            get<1>(_degs[u]) -= dm;
+            if constexpr (is_directed_::apply<g_t>::type::value)
+                get<0>(_degs[v]) -= dm;
+            else
+                get<1>(_degs[v]) -= dm;
 
             _E -= dm;
         }
@@ -1971,7 +1964,7 @@ public:
         return get_parallel_entropy(vertices_range(_g),
                                     [](auto u, auto v)
                                     { return (u < v &&
-                                              !is_directed_::apply<g_t>::type::value); 
+                                              !is_directed_::apply<g_t>::type::value);
                                     });
     }
 
