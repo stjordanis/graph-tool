@@ -96,7 +96,7 @@ __all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph",
 
 def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
                norm=True, p=1., distance=False, asymmetric=False):
-    r"""Return the adjacency similarity between the two graphs.
+    r"""Return the adjacency similarity between two graphs.
 
     Parameters
     ----------
@@ -136,11 +136,15 @@ def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
     In its default parametrization, the adjacency similarity is the sum of equal
     non-zero entries in the adjacency matrix, given a vertex ordering determined
     by the vertex labels. In other words, it counts the number of edges which
-    have the same source and target labels in both graphs. This function also
-    allows for generalized similarities according to an :math:`L^p` norm, for
-    arbitrary :math:`p`.
+    have the same source and target labels in both graphs.
 
-    More specifically, it is defined as:
+    If ``norm == True`` the value returned is the total fraction of edges of
+    both networks that match.
+
+    This function also allows for generalized similarities according to an
+    :math:`L^p` norm, for arbitrary :math:`p`.
+
+    More specifically, the adjacency similarity is defined as:
 
     .. math::
 
@@ -166,10 +170,45 @@ def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
 
     .. math::
 
-       d(\boldsymbol A_1, \boldsymbol A_2) = \left(\sum_{i\le j} \left(A_{ij}^{(1)} - A_{ij}^{(2)}\right)^p H(A_{ij}^{(1)} - A_{ij}^{(2)})\right)^{1/p},
+       d(\boldsymbol A_1, \boldsymbol A_2) = \left(\sum_{i\le j} \left|A_{ij}^{(1)} - A_{ij}^{(2)}\right|^p H(A_{ij}^{(1)} - A_{ij}^{(2)})\right)^{1/p},
 
-    where :math:`H(x)` is the unit step function, and the total sum is changed
-    accordingly to :math:`E=\left(\sum_{i\le j}|A_{ij}^{(1)}|^p\right)^{1/p}`.
+    where :math:`H(x) = \{1 \text{ if } x > 0; 0 \text{ otherwise}\}` is the
+    unit step function, and the total sum is changed accordingly to
+    :math:`E=\left(\sum_{i\le j}|A_{ij}^{(1)}|^p\right)^{1/p}`.
+
+    **Relation to set operations**
+
+    If the graph is unweighted, :math:`p=1`, and ``norm == False`` the
+    algorithm is equivalent to the following set operations:
+
+    1. If ``distance == True`` the returned value is equal to
+
+       .. math::
+
+            2 |\boldsymbol A_1 \cup \boldsymbol A_2|
+
+       where :math:`\boldsymbol A_1 \cup \boldsymbol A_2` is the union of the
+       edges in :math:`\boldsymbol A_1` and :math:`\boldsymbol A_2`.
+
+    2. If ``distance == False`` the returned value is equal to
+
+       .. math::
+
+            2 |\boldsymbol A_1 \cap \boldsymbol A_2|
+
+       where :math:`\boldsymbol A_1 \cap \boldsymbol A_2` is the intersection of
+       the edges in :math:`\boldsymbol A_1` and :math:`\boldsymbol A_2`.
+
+    3. If ``distance == True`` and ``asymmetric == True`` the returned value is
+       equal to
+
+       .. math::
+
+            |\boldsymbol A_1 \setminus \boldsymbol A_2|
+
+       where :math:`\boldsymbol A_1 \setminus \boldsymbol A_2` is the set of
+       edges in :math:`\boldsymbol A_1` that are not also in :math:`\boldsymbol
+       A_2`.
 
     The algorithm runs with complexity :math:`O(E_1 + V_1 + E_2 + V_2)`.
 

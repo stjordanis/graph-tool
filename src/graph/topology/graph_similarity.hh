@@ -30,7 +30,15 @@ template <bool normed, class Keys, class Set1, class Set2>
 auto set_difference(Keys& ks, Set1& s1, Set2& s2, double norm, bool asym)
 {
     typename Set1::value_type::second_type s = 0;
-    auto ndispatch = [&](auto x){ return normed ? std::pow(x, norm) : x; };
+
+    auto ndispatch = [&](auto x)
+                     {
+                         if constexpr (normed)
+                             return std::pow(x, norm);
+                         else
+                             return x;
+                     };
+
     auto get_map =
         [&](auto& m, auto&& k)
         {
@@ -39,6 +47,7 @@ auto set_difference(Keys& ks, Set1& s1, Set2& s2, double norm, bool asym)
                 return decltype(iter->second)(0);
             return iter->second;
         };
+
     for (auto& k : ks)
     {
         auto x1 = get_map(s1, k);
@@ -48,6 +57,7 @@ auto set_difference(Keys& ks, Set1& s1, Set2& s2, double norm, bool asym)
         else if (!asym)
             s += ndispatch(x2 - x1);
     }
+
     return s;
 }
 
