@@ -20,6 +20,10 @@
 
 #include <boost/python.hpp>
 
+#ifdef _OPENMP
+# include <omp.h>
+#endif
+
 namespace std
 {
     template<>
@@ -741,7 +745,11 @@ class GILRelease
 public:
     GILRelease(bool release=true)
     {
-        if (release)
+        size_t tid = 0;
+#ifdef _OPENMP
+        tid = omp_get_thread_num();
+#endif
+        if (release && tid == 0)
             _state = PyEval_SaveThread();
     }
 
