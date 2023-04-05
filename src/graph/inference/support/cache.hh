@@ -48,7 +48,7 @@ inline double safelog(T x)
 }
 
 template <bool Init=true, class T>
-//[[gnu::pure]] FIXME: should be allowed, but causes segfault with GCC
+[[gnu::pure]]
 inline double safelog_fast(T x)
 {
     if (size_t(x) >= __safelog_cache.size())
@@ -71,7 +71,7 @@ inline double xlogx(T x)
 }
 
 template <bool Init=true, class T>
-//[[gnu::pure]] FIXME: should be allowed, but causes segfault with GCC
+[[gnu::pure]]
 inline double xlogx_fast(T x)
 {
     if (size_t(x) >= __xlogx_cache.size())
@@ -87,7 +87,7 @@ inline double xlogx_fast(T x)
 void init_lgamma(size_t x);
 
 template <bool Init=true, class T>
-//[[gnu::pure]] FIXME: should be allowed, but causes segfault with GCC
+[[gnu::pure]]
 inline double lgamma_fast(T x)
 {
     if (size_t(x) >= __lgamma_cache.size())
