@@ -96,7 +96,7 @@ __all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph",
 
 def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
                norm=True, p=1., distance=False, asymmetric=False):
-    r"""Return the adjacency similarity between two graphs.
+    r"""Return the Jaccard adjacency similarity between two graphs.
 
     Parameters
     ----------
@@ -133,18 +133,19 @@ def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
 
     Notes
     -----
-    In its default parametrization, the adjacency similarity is the sum of equal
-    non-zero entries in the adjacency matrix, given a vertex ordering determined
-    by the vertex labels. In other words, it counts the number of edges which
-    have the same source and target labels in both graphs.
+    In its default parametrization, the Jaccard adjacency similarity is the sum
+    of equal non-zero entries in the adjacency matrices of both graphs, given a
+    vertex ordering determined by the vertex labels. In other words, it counts
+    the number of edges which have the same source and target labels in both
+    graphs.
 
-    If ``norm == True`` the value returned is the total fraction of edges of
-    both networks that match.
+    If ``norm == True`` (the default) the value returned is the total fraction
+    of edges of both networks that match.
 
     This function also allows for generalized similarities according to an
-    :math:`L^p` norm, for arbitrary :math:`p`.
+    :math:`L^p` norm, for arbitrary exponent :math:`p`.
 
-    More specifically, the adjacency similarity is defined as:
+    More specifically, the (unormalized) adjacency similarity is defined as:
 
     .. math::
 
@@ -156,11 +157,15 @@ def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
 
        d(\boldsymbol A_1, \boldsymbol A_2) = \left(\sum_{i\le j} \left|A_{ij}^{(1)} - A_{ij}^{(2)}\right|^p\right)^{1/p}
 
-    is the distance between graphs, and :math:`E=(\sum_{i\le j}|A_{ij}^{(1)}|^p +
-    |A_{ij}^{(2)}|^p)^{1/p}`. Unless otherwise stated via the parameter ``p``,
-    the exponent used is :math:`p=1`. This definition holds for undirected
-    graphs, otherwise the sums go over all directed pairs. If weights are
-    provided, the weighted adjacency matrix is used.
+    is the corresponding distance between graphs, and :math:`E=(\sum_{i\le
+    j}|A_{ij}^{(1)}|^p + |A_{ij}^{(2)}|^p)^{1/p}`. Unless otherwise stated via
+    the parameter ``p``, the exponent used is :math:`p=1`. This definition holds
+    for undirected graphs, otherwise the sums go over all directed pairs. If
+    edge weights are provided, the weighted adjacency matrix is used.
+
+    If a multigraph is passed, the matrix entries :math:`A^{(1)}_{ij}` and
+    :math:`A^{(2)}_{ij}` correspond to the edge multiplicities between nodes
+    :math:`i` and :math:`j` in each graph.
 
     If ``norm == True`` the value returned is :math:`S(\boldsymbol A_1,
     \boldsymbol A_2) / E`, which lies in the interval :math:`[0,1]`.
