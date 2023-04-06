@@ -58,7 +58,7 @@ public:
         if (iter == cache.end())
         {
             double d = _d(v, u);
-            cache[u] = d;
+            cache[v] = d;
             return d;
         }
         return iter->second;
@@ -122,7 +122,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
              {
                  if (u == v || (!fv.empty() && fv.find(u) != fv.end()))
                      continue;
-                 double l = d(v, u);
+                 double l = d(u, v);
                  auto& Bv = B[v];
                  Bv.emplace_back(u, l);
                  std::push_heap(Bv.begin(), Bv.end(), cmp);
@@ -289,7 +289,7 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
             if (!directed && u > v)
                 continue;
             auto l = d(u, v);
-            heap.push({{u,v}, l});
+            heap.push({{u, v}, l});
         }
     }
 
@@ -326,7 +326,6 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     size_t nk = ceil((4. * k)/num_vertices(g)) + 2;
     gen_knn<parallel>(g, d, nk, r, epsilon, eweight, forbid, rng);
-    //gen_knn_exact<parallel>(g, d, nk, eweight, forbid);
 
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
     std::vector<std::tuple<edge_t, double>> redges;
