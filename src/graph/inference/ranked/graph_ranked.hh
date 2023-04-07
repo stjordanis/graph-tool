@@ -142,57 +142,49 @@ public:
 
             double dS = _ustate.virtual_move(v, r, nr, uea, m_entries);
 
-            if (ea.edges_dl)
-            {
-                dS -= get_edges_dl({0, 0, 0}, 0);
+            get_dE(v, r, nr);
 
-                get_dE(v, r, nr);
+            int dB = 0;
+            if (_ustate._wr[r] == 1)
+                dB--;
+            if (_ustate._wr[nr] == 0)
+                dB++;
 
-                int dB = 0;
-                if (_ustate._wr[r] == 1)
-                    dB--;
-                if (_ustate._wr[nr] == 0)
-                    dB++;
+            dS -= get_edges_dl({0, 0, 0}, 0);
+            dS += get_edges_dl(_dE, dB);
 
-                dS += get_edges_dl(_dE, dB);
+            _delta.clear();
+            size_t B = num_vertices(_ustate._bg) + 1;
+            entries_op(m_entries, _ustate._emat,
+                       [&](auto t, auto u, auto&, auto delta)
+                       {
+                           if (delta == 0 || t == u)
+                               return;
+                           _delta[t + B * u] = delta;
+                       });
 
-                _delta.clear();
-                size_t B = num_vertices(_ustate._bg) + 1;
-                entries_op(m_entries, _ustate._emat,
-                           [&](auto t, auto u, auto&, auto delta)
-                           {
-                               if (delta == 0 || t == u)
-                                   return;
-                               _delta[t + B * u] = delta;
-                           });
+            entries_op(m_entries, _ustate._emat,
+                       [&](auto t, auto u, auto& me, auto delta)
+                       {
+                           if (delta == 0 || t == u)
+                               return;
 
-                entries_op(m_entries, _ustate._emat,
-                           [&](auto t, auto u, auto& me, auto delta)
-                           {
-                               if (delta == 0 || t == u)
-                                   return;
+                           size_t etu = _ustate._mrs[me];
+                           size_t eut = get_beprop(u, t, _ustate._mrs,
+                                                   _ustate._emat);
 
-                               size_t etu = _ustate._mrs[me];
-                               size_t eut = get_beprop(u, t, _ustate._mrs,
-                                                       _ustate._emat);
+                           int delta_r = 0;
+                           auto iter = _delta.find(u + B * t);
+                           if (iter != _delta.end())
+                               delta_r = iter->second;
 
-                               int delta_r = 0;
-                               auto iter = _delta.find(u + B * t);
-                               if (iter != _delta.end())
-                                   delta_r = iter->second;
+                           if (delta_r != 0 && t > u)
+                               return;
 
-                               if (delta_r != 0 && t > u)
-                                   return;
-
-                               dS += lbinom_fast(etu + eut, etu);
-                               dS -= lbinom_fast(etu + delta + eut + delta_r,
-                                                 etu + delta);
-                           });
-            }
-            else
-            {
-                get_dE(v, r, nr);
-            }
+                           dS += lbinom_fast(etu + eut, etu);
+                           dS -= lbinom_fast(etu + delta + eut + delta_r,
+                                             etu + delta);
+                       });
 
             return dS;
         }
@@ -295,23 +287,20 @@ public:
             ea.edges_dl = false;
             S += _ustate.entropy(ea);
 
-            if (edges_dl)
+            S += get_edges_dl({0, 0, 0}, 0);
+
+            for (auto e : edges_range(_ustate._bg))
             {
-                S += get_edges_dl({0, 0, 0}, 0);
+                auto r = source(e, _ustate._bg);
+                auto s = target(e, _ustate._bg);
 
-                for (auto e : edges_range(_ustate._bg))
-                {
-                    auto r = source(e, _ustate._bg);
-                    auto s = target(e, _ustate._bg);
+                if (r >= s)
+                    continue;
 
-                    if (r >= s)
-                        continue;
+                size_t ers = _ustate._mrs[e];
+                size_t esr = get_beprop(s, r, _ustate._mrs, _ustate._emat);
 
-                    size_t ers = _ustate._mrs[e];
-                    size_t esr = get_beprop(s, r, _ustate._mrs, _ustate._emat);
-
-                    S -= lbinom_fast(ers + esr, ers);
-                }
+                S -= lbinom_fast(ers + esr, ers);
             }
 
             return S;
