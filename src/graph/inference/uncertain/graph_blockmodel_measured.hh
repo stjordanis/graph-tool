@@ -260,6 +260,7 @@ struct Measured
             auto& e = get_u_edge(u, v);
 
             auto w = (e == _null_edge) ? 0 : _eweight[e];
+
             if (w + dw > _max_w)
                 return numeric_limits<double>::infinity();
 
