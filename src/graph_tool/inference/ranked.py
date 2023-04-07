@@ -265,6 +265,11 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                              str(list(kwargs.keys())))
         return S
 
+    def multiflip_mcmc_sweep(self, pmovelabel=1, **kwargs):
+        """Call :meth:`MultiflipMCMCState.multiflip_mcmc_sweep` with default
+        parameter ``pmovelabel=1``.`"""
+        return super().multiflip_mcmc_sweep(pmovelabel=pmovelabel, **kwargs)
+
     def _get_entropy_args(self, kwargs, ignore=None):
         return BlockState._get_entropy_args(self, kwargs, ignore)
 

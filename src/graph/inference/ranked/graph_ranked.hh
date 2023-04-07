@@ -134,55 +134,65 @@ public:
         double virtual_move(size_t v, size_t r, size_t nr, entropy_args_t& ea,
                             ME& m_entries)
         {
+            if (r == nr)
+                return 0;
+
             entropy_args_t uea = ea;
             uea.edges_dl = false;
 
             double dS = _ustate.virtual_move(v, r, nr, uea, m_entries);
 
-            get_dE(v, r, nr);
+            if (ea.edges_dl)
+            {
+                dS -= get_edges_dl({0, 0, 0}, 0);
 
-            dS -= get_edges_dl(_dE, 0);
+                get_dE(v, r, nr);
 
-            int dB = 0;
-            if (_ustate._wr[r] == 1)
-                dB--;
-            if (_ustate._wr[nr] == 0)
-                dB++;
+                int dB = 0;
+                if (_ustate._wr[r] == 1)
+                    dB--;
+                if (_ustate._wr[nr] == 0)
+                    dB++;
 
-            dS += get_edges_dl(_dE, dB);
+                dS += get_edges_dl(_dE, dB);
 
-            _delta.clear();
-            size_t B = num_vertices(_ustate._bg) + 1;
-            entries_op(m_entries, _ustate._emat,
-                       [&](auto t, auto u, auto&, auto delta)
-                       {
-                           if (delta == 0 || t == u)
-                               return;
-                           _delta[t + B * u] = delta;
-                       });
+                _delta.clear();
+                size_t B = num_vertices(_ustate._bg) + 1;
+                entries_op(m_entries, _ustate._emat,
+                           [&](auto t, auto u, auto&, auto delta)
+                           {
+                               if (delta == 0 || t == u)
+                                   return;
+                               _delta[t + B * u] = delta;
+                           });
 
-            entries_op(m_entries, _ustate._emat,
-                       [&](auto t, auto u, auto& me, auto delta)
-                       {
-                           if (delta == 0 || t == u)
-                               return;
+                entries_op(m_entries, _ustate._emat,
+                           [&](auto t, auto u, auto& me, auto delta)
+                           {
+                               if (delta == 0 || t == u)
+                                   return;
 
-                           size_t etu = _ustate._mrs[me];
-                           size_t eut = get_beprop(u, t, _ustate._mrs,
-                                                   _ustate._emat);
+                               size_t etu = _ustate._mrs[me];
+                               size_t eut = get_beprop(u, t, _ustate._mrs,
+                                                       _ustate._emat);
 
-                           int delta_r = 0;
-                           auto iter = _delta.find(u + B * t);
-                           if (iter != _delta.end())
-                               delta_r = iter->second;
+                               int delta_r = 0;
+                               auto iter = _delta.find(u + B * t);
+                               if (iter != _delta.end())
+                                   delta_r = iter->second;
 
-                           if (delta_r != 0 && t > u)
-                               return;
+                               if (delta_r != 0 && t > u)
+                                   return;
 
-                           dS += lbinom_fast(etu + eut, etu);
-                           dS -= lbinom_fast(etu + delta + eut + delta_r,
-                                             etu + delta);
-                       });
+                               dS += lbinom_fast(etu + eut, etu);
+                               dS -= lbinom_fast(etu + delta + eut + delta_r,
+                                                 etu + delta);
+                           });
+            }
+            else
+            {
+                get_dE(v, r, nr);
+            }
 
             return dS;
         }
@@ -195,6 +205,10 @@ public:
         template <class ME>
         void move_vertex(size_t v, size_t nr, ME& m_entries)
         {
+            auto r = _b[v];
+            if (r == nr)
+                return;
+
             for (size_t i = 0; i < 3; ++i)     // FIXME: should go in m_entries!
                 _E[i] += _dE[i];
 
@@ -204,6 +218,9 @@ public:
         void move_vertex(size_t v, size_t nr)
         {
             auto r = _b[v];
+
+            if (r == nr)
+                return;
 
             get_dE(v, r, nr);
 
@@ -273,23 +290,27 @@ public:
         {
             double S = 0;
 
+            bool edges_dl = ea.edges_dl;
             ea.edges_dl = false;
             S += _ustate.entropy(ea);
 
-            S += get_edges_dl({0, 0, 0}, 0);
-
-            for (auto e : edges_range(_ustate._bg))
+            if (edges_dl)
             {
-                auto r = source(e, _ustate._bg);
-                auto s = target(e, _ustate._bg);
+                S += get_edges_dl({0, 0, 0}, 0);
 
-                if (r >= s)
-                    continue;
+                for (auto e : edges_range(_ustate._bg))
+                {
+                    auto r = source(e, _ustate._bg);
+                    auto s = target(e, _ustate._bg);
 
-                size_t ers = _ustate._mrs[e];
-                size_t esr = get_beprop(s, r, _ustate._mrs, _ustate._emat);
+                    if (r >= s)
+                        continue;
 
-                S -= lbinom_fast(ers + esr, ers);
+                    size_t ers = _ustate._mrs[e];
+                    size_t esr = get_beprop(s, r, _ustate._mrs, _ustate._emat);
+
+                    S -= lbinom_fast(ers + esr, ers);
+                }
             }
 
             return S;
