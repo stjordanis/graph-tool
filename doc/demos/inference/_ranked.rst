@@ -30,13 +30,13 @@ Below we show how this model can be inferred for a :ns:`faculty_hiring` network.
 
 .. testcode:: ordered
 
-   g = gt.collection.ns["faculty_hiring/computer_science"]
+   g = gt.collection.ns["faculty_hiring/computer_science"].copy()
 
    # For visualization purposes, it will be more useful to work with a
    # weighted graph than with a multigraph, but the results are
    # insensitive to this.
 
-   g, ew = contract_parallel_edges(g)
+   ew = gt.contract_parallel_edges(g)
 
    # We will use a nested SBM, with the base state being the ordered SBM.
    
