@@ -205,7 +205,8 @@ public:
         template <class ME>
         void move_vertex(size_t v, size_t nr, ME& m_entries)
         {
-            auto r = _b[v];
+            size_t r = _b[v];
+
             if (r == nr)
                 return;
 
@@ -217,7 +218,7 @@ public:
 
         void move_vertex(size_t v, size_t nr)
         {
-            auto r = _b[v];
+            size_t r = _b[v];
 
             if (r == nr)
                 return;
