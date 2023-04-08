@@ -63,7 +63,7 @@ build_tarball:
     - docker run --platform linux/$PLATFORM -v $PWD:/mount $img tar -c build | tar x
     - name=`echo $BASE | grep -o ":.*" | sed s/://`
     - aptly repo create $name || true
-    - aptly repo add $name release/debian/build/python3-graph-tool_*.deb
+    - aptly repo add $name build/python3-graph-tool_*.deb
     - aptly publish drop $name filesystem:skewed:/apt-git
     - aptly publish repo -distribution=$name $name filesystem:skewed:/apt-git
     - aptly publish update $name filesystem:skewed:/apt-git
