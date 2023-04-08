@@ -59,7 +59,7 @@ build_tarball:
   script:
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg DEB_VERSION=$DEB_VERSION --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
+    - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg DEB_VERSION=$DEB_VERSION --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --pull --load
     - docker run --platform linux/$PLATFORM -v $PWD:/mount $img tar -c build | tar x
     - name=`echo $BASE | grep -o ":.*" | sed s/://`
     - aptly repo create $name || true
@@ -192,10 +192,16 @@ build_kinetic_arm:
     PLATFORM: arm64
   needs: ["build_kinetic"]
 
+build_kinetic_git:
+  extends: .build_deb_git
+  variables:
+    BASE: ubuntu:kinetic
+    PLATFORM: amd64
+
 build_docker:
   script:
     - cd release/docker
-    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool . --no-cache
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool . --no-cache --pull
     - docker login -u tiagopeixoto -p $DOCKER_TOKEN
     - docker push docker.io/tiagopeixoto/graph-tool
   only:
