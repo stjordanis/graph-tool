@@ -22,11 +22,12 @@ RUN /bin/bash git2debchangelog.sh > debian/changelog
 
 ARG DEB_VERSION=1
 
-RUN major=`cat configure.ac | grep -o "graph_tool_version_major, [^)]*" | sed s/.*,\ //``
-RUN minor=`cat configure.ac | grep -o "graph_tool_version_minor, [^)]*" | sed s/.*,\ //``
+RUN major=`cat configure.ac | grep -o "graph_tool_version_major, [^)]*" | sed s/.*,\ //`
+RUN minor=`cat configure.ac | grep -o "graph_tool_version_minor, [^)]*" | sed s/.*,\ //`
 RUN gt_version=${major}.${minor}
+RUN gt_version=`echo $gt_version | sed s/dev/~dev/`
 
-RUN if [ "$DEB_VERSION" -gt "1" ]; gt_version=${gt_version}-${DEB_VERSION}; fi
+RUN if [ "$DEB_VERSION" -gt "1" ]; then gt_version=${gt_version}-${DEB_VERSION}; fi
 RUN dch -v ${gt_version} -m 'New package release'
 RUN dch -r --no-force-save-on-release -m 'New package release'
 RUN head debian/changelog
