@@ -81,15 +81,10 @@ build_tarball:
   only:
   except:
     - tags
+  needs: ["job_gcc_amd64"]
 
 build_sid:
   extends: .build_deb
-  variables:
-    BASE: debian:sid
-    PLATFORM: amd64
-
-build_sid_git:
-  extends: .build_deb_git
   variables:
     BASE: debian:sid
     PLATFORM: amd64
@@ -100,6 +95,12 @@ build_sid_arm:
     BASE: debian:sid
     PLATFORM: arm64
   needs: ["build_sid"]
+
+build_sid_git:
+  extends: .build_deb_git
+  variables:
+    BASE: debian:sid
+    PLATFORM: amd64
 
 build_bookworm:
   extends: .build_deb
@@ -114,6 +115,12 @@ build_bookworm_arm:
     PLATFORM: arm64
   needs: ["build_bookworm"]
 
+build_bookworm_git:
+  extends: .build_deb_git
+  variables:
+    BASE: debian:bookworm
+    PLATFORM: amd64
+
 build_bullseye:
   extends: .build_deb
   variables:
@@ -126,6 +133,12 @@ build_bullseye_arm:
     BASE: debian:bullseye
     PLATFORM: arm64
   needs: ["build_bullseye"]
+
+build_bullseye_git:
+  extends: .build_deb_git
+  variables:
+    BASE: debian:bullseye
+    PLATFORM: amd64
 
 build_buster:
   extends: .build_deb
@@ -140,6 +153,12 @@ build_buster_arm:
     PLATFORM: arm64
   needs: ["build_buster"]
 
+build_buster_git:
+  extends: .build_deb_git
+  variables:
+    BASE: debian:buster
+    PLATFORM: amd64
+
 build_bionic:
   extends: .build_deb
   variables:
@@ -152,6 +171,12 @@ build_bionic_arm:
     BASE: ubuntu:bionic
     PLATFORM: arm64
   needs: ["build_bionic"]
+
+build_bionic_git:
+  extends: .build_deb_git
+  variables:
+    BASE: ubuntu:bionic
+    PLATFORM: amd64
 
 build_focal:
   extends: .build_deb
@@ -166,6 +191,12 @@ build_focal_arm:
     PLATFORM: arm64
   needs: ["build_focal"]
 
+build_focal_git:
+  extends: .build_deb_git
+  variables:
+    BASE: ubuntu:focal
+    PLATFORM: amd64
+
 build_jammy:
   extends: .build_deb
   variables:
@@ -178,6 +209,12 @@ build_jammy_arm:
     BASE: ubuntu:jammy
     PLATFORM: arm64
   needs: ["build_jammy"]
+
+build_jammy_git:
+  extends: .build_deb_git
+  variables:
+    BASE: ubuntu:jammy
+    PLATFORM: amd64
 
 build_kinetic:
   extends: .build_deb
