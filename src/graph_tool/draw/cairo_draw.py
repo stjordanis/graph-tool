@@ -1653,6 +1653,10 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
         position of the hierarchy tree.
     beta : ``float`` (optional, default: ``.8``)
         Edge bundling strength.
+    node_weight : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
+        If provided, this specifies a vertex property map with the relative angular
+        section that each vertex occupies. This value is ignored if
+        ``layout != "radial"``.
     vprops : dict (optional, default: ``None``)
         Dictionary with the vertex properties. Individual properties may also be
         given via the ``vertex_<prop-name>`` parameters, where ``<prop-name>`` is
