@@ -654,7 +654,7 @@ CPU-bound. Here is an example for a somewhat larger graph:
 
    import sys
    import tempfile
-   g = gt.collection.data["pgp-strong-2009"]
+   g = gt.collection.data["pgp-strong-2009"].copy()
    g.properties.clear()
    tmpdir = tempfile.mkdtemp()
    g.save("%s/pgp_graph.xml" % tmpdir)

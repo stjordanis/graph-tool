@@ -49,8 +49,8 @@ separating these two types of interactions in two layers:
                                             state_args=dict(base_type=gt.LayeredBlockState,
                                                             state_args=dict(ec=g.ep.weight, layers=True)))
 
-   state.draw(edge_color=g.ep.weight, edge_gradient=[],
-              ecmap=(matplotlib.cm.coolwarm_r, .6), edge_pen_width=5,
+   state.draw(edge_color=g.ep.weight.copy("double"), edge_gradient=[],
+              ecmap=(matplotlib.cm.coolwarm_r, .6), edge_pen_width=5,  eorder=g.ep.weight,
               output="tribes-sbm-edge-layers.svg")
 
 .. figure:: tribes-sbm-edge-layers.*
