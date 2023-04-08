@@ -173,5 +173,16 @@ build_docker:
   script:
     - cd release/docker
     - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool . --no-cache
+    - docker login -u tiagopeixoto -p $DOCKER_TOKEN
+    - docker push docker.io/tiagopeixoto/graph-tool
   only:
+    - tags
+
+build_docker_git:
+  script:
+    - cd release/docker
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool-git . --no-cache
+    - docker login -u tiagopeixoto -p $DOCKER_TOKEN
+    - docker push docker.io/tiagopeixoto/graph-tool-git
+  except:
     - tags
