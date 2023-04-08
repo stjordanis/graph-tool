@@ -54,19 +54,42 @@ build_tarball:
   variables:
     BASE: ""
     PLATFORM: ""
+  before_script:
+    - export DEB_VERSION=1
   script:
     - img=`echo $BASE | sed s/:/_/`
     - cd release/debian
-    - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
+    - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg DEB_VERSION=$DEB_VERSION --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --load
     - docker run --platform linux/$PLATFORM -v $PWD:/mount $img tar -c build | tar x
+    - name=`echo $BASE | grep -o ":.*" | sed s/://`
+    - aptly repo create $name || true
+    - aptly repo add $name release/debian/build/python3-graph-tool_*.deb
+    - aptly publish drop $name filesystem:skewed:/apt-dev
+    - aptly publish repo -distribution=$name $name filesystem:skewed:/apt-dev
+    - aptly publish update $name filesystem:skewed:/apt-dev
   only:
     - tags
   artifacts:
     paths:
       - release/debian/build/*
 
+.build_deb_git:
+  extends: .build_deb
+  before_script:
+    - last_relase=$(git tag -l "release-*" --sort=version:refname | tail -n 1)
+    - DEB_VERSION=$(git rev-list release-2.52..HEAD --count)
+  only:
+  except:
+    - tags
+
 build_sid:
   extends: .build_deb
+  variables:
+    BASE: debian:sid
+    PLATFORM: amd64
+
+build_sid_git:
+  extends: .build_deb_git
   variables:
     BASE: debian:sid
     PLATFORM: amd64

@@ -22,7 +22,13 @@ RUN /bin/bash git2debchangelog.sh > debian/changelog
 
 ARG DEB_VERSION=1
 
-RUN if [ "$DEB_VERSION" -gt "1" ]; then gt_version=`git describe --tags | grep -o 'release-[^-]*' | sed s/release-//`; dch -v ${gt_version}-${DEB_VERSION} -m 'New package release'; dch -r --no-force-save-on-release -m 'New package release'; fi
+RUN major=`cat configure.ac | grep -o "graph_tool_version_major, [^)]*" | sed s/.*,\ //``
+RUN minor=`cat configure.ac | grep -o "graph_tool_version_minor, [^)]*" | sed s/.*,\ //``
+RUN gt_version=${major}.${minor}
+
+RUN if [ "$DEB_VERSION" -gt "1" ]; gt_version=${gt_version}-${DEB_VERSION}; fi
+RUN dch -v ${gt_version} -m 'New package release'
+RUN dch -r --no-force-save-on-release -m 'New package release'
 RUN head debian/changelog
 
 RUN ./autogen.sh
