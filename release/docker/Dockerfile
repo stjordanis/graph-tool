@@ -13,7 +13,7 @@ RUN pacman -S expac yajl git --noconfirm --needed
 RUN pacman -S sudo grep file --noconfirm --needed
 
 RUN pacman -S sudo boost python python-scipy python-numpy python-zstandard \
-              cgal cairomm-1.16 python-cairo sparsehash cairomm \
+              cgal cairomm-1.16 python-cairo sparsehash cairomm debugedit \
               autoconf-archive autoconf automake pkg-config gd lib32-gcc-libs bison \
               --noconfirm --needed
 
