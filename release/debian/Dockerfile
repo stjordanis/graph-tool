@@ -36,7 +36,14 @@ RUN ./autogen.sh
 
 ARG NJOBS=4
 
-RUN NJOBS=$NJOBS dpkg-buildpackage -us -uc -j$NJOBS
+RUN has_jb=`dpkg-buildpackage --help | grep -e "jobs-force"`; \
+    if [ -z "${has_jb}" ]; then \
+        jbs=""; \
+    else \
+        jbs="--jobs-force=${NJOBS}"; \
+    fi; \
+    nice -n 19 dpkg-buildpackage -us -uc -j${NJOBS} ${jbs}
+
 WORKDIR ..
 RUN mkdir build
 RUN mv python3-graph-tool*.deb build/

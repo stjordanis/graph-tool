@@ -39,11 +39,10 @@ RUN mv -v "${MAKEPKG_ROOT}"/glibc-linux4/glibc-linux4-2*.pkg.tar.zst /tmp/glibc-
 USER ${MAKEPKG_USER}
 WORKDIR ${MAKEPKG_ROOT}
 ADD PKGBUILD PKGBUILD
-RUN makepkg PKGBUILD --needed GIT_REF=$GIT_REF CXXFLAGS="-mtune=generic -O3 -pipe -ffunction-sections -fdata-sections" LDFLAGS="-Wl,--gc-sections"
+RUN nice -n 19 makepkg PKGBUILD --needed GIT_REF=$GIT_REF CXXFLAGS="-mtune=generic -O3 -pipe -ffunction-sections -fdata-sections" LDFLAGS="-Wl,--gc-sections"
 
 USER root
 RUN mv -v "${MAKEPKG_ROOT}/"python-graph-tool-*-x86_64.pkg.tar.zst /tmp/python-graph-tool.pkg.tar.zst
-
 
 # Non-build
 
