@@ -19,18 +19,18 @@ RUN git reset --hard $REF
 ADD debian debian
 ADD git2debchangelog.sh .
 RUN /bin/bash git2debchangelog.sh > debian/changelog
+RUN DEBEMAIL="Tiago de Paula Peixoto <tiago@skewed.de>"
 
 ARG DEB_VERSION=1
 
-RUN major=`cat configure.ac | grep -o "graph_tool_version_major, [^)]*" | sed s/.*,\ //`
-RUN minor=`cat configure.ac | grep -o "graph_tool_version_minor, [^)]*" | sed s/.*,\ //`
-RUN gt_version=${major}.${minor}
-RUN gt_version=`echo $gt_version | sed s/dev/~dev/`
-
-RUN if [ "$DEB_VERSION" -gt "1" ]; then gt_version=${gt_version}-${DEB_VERSION}; fi
-RUN dch -v ${gt_version} -m 'New package release'
-RUN dch -r --no-force-save-on-release -m 'New package release'
-RUN head debian/changelog
+RUN major=`cat configure.ac | grep -o "graph_tool_version_major, [^)]*" | sed s/.*,\ //`; \
+    minor=`cat configure.ac | grep -o "graph_tool_version_minor, [^)]*" | sed s/.*,\ //`; \
+    gt_version=${major}.${minor}; \
+    gt_version=`echo ${gt_version} | sed s/dev/~dev/`; \
+    if [ "$DEB_VERSION" -gt "1" ]; then gt_version=${gt_version}-${DEB_VERSION}; fi; \
+    dch -v ${gt_version} -m 'New package release'; \
+    dch -r --no-force-save-on-release -m 'New package release'; \
+    head debian/changelog
 
 RUN ./autogen.sh
 
