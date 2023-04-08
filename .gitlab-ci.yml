@@ -64,7 +64,7 @@ build_tarball:
     - name=`echo $BASE | grep -o ":.*" | sed s/://`
     - aptly repo create $name || true
     - aptly repo add $name build/python3-graph-tool_*.deb
-    - aptly publish drop $name filesystem:skewed:/apt-git
+    - aptly publish drop $name filesystem:skewed:/apt-git || true
     - aptly publish repo -distribution=$name $name filesystem:skewed:/apt-git
     - aptly publish update $name filesystem:skewed:/apt-git
   only:
