@@ -26,7 +26,7 @@ ARG DEB_VERSION=1
 RUN major=`cat configure.ac | grep -o "graph_tool_version_major, [^)]*" | sed s/.*,\ //`; \
     minor=`cat configure.ac | grep -o "graph_tool_version_minor, [^)]*" | sed s/.*,\ //`; \
     gt_version=${major}.${minor}; \
-    gt_version=`echo ${gt_version} | sed s/dev/~dev/`; \
+    gt_version=`echo ${gt_version} | sed s/dev/~git/`; \
     if [ "$DEB_VERSION" -gt "1" ]; then gt_version=${gt_version}-${DEB_VERSION}; fi; \
     dch -v ${gt_version} -m 'New package release'; \
     dch -r --no-force-save-on-release -m 'New package release'; \
