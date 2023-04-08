@@ -39,21 +39,12 @@ try:
     import matplotlib.cm
     import matplotlib.colors
     from matplotlib.cbook import flatten
-    default_clrs = [(0.5529411764705883, 0.8274509803921568, 0.7803921568627451, 1.0),
-                    #(1.0, 1.0, 0.7019607843137254, 1.0),
-                    (0.7450980392156863, 0.7294117647058823, 0.8549019607843137, 1.0),
-                    (0.984313725490196, 0.5019607843137255, 0.4470588235294118, 1.0),
-                    (0.5019607843137255, 0.6941176470588235, 0.8274509803921568, 1.0),
-                    (0.9921568627450981, 0.7058823529411765, 0.3843137254901961, 1.0),
-                    (0.7019607843137254, 0.8705882352941177, 0.4117647058823529, 1.0),
-                    (0.9882352941176471, 0.803921568627451, 0.8980392156862745, 1.0),
-                    (0.8509803921568627, 0.8509803921568627, 0.8509803921568627, 1.0),
-                    (0.7372549019607844, 0.5019607843137255, 0.7411764705882353, 1.0),
-                    (0.8, 0.9215686274509803, 0.7725490196078432, 1.0),
-                    (1.0, 0.9294117647058824, 0.43529411764705883, 1.0)]
-    default_cm = matplotlib.colors.LinearSegmentedColormap.from_list("Set3",
-                                                                     default_clrs)
-    is_draw_inline = 'inline' in matplotlib.get_backend()
+    default_clrs = list(matplotlib.cm.tab20.colors) + \
+        list(matplotlib.cm.tab20b.colors)
+    default_cm = matplotlib.cm.colors.ListedColormap(default_clrs)
+    default_cm_bin = matplotlib.cm.colors.ListedColormap([[1, 1, 1, 1],
+                                                          [0, 0, 0, 1]])
+    has_draw_inline = 'inline' in matplotlib.get_backend()
     color_converter = matplotlib.colors.ColorConverter()
 except ImportError:
     msg = "Error importing matplotlib module. Graph drawing will not work."
@@ -72,6 +63,7 @@ import zipfile
 import copy
 import io
 from collections import defaultdict
+from scipy.stats import rankdata
 
 from .. import Graph, GraphView, PropertyMap, ungroup_vector_property,\
      group_vector_property, _prop, _check_prop_vector, map_property_values
@@ -119,7 +111,7 @@ _vdefaults = {
     "font_size": 12.,
     "surface": None,
     "pie_fractions": [0.75, 0.25],
-    "pie_colors": default_clrs # ('b', 'g', 'r', 'c', 'm', 'y', 'k')
+    "pie_colors": [matplotlib.cm.tab10(x) for x in range(10)]
     }
 
 _edefaults = {
@@ -319,6 +311,39 @@ def centered_rotation(g, pos, text_pos=True):
         return angle, tpos
     return angle
 
+def choose_cm(prop, cm):
+    is_bin = False
+    if prop.value_type() in ["double", "long double"]:
+        is_seq = True
+    else:
+        ph = perfect_prop_hash([prop])[0]
+        if ph.fa.max() >= default_cm.N:
+            is_seq = True
+        else:
+            is_seq = False
+            if ph.fa.max() == 1:
+                is_bin = True
+
+    if cm is not None:
+        return cm, is_seq
+
+    if prop.key_type() == "e":
+        if is_bin:
+            cm = matplotlib.cm.RdGy
+            is_seq = True
+        elif not is_seq:
+            cm = default_cm
+        else:
+            cm = matplotlib.cm.binary
+    else:
+        if is_bin:
+            cm = default_cm_bin
+        elif not is_seq:
+            cm = default_cm
+        else:
+            cm = matplotlib.cm.magma
+    return cm, is_seq
+
 def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
     try:
         cmap, alpha = cmap
@@ -356,6 +381,8 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
                         rg[1] = max(x, rg[1])
                 if rg[0] == rg[1]:
                     rg[1] = 1
+                if cmap is None:
+                    cmap = matplotlib.cm.Tab10
                 map_property_values(val, new_val,
                                     lambda y: flatten([cmap((x - rg[0]) / (rg[1] - rg[0]),
                                                             alpha=alpha) for x in y]))
@@ -411,10 +438,15 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
             elif val.value_type() in ["int16_t", "int32_t", "int64_t", "double",
                                       "long double", "unsigned long",
                                       "unsigned int", "bool"]:
+                cmap, is_seq = choose_cm(val, cmap)
                 g = val.get_graph()
                 if val.value_type() in ["int16_t", "int32_t", "int64_t",
                                         "unsigned long", "unsigned int"]:
-                    nval = perfect_prop_hash([val])[0]
+                    if not is_seq:
+                        nval = val.copy()
+                        nval.fa = rankdata(val.fa, method='dense') - 1
+                    else:
+                        nval = val
                 else:
                     nval = val
                 try:
@@ -424,8 +456,11 @@ def _convert(attr, val, cmap, pmap_default=False, g=None, k=None):
                     vrange = [int(g.vertex(0, use_index=False)),
                               int(g.vertex(g.num_vertices() - 1,
                                            use_index=False))]
-                cnorm = matplotlib.colors.Normalize(vmin=vrange[0],
-                                                    vmax=vrange[1])
+                if not is_seq:
+                    cnorm = lambda x : x % cmap.N
+                else:
+                    cnorm = matplotlib.colors.Normalize(vmin=vrange[0],
+                                                        vmax=vrange[1])
                 g = val.get_graph()
                 if val.key_type() == "v":
                     prop = g.new_vertex_property("vector<double>")
@@ -552,9 +587,8 @@ def parse_props(prefix, args):
             others[k] = v
     return props, others
 
-
 def cairo_draw(g, pos, cr, vprops=None, eprops=None, vorder=None, eorder=None,
-               nodesfirst=False, vcmap=default_cm, ecmap=default_cm,
+               nodesfirst=False, vcmap=None, ecmap=None,
                loop_angle=numpy.nan, parallel_distance=None, res=0,
                max_render_time=-1, **kwargs):
     r"""Draw a graph to a :mod:`cairo` context.
@@ -582,13 +616,13 @@ def cairo_draw(g, pos, cr, vprops=None, eprops=None, vorder=None, eorder=None,
         If provided, defines the relative order in which the edges are drawn.
     nodesfirst : bool (optional, default: ``False``)
         If ``True``, the vertices are drawn first, otherwise the edges are.
-    vcmap : :class:`matplotlib.colors.Colormap` or tuple (optional, default: :obj:`~graph_tool.draw.default_cm`)
+    vcmap : :class:`matplotlib.colors.Colormap` or tuple (optional, default: ``None``)
         Vertex color map. Optionally, this may be a
         (:class:`matplotlib.colors.Colormap`, alpha) tuple.
-    ecmap : :class:`matplotlib.colors.Colormap` or tuple (optional, default: :obj:`~graph_tool.draw.default_cm`)
+    ecmap : :class:`matplotlib.colors.Colormap` or tuple (optional, default: ``None``)
         Edge color map. Optionally, this may be a
         (:class:`matplotlib.colors.Colormap`, alpha) tuple.
-    loop_angle : float or :class:`~graph_tool.EdgePropertyMap` (optional, default: ``nan``)
+    loop_angle : float or :class:`~graph_tool.EdgePropertyMap` (optional, default: ``numpy.nan``)
         Angle used to draw self-loops. If ``nan`` is given, they will be placed
         radially from the center of the layout.
     parallel_distance : float (optional, default: ``None``)
@@ -731,7 +765,7 @@ def auto_colors(g, bg, pos, back):
 def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
                nodesfirst=False, output_size=(600, 600), fit_view=True,
                fit_view_ink=None, adjust_aspect=True, ink_scale=1,
-               inline=is_draw_inline, inline_scale=2, mplfig=None, output=None,
+               inline=has_draw_inline, inline_scale=2, mplfig=None, output=None,
                fmt="auto", bg_color=None, **kwargs):
     r"""Draw a graph to screen or to a file using :mod:`cairo`.
 
@@ -919,7 +953,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
         | Name           | Description                                       | Accepted types         | Default Value                    |
         +================+===================================================+========================+==================================+
-        | color          | Color used to stroke the edge lines.              | ``str`` or list of     | ``[0.179, 0.203,0.210, 0.8]``    |
+        | color          | Color used to stroke the edge lines.              | ``str`` or list of     | ``[0.179, 0.203, 0.210, 0.8]``   |
         |                |                                                   | floats                 |                                  |
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
         | pen_width      | Width of the line used to draw the edge, in       | ``float`` or ``int``   | ``1.0``                          |
@@ -1022,10 +1056,10 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
     eprops = eprops.copy() if eprops is not None else {}
 
     props, kwargs = parse_props("vertex", kwargs)
-    props = _convert_props(props, "v", g, kwargs.get("vcmap", default_cm))
+    props = _convert_props(props, "v", g, kwargs.get("vcmap", None))
     vprops.update(props)
     props, kwargs = parse_props("edge", kwargs)
-    props = _convert_props(props, "e", g, kwargs.get("ecmap", default_cm))
+    props = _convert_props(props, "e", g, kwargs.get("ecmap", None))
     eprops.update(props)
 
     if pos is None:
@@ -1069,7 +1103,7 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
             eprops["text_distance"] = pw * 2
 
     if "text" in vprops and ("text_color" not in vprops or vprops["text_color"] == "auto"):
-        vcmap = kwargs.get("vcmap", default_cm)
+        vcmap = kwargs.get("vcmap", None)
         bg = _convert(vertex_attrs.fill_color,
                       vprops.get("fill_color", _vdefaults["fill_color"]),
                       vcmap)
@@ -1371,7 +1405,8 @@ def transform_scale(M, scale):
 
 def get_hierarchy_control_points(g, t, tpos, beta=0.8, cts=None, is_tree=True,
                                  max_depth=None):
-    r"""Return the Bézier spline control points for the edges in ``g``, given the hierarchical structure encoded in graph `t`.
+    r"""Return the Bézier spline control points for the edges in ``g``, given
+    the hierarchical structure encoded in graph `t`.
 
     Parameters
     ----------
@@ -1909,7 +1944,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
             cts[e] = cts_p[e]
 
 
-    vprops = _convert_props(vprops, "v", g, kwargs.get("vcmap", default_cm),
+    vprops = _convert_props(vprops, "v", g, kwargs.get("vcmap", None),
                             pmap_default=True)
 
     props, kwargs = parse_props("edge", kwargs)
@@ -1918,7 +1953,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
     eprops.setdefault("pen_width", _edefaults["pen_width"])
     eprops.setdefault("color", list(_edefaults["color"][:-1]) + [.6])
     eprops.setdefault("end_marker", "arrow" if g.is_directed() else "none")
-    eprops = _convert_props(eprops, "e", g, kwargs.get("ecmap", default_cm),
+    eprops = _convert_props(eprops, "e", g, kwargs.get("ecmap", None),
                             pmap_default=True)
 
     hvprops = hvprops.copy() if hvprops is not None else {}
@@ -1947,7 +1982,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
             toffset = group_vector_property([xo, yo])
             hvprops["text_offset"] = toffset
 
-    hvprops = _convert_props(hvprops, "v", t, kwargs.get("vcmap", default_cm),
+    hvprops = _convert_props(hvprops, "v", t, kwargs.get("vcmap", None),
                              pmap_default=True)
 
     props, kwargs = parse_props("hedge", kwargs)
@@ -1958,10 +1993,10 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
     heprops.setdefault("marker_size", s * .8)
     heprops.setdefault("pen_width", s / 10)
 
-    heprops = _convert_props(heprops, "e", t, kwargs.get("ecmap", default_cm),
+    heprops = _convert_props(heprops, "e", t, kwargs.get("ecmap", None),
                              pmap_default=True)
 
-    vcmap = kwargs.get("vcmap", default_cm)
+    vcmap = kwargs.get("vcmap", None)
     ecmap = kwargs.get("ecmap", vcmap)
 
     B = state.levels[0].get_B()
@@ -2110,7 +2145,7 @@ def draw_hierarchy(state, pos=None, layout="radial", beta=0.8, node_weight=None,
             widget.regenerate_surface(reset=True)
             widget.queue_draw()
 
-    if ("output" not in kwargs and not kwargs.get("inline", is_draw_inline) and
+    if ("output" not in kwargs and not kwargs.get("inline", has_draw_inline) and
         kwargs.get("mplfig", None) is None):
         kwargs["layout_callback"] = update_cts
         kwargs["key_press_callback"] = draw_branch

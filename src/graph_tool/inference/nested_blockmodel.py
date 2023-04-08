@@ -789,7 +789,10 @@ class NestedBlockState(object):
         r"""Convenience wrapper to :func:`~graph_tool.draw.draw_hierarchy` that
         draws the hierarchical state."""
         import graph_tool.draw
-        return graph_tool.draw.draw_hierarchy(self, **kwargs)
+        return graph_tool.draw.draw_hierarchy(self,
+                                              vcmap=kwargs.pop("vcmap",
+                                                               graph_tool.draw.default_cm),
+                                              **kwargs)
 
 def get_hierarchy_tree(state, empty_branches=False):
     r"""Obtain the nested hierarchical levels as a tree.
