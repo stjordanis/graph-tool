@@ -283,7 +283,6 @@ public:
         {
             double S = 0;
 
-            bool edges_dl = ea.edges_dl;
             ea.edges_dl = false;
             S += _ustate.entropy(ea);
 
