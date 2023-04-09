@@ -870,7 +870,7 @@ class BinaryThresholdState(DiscreteStateBase):
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.BinaryThresholdState(g, r=0.25)
            >>> ret = state.iterate_sync(niter=1000)
-           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
+           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
            ...               output="binary-threshold.pdf")
            <...>
 
@@ -951,7 +951,7 @@ class IsingGlauberState(DiscreteStateBase):
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.IsingGlauberState(g, beta=.05)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
-           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
+           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
            ...               output="glauber-ising.pdf")
            <...>
 
@@ -1121,7 +1121,7 @@ class IsingMetropolisState(DiscreteStateBase):
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.IsingMetropolisState(g, beta=.1)
            >>> ret = state.iterate_async(niter=1000 * g.num_vertices())
-           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
+           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
            ...               output="metropolis-ising.pdf")
            <...>
 
@@ -1414,7 +1414,7 @@ class KirmanState(DiscreteStateBase):
            >>> g = gt.extract_largest_component(g, prune=True)
            >>> state = gt.KirmanState(g)
            >>> ret = state.iterate_sync(niter=1000)
-           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s, vcmap=cm.bone,
+           >>> gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.s,
            ...               output="kirman.pdf")
            <...>
 
