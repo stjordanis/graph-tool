@@ -62,9 +62,8 @@ build_tarball:
     - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg DEB_VERSION=$DEB_VERSION --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --pull --load
     - docker run --platform linux/$PLATFORM -v $PWD:/mount $img tar -c build | tar x
     - name=`echo $BASE | grep -o ":.*" | sed s/://`
-    - for f in `ls build/python3-graph-tool_*.deb`; do nf=`echo $f | sed s/.deb/_$name.deb/`; mv $f $nf; done
     - aptly repo create $name || true
-    - aptly repo add $name $nf || true
+    - for f in `ls build/python3-graph-tool_*.deb`; do nf=`echo $f | sed s/.deb/_$name.deb/`; mv $f $nf; aptly repo add $name $nf || true; done
     - aptly publish drop $name filesystem:skewed:/apt-git || true
     - aptly publish repo -distribution=$name $name filesystem:skewed:/apt-git || true
     - aptly publish update $name filesystem:skewed:/apt-git || true
