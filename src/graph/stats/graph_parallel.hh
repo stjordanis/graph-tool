@@ -112,14 +112,16 @@ void remove_labeled_edges(Graph& g, LabelMap label)
         for (auto e : out_edges_range(v, g))
         {
             if (label[e] > 0)
+            {
                 r_edges.push_back(e);
+                label[e] = 0;
+            }
         }
 
-        while (!r_edges.empty())
-        {
-            remove_edge(r_edges.back(), g);
-            r_edges.pop_back();
-        }
+        for (auto& e : r_edges)
+            remove_edge(e, g);
+
+        r_edges.clear();
     }
 }
 

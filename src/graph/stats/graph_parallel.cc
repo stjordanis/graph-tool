@@ -65,7 +65,7 @@ void do_remove_labeled_edges(GraphInterface& gi, boost::any property)
                  (std::forward<decltype(graph)>(graph),
                   std::forward<decltype(a2)>(a2));
          },
-         edge_scalar_properties())(property);
+         writable_edge_scalar_properties())(property);
 }
 
 using namespace boost::python;

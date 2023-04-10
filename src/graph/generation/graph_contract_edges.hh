@@ -34,11 +34,14 @@ void contract_parallel_edges(Graph& g, EWeight eweight)
 {
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
     idx_map<size_t, edge_t> emap;
+    idx_set<size_t> loops;
+    auto eidx = get(edge_index_t(), g);
     std::vector<edge_t> remove;
     for (auto v : vertices_range(g))
     {
         emap.clear();
         remove.clear();
+        loops.clear();
         for (auto e : out_edges_range(v, g))
         {
             auto u = target(e, g);
@@ -46,10 +49,12 @@ void contract_parallel_edges(Graph& g, EWeight eweight)
             if (iter == emap.end())
             {
                 emap[u] = e;
+                if (u == v)
+                    loops.insert(eidx[e]);
             }
             else
             {
-                if (e == iter->second) // self-loops
+                if (loops.find(eidx[e]) != loops.end()) // self-loops
                     continue;
                 if constexpr (is_convertible_v<typename boost::property_traits<EWeight>::category,
                                                boost::writable_property_map_tag>)
@@ -58,6 +63,8 @@ void contract_parallel_edges(Graph& g, EWeight eweight)
                     put(eweight, iter->second, eweight[e] + w);
                 }
                 remove.push_back(e);
+                if (u == v)
+                    loops.insert(eidx[e]);
             }
         }
         for (auto& e : remove)
@@ -70,21 +77,45 @@ void expand_parallel_edges(Graph& g, EWeight eweight)
 {
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
     std::vector<edge_t> edges;
-    for (auto e : edges_range(g))
-        edges.push_back(e);
-    for (auto& e : edges)
+    idx_set<size_t> loops;
+    auto eidx = get(edge_index_t(), g);
+    for (auto v : vertices_range(g))
     {
-        size_t w = eweight[e];
-        if (w == 0)
+        edges.clear();
+        if (!graph_tool::is_directed(g))
+            loops.clear();
+
+        for (auto e : out_edges_range(v, g))
         {
-            remove_edge(e, g);
-        }
-        else
-        {
-            auto v = source(e, g);
             auto u = target(e, g);
-            for (size_t m = 0; m < w - 1; ++m)
-                add_edge(v, u, g);
+
+            if (!graph_tool::is_directed(g))
+            {
+                if (v > u)
+                    continue;
+                if (v == u && loops.find(eidx[e]) != loops.end()) // self-loops
+                    continue;
+            }
+
+            edges.push_back(e);
+
+            if (!graph_tool::is_directed(g) && u == v)
+                loops.insert(eidx[e]);
+        }
+
+        for (auto& e : edges)
+        {
+            size_t w = eweight[e];
+            if (w == 0)
+            {
+                remove_edge(e, g);
+            }
+            else
+            {
+                auto u = target(e, g);
+                for (size_t m = 0; m < w - 1; ++m)
+                    add_edge(v, u, g);
+            }
         }
     }
 }
