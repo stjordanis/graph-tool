@@ -927,10 +927,12 @@ public:
         return S;
     }
 
-    double edge_entropy_term(size_t, size_t, int, const entropy_args_t&)
+    double modify_edge_dS(size_t, size_t, const GraphInterface::edge_t&,
+                          int, const entropy_args_t&)
     {
         return 0;
     }
+
     double propagate_entries_dS(size_t, size_t, int, int,
                                 std::vector<std::tuple<size_t, size_t,
                                                        GraphInterface::edge_t, int,
@@ -939,6 +941,7 @@ public:
     {
         return 0;
     }
+
     void propagate_delta(size_t, size_t,
                          std::vector<std::tuple<size_t, size_t,
                                                 GraphInterface::edge_t, int,

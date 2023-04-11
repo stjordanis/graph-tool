@@ -154,21 +154,21 @@ struct Uncertain
             return -S;
         }
 
-        double remove_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
+        double remove_edge_dS(size_t u, size_t v, int dm, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
-                                                                    target(e, _u),
-                                                                    e, dw, ea);
+            double dS = _block_state.modify_edge_dS(source(e, _u),
+                                                    target(e, _u),
+                                                    e, -dm, ea);
             if (ea.density && _E_prior)
             {
-                dS += _pe * dw;
-                dS += lgamma_fast(_E + 1 - dw) - lgamma_fast(_E + 1);
+                dS += _pe * dm;
+                dS += lgamma_fast(_E + 1 - dm) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
             {
-                if (_eweight[e] == dw && (_self_loops || u != v))
+                if (_eweight[e] == dm && (_self_loops || u != v))
                 {
                     auto& m = get_edge<false>(u, v);
                     double q_e = (m == _null_edge) ? _q_default : _q[m];
@@ -178,14 +178,14 @@ struct Uncertain
             return dS;
         }
 
-        double add_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
+        double add_edge_dS(size_t u, size_t v, int dm, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw, ea);
+            double dS = _block_state.modify_edge_dS(u, v, e, dm, ea);
             if (ea.density && _E_prior)
             {
-                dS -= _pe * dw;
-                dS += lgamma_fast(_E + 1 + dw) - lgamma_fast(_E + 1);
+                dS -= _pe * dm;
+                dS += lgamma_fast(_E + 1 + dm) - lgamma_fast(_E + 1);
             }
 
             if (ea.latent_edges)
@@ -200,18 +200,18 @@ struct Uncertain
             return dS;
         }
 
-        void remove_edge(size_t u, size_t v, int dw)
+        void remove_edge(size_t u, size_t v, int dm)
         {
             auto& e = get_u_edge(u, v);
-            _block_state.template modify_edge<false>(u, v, e, dw);
-            _E -= dw;
+            _block_state.template modify_edge<false>(u, v, e, dm);
+            _E -= dm;
         }
 
-        void add_edge(size_t u, size_t v, int dw)
+        void add_edge(size_t u, size_t v, int dm)
         {
             auto& e = get_u_edge<true>(u, v);
-            _block_state.template modify_edge<true>(u, v, e, dw);
-            _E += dw;
+            _block_state.template modify_edge<true>(u, v, e, dm);
+            _E += dm;
         }
 
     };

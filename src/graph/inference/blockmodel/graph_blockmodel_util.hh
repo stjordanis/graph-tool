@@ -54,7 +54,8 @@ public:
                                  const std::vector<double>& delta) = 0;
     virtual void add_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dm) = 0;
     virtual void remove_edge(size_t u, size_t v, GraphInterface::edge_t& e, int dm) = 0;
-    virtual double edge_entropy_term(size_t u, size_t v, int dm, const entropy_args_t& ea) = 0;
+    virtual double modify_edge_dS(size_t u, size_t v, const GraphInterface::edge_t& e,
+                                  int dm, const entropy_args_t& ea) = 0;
     virtual void propagate_delta(size_t u, size_t v,
                                  std::vector<std::tuple<size_t, size_t,
                                              GraphInterface::edge_t, int,

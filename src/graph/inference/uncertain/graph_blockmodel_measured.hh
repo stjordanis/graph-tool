@@ -232,9 +232,9 @@ struct Measured
         double remove_edge_dS(size_t u, size_t v, int dw, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
-                                                                    target(e, _u),
-                                                                    e, dw, ea);
+
+            double dS = _block_state.modify_edge_dS(u, v, e, -dw, ea);
+
             if (ea.density && _E_prior)
             {
                 dS += _pe * dw;
@@ -264,8 +264,8 @@ struct Measured
             if (w + dw > _max_w)
                 return numeric_limits<double>::infinity();
 
-            double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw,
-                                                                   ea);
+            double dS = _block_state.modify_edge_dS(u, v, e, dw, ea);
+
             if (ea.density && _E_prior)
             {
                 dS -= _pe * dw;

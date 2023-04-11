@@ -155,9 +155,7 @@ struct Dynamics
 
             auto& e = get_u_edge(u, v);
             auto x = _xc[e];
-            double dS = _block_state.template modify_edge_dS<false>(source(e, _u),
-                                                                    target(e, _u),
-                                                                    e, dw, ea);
+            double dS = _block_state.modify_edge_dS(u, v, e, -dw, ea);
             _xc[e] = x;
 
             if (ea.density && _E_prior)
@@ -184,7 +182,7 @@ struct Dynamics
                 return 0;
 
             auto& e = get_u_edge(u, v);
-            double dS = _block_state.template modify_edge_dS<true>(u, v, e, dw, ea);
+            double dS = _block_state.modify_edge_dS(u, v, e, dw, ea);
             if (ea.density && _E_prior)
             {
                 dS -= _pe * dw;

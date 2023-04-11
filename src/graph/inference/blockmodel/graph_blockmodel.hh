@@ -1777,19 +1777,22 @@ public:
     // Entropy computation
     // =========================================================================
 
-    double get_deg_entropy(size_t v, const simple_degs_t&)
+    double get_deg_entropy(size_t v, const simple_degs_t&,
+                           const std::array<int,2>& delta = {0, 0})
     {
-        auto kin = in_degreeS()(v, _g, _eweight);
-        auto kout = out_degreeS()(v, _g, _eweight);
+        auto kin = in_degreeS()(v, _g, _eweight) + delta[0];
+        auto kout = out_degreeS()(v, _g, _eweight) + delta[1];
         double S = -lgamma_fast(kin + 1) - lgamma_fast(kout + 1);
         return S * _vweight[v];
     }
 
-    double get_deg_entropy(size_t v, const typename degs_map_t::unchecked_t& degs)
+    double get_deg_entropy(size_t v,
+                           const typename degs_map_t::unchecked_t& degs,
+                           const std::array<int,2>& delta = {0, 0})
     {
         auto& ks = degs[v];
-        auto kin = get<0>(ks);
-        auto kout = get<1>(ks);
+        auto kin = get<0>(ks) + delta[0];
+        auto kout = get<1>(ks) + delta[1];
         double S = -lgamma_fast(kin + 1) - lgamma_fast(kout + 1);
         return S * _vweight[v];
     }
@@ -1924,7 +1927,7 @@ public:
     }
 
     template <class Vs, class Skip>
-    double get_parallel_entropy(Vs&& vs, Skip&& skip)
+    double get_parallel_entropy(Vs&& vs, Skip&& skip, int delta = 0)
     {
         double S = 0;
         for (auto v : vs)
@@ -1941,7 +1944,11 @@ public:
             for (auto& uc : us)
             {
                 auto& u = uc.first;
-                auto& m = uc.second;
+                auto m = uc.second;
+                if (u == v && !is_directed_::apply<g_t>::type::value)
+                    m += 2 * delta;
+                else
+                    m += delta;
                 if (m > 1)
                 {
                     if (u == v && !is_directed_::apply<g_t>::type::value)
@@ -1968,58 +1975,54 @@ public:
                                     });
     }
 
-    template <bool Add>
-    double edge_entropy_term(size_t u, size_t v, int dw,
-                             const entropy_args_t& ea)
+    double modify_edge_dS(size_t u, size_t v, const GraphInterface::edge_t& e,
+                          int dm, const entropy_args_t& ea)
     {
+        if (dm == 0)
+            return 0;
+
         double S = 0, S_dl = 0;
         size_t r = _b[u];
         size_t s = _b[v];
 
         if (ea.degree_dl && _deg_corr)
         {
-            constexpr size_t null = numeric_limits<size_t>::max() - 2;
+            constexpr size_t null = numeric_limits<size_t>::max();
 
             if (r != s || u == v)
             {
-                std::array<size_t, 2> kins, kouts;
+                std::array<std::tuple<size_t, int>, 2> kins, kouts;
 
                 auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
 
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    kins = {kin, null};
-                kouts = {kout, null};
+                    kins = {make_tuple(kin, 0), make_tuple(null, 0)};
+                kouts = {make_tuple(kout, 0), make_tuple(null, 0)};
 
                 if (u != v)
                 {
-                    if constexpr (Add)
-                        kouts[1] = kout + dw;
-                    else
-                        kouts[1] = kout - dw;
+                    kouts[1] = {kout + dm, 0};
                 }
                 else
                 {
                     if constexpr (!is_directed_::apply<g_t>::type::value)
                     {
-                        if constexpr (Add)
-                            kouts[1] = kout + 2*dw;
-                        else
-                            kouts[1] = kout - 2*dw;
+                        kouts[1] = {kout + 2 * dm, 0};
                     }
                     else
                     {
-                        if constexpr (Add)
-                        {
-                            kins[1] = kin + dw;
-                            kouts[1] = kout + dw;
-                        }
-                        else
-                        {
-                            kins[1] = kin - dw;
-                            kouts[1] = kout - dw;
-                        }
+                        kins[1] = {kin + dm, 0};
+                        kouts[1] = {kout + dm, 0};
                     }
                 }
+
+                S_dl -= get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
+                                                          std::array<size_t,1>({r}),
+                                                          kins, kouts);
+                get<1>(kins[0]) -= 1;
+                get<1>(kouts[0]) -= 1;
+                get<1>(kins[1]) += 1;
+                get<1>(kouts[1]) += 1;
 
                 S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
                                                           std::array<size_t,1>({r}),
@@ -2030,23 +2033,21 @@ public:
                     auto [kin, kout] = get_deg(v, _eweight, _degs, _g);
 
                     if constexpr (is_directed_::apply<g_t>::type::value)
-                        kins = {kin, null};
-                    kouts = {kout, null};
+                        kins = {make_tuple(kin, 0), make_tuple(null, 0)};
+                    kouts = {make_tuple(kout, 0), make_tuple(null, 0)};
 
                     if constexpr (!is_directed_::apply<g_t>::type::value)
-                    {
-                        if constexpr (Add)
-                            kouts[1] = kout + dw;
-                        else
-                            kouts[1] = kout - dw;
-                    }
+                        kouts[1] = {kout + dm, 0};
                     else
-                    {
-                        if constexpr (Add)
-                            kins[1] = kin + dw;
-                        else
-                            kins[1] = kin - dw;
-                    }
+                        kins[1] = {kin + dm, 0};
+
+                    S_dl -= get_partition_stats(v).get_deg_dl(ea.degree_dl_kind,
+                                                              std::array<size_t,1>({s}),
+                                                              kins, kouts);
+                    get<1>(kins[0]) -= 1;
+                    get<1>(kouts[0]) -= 1;
+                    get<1>(kins[1]) += 1;
+                    get<1>(kouts[1]) += 1;
 
                     S_dl += get_partition_stats(v).get_deg_dl(ea.degree_dl_kind,
                                                               std::array<size_t,1>({s}),
@@ -2055,59 +2056,67 @@ public:
             }
             else // r == s && u != v
             {
-
-                std::array<size_t, 4> kins, kouts;
+                std::array<std::tuple<size_t, int>, 4> kins, kouts;
 
                 auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
 
-                kouts = {kout, null, null, null};
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    kins = {kin, null, null, null};
+                    kins = {make_tuple(kin, -1), make_tuple(null, 0),
+                            make_tuple(null, 0), make_tuple(null, 0)};
+                kouts = {make_tuple(kout, -1), make_tuple(null, 0),
+                         make_tuple(null, 0), make_tuple(null, 0)};
 
-                if constexpr (Add)
-                    kouts[1] = kout + dw;
-                else
-                    kouts[1] = kout - dw;
+                kouts[1] = {kout + dm, 1};
 
                 std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
 
-                kouts[2] = kout;
+                kouts[2] = {kout, -1};
                 if constexpr (is_directed_::apply<g_t>::type::value)
-                    kins[2] = kin;
+                    kins[2] = {kin, -1};
 
                 if constexpr (!is_directed_::apply<g_t>::type::value)
-                {
-                    if constexpr (Add)
-                        kouts[3] = kout + dw;
-                    else
-                        kouts[3] = kout - dw;
-                }
+                    kouts[3] = {kout + dm, 1};
                 else
-                {
-                    if constexpr (Add)
-                        kins[3] = kin + dw;
-                    else
-                        kins[3] = kin - dw;
-                }
+                    kins[3] = {kin + dm, 1};
 
                 for (size_t i = 0; i < 2; ++i)
                 {
                     if constexpr (is_directed_::apply<g_t>::type::value)
                     {
-                        if (kins[2] == kins[i])
-                            kins[2] = null;
-                        if (kins[3] == kins[i])
-                            kins[3] = null;
+                        if (get<0>(kins[2]) == get<0>(kins[i]))
+                        {
+                            get<0>(kins[2]) = null;
+                            get<1>(kins[i]) += get<1>(kins[2]);
+                        }
+                        if (get<0>(kins[3]) == get<0>(kins[i]))
+                        {
+                            get<0>(kins[3]) = null;
+                            get<1>(kins[i]) += get<1>(kins[3]);
+                        }
                     }
-                    if (kouts[2] == kouts[i])
-                        kouts[2] = null;
-                    if (kouts[3] == kouts[i])
-                        kouts[3] = null;
+                    if (get<0>(kouts[2]) == get<0>(kouts[i]))
+                    {
+                        get<0>(kouts[2]) = null;
+                        get<1>(kouts[i]) += get<1>(kouts[2]);
+                    }
+
+                    if (get<0>(kouts[3]) == get<0>(kouts[i]))
+                    {
+                        get<0>(kouts[3]) = null;
+                        get<1>(kouts[i]) += get<1>(kouts[3]);
+                    }
                 }
 
                 S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
                                                           std::array<size_t,1>({r}),
                                                           kins, kouts);
+                for (size_t i = 0; i < 4; ++i)
+                    get<1>(kins[i]) = get<1>(kouts[i]) = 0;
+
+                S_dl -= get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
+                                                          std::array<size_t,1>({r}),
+                                                          kins, kouts);
+
             }
         }
 
@@ -2120,43 +2129,117 @@ public:
         {
             if (ea.dense)
             {
-                S += eterm_dense(r, s, mrs, _wr[r], _wr[s], ea.multigraph, _bg);
+                S -= eterm_dense(r, s, mrs, _wr[r], _wr[s], ea.multigraph, _bg);
+                S += eterm_dense(r, s, mrs + dm, _wr[r], _wr[s], ea.multigraph, _bg);
             }
             else
             {
                 if (ea.exact)
                 {
-                    S += eterm_exact(r, s, mrs, _bg);
-                    S += vterm_exact(_mrp[r], _mrm[r], _wr[r], _deg_corr, _bg);
+                    S -= eterm_exact(r, s, mrs, _bg);
+                    S += eterm_exact(r, s, mrs + dm, _bg);
                     if (s != r)
-                        S += vterm_exact(_mrp[s], _mrm[s], _wr[s], _deg_corr, _bg);
+                    {
+                        S -= vterm_exact(_mrp[r],      _mrm[r],      _wr[r], _deg_corr, _bg);
+                        S += vterm_exact(_mrp[r] + dm, _mrm[r] + dm, _wr[r], _deg_corr, _bg);
+                        S += vterm_exact(_mrp[s],      _mrm[s],      _wr[s], _deg_corr, _bg);
+                        S += vterm_exact(_mrp[s] + dm, _mrm[s] + dm, _wr[s], _deg_corr, _bg);
+                    }
+                    else
+                    {
+                        S -= vterm_exact(_mrp[r],          _mrm[r],          _wr[r], _deg_corr, _bg);
+                        if constexpr (is_directed_::apply<g_t>::type::value)
+                            S += vterm_exact(_mrp[r] + dm, _mrm[r] + dm, _wr[r], _deg_corr, _bg);
+                        else
+                            S += vterm_exact(_mrp[r] + 2 * dm, _mrm[r] + 2 * dm, _wr[r], _deg_corr, _bg);
+                    }
                 }
                 else
                 {
-                    S += eterm(r, s, mrs, _bg);
-                    S += vterm(_mrp[r], _mrm[r], _wr[r], _deg_corr, _bg);
+                    S -= eterm(r, s, mrs, _bg);
+                    S += eterm(r, s, mrs + dm, _bg);
                     if (s != r)
-                        S += vterm(_mrp[s], _mrm[s], _wr[s], _deg_corr, _bg);
+                    {
+                        S += vterm(_mrp[r],      _mrm[r],      _wr[r], _deg_corr, _bg);
+                        S += vterm(_mrp[r] + dm, _mrm[r] + dm, _wr[r], _deg_corr, _bg);
+                        S += vterm(_mrp[s],      _mrm[s],      _wr[s], _deg_corr, _bg);
+                        S += vterm(_mrp[s] + dm, _mrm[s] + dm, _wr[s], _deg_corr, _bg);
+                    }
+                    else
+                    {
+                        S -= vterm(_mrp[r],          _mrm[r],          _wr[r], _deg_corr, _bg);
+                        if constexpr (is_directed_::apply<g_t>::type::value)
+                            S += vterm(_mrp[r] + dm, _mrm[r] + dm, _wr[r], _deg_corr, _bg);
+                        else
+                            S += vterm(_mrp[r] + 2 * dm, _mrm[r] + 2 * dm, _wr[r], _deg_corr, _bg);
+                    }
                 }
 
                 if (ea.multigraph)
                 {
-                    S += get_parallel_entropy(std::array<size_t, 1>({u}),
-                                              [&](auto, auto w){ return w != v; });
+                    if constexpr (is_weighted_t::value)
+                    {
+                        auto e_S = [&](auto m)
+                            {
+                                if (u == v && !is_directed_::apply<g_t>::type::value)
+                                {
+                                    assert(m % 2 == 0);
+                                    return lgamma_fast(m/2 + 1) + m * log(2) / 2;
+                                }
+                                else
+                                {
+                                    return lgamma_fast(m + 1);
+                                }
+                            };
+
+                        auto m = (e == GraphInterface::edge_t()) ? 0 : _eweight[e];
+
+                        S -= e_S(m);
+
+                        if (u == v && !is_directed_::apply<g_t>::type::value)
+                            m += 2 * dm;
+                        else
+                            m += dm;
+
+                        S += e_S(m);
+                    }
+                    else
+                    {
+                        S -= get_parallel_entropy(std::array<size_t, 1>({u}),
+                                                  [&](auto, auto w){ return w != v; }, 0);
+                        S += get_parallel_entropy(std::array<size_t, 1>({u}),
+                                                  [&](auto, auto w){ return w != v; }, dm);
+                    }
                 }
 
                 if (_deg_corr)
                 {
-                    S += get_deg_entropy(u, _degs);
                     if (u != v)
-                        S += get_deg_entropy(v, _degs);
+                    {
+                        S -= get_deg_entropy(u, _degs);
+                        S += get_deg_entropy(u, _degs, {0, dm});
+                        S -= get_deg_entropy(v, _degs);
+                        if constexpr (is_directed_::apply<g_t>::type::value)
+                            S += get_deg_entropy(v, _degs, {dm, 0});
+                        else
+                            S += get_deg_entropy(v, _degs, {0, dm});
+                    }
+                    else
+                    {
+                        S -= get_deg_entropy(u, _degs);
+                        if constexpr (is_directed_::apply<g_t>::type::value)
+                            S += get_deg_entropy(u, _degs, {dm, dm});
+                        else
+                            S += get_deg_entropy(u, _degs, {0, 2 * dm});
+                    }
                 }
             }
         }
 
         if (_coupled_state != nullptr)
         {
-            S_dl += _coupled_state->edge_entropy_term(r, s, dw, _coupled_entropy_args);
+            S_dl += _coupled_state->modify_edge_dS(r, s, me, dm,
+                                                   _coupled_entropy_args);
         }
         else
         {
@@ -2166,31 +2249,12 @@ public:
                 for (auto& psi : _partition_stats)
                     actual_B += psi.get_actual_B();
                 auto& ps = get_partition_stats(u);
-                S_dl += ps.get_edges_dl(actual_B, _g);
+                S_dl -= ps.get_edges_dl(actual_B, _g);
+                S_dl += ps.get_edges_dl(actual_B, _g, dm);
             }
         }
 
         return S + S_dl * ea.beta_dl;
-    }
-
-    double edge_entropy_term(size_t u, size_t v, int dw, const entropy_args_t& ea)
-    {
-        return edge_entropy_term<true>(u, v, dw, ea);
-    }
-
-    template <bool Add>
-    double modify_edge_dS(size_t u, size_t v, GraphInterface::edge_t& e,
-                          int dw, const entropy_args_t& ea)
-    {
-        if (dw == 0)
-            return 0;
-
-        double dS = 0;
-        dS -= edge_entropy_term<Add>(u, v, dw, ea);
-        modify_edge<Add>(u, v, e, dw);
-        dS += edge_entropy_term<!Add>(u, v, dw, ea);
-        modify_edge<!Add>(u, v, e, dw);
-        return dS;
     }
 
     void init_partition_stats()

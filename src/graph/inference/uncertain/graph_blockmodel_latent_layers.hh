@@ -61,7 +61,7 @@ struct DummyBlockState
     DummyBlockState(Graph& g, EW& eweight)
         :_g(g), _eweight(eweight){}
 
-    template <bool Add, class E, class R, class EA>
+    template <class E, class R, class EA>
     constexpr double modify_edge_dS(size_t, size_t, E&&, R&&, EA&&)
     {
         return 0.;

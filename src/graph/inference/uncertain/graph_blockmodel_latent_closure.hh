@@ -342,7 +342,7 @@ struct LatentClosure
         {
             double dS = 0;
             if (_l == 0)
-                dS = _ebstate.template modify_edge_dS<Add>(u, v, e, 1, ea);
+                dS = _ebstate.modify_edge_dS(u, v, e, Add ? 1 : -1, ea);
             else
                 dS = modify_edge_g_dS<Add>(u, v);
 

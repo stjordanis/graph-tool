@@ -207,7 +207,7 @@ public:
                 if (_directed)
                 {
                     for (auto& k_c : get_hist<false, false>(r))
-                    S -= xlogx_fast(k_c.second);
+                        S -= xlogx_fast(k_c.second);
                 }
 
                 for (auto& k_c : get_hist<true, false>(r))
@@ -223,19 +223,25 @@ public:
 
                 if (_directed)
                 {
-                    for (auto& kin : kins)
+                    for (auto& kin_d : kins)
                     {
+                        auto& [kin, delta] = kin_d;
+                        if (kin == numeric_limits<size_t>::max())
+                            continue;
                         auto iter = h_in.find(kin);
                         auto k_c = (iter != h_in.end()) ? iter->second : 0;
-                        S -= xlogx(k_c);
+                        S -= xlogx(k_c + delta);
                     }
                 }
 
-                for (auto& kout : kouts)
+                for (auto& kout_d : kouts)
                 {
+                    auto& [kout, delta] = kout_d;
+                    if (kout == numeric_limits<size_t>::max())
+                        continue;
                     auto iter = h_out.find(kout);
                     auto k_c = (iter != h_out.end()) ? iter->second : 0;
-                    S -= xlogx(k_c);
+                    S -= xlogx(k_c + delta);
                 }
 
                 total = _total[r];
@@ -249,14 +255,46 @@ public:
     }
 
     template <class Rs, class Ks>
-    double get_deg_dl_uniform(Rs&& rs, Ks&&, Ks&&)
+    double get_deg_dl_uniform(Rs&& rs, Ks&& kins, Ks&& kouts)
     {
         double S = 0;
         for (auto r : rs)
         {
             r = get_r(r);
-            S += lbinom_fast(_total[r] + _ep[r] - 1, _ep[r]);
-            S += lbinom_fast(_total[r] + _em[r] - 1, _em[r]);
+            if (kins.empty() && kouts.empty())
+            {
+                S += lbinom_fast(_total[r] + _ep[r] - 1, _ep[r]);
+                if (_directed)
+                    S += lbinom_fast(_total[r] + _em[r] - 1, _em[r]);
+            }
+            else
+            {
+                int dp = 0;
+                int dm = 0;
+
+                if (_directed)
+                {
+                    for (auto& kin_d : kins)
+                    {
+                        auto& [kin, delta] = kin_d;
+                        if (kin == numeric_limits<size_t>::max())
+                            continue;
+                        dm +=  delta * kin;
+                    }
+                }
+
+                for (auto& kout_d : kouts)
+                {
+                    auto& [kout, delta] = kout_d;
+                    if (kout == numeric_limits<size_t>::max())
+                        continue;
+                    dp += delta * kout;
+                }
+
+                S += lbinom_fast(_total[r] + _ep[r] + dp - 1, _ep[r] + dp);
+                if (_directed)
+                    S += lbinom_fast(_total[r] + _em[r] + dm - 1, _em[r] + dm);
+            }
         }
         return S;
     }
@@ -268,9 +306,8 @@ public:
         for (auto r : rs)
         {
             r = get_r(r);
-            S += log_q(_ep[r], _total[r]);
-            S += log_q(_em[r], _total[r]);
-
+            int dm = 0;
+            int dp = 0;
             size_t total = 0;
             if (kins.empty() && kouts.empty())
             {
@@ -293,23 +330,35 @@ public:
 
                 if (_directed)
                 {
-                    for (auto& kin : kins)
+                    for (auto& kin_d : kins)
                     {
+                        auto& [kin, delta] = kin_d;
+                        if (kin == numeric_limits<size_t>::max())
+                            continue;
                         auto iter = h_in.find(kin);
                         auto k_c = (iter != h_in.end()) ? iter->second : 0;
-                        S -= lgamma_fast(k_c + 1);
+                        S -= lgamma_fast(k_c + delta + 1);
+                        dm += delta * kin;
                     }
                 }
 
-                for (auto& kout : kouts)
+                for (auto& kout_d : kouts)
                 {
+                    auto& [kout, delta] = kout_d;
+                    if (kout == numeric_limits<size_t>::max())
+                        continue;
                     auto iter = h_out.find(kout);
                     auto k_c = (iter != h_out.end()) ? iter->second : 0;
-                    S -= lgamma_fast(k_c + 1);
+                    S -= lgamma_fast(k_c + delta + 1);
+                    dp += delta * kout;
                 }
 
                 total = _total[r];
             }
+
+            S += log_q(_ep[r] + dp, _total[r]);
+            if (_directed)
+                S += log_q(_em[r] + dm, _total[r]);
 
             if (_directed)
                 S += 2 * lgamma_fast(total + 1);
@@ -341,15 +390,15 @@ public:
     double get_deg_dl(int kind)
     {
         return get_deg_dl(kind, boost::counting_range(size_t(0), _total_B),
-                          std::array<size_t,0>(),
-                          std::array<size_t,0>());
+                          std::array<std::pair<size_t,int>,0>(),
+                          std::array<std::pair<size_t,int>,0>());
     }
 
     template <class Graph>
-    double get_edges_dl(size_t B, Graph& g)
+    double get_edges_dl(size_t B, Graph& g, int dE = 0)
     {
         size_t BB = (graph_tool::is_directed(g)) ? B * B : (B * (B + 1)) / 2;
-        return lbinom(BB + _E - 1, _E);
+        return lbinom(BB + _E + dE - 1, _E + dE);
     }
 
     template <class VProp>
@@ -570,7 +619,8 @@ public:
             {
                 double S = 0;
                 S += lbinom_fast(total_r + dn + ep_r - 1 + dkout, ep_r + dkout);
-                S += lbinom_fast(total_r + dn + em_r - 1 + dkin,  em_r + dkin);
+                if (_directed)
+                    S += lbinom_fast(total_r + dn + em_r - 1 + dkin,  em_r + dkin);
                 return S;
             };
 
@@ -601,7 +651,8 @@ public:
                 assert(total_r + delta >= 0);
                 assert(em_r + kin >= 0);
                 assert(ep_r + kout >= 0);
-                S += log_q(em_r + kin, total_r + delta);
+                if (_directed)
+                    S += log_q(em_r + kin, total_r + delta);
                 S += log_q(ep_r + kout, total_r + delta);
                 return S;
             };
@@ -711,7 +762,8 @@ public:
             change_hist(_hist_in, get_hist<false>(r), kin);
         change_hist(_hist_out, get_hist<true>(r), kout);
 
-        _em[r] += dk * kin;
+        if (_directed)
+            _em[r] += dk * kin;
         _ep[r] += dk * kout;
     }
 
