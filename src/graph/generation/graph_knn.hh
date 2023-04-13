@@ -94,7 +94,7 @@ auto get_forbidden(Graph& g)
 template <bool parallel, class Graph, class Dist, class Weight, class F,
           class RNG>
 void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
-             Weight eweight, F& forbid, RNG& rng_)
+             Weight eweight, F& forbid, bool verbose, RNG& rng_)
 {
     parallel_rng<rng_t>::init(rng_);
 
@@ -131,31 +131,38 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
              }
          });
 
-    auto build_graph = [&]()
+    auto build_vertex = [&](auto v)
         {
-            for (auto v : vertices_range(g))
-                clear_vertex(v, g);
+            clear_vertex(v, g);
 
-            for (auto v : vertices_range(g))
+            for (auto u : forbid[v])
+                add_edge(u, v, g);
+
+            for (auto& [u, l] : B[v])
             {
-                for (auto u : forbid[v])
-                    add_edge(u, v, g);
-
-                for (auto& [u, l] : B[v])
-                {
-                    auto e = add_edge(u, v, g).first;
-                    eweight[e] = l;
-                }
+                auto e = add_edge(u, v, g).first;
+                eweight[e] = l;
             }
         };
 
     idx_set<size_t> visited;
     std::bernoulli_distribution rsample(r);
 
+#ifdef HAVE_OPENMP
+    bool async = parallel && (omp_get_max_threads() > 1);
+#else
+    bool async = false;
+#endif
+
+    size_t iter = 0;
     double delta = epsilon + 1;
     while (delta > epsilon)
     {
-        build_graph();
+        if (async)
+        {
+            for (auto v : vertices_range(g))
+                build_vertex(v);
+        }
 
         size_t c = 0;
         #pragma omp parallel if (parallel) reduction(+:c) firstprivate(visited)
@@ -194,19 +201,29 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                          visited.insert(w);
                      }
                  }
+
+                 if (!async)
+                     build_vertex(v);
              });
 
         delta = c / double(vs.size() * k);
+        if (verbose)
+            cout << iter++ << " " << delta << endl;
     }
-    build_graph();
+
+    if (async)
+    {
+        for (auto v : vertices_range(g))
+            build_vertex(v);
+    }
 }
 
 template <bool parallel, class Graph, class Dist, class Weight, class RNG>
 void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
-             Weight eweight, RNG& rng_)
+             Weight eweight, bool verbose, RNG& rng_)
 {
     auto forbid = get_forbidden<parallel>(g);
-    gen_knn<parallel>(g, d, k, r, epsilon, eweight, forbid, rng_);
+    gen_knn<parallel>(g, d, k, r, epsilon, eweight, forbid, verbose, rng_);
 }
 
 template <bool parallel, class Graph, class Dist, class Weight, class F>
@@ -313,7 +330,7 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
 
 template <bool parallel, class Graph, class Dist, class Weight, class RNG>
 void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
-                   Weight eweight, bool directed, RNG& rng)
+                   Weight eweight, bool directed, bool verbose, RNG& rng)
 {
     auto forbid = get_forbidden<parallel>(g);
 
@@ -325,7 +342,9 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
     }
 
     size_t nk = ceil((4. * k)/num_vertices(g)) + 2;
-    gen_knn<parallel>(g, d, nk, r, epsilon, eweight, forbid, rng);
+    if (verbose)
+        cout << "Running KNN with k = " << nk << endl;
+    gen_knn<parallel>(g, d, nk, r, epsilon, eweight, forbid, verbose, rng);
 
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
     std::vector<std::tuple<edge_t, double>> redges;
@@ -336,7 +355,8 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                                  {
                                      return get<1>(x) > get<1>(y);
                                  });
-
+    if (verbose)
+        cout << "Ranking edges..." << endl;
     #pragma omp parallel for firstprivate(heap)
     for (size_t i = 0; i < N; ++i)
     {
@@ -348,6 +368,9 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
     };
 
     heap.merge();
+
+    if (verbose)
+        cout << "Selecting nodes..." << endl;
 
     typename eprop_map_t<uint8_t>::type eremove(g.get_edge_index_range(),
                                                 get(edge_index_t(), g));
@@ -382,22 +405,31 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     if (N * N <= 4 * k)
     {
+        if (verbose)
+            cout << "Running exact KNN with k = " << k << " and N = " << N << endl;
         gen_k_nearest_exact<parallel>(u, d, k, directed, ew, forbid);
     }
     else
     {
         nk = ceil((4. * k)/N) + 2;
-        gen_knn<parallel>(u, d, nk, r, epsilon, ew, forbid, rng);
-        //gen_knn_exact<parallel>(u, d, nk, ew, forbid);
+        if (verbose)
+            cout << "Running KNN with k = " << nk << " and N = " << N << endl;
+        gen_knn<parallel>(u, d, nk, r, epsilon, ew, forbid, verbose, rng);
     }
 
     if (!directed)
     {
+        if (verbose)
+            cout << "Removing parallel edges..." << endl;
+
         undirected_adaptor g_u(g);
         contract_parallel_edges(g_u, dummy_property_map());
         undirected_adaptor u_u(g_);
         contract_parallel_edges(u_u, dummy_property_map());
     }
+
+    if (verbose)
+        cout << "Selecting best edges..." << endl;
 
     gt_hash_set<std::tuple<size_t, size_t>> visited;
     std::vector<std::tuple<std::tuple<size_t, size_t>, double>> pairs;
@@ -427,6 +459,9 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     collect_heap(g, eweight);
     collect_heap(u, ew);
+
+    if (verbose)
+        cout << "Building graph..." << endl;
 
     for (auto v : vertices_range(g))
     {

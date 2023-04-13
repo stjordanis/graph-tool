@@ -24,7 +24,7 @@ using namespace graph_tool;
 
 void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                   double r, double epsilon, bool cache, boost::any aw,
-                  rng_t& rng)
+                  bool verbose, rng_t& rng)
 
 {
     typedef eprop_map_t<double>::type emap_t;
@@ -50,7 +50,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
             run_action<always_directed_never_filtered_never_reversed>()
                 (gi, [&](auto& g)
                      {
-                         gen_knn<true>(g, d_e, k, r, epsilon, w, rng);
+                         gen_knn<true>(g, d_e, k, r, epsilon, w, verbose, rng);
                      })();
         }
         else
@@ -59,7 +59,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                 (gi, [&](auto& g)
                      {
                          auto d = make_cached_dist(g, d_e);
-                         gen_knn<true>(g, d, k, r, epsilon, w, rng);
+                         gen_knn<true>(g, d, k, r, epsilon, w, verbose, rng);
                      })();
         }
     }
@@ -77,7 +77,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
             run_action<always_directed_never_filtered_never_reversed>()
                 (gi, [&](auto& g)
                      {
-                         gen_knn<false>(g, d_e, k, r, epsilon, w, rng);
+                         gen_knn<false>(g, d_e, k, r, epsilon, w, verbose, rng);
                      })();
         }
         else
@@ -95,7 +95,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                 (gi, [&](auto& g)
                      {
                          auto d = make_cached_dist(g, d_e);
-                         gen_knn<true>(g, d, k, r, epsilon, w, rng);
+                         gen_knn<true>(g, d, k, r, epsilon, w, verbose, rng);
                      })();
         }
     }
@@ -146,7 +146,7 @@ void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
 
 void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
                         double r, double epsilon, bool cache, boost::any aw,
-                        bool directed, rng_t& rng)
+                        bool directed, bool verbose, rng_t& rng)
 
 {
     typedef eprop_map_t<double>::type emap_t;
@@ -168,7 +168,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
                 (gi, [&](auto& g)
                      {
                          gen_k_nearest<true>(g, d_e, k, r, epsilon, w, directed,
-                                             rng);
+                                             verbose, rng);
                      })();
         }
         else
@@ -178,7 +178,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
                      {
                          auto d = make_cached_dist(g, d_e);
                          gen_k_nearest<true>(g, d, k, r, epsilon, w, directed,
-                                             rng);
+                                             verbose, rng);
                      })();
         }
     }
@@ -197,7 +197,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
                 (gi, [&](auto& g)
                      {
                          gen_k_nearest<false>(g, d_e, k, r, epsilon, w,
-                                              directed, rng);
+                                              directed, verbose, rng);
                      })();
         }
         else
@@ -216,7 +216,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
                      {
                          auto d = make_cached_dist(g, d_e);
                          gen_k_nearest<true>(g, d, k, r, epsilon, w, directed,
-                                             rng);
+                                             verbose, rng);
                      })();
         }
     }
