@@ -38,20 +38,22 @@ public:
         if (_local_heap.size() < _max_size)
         {
             _local_heap.push_back(x);
+            std::push_heap(_local_heap.begin(),
+                           _local_heap.end(), _cmp);
         }
         else if (_cmp(x, _local_heap.front()))
         {
             std::pop_heap(_local_heap.begin(),
                           _local_heap.end(), _cmp);
             _local_heap.back() = x;
+            std::push_heap(_local_heap.begin(),
+                           _local_heap.end(), _cmp);
         }
-        std::push_heap(_local_heap.begin(),
-                       _local_heap.end(), _cmp);
     }
 
     void merge()
     {
-        #pragma omp critical
+        #pragma omp critical (shared_heap)
         {
             if (_heap.empty())
             {
@@ -76,9 +78,9 @@ public:
                                        _heap.end(), _cmp);
                     }
                 }
+                _local_heap.clear();
             }
         }
-        _local_heap.clear();
     }
 
 private:

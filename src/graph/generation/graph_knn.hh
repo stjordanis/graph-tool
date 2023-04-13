@@ -133,7 +133,12 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     auto build_vertex = [&](auto v)
         {
-            clear_vertex(v, g);
+            std::vector<typename graph_traits<Graph>::edge_descriptor> es;
+            for (auto e : in_edges_range(v, g))
+                es.push_back(e);
+
+            for (auto& e : es)
+                remove_edge(e, g);
 
             for (auto u : forbid[v])
                 add_edge(u, v, g);
@@ -329,52 +334,54 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
 }
 
 template <bool parallel, class Graph, class Dist, class Weight, class RNG>
-void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
+void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, double epsilon,
                    Weight eweight, bool directed, bool verbose, RNG& rng)
 {
     auto forbid = get_forbidden<parallel>(g);
 
     size_t N = num_vertices(g);
-    if (N * N <= 4 * k)
+    if (N * N <= 4 * m)
     {
-        gen_k_nearest_exact<parallel>(g, d, k, directed, eweight, forbid);
+        gen_k_nearest_exact<parallel>(g, d, m, directed, eweight, forbid);
         return;
     }
 
-    size_t nk = ceil((4. * k)/num_vertices(g)) + 2;
+    size_t nk = ceil((4. * m)/num_vertices(g)) + 2;
     if (verbose)
-        cout << "Running KNN with k = " << nk << endl;
+        cout << "Running KNN with k = " << nk << " and N = " << N << endl;
     gen_knn<parallel>(g, d, nk, r, epsilon, eweight, forbid, verbose, rng);
 
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
-    std::vector<std::tuple<edge_t, double>> redges;
+    std::vector<std::tuple<edge_t, double>> medges;
 
-    size_t E = num_edges(g);
-    auto heap = make_shared_heap(redges, E - 2 * k,
+    // 2m shortest directed pairs
+    auto heap = make_shared_heap(medges, 2 * m,
                                  [](auto& x, auto& y)
                                  {
-                                     return get<1>(x) > get<1>(y);
+                                     return get<1>(x) < get<1>(y);
                                  });
     if (verbose)
-        cout << "Ranking edges..." << endl;
-    #pragma omp parallel for firstprivate(heap)
-    for (size_t i = 0; i < N; ++i)
-    {
-        auto v = vertex(i, g);
-        if (!is_valid_vertex(v, g))
-            continue;
-        for (auto e : out_edges_range(v, g))
-            heap.push({e, eweight[e]});
-    };
+        cout << "Ranking 2m = " << 2 * m << " of "
+             << num_edges(g) << " closest directed pairs..." << endl;
+
+    #pragma omp parallel firstprivate(heap)
+    parallel_edge_loop_no_spawn(g,
+                                [&](auto& e)
+                                { heap.push({e, eweight[e]}); });
 
     heap.merge();
 
     if (verbose)
+        cout << "heap size: " << medges.size()
+             << ", top: " << get<1>(medges.front()) << endl;
+
+    if (verbose)
         cout << "Selecting nodes..." << endl;
 
-    typename eprop_map_t<uint8_t>::type eremove(g.get_edge_index_range(),
+    typename eprop_map_t<uint8_t>::type ekeep(g.get_edge_index_range(),
                                                 get(edge_index_t(), g));
-    parallel_loop(redges, [&](auto, auto& el){ eremove[get<0>(el)] = true; });
+
+    parallel_loop(medges, [&](auto, auto& el){ ekeep[get<0>(el)] = true; });
 
     N = 0;
     std::vector<uint8_t> select(num_vertices(g));
@@ -386,7 +393,7 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                  select[v] = true;
                  for (auto e : in_edges_range(v, g))
                  {
-                     if (eremove[e])
+                     if (!ekeep[e])
                      {
                          select[v] = false;
                          break;
@@ -403,19 +410,22 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
     auto u = make_filt_graph(g_, boost::keep_all(),
                              [&](auto v) { return select[v]; });
 
-    if (N * N <= 4 * k)
+    if (N * N <= 4 * m)
     {
         if (verbose)
-            cout << "Running exact KNN with k = " << k << " and N = " << N << endl;
-        gen_k_nearest_exact<parallel>(u, d, k, directed, ew, forbid);
+            cout << "Running exact nearest pairs with m = " << m << " and N = " << N << endl;
+        gen_k_nearest_exact<parallel>(u, d, m, directed, ew, forbid);
     }
     else
     {
-        nk = ceil((4. * k)/N) + 2;
+        nk = ceil((4. * m)/N) + 2;
         if (verbose)
             cout << "Running KNN with k = " << nk << " and N = " << N << endl;
         gen_knn<parallel>(u, d, nk, r, epsilon, ew, forbid, verbose, rng);
     }
+
+    if (verbose)
+        cout << "Additional E = " << num_edges(u) << endl;
 
     if (!directed)
     {
@@ -426,17 +436,21 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
         contract_parallel_edges(g_u, dummy_property_map());
         undirected_adaptor u_u(g_);
         contract_parallel_edges(u_u, dummy_property_map());
+
+        if (verbose)
+            cout << "E = " << num_edges(g)
+                 << ", E' = " << num_edges(g_) << endl;
     }
 
     if (verbose)
-        cout << "Selecting best edges..." << endl;
+        cout << "Selecting best m edges..." << endl;
 
     gt_hash_set<std::tuple<size_t, size_t>> visited;
     std::vector<std::tuple<std::tuple<size_t, size_t>, double>> pairs;
     auto collect_heap =
         [&](auto& g, auto& ew)
         {
-            auto heap = make_shared_heap(pairs, k,
+            auto heap = make_shared_heap(pairs, m,
                                          [](auto& x, auto& y)
                                          {
                                              return get<1>(x) < get<1>(y);
@@ -447,11 +461,11 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                 size_t v = target(e, g);
                 if (!directed && u > v)
                     std::swap(u, v);
-                if (visited.find({u,v}) != visited.end())
+                if (visited.find({u, v}) != visited.end())
                     continue;
                 visited.insert({u, v});
                 auto l = ew[e];
-                heap.push({{u,v}, l});
+                heap.push({{u, v}, l});
             }
 
             heap.merge();
@@ -459,6 +473,10 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     collect_heap(g, eweight);
     collect_heap(u, ew);
+
+    if (verbose)
+        cout << "E = " << pairs.size()
+             << ", top: " << get<1>(pairs.front()) << endl;
 
     if (verbose)
         cout << "Building graph..." << endl;
