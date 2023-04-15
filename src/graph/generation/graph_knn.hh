@@ -133,13 +133,6 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     auto build_vertex = [&](auto v)
         {
-            std::vector<typename graph_traits<Graph>::edge_descriptor> es;
-            for (auto e : in_edges_range(v, g))
-                es.push_back(e);
-
-            for (auto& e : es)
-                remove_edge(e, g);
-
             for (auto u : forbid[v])
                 add_edge(u, v, g);
 
@@ -153,21 +146,14 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
     idx_set<size_t> visited;
     std::bernoulli_distribution rsample(r);
 
-#ifdef HAVE_OPENMP
-    bool async = parallel && (omp_get_max_threads() > 1);
-#else
-    bool async = false;
-#endif
-
     size_t iter = 0;
     double delta = epsilon + 1;
     while (delta > epsilon)
     {
-        if (async)
-        {
-            for (auto v : vertices_range(g))
-                build_vertex(v);
-        }
+        for (auto v : vertices_range(g))
+            clear_vertex(v, g);
+        for (auto v : vertices_range(g))
+            build_vertex(v);
 
         size_t c = 0;
         #pragma omp parallel if (parallel) reduction(+:c) firstprivate(visited)
@@ -206,9 +192,6 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                          visited.insert(w);
                      }
                  }
-
-                 if (!async)
-                     build_vertex(v);
              });
 
         delta = c / double(vs.size() * k);
@@ -216,11 +199,10 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
             cout << iter++ << " " << delta << endl;
     }
 
-    if (async)
-    {
-        for (auto v : vertices_range(g))
-            build_vertex(v);
-    }
+    for (auto v : vertices_range(g))
+        clear_vertex(v, g);
+    for (auto v : vertices_range(g))
+        build_vertex(v);
 }
 
 template <bool parallel, class Graph, class Dist, class Weight, class RNG>
@@ -237,29 +219,29 @@ void gen_knn_exact(Graph& g, Dist&& d, size_t k, Weight eweight, F& forbid)
     std::vector<std::vector<std::tuple<size_t, double>>> vs(num_vertices(g));
     #pragma omp parallel if (parallel)
     parallel_vertex_loop_no_spawn
-            (g,
-             [&](auto v)
+        (g,
+         [&](auto v)
+         {
+             auto& fv = forbid[v];
+             auto& ns = vs[v];
+             for (auto u : vertices_range(g))
              {
-                 auto& fv = forbid[v];
-                 auto& ns = vs[v];
-                 for (auto u : vertices_range(g))
-                 {
-                     if (u == v || (!fv.empty() && fv.find(u) != fv.end()))
-                         continue;
-                     ns.emplace_back(u, d(u, v));
-                 }
-                 if (ns.size() <= k)
-                     return;
-                 nth_element(ns.begin(),
-                             ns.begin() + k,
-                             ns.end(),
-                             [] (auto& x, auto& y)
-                             {
-                                 return get<1>(x) < get<1>(y);
-                             });
-                 ns.resize(k);
-                 ns.shrink_to_fit();
-             });
+                 if (u == v || (!fv.empty() && fv.find(u) != fv.end()))
+                     continue;
+                 ns.emplace_back(u, d(u, v));
+             }
+             if (ns.size() <= k)
+                 return;
+             nth_element(ns.begin(),
+                         ns.begin() + k,
+                         ns.end(),
+                         [](auto& x, auto& y)
+                         {
+                             return get<1>(x) < get<1>(y);
+                         });
+             ns.resize(k);
+             ns.shrink_to_fit();
+         });
 
     for (auto v : vertices_range(g))
     {
@@ -296,24 +278,22 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
     for (auto v : vertices_range(g))
         vs.push_back(v);
 
-    size_t N = num_vertices(g);
-    #pragma omp parallel for if (parallel) firstprivate(heap)
-    for (size_t i = 0; i < N; ++i)
-    {
-        auto v = vertex(i, g);
-        if (!is_valid_vertex(v, g))
-            continue;
-        auto& fv = forbid[v];
-        for (auto u : vs)
-        {
-            if (u == v || (!fv.empty() && fv.find(u) != fv.end()))
-                continue;
-            if (!directed && u > v)
-                continue;
-            auto l = d(u, v);
-            heap.push({{u, v}, l});
-        }
-    }
+    #pragma omp parallel if (parallel) firstprivate(heap)
+    parallel_vertex_loop_no_spawn
+        (g,
+         [&](auto v)
+         {
+             auto& fv = forbid[v];
+             for (auto u : vs)
+             {
+                 if (u == v || (!fv.empty() && fv.find(u) != fv.end()))
+                     continue;
+                 if (!directed && u > v)
+                     continue;
+                 auto l = d(u, v);
+                 heap.push({{u, v}, l});
+             }
+         });
 
     heap.merge();
 
@@ -379,7 +359,7 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, double epsilon,
         cout << "Selecting nodes..." << endl;
 
     typename eprop_map_t<uint8_t>::type ekeep(g.get_edge_index_range(),
-                                                get(edge_index_t(), g));
+                                              get(edge_index_t(), g));
 
     parallel_loop(medges, [&](auto, auto& el){ ekeep[get<0>(el)] = true; });
 
@@ -387,21 +367,21 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, double epsilon,
     std::vector<uint8_t> select(num_vertices(g));
     #pragma omp parallel reduction(+:N)
     parallel_vertex_loop_no_spawn
-            (g,
-             [&](auto v)
+        (g,
+         [&](auto v)
+         {
+             select[v] = true;
+             for (auto e : in_edges_range(v, g))
              {
-                 select[v] = true;
-                 for (auto e : in_edges_range(v, g))
+                 if (!ekeep[e])
                  {
-                     if (!ekeep[e])
-                     {
-                         select[v] = false;
-                         break;
-                     }
+                     select[v] = false;
+                     break;
                  }
-                 if (select[v])
-                     N++;
-             });
+             }
+             if (select[v])
+                 N++;
+         });
 
     adj_list<> g_(num_vertices(g));
     g_.set_keep_epos(true);
@@ -410,18 +390,21 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, double epsilon,
     auto u = make_filt_graph(g_, boost::keep_all(),
                              [&](auto v) { return select[v]; });
 
-    if (N * N <= 4 * m)
+    if (N < num_vertices(g))
     {
-        if (verbose)
-            cout << "Running exact nearest pairs with m = " << m << " and N = " << N << endl;
-        gen_k_nearest_exact<parallel>(u, d, m, directed, ew, forbid);
-    }
-    else
-    {
-        nk = ceil((4. * m)/N) + 2;
-        if (verbose)
-            cout << "Running KNN with k = " << nk << " and N = " << N << endl;
-        gen_knn<parallel>(u, d, nk, r, epsilon, ew, forbid, verbose, rng);
+        if (N * N <= 4 * m)
+        {
+            if (verbose)
+                cout << "Running exact nearest pairs with m = " << m << " and N = " << N << endl;
+            gen_k_nearest_exact<parallel>(u, d, m, directed, ew, forbid);
+        }
+        else
+        {
+            nk = ceil((4. * m)/N) + 2;
+            if (verbose)
+                cout << "Running KNN with k = " << nk << " and N = " << N << endl;
+            gen_knn<parallel>(u, d, nk, r, epsilon, ew, forbid, verbose, rng);
+        }
     }
 
     if (verbose)
