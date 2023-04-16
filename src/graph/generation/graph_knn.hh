@@ -143,7 +143,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
             }
         };
 
-    idx_set<size_t> visited;
+    idx_set<size_t, false, false> visited(num_vertices(g));
     std::bernoulli_distribution rsample(r);
 
     size_t iter = 0;
@@ -182,6 +182,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                              continue;
 
                          double l = d(w, v);
+
                          if (l < get<1>(Bv.front()))
                          {
                              std::pop_heap(Bv.begin(), Bv.end(), cmp);
@@ -189,12 +190,14 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                              std::push_heap(Bv.begin(), Bv.end(), cmp);
                              c++;
                          }
+
                          visited.insert(w);
                      }
                  }
              });
 
         delta = c / double(vs.size() * k);
+
         if (verbose)
             cout << iter++ << " " << delta << endl;
     }

@@ -22,7 +22,7 @@
 #include <utility>
 #include <limits>
 
-template <class Key, class T, bool shared_pos=false>
+template <class Key, class T, bool shared_pos=false, bool check_size=true>
 class idx_map
 {
 public:
@@ -32,10 +32,12 @@ public:
     typedef typename std::vector<std::pair<Key,T>>::iterator iterator;
     typedef typename std::vector<std::pair<Key,T>>::const_iterator const_iterator;
 
-    idx_map()
+    idx_map(size_t size = 0)
     {
         if constexpr (shared_pos)
             _pos = nullptr;
+        else
+            _pos.resize(size, _null);
     }
 
     idx_map(std::vector<size_t>& pos) : _pos(&pos) {}
@@ -52,8 +54,11 @@ public:
     std::pair<iterator,bool> insert(P&& value)
     {
         auto& pos = get_pos();
-        if (pos.size() <= size_t(value.first))
-            pos.resize(value.first + 1, _null);
+        if constexpr (check_size)
+        {
+            if (pos.size() <= size_t(value.first))
+                pos.resize(value.first + 1, _null);
+        }
         size_t& idx = pos[value.first];
         if (idx == _null || shared_pos)
         {
@@ -101,8 +106,11 @@ public:
     iterator find(const Key& key)
     {
         auto& pos = get_pos();
-        if (size_t(key) >= pos.size())
-            return end();
+        if constexpr (check_size)
+        {
+            if (size_t(key) >= pos.size())
+                return end();
+        }
         size_t idx = pos[key];
         if constexpr (shared_pos)
         {
@@ -125,7 +133,7 @@ public:
     void clear()
     {
         auto& pos = get_pos();
-        if constexpr (shared_pos)
+        if constexpr (shared_pos || !check_size)
         {
             for (auto k : _items)
                 pos[k.first] = _null;
@@ -141,7 +149,7 @@ public:
     {
         auto& pos = get_pos();
         _items.shrink_to_fit();
-        if (_items.empty())
+        if (_items.empty() && !check_size)
             pos.clear();
         pos.shrink_to_fit();
     }
@@ -159,13 +167,11 @@ private:
     std::conditional_t<shared_pos,
                        std::vector<size_t>*,
                        std::vector<size_t>> _pos;
-    static constexpr size_t _null = std::numeric_limits<size_t>::max();
+    inline static constexpr size_t _null = std::numeric_limits<size_t>::max();
 };
 
-template <class Key, class T, bool shared_pos>
-constexpr size_t idx_map<Key, T, shared_pos>::_null;
 
-template <class Key, bool shared_pos=false>
+template <class Key, bool shared_pos=false, bool check_size=true>
 class idx_set
 {
 public:
@@ -175,10 +181,12 @@ public:
     typedef typename std::vector<Key>::const_iterator const_iterator;
     typedef std::vector<size_t> pos_t;
 
-    idx_set()
+    idx_set(size_t size = 0)
     {
         if constexpr (shared_pos)
             _pos = nullptr;
+        else
+            _pos.resize(size, _null);
     }
 
     idx_set(std::vector<size_t>& pos) : _pos(&pos) {}
@@ -194,8 +202,11 @@ public:
     std::pair<const_iterator,bool> insert(const Key& k)
     {
         pos_t& pos = const_cast<pos_t&>(get_pos());
-        if (pos.size() <= size_t(k))
-            pos.resize(k + 1, _null);
+        if constexpr (check_size)
+        {
+            if (pos.size() <= size_t(k))
+                pos.resize(k + 1, _null);
+        }
         size_t& idx = pos[k];
         if (idx == _null || shared_pos)
         {
@@ -234,8 +245,11 @@ public:
     const_iterator find(const Key& key) const
     {
         const auto& pos = get_pos();
-        if (size_t(key) >= pos.size())
-            return end();
+        if constexpr (check_size)
+        {
+            if (size_t(key) >= pos.size())
+                return end();
+        }
         size_t idx = pos[key];
         if (idx == _null)
             return end();
@@ -245,7 +259,7 @@ public:
     void clear()
     {
         auto& pos = const_cast<pos_t&>(get_pos());
-        if constexpr (shared_pos)
+        if constexpr (shared_pos || !check_size)
         {
             for (auto k : _items)
                 pos[k] = _null;
@@ -261,7 +275,7 @@ public:
     {
         auto& pos = const_cast<pos_t&>(get_pos());
         _items.shrink_to_fit();
-        if (_items.empty())
+        if (_items.empty() && !check_size)
             pos.clear();
         pos.shrink_to_fit();
     }
@@ -275,10 +289,7 @@ public:
 private:
     std::vector<Key> _items;
     std::conditional_t<shared_pos, pos_t*, pos_t> _pos;
-    static constexpr size_t _null = std::numeric_limits<size_t>::max();
+    inline static constexpr size_t _null = std::numeric_limits<size_t>::max();
 };
-
-template <class Key, bool shared_pos>
-constexpr size_t idx_set<Key, shared_pos>::_null;
 
 #endif // IDX_MAP_HH
