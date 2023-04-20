@@ -43,7 +43,7 @@ Property Maps
 .. autosummary::
    :nosignatures:
    :toctree: autosummary
-   :template: class.rst
+   :template: graph.rst
 
    PropertyMap
    VertexPropertyMap
@@ -1626,7 +1626,7 @@ class Graph(object):
       :class:`~graph_tool.VertexPropertyMap` specifying the ordering of the
       vertices in the copied graph.
 
-    The value of `set_fast_edge_removal` is passed to
+    The value of ``set_fast_edge_removal`` is passed to
     :meth:`~graph_tool.Graph.set_fast_edge_removal`.
 
     .. note::

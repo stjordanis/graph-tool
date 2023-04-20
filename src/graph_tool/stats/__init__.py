@@ -168,8 +168,7 @@ def edge_hist(g, eprop, bins=[0, 1], float_count=True):
     >>> eprop = g.new_edge_property("double")
     >>> eprop.get_array()[:] = random(g.num_edges())
     >>> print(gt.edge_hist(g, eprop, linspace(0, 1, 11)))
-    [array([485., 538., 502., 505., 474., 497., 544., 465., 492., 498.]), array([0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ])]
-
+    [array([525., 504., 502., 502., 467., 499., 531., 471., 520., 479.]), array([0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ])]
     """
 
     ret = libgraph_tool_stats.\
@@ -222,7 +221,7 @@ def vertex_average(g, deg):
     >>> from numpy.random import poisson
     >>> g = gt.random_graph(1000, lambda: (poisson(5), poisson(5)))
     >>> print(gt.vertex_average(g, "in"))
-    (4.986, 0.07323799560337517)
+    (5.034, 0.06911471623323068)
     """
 
     if isinstance(deg, PropertyMap) and "string" in deg.value_type():
@@ -284,7 +283,7 @@ def edge_average(g, eprop):
     >>> eprop = g.new_edge_property("double")
     >>> eprop.get_array()[:] = random(g.num_edges())
     >>> print(gt.edge_average(g, eprop))
-    (0.5027850372071281, 0.004073940886690715)
+    (0.49683199099042286, 0.004095628750806015)
     """
 
     if "string" in eprop.value_type():
@@ -360,10 +359,11 @@ def distance_histogram(g, weight=None, bins=[0, 1], samples=None,
     >>> g = gt.random_graph(100, lambda: (3, 3))
     >>> hist = gt.distance_histogram(g)
     >>> print(hist)
-    [array([   0.,  300.,  862., 2195., 3850., 2518.,  175.]), array([0, 1, 2, 3, 4, 5, 6, 7], dtype=uint64)]
+    [array([   0.,  300.,  858., 2179., 3851., 2522.,  190.]), array([0, 1, 2, 3, 4, 5, 6, 7], dtype=uint64)]
     >>> hist = gt.distance_histogram(g, samples=10)
     >>> print(hist)
-    [array([  0.,  30.,  86., 213., 378., 262.,  21.]), array([0, 1, 2, 3, 4, 5, 6, 7], dtype=uint64)]
+    [array([  0.,  30.,  85., 215., 372., 260.,  28.]), array([0, 1, 2, 3, 4, 5, 6, 7], dtype=uint64)]
+
     """
 
     if samples is not None:

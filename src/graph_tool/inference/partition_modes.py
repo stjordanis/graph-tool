@@ -606,7 +606,7 @@ def nested_partition_overlap(x, y, norm=True):
     >>> x = [np.random.randint(0, 100, 1000), np.random.randint(0, 10, 100), np.random.randint(0, 3, 10)]
     >>> y = [np.random.randint(0, 100, 1000), np.random.randint(0, 10, 100), np.random.randint(0, 3, 10)]
     >>> gt.nested_partition_overlap(x, y)
-    0.150858...
+    0.140018...
 
 
     References
@@ -679,13 +679,13 @@ def contingency_graph(x, y):
     >>> y = np.random.randint(0, 10, 1000)
     >>> g = gt.contingency_graph(x, y)
     >>> g.ep.mrs.a
-    PropertyArray([ 8,  6,  8, 15, 15, 14, 11, 13,  8,  9, 16,  6,  5, 11,  8,
-                   15,  6,  8,  9, 12, 11,  8, 13,  6, 10, 14, 12, 14, 15, 18,
-                   13, 15, 10, 12, 13,  6, 12, 13, 15,  9, 11, 11,  5,  7, 11,
-                    6,  8, 15, 15, 14,  8,  8,  7, 13, 11, 11,  8, 11,  9, 11,
-                    9, 16, 13, 12,  8, 16,  6, 10, 15, 14,  4,  4,  7, 12, 11,
-                    8,  6, 16, 11, 13,  3,  5, 13,  9, 11,  4,  4, 12,  7,  5,
-                    7, 10,  6,  8,  6,  7, 10,  7, 11,  2], dtype=int32)
+    PropertyArray([ 8, 10,  4, 11,  8, 11, 15, 12, 14, 11,  8, 12,  9,  9, 11,
+                   14, 10,  9, 16,  8, 12, 16, 15, 13, 12,  7, 11, 13, 18,  9,
+                    9,  9, 14, 10, 11,  8,  6,  7, 11, 11,  8, 11, 14, 12,  8,
+                    7,  7,  8,  8, 12, 10, 11,  8, 15,  6, 13, 14, 14,  8, 10,
+                    8, 11,  7,  6, 10, 13, 10, 13,  6, 11, 15,  5,  4, 10, 13,
+                    8,  8,  9, 14,  8,  6, 11,  7,  8, 15, 10,  9,  7,  8, 11,
+                   10, 11,  9,  8,  8, 10,  7,  8,  3,  9], dtype=int32)
     """
     x = np.asarray(x, dtype="int32")
     y = np.asarray(y, dtype="int32")
@@ -717,7 +717,7 @@ def shuffle_partition_labels(x):
     --------
     >>> x = [0, 0, 0, 1, 1, 1, 2, 2, 2]
     >>> gt.shuffle_partition_labels(x)
-    array([1, 1, 1, 0, 0, 0, 2, 2, 2], dtype=int32)
+    array([0, 0, 0, 2, 2, 2, 1, 1, 1], dtype=int32)
     """
 
     x = np.asarray(x, dtype="int32").copy()
@@ -868,7 +868,7 @@ def align_nested_partition_labels(x, y):
     >>> x = [[0, 2, 2, 1, 1, 1, 2, 3, 2], [1, 0, 1, 0], [0,0]]
     >>> y = gt.shuffle_nested_partition_labels(x)
     >>> print(y)
-    [array([3, 2, 2, 0, 0, 0, 2, 1, 2], dtype=int32), array([1, 1, 0, 0], dtype=int32), array([0, 0], dtype=int32)]
+    [array([0, 3, 3, 2, 2, 2, 3, 1, 3], dtype=int32), array([1, 0, 0, 1], dtype=int32), array([0, 0], dtype=int32)]
     >>> gt.align_nested_partition_labels(y, x)
     [array([0, 2, 2, 1, 1, 1, 2, 3, 2], dtype=int32), array([1, 0, 1, 0], dtype=int32), array([0, 0], dtype=int32)]
     """
@@ -940,10 +940,10 @@ def partition_overlap_center(bs, init=None, relabel_bs=False):
     ...     y[np.random.randint(len(y))] = np.random.randint(5)
     ...     bs.append(y)
     >>> bs[:3]
-    [array([5, 5, 2, 0, 1, 2, 1, 0, 0, 0, 0]), array([1, 5, 2, 0, 1, 0, 1, 0, 0, 0, 0]), array([5, 5, 2, 0, 1, 0, 1, 0, 4, 0, 0])]
+    [array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 3]), array([5, 5, 2, 0, 4, 0, 1, 0, 0, 0, 0]), array([5, 5, 1, 0, 1, 0, 1, 0, 0, 0, 0])]
     >>> c, r = gt.partition_overlap_center(bs)
     >>> print(c, r)
-    [1 1 2 0 3 0 3 0 0 0 0] 0.07454545...
+    [1 1 2 0 3 0 3 0 0 0 0] 0.06818181...
     >>> gt.align_partition_labels(c, x)
     array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 0], dtype=int32)
 
@@ -1031,10 +1031,10 @@ def nested_partition_overlap_center(bs, init=None, return_bs=False):
     ...     y[1][np.random.randint(len(y[1]))] = np.random.randint(2)
     ...     bs.append(y)
     >>> bs[:3]
-    [[array([5, 5, 2, 0, 1, 0, 3, 0, 0, 0, 0]), array([0, 1, 1, 1, 1, 1])], [array([5, 5, 2, 0, 0, 0, 1, 0, 0, 0, 0]), array([0, 0, 0, 1, 1, 1])], [array([1, 5, 2, 0, 1, 0, 1, 0, 0, 0, 0]), array([0, 1, 0, 1, 1, 1])]]
+    [[array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 3]), array([0, 1, 0, 1, 1, 1])], [array([5, 5, 2, 0, 1, 0, 4, 0, 0, 0, 0]), array([0, 1, 1, 1, 1, 1])], [array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 2]), array([0, 1, 0, 1, 1, 1])]]
     >>> c, r = gt.nested_partition_overlap_center(bs)
     >>> print(c, r)
-    [array([1, 1, 2, 0, 3, 0, 3, 0, 0, 0, 0], dtype=int32), array([0, 1, 0, 1, 1], dtype=int32)] 0.084492...
+    [array([1, 1, 2, 0, 3, 0, 3, 0, 0, 0, 0], dtype=int32), array([0, 1, 0, 1, 1], dtype=int32)] 0.069385...
     >>> gt.align_nested_partition_labels(c, x)
     [array([5, 5, 2, 0, 1, 0, 1, 0, 0, 0, 0], dtype=int32), array([ 0,  1,  0, -1, -1,  1], dtype=int32)]
 

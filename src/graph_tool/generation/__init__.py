@@ -239,7 +239,6 @@ def random_graph(N, deg_sampler, directed=True,
     ...         k = np.random.randint(1,max+1)
     ...         accept = np.random.random() < 1.0/k
     ...     return k
-    ...
 
     The following generates a random undirected graph with degree distribution
     :math:`P(k)\propto 1/k` (with k_max=40) and an *assortative* degree
@@ -712,6 +711,12 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
 
     We can try with larger graphs to get better statistics, as follows.
 
+    >>> def sample_k(max):
+    ...     accept = False
+    ...     while not accept:
+    ...         k = np.random.randint(1,max+1)
+    ...         accept = np.random.random() < 1.0/k
+    ...     return k
     >>> figure(figsize=(8,3))
     <...>
     >>> g = gt.random_graph(30000, lambda: sample_k(20), model="probabilistic-configuration",
@@ -753,6 +758,12 @@ def random_rewire(g, model="configuration", n_iter=1, edge_sweep=True,
     Now let's do it for a directed graph. See
     :func:`~graph_tool.generation.random_graph` for more details.
 
+    >>> def sample_k(max):
+    ...     accept = False
+    ...     while not accept:
+    ...         k = np.random.randint(1,max+1)
+    ...         accept = np.random.random() < 1.0/k
+    ...     return k
     >>> p = scipy.stats.poisson
     >>> g = gt.random_graph(20000, lambda: (sample_k(19), sample_k(19)),
     ...                     model="probabilistic-configuration",

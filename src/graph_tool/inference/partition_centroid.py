@@ -183,7 +183,7 @@ def variation_information(x, y, norm=False):
     >>> x = np.random.randint(0, 10, 1000)
     >>> y = np.random.randint(0, 10, 1000)
     >>> gt.variation_information(x, y)
-    4.5346824...
+    4.525389...
 
     References
     ----------
@@ -288,7 +288,7 @@ def mutual_information(x, y, norm=False, adjusted=False, avg_method="arithmetic"
     >>> x = np.random.randint(0, 10, 1000)
     >>> y = np.random.randint(0, 10, 1000)
     >>> gt.mutual_information(x, y)
-    0.050321...
+    0.036350...
 
     References
     ----------
@@ -394,7 +394,7 @@ def reduced_mutual_information(x, y, norm=False):
     >>> x = np.random.randint(0, 10, 1000)
     >>> y = np.random.randint(0, 10, 1000)
     >>> gt.reduced_mutual_information(x, y)
-    -0.065562...
+    -0.069938...
 
     References
     ----------

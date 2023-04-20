@@ -1337,6 +1337,7 @@ def label_components(g, vprop=None, directed=None, attractors=False):
     .. testcode::
        :hide:
 
+       import numpy.random
        numpy.random.seed(43)
        gt.seed_rng(43)
 
@@ -1918,11 +1919,11 @@ def shortest_distance(g, source=None, target=None, weights=None,
             If this parameter is supplied, the user is responsible for
             initializing it to infinity. This can be done as:
 
-            >>> dist_map = g.new_vp("double", numpy.inf)
+            >>> dist_map = g.new_vp("double", numpy.inf)                     # doctest: +SKIP
 
             or
 
-            >>> dist_map = g.new_vp("int32_t", numpy.iinfo(numpy.int32).max)
+            >>> dist_map = g.new_vp("int32_t", numpy.iinfo(numpy.int32).max) # doctest: +SKIP
 
             depending on the distance type.
 
@@ -1937,7 +1938,7 @@ def shortest_distance(g, source=None, target=None, weights=None,
             If a property map is supplied, the user is responsible for
             initializing to the identity map. This can be done as:
 
-            >>> pred_map = g.vertex_index.copy()
+            >>> pred_map = g.vertex_index.copy()                             # doctest: +SKIP
 
     return_reached : ``bool`` (optional, default: ``False``)
         If ``True``, return an array of visited vertices.
@@ -3085,6 +3086,7 @@ def max_cardinality_matching(g, weight=None, bipartite=False,
     .. testcode::
        :hide:
 
+       import numpy.random
        numpy.random.seed(43)
        gt.seed_rng(43)
 
@@ -3189,6 +3191,7 @@ def max_independent_vertex_set(g, high_deg=False, mivs=None):
     .. testcode::
        :hide:
 
+       import numpy.random
        numpy.random.seed(43)
        gt.seed_rng(43)
 

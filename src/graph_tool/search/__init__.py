@@ -234,6 +234,8 @@ def bfs_search(g, source=None, visitor=BFSVisitor()):
 
     With the above class defined, we can perform the BFS search as follows.
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
     >>> dist = g.new_vertex_property("int")
     >>> pred = g.new_vertex_property("int64_t")
     >>> gt.bfs_search(g, g.vertex(0), VisitorExample(name, pred, dist))
@@ -322,6 +324,8 @@ def bfs_iterator(g, source=None, array=False):
     Examples
     --------
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
     >>> for e in gt.bfs_iterator(g, g.vertex(0)):
     ...    print(name[e.source()], "->", name[e.target()])
     Bob -> Eve
@@ -516,6 +520,8 @@ def dfs_search(g, source=None, visitor=DFSVisitor()):
 
     With the above class defined, we can perform the DFS search as follows.
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
     >>> time = g.new_vertex_property("int")
     >>> pred = g.new_vertex_property("int64_t")
     >>> gt.dfs_search(g, g.vertex(0), VisitorExample(name, pred, time))
@@ -626,6 +632,8 @@ def dfs_iterator(g, source=None, array=False):
     Examples
     --------
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
     >>> for e in gt.dfs_iterator(g, g.vertex(0)):
     ...    print(name[e.source()], "->", name[e.target()])
     Bob -> Eve
@@ -847,6 +855,9 @@ def dijkstra_search(g, weight, source=None, visitor=DijkstraVisitor(), dist_map=
 
     With the above class defined, we can perform the Dijkstra search as follows.
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
+    >>> weight = g.ep["weight"]
     >>> time = g.new_vertex_property("int")
     >>> dist, pred = gt.dijkstra_search(g, weight, g.vertex(0), VisitorExample(name, time))
     --> Bob has been discovered!
@@ -1017,6 +1028,9 @@ def dijkstra_iterator(g, weight, source=None, dist_map=None, combine=None,
     Examples
     --------
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
+    >>> weight = g.ep["weight"]
     >>> for e in gt.dijkstra_iterator(g, weight, g.vertex(0)):
     ...    print(name[e.source()], "->", name[e.target()])
     Bob -> Eve
@@ -1283,6 +1297,9 @@ def bellman_ford_search(g, source, weight, visitor=BellmanFordVisitor(),
     With the above class defined, we can perform the Bellman-Ford search as
     follows.
 
+    >>> g = gt.load_graph("search_example.xml")
+    >>> name = g.vp["name"]
+    >>> weight = g.ep["weight"]
     >>> nweight = g.copy_property(weight)
     >>> nweight.a[6] *= -1   # include negative weight in edge (Carlos, Alice)
     >>> minimized, dist, pred = gt.bellman_ford_search(g, g.vertex(0), nweight, VisitorExample(name))
@@ -1594,6 +1611,7 @@ def astar_search(g, source, weight, visitor=AStarVisitor(),
         from numpy.random import seed, random
         import matplotlib.cm
         seed(42)
+
 
     >>> points = random((500, 2)) * 4
     >>> points[0] = [-0.01, 0.01]

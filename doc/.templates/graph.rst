@@ -2,9 +2,11 @@
 
 .. currentmodule:: {{ module }}
 
-{% if objtype  == "class" %}
+{% if objtype == "class" %}
 
 {% if objname != "Graph" %}
+
+{% if objname != "PropertyArray" %}
 
 .. autoclass:: {{ objname }}
    :members:
@@ -32,6 +34,8 @@
    {%- endfor %}
    {% endif %}
 
+   {% endblock %}
+
    {% if methods %}
    {% for item in methods %}
    .. automethod:: {{ item }}
@@ -44,7 +48,32 @@
    {%- endfor %}
    {% endif %}
 
-   {% endblock %}
+{% else %}
+
+.. autoclass:: {{ objname }}
+   :members:
+   :show-inheritance:
+
+   {% if attributes %}
+   .. rubric:: {{ _('Attributes') }}
+
+   .. autosummary::
+   {% for item in attributes %}
+   {% if item not in inherited_members %}
+      ~{{ name }}.{{ item }}
+   {% endif %}
+   {%- endfor %}
+   {% endif %}
+
+   {% if attributes %}
+   {% for item in attributes %}
+   {% if item not in inherited_members %}
+   .. autoattribute:: {{ item }}
+   {% endif %}
+   {%- endfor %}
+   {% endif %}
+
+{% endif %}
 
 {% else %}
 
