@@ -2179,29 +2179,25 @@ public:
                 {
                     if constexpr (is_weighted_t::value)
                     {
-                        auto e_S = [&](auto m)
-                            {
-                                if (u == v && !is_directed_::apply<g_t>::type::value)
-                                {
-                                    assert(m % 2 == 0);
-                                    return lgamma_fast(m/2 + 1) + m * log(2) / 2;
-                                }
-                                else
-                                {
-                                    return lgamma_fast(m + 1);
-                                }
-                            };
-
                         auto m = (e == GraphInterface::edge_t()) ? 0 : _eweight[e];
-
-                        S -= e_S(m);
-
                         if (u == v && !is_directed_::apply<g_t>::type::value)
-                            m += 2 * dm;
+                        {
+                            auto e_S = [&](auto m)
+                            {
+                                return lgamma_fast(m/2 + 1) + m * log(2) / 2;
+                            };
+                            S -= e_S(2 * m);
+                            S += e_S(2 * (m + dm));
+                        }
                         else
-                            m += dm;
-
-                        S += e_S(m);
+                        {
+                            auto e_S = [&](auto m)
+                            {
+                                return lgamma_fast(m + 1);
+                            };
+                            S -= e_S(m);
+                            S += e_S(m + dm);
+                        };
                     }
                     else
                     {
