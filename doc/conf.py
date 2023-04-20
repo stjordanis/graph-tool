@@ -31,6 +31,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.extlinks',
               'sphinx.ext.viewcode',
               'extlinks_fancy',
+              'sphinxext.opengraph',
               #'sphinx.ext.linkcode'
               #'matplotlib.sphinxext.plot_directive'
               ]
@@ -251,8 +252,13 @@ autosummary_imported_members = True
 autosummary_ignore_module_all = True
 numpydoc_show_class_members = False
 autodoc_docstring_signature = False
-autoclass_content = 'class'
+autoclass_content = 'both'
 imported_members = True
+
+ogp_site_url = "https://graph-tool.skewed.de/static/doc/index.html"
+ogp_image = "https://graph-tool.skewed.de/static/img/graph-tool-logo.png"
+ogp_description_length = 300
+ogp_enable_meta_description = True
 
 def linkcode_resolve(domain, info):
     if domain != 'py':

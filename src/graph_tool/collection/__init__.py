@@ -50,7 +50,7 @@ Interface to the Netzschleuder online network repository
 .. data:: ns_info
 
     Dictionary containing descriptions and other summary information for
-    datasets available in the Netzschleuder <https://networks.skewed.de>`__
+    datasets available in the `Netzschleuder <https://networks.skewed.de>`__
     repository. For dataset entries with more than one network, they are
     accessed either via a string ``"<entry>/<network>"`` or a tuple
     ``("<entry>", "<network>")``. The information is downloaded on-the-fly via

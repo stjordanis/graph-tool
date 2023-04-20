@@ -130,7 +130,7 @@ And now we set their values for each vertex and edge:
    >>> vcolor[v1] = "#1c71d8"
    >>> vcolor[v2] = "#2ec27e"
 
-Property maps can then be used in a many ``graph-tool`` functions to set node
+Property maps can then be used in many ``graph-tool`` functions to set node
 and edge properties, for example:
 
 .. doctest:: two-nodes
