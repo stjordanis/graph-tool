@@ -1,21 +1,25 @@
+.. _submodules:
+
 Submodules
 ==========
 
-.. toctree::
-   :maxdepth: 2
+``graph-tool`` is subdivided into the following submodules:
 
-   graph_tool
-   centrality
-   clustering
-   collection
-   correlations
-   dynamics
-   draw
-   flow
-   generation
-   inference
-   search_module
-   spectral
-   stats
-   topology
-   util 
+.. toctree::
+  :titlesonly:
+
+  graph_tool
+  centrality
+  clustering
+  collection
+  correlations
+  dynamics
+  draw
+  flow
+  generation
+  inference
+  search_module
+  spectral
+  stats
+  topology
+  util

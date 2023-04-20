@@ -1,3 +1,5 @@
+.. _cppextensions:
+
 Writing extensions in C++
 =========================
 

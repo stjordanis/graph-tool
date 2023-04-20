@@ -19,41 +19,84 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.s
 
 """
-``graph_tool.generation`` - Graph generation
---------------------------------------------
+``graph_tool.generation``
+-------------------------
 
-Summary
-+++++++
+This module contains functions that generate different kinds of graphs.
+
+Random graph generation
++++++++++++++++++++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    random_graph
    random_rewire
    add_random_edges
    remove_random_edges
+   generate_triadic_closure
+   price_network
+
+Stochastic block models
++++++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    generate_sbm
    generate_maxent_sbm
    solve_sbm_fugacities
+
+Geometric models
+++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    generate_knn
-   generate_triadic_closure
+   geometric_graph
+   triangulation
+
+Graph transformations
++++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    predecessor_tree
    line_graph
-   graph_union
-   triangulation
-   lattice
-   geometric_graph
-   price_network
-   complete_graph
-   circular_graph
    condensation_graph
    contract_parallel_edges
    remove_parallel_edges
    expand_parallel_edges
+   label_parallel_edges
    remove_self_loops
+   label_self_loops
 
-Contents
-++++++++
+Graph operations
+++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
+   graph_union
+
+Deterministic graphs
+++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
+   lattice
+   complete_graph
+   circular_graph
+
 """
 
 from .. dl_import import dl_import
@@ -61,7 +104,6 @@ dl_import("from . import libgraph_tool_generation")
 
 from .. import Graph, GraphView, _check_prop_scalar, _prop, _limit_args, \
     _gt_type, _get_rng, Vector_double, VertexPropertyMap
-from .. import stats
 import inspect
 import types
 import numpy
@@ -75,7 +117,8 @@ __all__ = ["random_graph", "random_rewire", "add_random_edges",
            "predecessor_tree", "line_graph", "graph_union", "triangulation",
            "lattice", "geometric_graph", "price_network", "complete_graph",
            "circular_graph", "condensation_graph", "contract_parallel_edges",
-           "expand_parallel_edges", "remove_parallel_edges", "remove_self_loops"]
+           "expand_parallel_edges", "remove_parallel_edges", "remove_self_loops",
+           "label_parallel_edges", "label_self_loops", "remove_labeled_edges"]
 
 def random_graph(N, deg_sampler, directed=True,
                  parallel_edges=False, self_loops=False, block_membership=None,
@@ -2339,7 +2382,8 @@ def geometric_graph(points, radius, ranges=None):
 
 
 def price_network(N, m=1, c=None, gamma=1, directed=True, seed_graph=None):
-    r"""A generalized version of Price's -- or Barabási-Albert if undirected -- preferential attachment network model.
+    r"""A generalized version of Price's --- or Barabási-Albert if undirected
+    --- preferential attachment network model.
 
     Parameters
     ----------
@@ -2728,8 +2772,8 @@ def remove_parallel_edges(g):
 
 def remove_self_loops(g):
     """Remove all self-loops edges from the graph."""
-    eprop = stats.label_self_loops(g)
-    stats.remove_labeled_edges(g, eprop)
+    eprop = label_self_loops(g)
+    remove_labeled_edges(g, eprop)
 
 def expand_parallel_edges(g, weight):
     r"""Expand edge multiplicities into parallel edges.
@@ -2764,6 +2808,48 @@ def expand_parallel_edges(g, weight):
     """
     libgraph_tool_generation.\
         expand_parallel_edges(g._Graph__graph, _prop("e", g, weight))
+
+def remove_labeled_edges(g, label):
+    """Remove every edge `e` such that `label[e] != 0`."""
+    u = GraphView(g, directed=True, reversed=g.is_reversed(),
+                  skip_properties=True)
+    libgraph_tool_generation.\
+          remove_labeled_edges(u._Graph__graph, _prop("e", g, label))
+
+
+def label_parallel_edges(g, mark_only=False, eprop=None):
+    r"""Label edges which are parallel, i.e, have the same source and target
+    vertices. For each parallel edge set :math:`PE`, the labelling starts from 0
+    to :math:`|PE|-1`. If `mark_only==True`, all parallel edges are simply
+    marked with the value 1. If the `eprop` parameter is given (a
+    :class:`~graph_tool.EdgePropertyMap`), the labelling is stored there."""
+    if eprop is None:
+        if mark_only:
+            eprop = g.new_edge_property("bool")
+        else:
+            eprop = g.new_edge_property("int32_t")
+    libgraph_tool_generation.\
+          label_parallel_edges(g._Graph__graph, _prop("e", g, eprop),
+                               mark_only)
+    return eprop
+
+
+def label_self_loops(g, mark_only=False, eprop=None):
+    """Label edges which are self-loops, i.e, the source and target vertices are
+    the same. For each self-loop edge set :math:`SL`, the labelling starts from 0
+    to :math:`|SL|-1`. If `mark_only == True`, self-loops are labeled with 1
+    and others with 0. If the `eprop` parameter is given
+    (a :class:`~graph_tool.EdgePropertyMap`), the labelling is stored there."""
+
+    if eprop is None:
+        if mark_only:
+            eprop = g.new_edge_property("bool")
+        else:
+            eprop = g.new_edge_property("int32_t")
+    libgraph_tool_generation.\
+          label_self_loops(g._Graph__graph, _prop("e", g, eprop),
+                           mark_only)
+    return eprop
 
 class Sampler(libgraph_tool_generation.Sampler):
     def __init__(self, values, probs):

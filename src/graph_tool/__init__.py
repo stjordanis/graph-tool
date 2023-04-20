@@ -19,26 +19,37 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool`` - Core module
-============================
+``graph_tool``
+==============
 
-Summary
--------
+This is the core module providing the fundamental data structures and functions.
+
+Fundamental classes
++++++++++++++++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: graph.rst
 
    Graph
    GraphView
    Vertex
    Edge
+
+Property Maps
++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
+
+   PropertyMap
    VertexPropertyMap
    EdgePropertyMap
    GraphPropertyMap
-   PropertyMap
    PropertyArray
-   load_graph
-   load_graph_from_csv
    group_vector_property
    ungroup_vector_property
    map_property_values
@@ -47,46 +58,39 @@ Summary
    incident_edges_op
    perfect_prop_hash
    value_types
+
+Graph IO
+++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
+   load_graph
+   load_graph_from_csv
+
+OpenMP configuration
+++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    openmp_enabled
    openmp_get_num_threads
    openmp_set_num_threads
    openmp_get_schedule
    openmp_set_schedule
+
+System information
+++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    show_config
 
-
-This module provides:
-
-   1. A :class:`~graph_tool.Graph` class for graph representation and manipulation
-   2. Property maps for Vertex, Edge or Graph.
-   3. Fast algorithms implemented in C++.
-
-How to use the documentation
-----------------------------
-
-Documentation is available in two forms: docstrings provided
-with the code, and the full documentation available in
-`the graph-tool homepage <http://graph-tool.skewed.de>`_.
-
-We recommend exploring the docstrings using `IPython
-<http://ipython.scipy.org>`_, an advanced Python shell with TAB-completion and
-introspection capabilities.
-
-The docstring examples assume that ``graph_tool.all`` has been imported as
-``gt``::
-
-   >>> import graph_tool.all as gt
-
-Code snippets are indicated by three greater-than signs::
-
-   >>> x = x + 1
-
-Use the built-in ``help`` function to view a function's docstring::
-
-   >>> help(gt.Graph)
-
-Contents
---------
 """
 
 __author__ = "Tiago de Paula Peixoto <tiago@skewed.de>"
@@ -1562,7 +1566,7 @@ class Graph(object):
         3. An edge list, i.e. an iterable over (source, target) pairs, which
            will be used to populate the graph.
 
-           This is equivalent to calling:
+           This is equivalent to calling :meth:`~graph_tool.Graph.add_edge_list`:
 
            .. testsetup:: init_list
 
@@ -1577,7 +1581,8 @@ class Graph(object):
            interable of vertices, which will be used to populate the graph. For
            directed graphs, the adjacency should list the out-neighbors.
 
-           This is equivalent to calling:
+           This is equivalent to calling :meth:`~graph_tool.Graph.add_edge_list`
+           as such:
 
            .. testsetup:: init_adj
 
@@ -1612,14 +1617,17 @@ class Graph(object):
     In case ``g`` is specified and points to a :class:`Graph` object, the
     following options take effect:
 
-    If ``prune`` is set to ``True``, only the filtered graph will be copied, and
-    the new graph object will not be filtered. Optionally, a tuple of three
-    booleans can be passed as value to ``prune``, to specify a different
-    behavior to vertex, edge, and reversal filters, respectively.
+    * If ``prune`` is set to ``True``, only the filtered graph will be copied,
+      and the new graph object will not be filtered. Optionally, a tuple of
+      three booleans can be passed as value to ``prune``, to specify a different
+      behavior to vertex, edge, and reversal filters, respectively.
 
-    If ``vorder`` is specified, it should correspond to a vertex
-    :class:`~graph_tool.VertexPropertyMap` specifying the ordering of the
-    vertices in the copied graph.
+    * If ``vorder`` is specified, it should correspond to a vertex
+      :class:`~graph_tool.VertexPropertyMap` specifying the ordering of the
+      vertices in the copied graph.
+
+    The value of `set_fast_edge_removal` is passed to
+    :meth:`~graph_tool.Graph.set_fast_edge_removal`.
 
     .. note::
 
@@ -2648,7 +2656,7 @@ class Graph(object):
     properties = property(lambda self: self.__properties,
                           doc=
     """Dictionary of internal properties. Keys must always be a tuple, where the
-    first element if a string from the set {'v', 'e', 'g'}, representing a
+    first element if a string from the set ``{'v', 'e', 'g'}``, representing a
     vertex, edge or graph property, respectively, and the second element is the
     name of the property map.
 

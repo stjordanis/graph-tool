@@ -70,7 +70,7 @@ void do_remove_labeled_edges(GraphInterface& gi, boost::any property)
 
 using namespace boost::python;
 
-#define __MOD__ stats
+#define __MOD__ generation
 #include "module_registry.hh"
 REGISTER_MOD
 ([]

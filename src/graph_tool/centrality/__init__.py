@@ -19,16 +19,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.centrality`` - Centrality measures
------------------------------------------------
+``graph_tool.centrality``
+-------------------------
 
-This module includes centrality-related algorithms.
+This module provides centrality-related algorithms.
 
 Summary
 +++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    pagerank
    betweenness
@@ -40,8 +41,6 @@ Summary
    eigentrust
    trust_transitivity
 
-Contents
-++++++++
 """
 
 from .. dl_import import dl_import

@@ -19,22 +19,23 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.util`` - Graph utilities
--------------------------------------
+``graph_tool.util``
+-------------------
+
+This module contains miscelaneous utility functions.
 
 Summary
 +++++++
 
 .. autosummary::
     :nosignatures:
+    :toctree: autosummary
 
     find_vertex
     find_vertex_range
     find_edge
     find_edge_range
 
-Contents
-++++++++
 """
 
 from .. dl_import import dl_import

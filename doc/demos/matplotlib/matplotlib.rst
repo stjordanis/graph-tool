@@ -1,3 +1,5 @@
+.. _matplotlib_sec:
+
 Integration with matplotlib
 ===========================
 

@@ -314,6 +314,7 @@ libgraph_tool_generation_la_SOURCES = \
 	src/graph/generation/graph_lattice.cc \
 	src/graph/generation/graph_line_graph.cc \
 	src/graph/generation/graph_maxent_sbm.cc \
+	src/graph/generation/graph_parallel.cc \
 	src/graph/generation/graph_predecessor.cc \
 	src/graph/generation/graph_price.cc \
 	src/graph/generation/graph_random_edges.cc \
@@ -334,6 +335,7 @@ libgraph_tool_generation_la_include_HEADERS = \
 	src/graph/generation/graph_knn.hh \
 	src/graph/generation/graph_lattice.hh \
 	src/graph/generation/graph_maxent_sbm.hh \
+	src/graph/generation/graph_parallel.hh \
 	src/graph/generation/graph_predecessor.hh \
 	src/graph/generation/graph_price.hh \
 	src/graph/generation/graph_random_edges.hh \
@@ -646,12 +648,10 @@ libgraph_tool_stats_la_LDFLAGS = $(MOD_LDFLAGS)
 libgraph_tool_stats_la_SOURCES = \
 	src/graph/stats/graph_histograms.cc \
 	src/graph/stats/graph_average.cc \
-	src/graph/stats/graph_parallel.cc \
 	src/graph/stats/graph_distance.cc \
 	src/graph/stats/graph_distance_sampled.cc \
 	src/graph/stats/graph_stats_bind.cc
 libgraph_tool_stats_la_include_HEADERS = \
-	src/graph/stats/graph_parallel.hh \
 	src/graph/stats/graph_histograms.hh \
 	src/graph/stats/graph_average.hh \
 	src/graph/stats/graph_distance_sampled.hh \

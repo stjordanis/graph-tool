@@ -1,10 +1,12 @@
+.. _demos:
+
 Cookbook guides
 ===============
 
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :glob:
 
    inference/inference

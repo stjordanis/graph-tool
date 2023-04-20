@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.search`` - Search algorithms
------------------------------------------
+``graph_tool.search``
+---------------------
 
 This module includes several search algorithms, which are customizable to
 arbitrary purposes. It is mostly a wrapper around the Visitor interface of the
@@ -33,6 +33,8 @@ Summary
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    bfs_search
    bfs_iterator
@@ -50,8 +52,8 @@ Summary
    AStarVisitor
    StopSearch
 
-Examples
-++++++++
+Example network
++++++++++++++++
 
 In this module, most documentation examples will make use of the network
 :download:`search_example.xml <search_example.xml>`, shown below.
@@ -72,9 +74,6 @@ In this module, most documentation examples will make use of the network
    This is the network used in the examples below. The width of the edges
    correspond to the values of the "weight" property map.
 
-
-Contents
-++++++++
 """
 
 from .. dl_import import dl_import
@@ -696,7 +695,7 @@ class DijkstraVisitor(object):
         ::
 
             (u, v) = tuple(e)
-            assert(compare(combine(d[u], weight[e]), d[v]))
+            assert compare(combine(d[u], weight[e]), d[v])
 
         """
         return
@@ -1400,7 +1399,7 @@ class AStarVisitor(object):
         ::
 
             (u, v) = tuple(e)
-            assert(compare(combine(d[u], weight[e]), d[v]))
+            assert compare(combine(d[u], weight[e]), d[v])
 
         """
         return

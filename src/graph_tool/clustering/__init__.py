@@ -19,17 +19,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.clustering`` - Clustering coefficients
----------------------------------------------------
+``graph_tool.clustering``
+=========================
 
-Provides algorithms for calculation of clustering coefficients,
-aka. transitivity.
+
+This module provides algorithms for calculation of clustering coefficients,
+a.k.a. transitivity, and related concepts.
 
 Summary
 +++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    local_clustering
    global_clustering
@@ -37,8 +39,6 @@ Summary
    motifs
    motif_significance
 
-Contents
-++++++++
 """
 
 from .. dl_import import dl_import

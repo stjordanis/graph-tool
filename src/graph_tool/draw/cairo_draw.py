@@ -68,7 +68,7 @@ from scipy.stats import rankdata
 from .. import Graph, GraphView, PropertyMap, ungroup_vector_property,\
      group_vector_property, _prop, _check_prop_vector, map_property_values
 
-from .. stats import label_parallel_edges, label_self_loops
+from .. generation import label_parallel_edges, label_self_loops
 
 from .. dl_import import dl_import
 dl_import("from . import libgraph_tool_draw")
@@ -854,7 +854,9 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
     Notes
     -----
 
-    .. table:: **List of vertex properties**
+    .. rubric:: List of vertex properties
+
+    .. table::
 
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
         | Name           | Description                                       | Accepted types         | Default Value                    |
@@ -948,7 +950,9 @@ def graph_draw(g, pos=None, vprops=None, eprops=None, vorder=None, eorder=None,
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
 
 
-    .. table:: **List of edge properties**
+    .. rubric:: List of edge properties
+
+    .. table::
 
         +----------------+---------------------------------------------------+------------------------+----------------------------------+
         | Name           | Description                                       | Accepted types         | Default Value                    |

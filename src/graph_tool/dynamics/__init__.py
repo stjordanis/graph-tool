@@ -19,20 +19,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.dynamics`` - Dynamical processes
----------------------------------------------
+``graph_tool.dynamics``
+-----------------------
 
 This module contains implementations of some often-studied dynamical processes
 that take place on networks.
-
-Summary
-+++++++
 
 Discrete-time dynamics
 ======================
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    DiscreteStateBase
    EpidemicStateBase
@@ -57,6 +56,8 @@ Continuous-time dynamics
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    ContinuousStateBase
    KuramotoState
@@ -69,7 +70,7 @@ Contents
 
 from .. import _degree, _prop, Graph, GraphView, _get_rng, PropertyMap, \
     EdgePropertyMap, VertexPropertyMap, _check_prop_scalar
-from .. stats import label_self_loops
+from .. generation import label_self_loops
 import numpy
 import numpy.random
 import collections.abc

@@ -19,14 +19,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.spectral`` - Spectral properties
----------------------------------------------
+``graph_tool.spectral``
+-----------------------
 
-Summary
-+++++++
+This module contains several linear operators based on network structure, which
+useful for spectral analysis.
+
+Sparse matrices
++++++++++++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    adjacency
    laplacian
@@ -35,6 +39,14 @@ Summary
    modularity_matrix
    hashimoto
 
+Operator objects
+++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
+
    AdjacencyOperator
    LaplacianOperator
    IncidenceOperator
@@ -42,13 +54,11 @@ Summary
    HashimotoOperator
    CompactHashimotoOperator
 
-Contents
-++++++++
 """
 
 from .. import _degree, _prop, Graph, GraphView, _limit_args, Vector_int64_t, \
     Vector_double
-from .. stats import label_self_loops
+from .. generation import label_self_loops
 import numpy
 import scipy.sparse
 import scipy.sparse.linalg

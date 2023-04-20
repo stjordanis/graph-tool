@@ -19,26 +19,23 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.stats`` - Miscellaneous statistics
------------------------------------------------
+``graph_tool.stats``
+--------------------
+
+This module contains miscellaneous statistical functions.
 
 Summary
 +++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    vertex_hist
    edge_hist
    vertex_average
    edge_average
-   label_parallel_edges
-   label_self_loops
-   remove_labeled_edges
    distance_histogram
-
-Contents
-++++++++
 
 """
 
@@ -50,7 +47,6 @@ from .. generation import libgraph_tool_generation
 from numpy import *
 
 __all__ = ["vertex_hist", "edge_hist", "vertex_average", "edge_average",
-           "label_parallel_edges", "label_self_loops", "remove_labeled_edges",
            "distance_histogram"]
 
 
@@ -304,49 +300,6 @@ def edge_average(g, eprop):
     a /= count
     aa = sqrt((aa / count - a ** 2) / count)
     return a, aa
-
-
-def remove_labeled_edges(g, label):
-    """Remove every edge `e` such that `label[e] != 0`."""
-    u = GraphView(g, directed=True, reversed=g.is_reversed(),
-                  skip_properties=True)
-    libgraph_tool_stats.\
-          remove_labeled_edges(u._Graph__graph, _prop("e", g, label))
-
-
-def label_parallel_edges(g, mark_only=False, eprop=None):
-    r"""Label edges which are parallel, i.e, have the same source and target
-    vertices. For each parallel edge set :math:`PE`, the labelling starts from 0
-    to :math:`|PE|-1`. If `mark_only==True`, all parallel edges are simply
-    marked with the value 1. If the `eprop` parameter is given (a
-    :class:`~graph_tool.EdgePropertyMap`), the labelling is stored there."""
-    if eprop is None:
-        if mark_only:
-            eprop = g.new_edge_property("bool")
-        else:
-            eprop = g.new_edge_property("int32_t")
-    libgraph_tool_stats.\
-          label_parallel_edges(g._Graph__graph, _prop("e", g, eprop),
-                               mark_only)
-    return eprop
-
-
-def label_self_loops(g, mark_only=False, eprop=None):
-    """Label edges which are self-loops, i.e, the source and target vertices are
-    the same. For each self-loop edge set :math:`SL`, the labelling starts from 0
-    to :math:`|SL|-1`. If `mark_only == True`, self-loops are labeled with 1
-    and others with 0. If the `eprop` parameter is given
-    (a :class:`~graph_tool.EdgePropertyMap`), the labelling is stored there."""
-
-    if eprop is None:
-        if mark_only:
-            eprop = g.new_edge_property("bool")
-        else:
-            eprop = g.new_edge_property("int32_t")
-    libgraph_tool_stats.\
-          label_self_loops(g._Graph__graph, _prop("e", g, eprop),
-                           mark_only)
-    return eprop
 
 def distance_histogram(g, weight=None, bins=[0, 1], samples=None,
                        float_count=True):

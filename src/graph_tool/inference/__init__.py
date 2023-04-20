@@ -19,8 +19,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-"""``graph_tool.inference`` - Statistical inference of generative network models
------------------------------------------------------------------------------
+"""
+``graph_tool.inference``
+------------------------
 
 This module contains algorithms for the identification of large-scale network
 structure via the statistical inference of generative models.
@@ -36,10 +37,9 @@ Nonparametric stochastic block model inference
 High-level functions
 ====================
 
-.. currentmodule:: graph_tool.inference
-
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    minimize_blockmodel_dl
    minimize_nested_blockmodel_dl
@@ -47,8 +47,12 @@ High-level functions
 State classes
 =============
 
+.. currentmodule:: graph_tool.inference
+
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    BlockState
    OverlapBlockState
@@ -63,8 +67,13 @@ State classes
 
 Abstract base classes
 =====================
+
+.. currentmodule:: graph_tool.inference
+
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    MCMCState
    MultiflipMCMCState
@@ -72,16 +81,24 @@ Abstract base classes
    GibbsMCMCState
    MulticanonicalMCMCState
    ExhaustiveSweepState
+   DrawBlockState
 
 Sampling and minimization
 =========================
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    mcmc_equilibrate
    mcmc_anneal
    multicanonical_equilibrate
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
+
    MulticanonicalState
 
 Comparing and manipulating partitions
@@ -89,10 +106,17 @@ Comparing and manipulating partitions
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    PartitionModeState
    ModeClusterState
    PartitionCentroidState
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    partition_overlap
    nested_partition_overlap
    variation_information
@@ -115,6 +139,7 @@ Auxiliary functions
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    mf_entropy
    bethe_entropy
@@ -128,6 +153,8 @@ Auxiliary classes
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class-no-inherit.rst
 
    PartitionHist
    BlockPairHist
@@ -140,7 +167,10 @@ State classes
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
+   LatentLayerBaseState
    LatentMultigraphBlockState
    LatentClosureBlockState
    MeasuredBlockState
@@ -161,6 +191,7 @@ Expectation-maximization Inference
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    latent_multigraph
 
@@ -172,6 +203,8 @@ State classes
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
+   :template: class.rst
 
    EMBlockState
 
@@ -180,6 +213,7 @@ Expectation-maximization Inference
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    em_infer
 
@@ -188,11 +222,9 @@ Large-scale descriptors
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    modularity
-
-Contents
-++++++++
 
 """
 

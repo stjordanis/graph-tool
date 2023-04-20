@@ -19,17 +19,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.draw`` - Graph drawing and layout
-----------------------------------------------
+``graph_tool.draw``
+-------------------
 
-Summary
-+++++++
+This module contains functions for graph drawing and layout.
 
 Layout algorithms
 =================
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    sfdp_layout
    fruchterman_reingold_layout
@@ -43,6 +43,7 @@ Graph drawing
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    graph_draw
    draw_hierarchy
@@ -56,14 +57,19 @@ Low-level graph drawing
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    cairo_draw
    interactive_window
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+   :template: class-no-inherit.rst
+
    GraphWidget
    GraphWindow
 
-Contents
-++++++++
 """
 
 from .. import Graph, GraphView, _check_prop_vector, _check_prop_scalar, \

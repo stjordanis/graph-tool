@@ -1,3 +1,2 @@
 .. automodule:: graph_tool.topology
-   :members:
-   :undoc-members:
+   :no-members:

@@ -19,8 +19,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.collection`` - Dataset collection
-----------------------------------------------
+``graph_tool.collection``
+-------------------------
 
 This module contains an assortment of useful networks.
 
@@ -31,7 +31,7 @@ Interface to the Netzschleuder online network repository
 
     Dictionary containing :class:`~graph_tool.Graph` objects, indexed by the
     name of the dataset, fetched from the `Netzschleuder
-    <https://networks.skewed.de>`_ repository. For dataset entries with more
+    <https://networks.skewed.de>`__ repository. For dataset entries with more
     than one network, they are accessed either via a string
     ``"<entry>/<network>"`` or a tuple ``("<entry>", "<network>")``. This is a
     "lazy" dictionary, i.e. it only downloads the graphs when the items are
@@ -50,7 +50,7 @@ Interface to the Netzschleuder online network repository
 .. data:: ns_info
 
     Dictionary containing descriptions and other summary information for
-    datasets available in the `Netzschleuder <https://networks.skewed.de>`_
+    datasets available in the Netzschleuder <https://networks.skewed.de>`__
     repository. For dataset entries with more than one network, they are
     accessed either via a string ``"<entry>/<network>"`` or a tuple
     ``("<entry>", "<network>")``. The information is downloaded on-the-fly via
@@ -289,6 +289,7 @@ Functions returning small graphs
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    LCF_graph
    bull_graph
@@ -341,9 +342,6 @@ Small graph atlas
     ++++++++++
     .. [atlas] Ronald C. Read and Robin J. Wilson, “An Atlas of Graphs". Oxford
        University Press, 1998.
-
-Contents
-========
 """
 
 import os.path

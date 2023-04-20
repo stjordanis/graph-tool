@@ -19,14 +19,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.topology`` - Assessing graph topology
---------------------------------------------------
+``graph_tool.topology``
+-----------------------
 
-Summary
-+++++++
+This module contains various functions that assess the graph topology.
+
+Distance and paths
+++++++++++++++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    shortest_distance
    shortest_path
@@ -37,21 +40,59 @@ Summary
    all_paths
    all_circuits
    pseudo_diameter
+
+Graph comparison
+++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    similarity
    vertex_similarity
    isomorphism
    subgraph_isomorphism
    mark_subgraph
    max_cliques
+
+Matching and independent sets
++++++++++++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    max_cardinality_matching
    max_independent_vertex_set
+
+Spanning tree
++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    min_spanning_tree
    random_spanning_tree
+
+Sorting and closure
++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    dominator_tree
    topological_sort
    transitive_closure
-   tsp_tour
-   sequential_vertex_coloring
+
+Components and connectivity
++++++++++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    label_components
    label_biconnected_components
    label_largest_component
@@ -60,14 +101,37 @@ Summary
    vertex_percolation
    edge_percolation
    kcore_decomposition
+
+Graph classification
+++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    is_bipartite
    is_DAG
    is_planar
    make_maximal_planar
+
+Directionality
+++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
    edge_reciprocity
 
-Contents
-++++++++
+Combinatorial optmizaton
+++++++++++++++++++++++++
+
+.. autosummary::
+   :nosignatures:
+   :toctree: autosummary
+
+   tsp_tour
+   sequential_vertex_coloring
 
 """
 
@@ -77,7 +141,7 @@ dl_import("from . import libgraph_tool_topology")
 from .. import _prop, Vector_int32_t, Vector_size_t, _check_prop_writable, \
      _check_prop_scalar, _check_prop_vector, Graph, VertexPropertyMap, \
      PropertyMap, GraphView, libcore, _get_rng, perfect_prop_hash, _limit_args
-from .. stats import label_self_loops
+from .. generation import label_self_loops
 import numpy, collections.abc
 
 __all__ = ["isomorphism", "subgraph_isomorphism", "mark_subgraph",

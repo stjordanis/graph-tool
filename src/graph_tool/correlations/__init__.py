@@ -19,14 +19,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.correlations`` - Correlations
-------------------------------------------
+``graph_tool.correlations``
+---------------------------
+
+This module contains functions that compute various correlations among nodes of
+a network.
 
 Summary
 +++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    assortativity
    scalar_assortativity
@@ -35,8 +39,6 @@ Summary
    avg_neighbor_corr
    avg_combined_corr
 
-Contents
-++++++++
 """
 
 from .. dl_import import dl_import

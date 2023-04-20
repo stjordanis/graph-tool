@@ -102,7 +102,7 @@ pygments_style = 'sphinx'
 # doctest
 
 doctest_global_setup = open("pyenv.py").read()
-doctest_global_setup += "os.chdir('%s')\n" % os.getcwd()
+#doctest_global_setup += "os.chdir('%s')\n" % os.getcwd()
 
 # Options for HTML outputs
 # -----------------------
@@ -112,7 +112,7 @@ doctest_global_setup += "os.chdir('%s')\n" % os.getcwd()
 # given in html_static_path.
 # html_style = 'default.css'
 
-html_theme = "pydata_sphinx_theme"
+html_theme = "sphinx_book_theme"
 #html_theme = "gt_theme"
 #html_theme_path = ["."]
 
@@ -138,10 +138,15 @@ html_theme_options = {
     ],
     "primary_sidebar_end": ["indices.html"],
     "use_edit_page_button": True,
+    "home_page_in_toc": True,
+    "show_navbar_depth": 2,
+    "show_toc_level": 4,
+    'use_sidenotes': True,
     "logo": {
         "image_light": "graph-tool-logo.svg",
         "image_dark": "graph-tool-logo.svg",
-        "text": f"graph-tool docs ({version})"
+        "text": f"""graph-tool documentation
+({version})"""
     }
 }
 
@@ -214,8 +219,8 @@ htmlhelp_basename = 'graph-tooldoc'
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'numpy': ('https://numpy.org/doc/stable/', None),
-                       'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-                       'matplotlib': ('https://matplotlib.org', None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+                       'matplotlib': ('https://matplotlib.org/stable/', None),
                        'cairo': ('https://www.cairographics.org/documentation/pycairo/3', None),
                        'ipython': ('https://ipython.org/ipython-doc/stable/', None),
                        'panda': ('https://pandas.pydata.org/pandas-docs/stable/', None)}
@@ -236,17 +241,17 @@ plot_rcparams = pyenv.rcParams
 
 
 autodoc_default_options = {
-    'members': True,
+    'members': False,
     'member-order': 'bysource',
-    'undoc-members': True
+    'undoc-members': False
 }
 
 autosummary_gerenerate = True
 autosummary_imported_members = True
-autosummary_ignore_module_all = False
+autosummary_ignore_module_all = True
 numpydoc_show_class_members = False
 autodoc_docstring_signature = False
-autoclass_content = 'both'
+autoclass_content = 'class'
 imported_members = True
 
 def linkcode_resolve(domain, info):
@@ -258,3 +263,11 @@ def linkcode_resolve(domain, info):
     return "https://git.skewed.de/count0/graph-tool/tree/master/src/%s/__init__.py" % modname
 
 nitpicky = True
+
+def skip(app, what, name, obj, would_skip, options):
+    if name.startswith("_"):
+        return True
+    return would_skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)

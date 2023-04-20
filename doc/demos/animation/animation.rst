@@ -1,3 +1,5 @@
+.. _animation:
+
 Animations with graph-tool
 ==========================
 

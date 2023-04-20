@@ -19,14 +19,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-``graph_tool.flow`` - Maximum flow algorithms
----------------------------------------------
+``graph_tool.flow``
+-------------------
+
+This module includes maximum flow / minimum cut algorithms.
 
 Summary
 +++++++
 
 .. autosummary::
    :nosignatures:
+   :toctree: autosummary
 
    edmonds_karp_max_flow
    push_relabel_max_flow
@@ -34,8 +37,8 @@ Summary
    min_st_cut
    min_cut
 
-Contents
-++++++++
+Example network
++++++++++++++++
 
 The following network will be used as an example throughout the documentation.
 
