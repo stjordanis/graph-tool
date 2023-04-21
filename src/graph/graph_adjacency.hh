@@ -414,7 +414,7 @@ public:
 
     void reindex_edges()
     {
-        _free_indexes.clear();
+        _free_indices.clear();
         _edge_index_range = 0;
         for (auto& es : _edges)
             es.second.resize(es.first);
@@ -481,12 +481,12 @@ public:
             _edge_index_range = 0;
         else
             _edge_index_range = iter->idx + 1;
-        auto iter_idx = std::remove_if(_free_indexes.begin(),
-                                       _free_indexes.end(),
+        auto iter_idx = std::remove_if(_free_indices.begin(),
+                                       _free_indices.end(),
                                        [&](auto idx) -> bool
                                        {return idx >= _edge_index_range;});
-        _free_indexes.erase(iter_idx, _free_indexes.end());
-        _free_indexes.shrink_to_fit();
+        _free_indices.erase(iter_idx, _free_indices.end());
+        _free_indices.shrink_to_fit();
         if (_keep_epos)
             _epos.resize(_edge_index_range);
         _epos.shrink_to_fit();
@@ -524,9 +524,9 @@ private:
     vertex_list_t _edges;
     size_t _n_edges;
     size_t _edge_index_range;
-    std::vector<size_t> _free_indexes; // indexes of deleted edges to be used up
+    std::vector<size_t> _free_indices; // indices of deleted edges to be used up
                                        // for new edges to avoid very large
-                                       // indexes, and unnecessary property map
+                                       // indices, and unnecessary property map
                                        // memory use
     bool _keep_epos;
     std::vector<std::pair<uint32_t, uint32_t>> _epos; // out, in
@@ -929,14 +929,14 @@ add_edge(Vertex s, Vertex t, adj_list<Vertex>& g)
 {
     // get index from free list, if available
     Vertex idx;
-    if (g._free_indexes.empty())
+    if (g._free_indices.empty())
     {
         idx = g._edge_index_range++;
     }
     else
     {
-        idx = g._free_indexes.back();
-        g._free_indexes.pop_back();
+        idx = g._free_indices.back();
+        g._free_indices.pop_back();
     }
 
     // put target on back of source's out-list (middle of total list)
@@ -1051,7 +1051,7 @@ void remove_edge(const typename adj_list<Vertex>::edge_descriptor& e,
         //g.check_epos();
     }
 
-    g._free_indexes.push_back(idx);
+    g._free_indices.push_back(idx);
     g._n_edges--;
 }
 

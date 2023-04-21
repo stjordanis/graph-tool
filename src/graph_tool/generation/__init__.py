@@ -1829,7 +1829,7 @@ def graph_union(g1, g2, intersection=None, props=None, include=False,
        Second graph in the union.
     intersection : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
        Vertex property map owned by `g2` which maps each of its vertices
-       to vertex indexes belonging to `g1`. Negative values mean no mapping
+       to vertex indices belonging to `g1`. Negative values mean no mapping
        exists, and thus both vertices in `g1` and `g2` will be present in the
        union graph.
     props : list of tuples of :class:`~graph_tool.PropertyMap` (optional, default: ``None``)

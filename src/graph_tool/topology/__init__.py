@@ -174,10 +174,10 @@ def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
         Edge weights for the second graph to be used in comparison.
     label1 : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex labels for the first graph to be used in comparison. If not
-        supplied, the vertex indexes are used.
+        supplied, the vertex indices are used.
     label2 : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
         Vertex labels for the second graph to be used in comparison. If not
-        supplied, the vertex indexes are used.
+        supplied, the vertex indices are used.
     norm : bool (optional, default: ``True``)
         If ``True``, the returned value is normalized by the total number of
         edges.
@@ -870,7 +870,7 @@ def mark_subgraph(g, sub, vmap, vmask=None, emask=None):
     Mark a given subgraph `sub` on the graph `g`.
 
     The mapping must be provided by the `vmap` and `emap` parameters,
-    which map vertices/edges of `sub` to indexes of the corresponding
+    which map vertices/edges of `sub` to indices of the corresponding
     vertices/edges in `g`.
 
     This returns a vertex and an edge property map, with value type 'bool',
@@ -1210,7 +1210,7 @@ def dominator_tree(g, root, dom_map=None):
 def topological_sort(g):
     """
     Return the topological sort of the given graph. It is returned as an array
-    of vertex indexes, in the sort order.
+    of vertex indices, in the sort order.
 
     Notes
     -----
@@ -2843,7 +2843,7 @@ def is_planar(g, embedding=False, kuratowski=False):
     is_planar : bool
         Whether or not the graph is planar.
     embedding : :class:`~graph_tool.VertexPropertyMap` (only if `embedding=True`)
-        A vertex property map with the out-edges indexes in clockwise order in
+        A vertex property map with the out-edges indices in clockwise order in
         the planar embedding,
     kuratowski : :class:`~graph_tool.EdgePropertyMap` (only if `kuratowski=True`)
         An edge property map with the minimal set of edges that form the
@@ -3315,7 +3315,7 @@ def tsp_tour(g, src, weight=None):
     Returns
     -------
     tour : :class:`numpy.ndarray`
-        List of vertex indexes corresponding to the tour.
+        List of vertex indices corresponding to the tour.
 
     Notes
     -----

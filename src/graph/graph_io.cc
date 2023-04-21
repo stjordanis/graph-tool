@@ -509,7 +509,7 @@ void GraphInterface::write_to_file(string file, boost::python::object pfile,
 
             if (is_vertex_filter_active())
             {
-                // vertex indexes must be between the [0, HardNumVertices(g)] range
+                // vertex indices must be between the [0, HardNumVertices(g)] range
                 vector_property_map<size_t> index_map(_vertex_index);
                 run_action<>()
                     (*this,
@@ -558,7 +558,7 @@ void GraphInterface::write_to_file(string file, boost::python::object pfile,
 
             if (is_vertex_filter_active())
             {
-                // vertex indexes must be between the [0, HardNumVertices(g)] range
+                // vertex indices must be between the [0, HardNumVertices(g)] range
                 vector_property_map<size_t> index_map(_vertex_index);
                 run_action<>()
                     (*this,

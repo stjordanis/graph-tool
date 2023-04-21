@@ -413,7 +413,7 @@ When removing edges, it is important to keep in mind some performance considerat
    No edge descriptors are ever invalidated after edge removal, with the
    exception of the edge itself that is being removed.
 
-Since vertices are uniquely identifiable by their indexes, there is no
+Since vertices are uniquely identifiable by their indices, there is no
 need to keep the vertex descriptor lying around to access them at a
 later point. If we know its index, we can obtain the descriptor of a
 vertex with a given index using the :meth:`~graph_tool.Graph.vertex`
@@ -439,7 +439,7 @@ Another way to obtain edge or vertex descriptors is to *iterate* through
 them, as described in section :ref:`sec_iteration`. This is in fact the
 most useful way of obtaining vertex and edge descriptors.
 
-Like vertices, edges also have unique indexes, which are given by the
+Like vertices, edges also have unique indices, which are given by the
 :attr:`~graph_tool.Graph.edge_index` property:
 
 .. doctest::
@@ -448,13 +448,13 @@ Like vertices, edges also have unique indexes, which are given by the
    >>> print(g.edge_index[e])
    1
 
-Differently from vertices, edge indexes do not necessarily conform to
-any specific range. If no edges are ever removed, the indexes will be in
+Differently from vertices, edge indices do not necessarily conform to
+any specific range. If no edges are ever removed, the indices will be in
 the range :math:`[0, E-1]`, where :math:`E` is the number of edges, and
-edges added earlier have lower indexes. However if an edge is removed,
-its index will be "vacant", and the remaining indexes will be left
+edges added earlier have lower indices. However if an edge is removed,
+its index will be "vacant", and the remaining indices will be left
 unmodified, and thus will not all lie in the range :math:`[0, E-1]`.  If
-a new edge is added, it will reuse old indexes, in an increasing order.
+a new edge is added, it will reuse old indices, in an increasing order.
 
 
 .. _sec_iteration:
@@ -1049,7 +1049,7 @@ performance overhead. A faster approach involves the use of the methods
 :meth:`~graph_tool.Graph.iter_all_edges`,
 :meth:`~graph_tool.Graph.iter_out_neighbors`,
 :meth:`~graph_tool.Graph.iter_in_neighbors`,
-:meth:`~graph_tool.Graph.iter_all_neighbors`, which return vertex indexes and
+:meth:`~graph_tool.Graph.iter_all_neighbors`, which return vertex indices and
 pairs thereof, instead of descriptors objects, to specify vertex and edges,
 respectively.
 

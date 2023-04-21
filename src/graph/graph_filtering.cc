@@ -184,7 +184,7 @@ void GraphInterface::purge_vertices(boost::any aold_index)
     vector<bool> deleted(N, false);
     for (size_t i = 0; i < N; ++i)
         deleted[i] = !filter(vertex(i, *_mg));
-    vector<int> old_indexes;
+    vector<int> old_indices;
 
     //remove vertices
     for (int64_t i = N-1; i >= 0; --i)
@@ -192,12 +192,12 @@ void GraphInterface::purge_vertices(boost::any aold_index)
         if (deleted[i])
             remove_vertex(vertex(i, *_mg), *_mg);
         else
-            old_indexes.push_back(i);
+            old_indices.push_back(i);
     }
 
-    N = old_indexes.size();
+    N = old_indices.size();
     for (int64_t i = N-1; i >= 0; --i)
-        old_index[vertex((N - 1) - i, *_mg)] = old_indexes[i];
+        old_index[vertex((N - 1) - i, *_mg)] = old_indices[i];
 }
 
 void GraphInterface::set_vertex_filter_property(boost::any property, bool invert)

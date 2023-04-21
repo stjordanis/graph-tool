@@ -609,13 +609,13 @@ class PropertyMap(object):
         of vertices or edges, and ``M`` is the size of each property vector,
         with contains a copy of all entries of the vector-valued property map.
         The parameter ``pos`` must be a sequence of integers which specifies the
-        indexes of the property values which will be copied.
+        indices of the property values which will be copied.
         """
 
         if self.key_type() == "g":
             raise ValueError("Cannot create multidimensional array for graph property maps.")
         if "vector" not in self.value_type() and (len(pos) > 1 or pos[0] != 0):
-            raise ValueError("Cannot create array of dimension %d (indexes %s) from non-vector property map of type '%s'." \
+            raise ValueError("Cannot create array of dimension %d (indices %s) from non-vector property map of type '%s'." \
                              % (len(pos), str(pos), self.value_type()))
         if "string" in self.value_type():
             if "vector" in self.value_type():
@@ -649,7 +649,7 @@ class PropertyMap(object):
         array ``a`` of shape ``(M,N)``, where ``N`` is the number of vertices or
         edges, and ``M`` is the size of each property vector. If given, the
         parameter ``pos`` must be a sequence of integers which specifies the
-        indexes of the property values which will be set (i.e. rows if the ``a``
+        indices of the property values which will be set (i.e. rows if the ``a``
         matrix).
         """
 
@@ -1019,7 +1019,7 @@ def group_vector_property(props, value_type=None, vprop=None, pos=None):
     vprop : :class:`~graph_tool.PropertyMap` (optional, default: None)
         If supplied, the properties are grouped into this property map.
     pos : list of ints (optional, default: None)
-        If supplied, should contain a list of indexes where each corresponding
+        If supplied, should contain a list of indices where each corresponding
         element of ``props`` should be inserted.
 
     Returns
@@ -1096,7 +1096,7 @@ def ungroup_vector_property(vprop, pos, props=None):
     vprop : :class:`~graph_tool.PropertyMap`
         Vector property map to be ungrouped.
     pos : list of ints
-        A list of indexes corresponding to where each element of ``vprop``
+        A list of indices corresponding to where each element of ``vprop``
         should be inserted into the ungrouped list.
     props : list of :class:`~graph_tool.PropertyMap`  (optional, default: None)
         If supplied, should contain a list of property maps to which ``vprop``
@@ -2539,7 +2539,7 @@ class Graph(object):
                       eprops=None):
         """Add a list of edges to the graph, given by ``edge_list``, which can
         be an iterator of ``(source, target)`` pairs where both ``source`` and
-        ``target`` are vertex indexes (or can be so converted), or a
+        ``target`` are vertex indices (or can be so converted), or a
         :class:`numpy.ndarray` of shape ``(E,2)``, where ``E`` is the number of
         edges, and each line specifies a ``(source, target)`` pair. If the list
         references vertices which do not exist in the graph, they will be
@@ -2767,7 +2767,7 @@ class Graph(object):
                                 class, which is **immutable**, and cannot be
                                 accessed as an array.
 
-                                Additionally, the indexes may not necessarily
+                                Additionally, the indices may not necessarily
                                 lie in the range [0, :meth:`~graph_tool.Graph.num_edges` - 1].
                                 However this will always happen whenever no
                                 edges are deleted from the graph.""")
@@ -2776,11 +2776,11 @@ class Graph(object):
         return self.__graph.get_edge_index_range()
 
     edge_index_range = property(_get_edge_index_range,
-                                doc="The size of the range of edge indexes.")
+                                doc="The size of the range of edge indices.")
 
     def reindex_edges(self):
         """
-        Reset the edge indexes so that they lie in the [0, :meth:`~graph_tool.Graph.num_edges` - 1]
+        Reset the edge indices so that they lie in the [0, :meth:`~graph_tool.Graph.num_edges` - 1]
         range. The index ordering will be compatible with the sequence returned
         by the :meth:`~graph_tool.Graph.edges` function.
 
@@ -2788,7 +2788,7 @@ class Graph(object):
 
            Calling this function will invalidate all existing edge property
            maps, if the index ordering is modified! The property maps will still
-           be usable, but their contents will still be tied to the old indexes,
+           be usable, but their contents will still be tied to the old indices,
            and thus may become scrambled.
         """
         self.__graph.re_index_edges()
@@ -2897,7 +2897,7 @@ class Graph(object):
 
            For edge properties, the edge index is not important, and the
            properties are copied by matching edges between the different graphs
-           according to the source and target vertex indexes. In case the graph
+           according to the source and target vertex indices. In case the graph
            has parallel edges with the same source and target vertices, they are
            matched according to their iteration order. The edge sets do not have
            to be the same between source and target graphs, as the copying
@@ -3369,15 +3369,15 @@ class Graph(object):
 
         """
         if in_place:
-            old_indexes = self.vertex_index.copy("int64_t")
-            self.__graph.purge_vertices(_prop("v", self, old_indexes))
+            old_indices = self.vertex_index.copy("int64_t")
+            self.__graph.purge_vertices(_prop("v", self, old_indices))
             self.set_vertex_filter(None)
             for pmap in self.__known_properties.values():
                 if (pmap() is not None and pmap().key_type() == "v" and
                     pmap().is_writable() and
                     pmap() not in [self.vertex_index, self.edge_index]):
                     self.__graph.re_index_vertex_property(_prop("v", self, pmap()),
-                                                          _prop("v", self, old_indexes))
+                                                          _prop("v", self, old_indices))
         else:
             stamp = id(self)
             pmaps = []

@@ -81,7 +81,7 @@ def adjacency(g, weight=None, vindex=None, operator=False, csr=True):
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
     vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        Vertex property map specifying the row/column indexes. If not provided, the
+        Vertex property map specifying the row/column indices. If not provided, the
         internal vertex index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
@@ -281,7 +281,7 @@ def laplacian(g, deg="out", norm=False, weight=None, r=1, vindex=None, operator=
         then this corresponds to the Bethe Hessian. (This parameter has an
         effect only for ``norm == False``.)
     vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        Vertex property map specifying the row/column indexes. If not provided, the
+        Vertex property map specifying the row/column indices. If not provided, the
         internal vertex index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
@@ -554,10 +554,10 @@ def incidence(g, vindex=None, eindex=None, operator=False, csr=True):
     g : :class:`~graph_tool.Graph`
         Graph to be used.
     vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        Vertex property map specifying the row indexes. If not provided, the
+        Vertex property map specifying the row indices. If not provided, the
         internal vertex index is used.
     eindex : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
-        Edge property map specifying the column indexes. If not provided, the
+        Edge property map specifying the column indices. If not provided, the
         internal edge index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
@@ -755,7 +755,7 @@ def transition(g, weight=None, vindex=None, operator=False, csr=True):
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
     vindex : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        Vertex property map specifying the row/column indexes. If not provided,
+        Vertex property map specifying the row/column indices. If not provided,
         the internal vertex index is used.
     operator : ``bool`` (optional, default: ``False``)
         If ``True``, a :class:`scipy.sparse.linalg.LinearOperator` subclass is
@@ -942,7 +942,7 @@ def modularity_matrix(g, weight=None, vindex=None):
     weight : :class:`~graph_tool.EdgePropertyMap` (optional, default: ``None``)
         Edge property map with the edge weights.
     index : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        Vertex property map specifying the row/column indexes. If not provided, the
+        Vertex property map specifying the row/column indices. If not provided, the
         internal vertex index is used.
 
     Returns
@@ -1043,7 +1043,7 @@ def hashimoto(g, index=None, compact=False, operator=False, csr=True):
     g : :class:`~graph_tool.Graph`
         Graph to be used.
     index : :class:`~graph_tool.VertexPropertyMap` (optional, default: ``None``)
-        Edge property map specifying the row/column indexes. If not provided, the
+        Edge property map specifying the row/column indices. If not provided, the
         internal edge index is used.
     compact : ``boolean`` (optional, default: ``False``)
         If ``True``, a compact :math:`2|V|\times 2|V|` version of the matrix is

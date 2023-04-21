@@ -335,7 +335,7 @@ Small graph atlas
     - graphs 1007 and 1008, with degree sequences 3333444 and 3333336,
     - graphs 1012 and 1213, with degree sequences 1244555 and 1244456.
 
-    These errors are kept in this list so that the indexes match those of
+    These errors are kept in this list so that the indices match those of
     [atlas]_.
 
     References
