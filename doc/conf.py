@@ -32,6 +32,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.viewcode',
               'extlinks_fancy',
               'sphinxext.opengraph',
+              'sphinx_copybutton'
               #'sphinx.ext.linkcode'
               #'matplotlib.sphinxext.plot_directive'
               ]

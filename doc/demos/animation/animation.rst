@@ -29,8 +29,7 @@ show the states in an interactive window:
    >>> for i in range(100):
    ...     ret = state.iterate_sync(niter=100)
    ...     win = gt.graph_draw(g, g.vp.pos, vertex_fill_color=state.get_state(), 
-   ...                         vcmap=matplotlib.cm.bone_r, window=win, return_window=True,
-   ...                         main=False)
+   ...                         window=win, return_window=True, main=False)
    
    
 Although sufficient for many simple animations, the above method is not
