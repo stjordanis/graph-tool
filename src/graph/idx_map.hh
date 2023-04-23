@@ -57,7 +57,7 @@ public:
         if constexpr (check_size)
         {
             if (pos.size() <= size_t(value.first))
-                pos.resize(value.first + 1, _null);
+                pos.resize(value.first * value.first + 1, _null);
         }
         size_t& idx = pos[value.first];
         if (idx == _null || shared_pos)
@@ -205,7 +205,7 @@ public:
         if constexpr (check_size)
         {
             if (pos.size() <= size_t(k))
-                pos.resize(k + 1, _null);
+                pos.resize(k * k + 1, _null);
         }
         size_t& idx = pos[k];
         if (idx == _null || shared_pos)
