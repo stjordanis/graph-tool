@@ -170,7 +170,7 @@ auto get_similarity_fast(const Graph1& g1, const Graph2& g2, WeightMap ew1,
     {
         size_t i = get(l1, v);
         if (lmap1.size() <= i)
-            lmap1.resize(i + 1, graph_traits<Graph1>::null_vertex());
+            lmap1.resize(i * i + 1, graph_traits<Graph1>::null_vertex());
         lmap1[i] = v;
     }
 
@@ -178,7 +178,7 @@ auto get_similarity_fast(const Graph1& g1, const Graph2& g2, WeightMap ew1,
     {
         size_t i = get(l2, v);
         if (lmap2.size() <= i)
-            lmap2.resize(i + 1, graph_traits<Graph2>::null_vertex());
+            lmap2.resize(i * i + 1, graph_traits<Graph2>::null_vertex());
         lmap2[i] = v;
     }
 
@@ -186,8 +186,8 @@ auto get_similarity_fast(const Graph1& g1, const Graph2& g2, WeightMap ew1,
     lmap1.resize(N, graph_traits<Graph1>::null_vertex());
     lmap2.resize(N, graph_traits<Graph2>::null_vertex());
 
-    idx_set<label_t> keys;
-    idx_map<label_t, val_t> adj1, adj2;
+    idx_set<label_t, false, false> keys(N);
+    idx_map<label_t, val_t, false, false> adj1(N), adj2(N);
 
     val_t s = 0;
     #pragma omp parallel if (num_vertices(g1) > OPENMP_MIN_THRESH) \

@@ -33,10 +33,11 @@ template <class Graph, class EWeight>
 void contract_parallel_edges(Graph& g, EWeight eweight)
 {
     typedef typename graph_traits<Graph>::edge_descriptor edge_t;
-    idx_map<size_t, edge_t> emap;
+    idx_map<size_t, edge_t, false, false> emap(num_vertices(g));
     idx_set<size_t> loops;
     auto eidx = get(edge_index_t(), g);
     std::vector<edge_t> remove;
+
     for (auto v : vertices_range(g))
     {
         emap.clear();
@@ -45,6 +46,10 @@ void contract_parallel_edges(Graph& g, EWeight eweight)
         for (auto e : out_edges_range(v, g))
         {
             auto u = target(e, g);
+
+            if (!graph_tool::is_directed(g) && u < v)
+                continue;
+
             auto iter = emap.find(u);
             if (iter == emap.end())
             {
@@ -67,6 +72,7 @@ void contract_parallel_edges(Graph& g, EWeight eweight)
                     loops.insert(eidx[e]);
             }
         }
+
         for (auto& e : remove)
             remove_edge(e, g);
     }

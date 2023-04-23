@@ -54,7 +54,8 @@ struct get_price
         if (sampler.empty())
             throw GraphException("Cannot connect edges: seed graph is empty, or has zero probability");
 
-        idx_set<typename graph_traits<Graph>::vertex_descriptor> visited;
+        idx_set<typename graph_traits<Graph>::vertex_descriptor, false, false>
+            visited(num_vertices(g));
         for (size_t i = 0; i < N; ++i)
         {
             visited.clear();
