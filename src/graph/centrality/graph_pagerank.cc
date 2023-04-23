@@ -40,7 +40,7 @@ size_t pagerank(GraphInterface& g, boost::any rank, boost::any pers,
     typedef boost::mpl::push_back<vertex_scalar_properties, pers_map_t>::type
         pers_props_t;
 
-    if(pers.empty())
+    if (pers.empty())
         pers = pers_map_t(1.0 / g.get_num_vertices());
 
     typedef UnityPropertyMap<int,GraphInterface::edge_t> weight_map_t;
@@ -50,7 +50,7 @@ size_t pagerank(GraphInterface& g, boost::any rank, boost::any pers,
     if (!weight.empty() && !belongs<edge_scalar_properties>()(weight))
         throw ValueException("weight edge property must have a scalar value type");
 
-    if(weight.empty())
+    if (weight.empty())
         weight = weight_map_t();
 
     size_t iter;
