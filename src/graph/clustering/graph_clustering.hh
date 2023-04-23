@@ -51,36 +51,35 @@ auto get_triangles(typename graph_traits<Graph>::vertex_descriptor v,
     typedef typename property_traits<EWeight>::value_type val_t;
     val_t triangles = 0, k = 0;
 
-    for (auto e : out_edges_range(v, g))
+    if (out_degree(v, g) > 1)
     {
-        auto n = target(e, g);
-        if (n == v)
-            continue;
-        auto w = eweight[e];
-        mark[n] = w;
-        k += w;
-    }
-
-    for (auto e : out_edges_range(v, g))
-    {
-        auto n = target(e, g);
-        if (n == v)
-            continue;
-        auto m = mark[n];
-        mark[n] = 0;
-        val_t t = 0;
-        for (auto e2 : out_edges_range(n, g))
+        for (auto e : out_edges_range(v, g))
         {
-            auto n2 = target(e2, g);
-            if (mark[n2] > 0)
-                t += eweight[e2];
+            auto u = target(e, g);
+            if (u == v)
+                continue;
+            mark[u] = 1;
+            k += eweight[e];
         }
-        triangles += t * eweight[e];
-        mark[n] = m;
-    }
 
-    for (auto n : adjacent_vertices_range(v, g))
-        mark[n] = 0;
+        for (auto e : out_edges_range(v, g))
+        {
+            auto u = target(e, g);
+            if (u == v)
+                continue;
+            val_t t = 0;
+            for (auto e2 : out_edges_range(u, g))
+            {
+                auto w = target(e2, g);
+                if (mark[w] > 0 && w != u)
+                    t += eweight[e2];
+            }
+            triangles += t * eweight[e];
+        }
+
+        for (auto u : adjacent_vertices_range(v, g))
+            mark[u] = 0;
+    }
 
     if (graph_tool::is_directed(g))
         return make_pair(val_t(triangles), val_t((k * (k - 1))));
@@ -95,7 +94,7 @@ auto get_global_clustering(const Graph& g, EWeight eweight)
 {
     typedef typename property_traits<EWeight>::value_type val_t;
     val_t triangles = 0, n = 0;
-    vector<val_t> mask(num_vertices(g), 0);
+    vector<uint8_t> mask(num_vertices(g), 0);
     vector<std::pair<val_t, val_t>> ret(num_vertices(g));
 
     #pragma omp parallel if (num_vertices(g) > OPENMP_MIN_THRESH) \

@@ -44,7 +44,7 @@ boost::python::tuple global_clustering(GraphInterface& g, boost::any weight)
     if (!weight.empty() && !belongs<edge_scalar_properties>()(weight))
         throw ValueException("weight edge property must have a scalar value type");
 
-    if(weight.empty())
+    if (weight.empty())
         weight = weight_map_t();
 
     boost::python::tuple oret;
