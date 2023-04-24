@@ -61,6 +61,18 @@ boost::python::tuple global_clustering(GraphInterface& g, boost::any weight)
     return oret;
 }
 
+double global_clustering_sampled(GraphInterface& g, size_t m, rng_t& rng)
+{
+    double c = 0;
+    run_action<graph_tool::detail::never_directed>()
+        (g,
+         [&](auto&& graph)
+         {
+             c = get_global_clustering_sampled(graph, m, rng);
+         })();
+    return c;
+}
+
 void local_clustering(GraphInterface& g, boost::any prop, boost::any weight)
 {
     typedef UnityPropertyMap<size_t,GraphInterface::edge_t> weight_map_t;
@@ -90,6 +102,7 @@ BOOST_PYTHON_MODULE(libgraph_tool_clustering)
 {
     docstring_options dopt(true, false);
     def("global_clustering", &global_clustering);
+    def("global_clustering_sampled", &global_clustering_sampled);
     def("local_clustering", &local_clustering);
     __MOD__::EvokeRegistry();
 }

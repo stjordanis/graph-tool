@@ -20,8 +20,8 @@
 
 #include "config.h"
 
-#include "hash_map_wrap.hh"
-#include <boost/mpl/if.hpp>
+#include "idx_map.hh"
+#include "../generation/sampler.hh"
 
 #ifdef _OPENMP
 #include "omp.h"
@@ -148,6 +148,45 @@ void set_clustering_to_property(const Graph& g, EWeight eweight,
              clust_map[v] = clustering;
          });
 }
+
+template <class Graph, class RNG>
+auto get_global_clustering_sampled(const Graph& g, size_t m, RNG& rng)
+{
+    std::vector<size_t> vs;
+    std::vector<double> probs;
+    idx_set<size_t, false, false> us(num_vertices(g));
+
+    for (auto v : vertices_range(g))
+    {
+        us.clear();
+        for (auto u : out_neighbors_range(v, g))
+            us.insert(u);
+        auto k = us.size();
+        vs.push_back(v);
+        if (graph_tool::is_directed(g))
+            probs.push_back(k * (k - 1));
+        else
+            probs.push_back((k * (k - 1))/2);
+    }
+
+    Sampler<size_t> sampler(vs, probs);
+
+    size_t ts = 0;
+    for (size_t i = 0; i < m; ++i)
+    {
+        auto v = sampler(rng);
+        us.clear();
+        for (auto u : out_neighbors_range(v, g))
+            us.insert(u);
+        auto u = uniform_sample(us, rng);
+        us.erase(u);
+        auto w = uniform_sample(us, rng);
+        if (edge(u, w, g).second)
+            ts++;
+    }
+    return ts / double(m);
+}
+
 
 } //graph-tool namespace
 

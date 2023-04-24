@@ -69,7 +69,7 @@ def local_clustering(g, weight=None, prop=None, undirected=True):
     prop : :class:`~graph_tool.VertexPropertyMap` or string, optional
         Vertex property map where results will be stored. If specified, this
         parameter will also be the return value.
-    undirected : bool (default: True)
+    undirected : bool (default: ``True``)
         Calculate the *undirected* clustering coefficient, if graph is directed
         (this option has no effect if the graph is undirected).
 
@@ -131,7 +131,7 @@ def local_clustering(g, weight=None, prop=None, undirected=True):
     return prop
 
 
-def global_clustering(g, weight=None, ret_counts=False):
+def global_clustering(g, weight=None, ret_counts=False, sampled=False, m=1000):
     r"""Return the global clustering coefficient.
 
     Parameters
@@ -143,15 +143,22 @@ def global_clustering(g, weight=None, ret_counts=False):
     ret_counts : ``boolean`` (optional, default: ``False``)
         If ``True`` the number of triangles and connected triples are also
         returned.
+    sampled : bool (default: ``False``)
+        If ``True`` a much faster, assymptotically exact, sampling estimate is
+        performed. In this case the, ``weight`` option is ignored.
+    m : int (default: ``1000``)
+        If ``sampled is True``, this will be the number of samples used for the
+        estimation.
 
     Returns
     -------
-    c : tuple of floats
-        Global clustering coefficient and standard deviation (jackknife method)
+    c : tuple of floats or float
+        Global clustering coefficient and standard deviation (jackknife method).
+        If ``sampled is True`` only the clustering coefficient is returned.
     triangles : `int` (if ``ret_counts is True``)
-        Number of triangles.
+        Number of triangles. Not returned if ``sampled is True``.
     triples : `int` (if ``ret_counts is True``)
-        Number of connected triples.
+        Number of connected triples. Not returned if ``sampled is True``.
 
     See Also
     --------
@@ -198,7 +205,10 @@ def global_clustering(g, weight=None, ret_counts=False):
 
     if g.is_directed():
         g = GraphView(g, directed=False, skip_properties=True)
-    c = _gt.global_clustering(g._Graph__graph, _prop("e", g, weight))
+    if not sampled:
+        c = _gt.global_clustering(g._Graph__graph, _prop("e", g, weight))
+    else:
+        return _gt.global_clustering_sampled(g._Graph__graph, m, _get_rng())
     if ret_counts:
         return c[:2], c[2], c[3]
     else:
