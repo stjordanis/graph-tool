@@ -22,6 +22,15 @@
 #include <utility>
 #include <limits>
 
+template <class T>
+size_t get_size(T n)
+{
+    size_t k = 1;
+    while (k < size_t(n))
+        k <<= 1;
+    return k;
+}
+
 template <class Key, class T, bool shared_pos=false, bool check_size=true>
 class idx_map
 {
@@ -57,7 +66,7 @@ public:
         if constexpr (check_size)
         {
             if (pos.size() <= size_t(value.first))
-                pos.resize(value.first * value.first + 1, _null);
+                pos.resize(get_size(value.first + 1), _null);
         }
         size_t& idx = pos[value.first];
         if (idx == _null || shared_pos)
@@ -205,7 +214,7 @@ public:
         if constexpr (check_size)
         {
             if (pos.size() <= size_t(k))
-                pos.resize(k * k + 1, _null);
+                pos.resize(get_size(k + 1), _null);
         }
         size_t& idx = pos[k];
         if (idx == _null || shared_pos)
