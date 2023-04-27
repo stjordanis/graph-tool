@@ -2001,6 +2001,8 @@ public:
 
                 if (u != v)
                 {
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                        kins[0] = {null, 0};
                     kouts[1] = {kout + dm, 0};
                 }
                 else
@@ -2019,9 +2021,11 @@ public:
                 S_dl -= get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
                                                           std::array<size_t,1>({r}),
                                                           kins, kouts);
-                get<1>(kins[0]) -= 1;
+                if constexpr (is_directed_::apply<g_t>::type::value)
+                    get<1>(kins[0]) -= 1;
                 get<1>(kouts[0]) -= 1;
-                get<1>(kins[1]) += 1;
+                if constexpr (is_directed_::apply<g_t>::type::value)
+                    get<1>(kins[1]) += 1;
                 get<1>(kouts[1]) += 1;
 
                 S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
@@ -2037,16 +2041,23 @@ public:
                     kouts = {make_tuple(kout, 0), make_tuple(null, 0)};
 
                     if constexpr (!is_directed_::apply<g_t>::type::value)
+                    {
                         kouts[1] = {kout + dm, 0};
+                    }
                     else
+                    {
                         kins[1] = {kin + dm, 0};
+                        kouts[0] = {null, 0};
+                    }
 
                     S_dl -= get_partition_stats(v).get_deg_dl(ea.degree_dl_kind,
                                                               std::array<size_t,1>({s}),
                                                               kins, kouts);
-                    get<1>(kins[0]) -= 1;
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                        get<1>(kins[0]) -= 1;
                     get<1>(kouts[0]) -= 1;
-                    get<1>(kins[1]) += 1;
+                    if constexpr (is_directed_::apply<g_t>::type::value)
+                        get<1>(kins[1]) += 1;
                     get<1>(kouts[1]) += 1;
 
                     S_dl += get_partition_stats(v).get_deg_dl(ea.degree_dl_kind,
@@ -2056,67 +2067,72 @@ public:
             }
             else // r == s && u != v
             {
-                std::array<std::tuple<size_t, int>, 4> kins, kouts;
-
-                auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
-
-                if constexpr (is_directed_::apply<g_t>::type::value)
-                    kins = {make_tuple(kin, -1), make_tuple(null, 0),
-                            make_tuple(null, 0), make_tuple(null, 0)};
-                kouts = {make_tuple(kout, -1), make_tuple(null, 0),
-                         make_tuple(null, 0), make_tuple(null, 0)};
-
-                kouts[1] = {kout + dm, 1};
-
-                std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
-
-                kouts[2] = {kout, -1};
-                if constexpr (is_directed_::apply<g_t>::type::value)
-                    kins[2] = {kin, -1};
-
                 if constexpr (!is_directed_::apply<g_t>::type::value)
-                    kouts[3] = {kout + dm, 1};
-                else
-                    kins[3] = {kin + dm, 1};
-
-                for (size_t i = 0; i < 2; ++i)
                 {
-                    if constexpr (is_directed_::apply<g_t>::type::value)
+                    std::array<std::tuple<size_t, int>, 0> kins;
+                    std::array<std::tuple<size_t, int>, 4> kouts;
+
+                    auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
+
+                    kouts = {make_tuple(kout, -1), make_tuple(null, 0),
+                             make_tuple(null, 0), make_tuple(null, 0)};
+                    kouts[1] = {kout + dm, 1};
+
+                    std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
+
+                    kouts[2] = {kout, -1};
+
+                    kouts[3] = {kout + dm, 1};
+
+                    for (size_t i = 0; i < 2; ++i)
                     {
-                        if (get<0>(kins[2]) == get<0>(kins[i]))
+                        if (get<0>(kouts[2]) == get<0>(kouts[i]))
                         {
-                            get<0>(kins[2]) = null;
-                            get<1>(kins[i]) += get<1>(kins[2]);
+                            get<0>(kouts[2]) = null;
+                            get<1>(kouts[i]) += get<1>(kouts[2]);
                         }
-                        if (get<0>(kins[3]) == get<0>(kins[i]))
+
+                        if (get<0>(kouts[3]) == get<0>(kouts[i]))
                         {
-                            get<0>(kins[3]) = null;
-                            get<1>(kins[i]) += get<1>(kins[3]);
+                            get<0>(kouts[3]) = null;
+                            get<1>(kouts[i]) += get<1>(kouts[3]);
                         }
-                    }
-                    if (get<0>(kouts[2]) == get<0>(kouts[i]))
-                    {
-                        get<0>(kouts[2]) = null;
-                        get<1>(kouts[i]) += get<1>(kouts[2]);
                     }
 
-                    if (get<0>(kouts[3]) == get<0>(kouts[i]))
-                    {
-                        get<0>(kouts[3]) = null;
-                        get<1>(kouts[i]) += get<1>(kouts[3]);
-                    }
+                    S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
+                                                              std::array<size_t,1>({r}),
+                                                              kins, kouts);
+                    for (size_t i = 0; i < 4; ++i)
+                        get<1>(kouts[i]) = 0;
+
+                    S_dl -= get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
+                                                              std::array<size_t,1>({r}),
+                                                              kins, kouts);
                 }
+                else
+                {
+                    std::array<std::tuple<size_t, int>, 2> kins;
+                    std::array<std::tuple<size_t, int>, 2> kouts;
 
-                S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
-                                                          std::array<size_t,1>({r}),
-                                                          kins, kouts);
-                for (size_t i = 0; i < 4; ++i)
-                    get<1>(kins[i]) = get<1>(kouts[i]) = 0;
+                    auto [kin, kout] = get_deg(u, _eweight, _degs, _g);
 
-                S_dl -= get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
-                                                          std::array<size_t,1>({r}),
-                                                          kins, kouts);
+                    kouts = {make_tuple(kout, -1), make_tuple(kout + dm, 1)};
 
+                    std::tie(kin, kout) = get_deg(v, _eweight, _degs, _g);
+
+                    kins = {make_tuple(kin, -1), make_tuple(kin + dm, 1)};
+
+                    S_dl += get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
+                                                              std::array<size_t,1>({r}),
+                                                              kins, kouts);
+                    for (size_t i = 0; i < 2; ++i)
+                        get<1>(kins[i]) = get<1>(kouts[i]) = 0;
+
+                    S_dl -= get_partition_stats(u).get_deg_dl(ea.degree_dl_kind,
+                                                              std::array<size_t,1>({r}),
+                                                              kins, kouts);
+
+                }
             }
         }
 

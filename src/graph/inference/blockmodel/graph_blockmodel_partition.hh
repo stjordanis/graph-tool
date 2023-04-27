@@ -194,8 +194,8 @@ public:
         return S;
     }
 
-    template <class Rs, class Ks>
-    double get_deg_dl_ent(Rs&& rs, Ks&& kins, Ks&& kouts)
+    template <class Rs, class Kins, class Kouts>
+    double get_deg_dl_ent(Rs&& rs, Kins&& kins, Kouts&& kouts)
     {
         double S = 0;
         for (auto r : rs)
@@ -254,8 +254,8 @@ public:
         return S;
     }
 
-    template <class Rs, class Ks>
-    double get_deg_dl_uniform(Rs&& rs, Ks&& kins, Ks&& kouts)
+    template <class Rs, class Kins, class Kouts>
+    double get_deg_dl_uniform(Rs&& rs, Kins&& kins, Kouts&& kouts)
     {
         double S = 0;
         for (auto r : rs)
@@ -299,8 +299,8 @@ public:
         return S;
     }
 
-    template <class Rs, class Ks>
-    double get_deg_dl_dist(Rs&& rs, Ks&& kins, Ks&& kouts)
+    template <class Rs, class Kins, class Kouts>
+    double get_deg_dl_dist(Rs&& rs, Kins&& kins, Kouts&& kouts)
     {
         double S = 0;
         for (auto r : rs)
@@ -368,8 +368,8 @@ public:
         return S;
     }
 
-    template <class Rs, class Ks>
-    double get_deg_dl(int kind, Rs&& rs, Ks&& kins, Ks&& kouts)
+    template <class Rs, class Kins, class Kouts>
+    double get_deg_dl(int kind, Rs&& rs, Kins&& kins, Kouts&& kouts)
     {
         if (_N == 0)
             return 0;
