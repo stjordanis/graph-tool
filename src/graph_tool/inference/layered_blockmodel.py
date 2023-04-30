@@ -828,7 +828,7 @@ class LayeredBlockState(OverlapBlockState, BlockState):
                                      (int(u), int(v), l[0]))
 
                 if state.is_weighted:
-                    staete.eweight[e] -= 1
+                    state.eweight[e] -= 1
                     if state.eweight[e] == 0:
                         state.g.remove_edge(e)
                 else:
