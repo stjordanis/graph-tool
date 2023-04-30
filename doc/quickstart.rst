@@ -728,6 +728,36 @@ such:
     gprop = g.new_graph_property("bool")                 # Boolean
     gprop[g] = True
 
+It is possible also to access vertex property maps directly by vertex indices:
+
+    >>> print(vprop[10])
+    3.1416
+
+.. warning::
+   :class: margin
+
+   The following lines are equivalent:
+
+   .. code-block::
+
+       eprop[(30, 40)]
+       eprop[g.edge(30, 40)]
+
+   Which means that indexing via (source, target) pairs is slower than via edge
+   descriptors, since the function :meth:`~graph_tool.Graph.edge` needs to be
+   called first.
+
+And likewise we can access edge descriptors via (source, target) pairs:
+
+    >>> g.add_edge(30, 40)
+    <...>
+    >>> eprop[(30, 40)] = "gnat"
+
+We can also iterate through the property map values directly, i.e.
+
+    >>> print(list(vprop)[:10])
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
 Property maps with scalar value types can also be accessed as a
 :class:`numpy.ndarray`, with the
 :meth:`~graph_tool.PropertyMap.get_array` method, or the

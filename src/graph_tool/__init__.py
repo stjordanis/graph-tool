@@ -888,13 +888,39 @@ class EdgePropertyMap(PropertyMap):
         PropertyMap.__init__(self, pmap, g, "e")
 
     def __getitem__(self, k):
-        return self._PropertyMap__map[k]
+        try:
+            return self._PropertyMap__map[k]
+        except ArgumentError:
+            try:
+                u, v = k
+            except ValueError:
+                raise TypeError("Edge property map indices must be Edge objects or integer pairs")
+            g = self.get_graph()
+            try:
+                return self._PropertyMap__map[g.edge(u, v)]
+            except ArgumentError:
+                raise IndexError(f"nonexistent edge ({u}, {v})")
 
     def __setitem__(self, k, v):
         try:
-            self._PropertyMap__map[k] = v
-        except TypeError:
-            self._PropertyMap__map[k] = self._PropertyMap__convert(v)
+            try:
+                self._PropertyMap__map[k] = v
+            except TypeError:
+                self._PropertyMap__map[k] = self._PropertyMap__convert(v)
+        except ArgumentError:
+            try:
+                u, v = k
+            except ValueError:
+                raise TypeError("Edge property map indices must be Edge objects or integer pairs")
+            g = self.get_graph()
+            try:
+                e = g.edge(u, v)
+                try:
+                    self._PropertyMap__map[e] = v
+                except TypeError:
+                    self._PropertyMap__map[e] = self._PropertyMap__convert(v)
+            except ArgumentError:
+                raise IndexError(f"nonexistent edge ({u}, {v})")
 
     def __iter__(self):
         g = self.get_graph()
