@@ -45,7 +45,7 @@ is called the `evidence`, and corresponds to the total probability of
 the data summed over all model parameters. The particular types of model
 that will be considered here have "hard constraints", such that there is
 only one choice for the remaining parameters :math:`\boldsymbol\theta`
-that is compatible with the generated network, such that
+that is compatible with the generated network, which means
 Eq. :eq:`model-posterior-sum` simplifies to
 
 .. math::
