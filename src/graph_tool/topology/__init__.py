@@ -123,8 +123,8 @@ Directionality
 
    edge_reciprocity
 
-Combinatorial optmizaton
-++++++++++++++++++++++++
+Combinatorial optimizaton
++++++++++++++++++++++++++
 
 .. autosummary::
    :nosignatures:
