@@ -238,8 +238,9 @@ build_kinetic_git:
 build_docker:
   script:
     - cd release/docker
-    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool . --no-cache --pull
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool:$CI_COMMIT_TAG . --no-cache --pull
     - docker login -u tiagopeixoto -p $DOCKER_TOKEN
+    - docker tag tiagopeixoto/graph-tool:$CI_COMMIT_TAG docker.io/tiagopeixoto/graph-tool:$CI_COMMIT_TAG
     - docker push docker.io/tiagopeixoto/graph-tool:$CI_COMMIT_TAG
   only:
     - tags
@@ -247,8 +248,9 @@ build_docker:
 build_docker_git:
   script:
     - cd release/docker
-    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool-git . --no-cache
+    - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool-git:$CI_COMMIT_SHA . --no-cache
     - docker login -u tiagopeixoto -p $DOCKER_TOKEN
+    - docker tag tiagopeixoto/graph-tool-git:$CI_COMMIT_SHA docker.io/tiagopeixoto/graph-tool-git:$CI_COMMIT_SHA
     - docker push docker.io/tiagopeixoto/graph-tool-git:$CI_COMMIT_SHA
   except:
     - tags
