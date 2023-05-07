@@ -240,7 +240,7 @@ build_docker:
     - cd release/docker
     - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool . --no-cache --pull
     - docker login -u tiagopeixoto -p $DOCKER_TOKEN
-    - docker push docker.io/tiagopeixoto/graph-tool
+    - docker push docker.io/tiagopeixoto/graph-tool:$CI_COMMIT_TAG
   only:
     - tags
 
@@ -249,6 +249,6 @@ build_docker_git:
     - cd release/docker
     - docker build --build-arg REF=`git log -n1 --pretty='%H'` -t tiagopeixoto/graph-tool-git . --no-cache
     - docker login -u tiagopeixoto -p $DOCKER_TOKEN
-    - docker push docker.io/tiagopeixoto/graph-tool-git
+    - docker push docker.io/tiagopeixoto/graph-tool-git:$CI_COMMIT_SHA
   except:
     - tags
