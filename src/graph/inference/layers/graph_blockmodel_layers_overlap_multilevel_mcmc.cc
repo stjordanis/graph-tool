@@ -143,7 +143,7 @@ python::object multilevel_mcmc_layered_overlap_sweep_parallel(python::object omc
     python::list orets;
     for (auto& ret : rets)
         orets.append(tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret));
-    return std::move(orets);
+    return orets;
 }
 
 

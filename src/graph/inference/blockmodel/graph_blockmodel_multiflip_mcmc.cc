@@ -117,7 +117,7 @@ python::object do_multiflip_mcmc_sweep_parallel(python::object omcmc_states,
     python::list orets;
     for (auto& ret : rets)
         orets.append(tuple_apply([&](auto&... args){ return python::make_tuple(args...); }, ret));
-    return std::move(orets);
+    return orets;
 }
 
 #define __MOD__ inference
