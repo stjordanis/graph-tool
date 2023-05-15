@@ -45,34 +45,63 @@ class CachedDist
 {
 public:
     template <class Graph>
-    CachedDist(Graph& g, D& d)
-        : _d(d)
+    CachedDist(Graph& g, D& d, size_t max_size)
+        : _d(d), _max_size(max_size)
     {
         _dist_cache.resize(num_vertices(g));
     }
 
     double operator()(size_t v, size_t u)
     {
+        _time++;
         auto& cache = _dist_cache[u];
         auto iter = cache.find(v);
         if (iter == cache.end())
         {
+            if (cache.size() / 2 > _max_size)
+                clean_cache(cache);
             double d = _d(v, u);
-            cache[v] = d;
+            cache[v] = {d, _time};
             return d;
         }
-        return iter->second;
+        get<1>(iter->second) = _time;
+        return get<0>(iter->second);
+    }
+
+    template <class Cache>
+    void clean_cache(Cache& cache)
+    {
+        std::vector<std::tuple<size_t, size_t>> heap;
+
+        for (auto& [u, dt] : cache)
+        {
+            size_t t = get<1>(dt);
+            heap.emplace_back(u, t);
+        }
+
+        auto cmp = [&](auto& a, auto& b) { return get<1>(a) > get<1>(b); };
+
+        make_heap(heap.begin(), heap.end(), cmp);
+
+        while (heap.size() > _max_size)
+        {
+            cache.erase(get<0>(heap.front()));
+            pop_heap(heap.begin(), heap.end(), cmp);
+            heap.pop_back();
+        }
     }
 
 private:
-    std::vector<gt_hash_map<size_t, double>> _dist_cache;
+    std::vector<gt_hash_map<size_t, std::tuple<double, uint64_t>>> _dist_cache;
     D& _d;
+    size_t _max_size;
+    uint64_t _time;
 };
 
 template <class Graph, class D>
-auto make_cached_dist(Graph& g, D& d)
+auto make_cached_dist(Graph& g, D& d, size_t max_size)
 {
-    return CachedDist<D>(g, d);
+    return CachedDist<D>(g, d, max_size);
 }
 
 template <bool parallel, class Graph>

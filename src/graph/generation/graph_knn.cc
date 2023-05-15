@@ -23,8 +23,8 @@ using namespace boost;
 using namespace graph_tool;
 
 void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
-                  double r, double epsilon, bool cache, boost::any aw,
-                  bool verbose, rng_t& rng)
+                  double r, double epsilon, bool cache, size_t max_cache,
+                  boost::any aw, bool verbose, rng_t& rng)
 
 {
     typedef eprop_map_t<double>::type emap_t;
@@ -58,7 +58,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
             run_action<always_directed_never_filtered_never_reversed>()
                 (gi, [&](auto& g)
                      {
-                         auto d = make_cached_dist(g, d_e);
+                         auto d = make_cached_dist(g, d_e, max_cache);
                          gen_knn<true>(g, d, k, r, epsilon, w, verbose, rng);
                      })();
         }
@@ -94,7 +94,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
             run_action<always_directed_never_filtered_never_reversed>()
                 (gi, [&](auto& g)
                      {
-                         auto d = make_cached_dist(g, d_e);
+                         auto d = make_cached_dist(g, d_e, max_cache);
                          gen_knn<true>(g, d, k, r, epsilon, w, verbose, rng);
                      })();
         }
@@ -145,8 +145,8 @@ void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
 }
 
 void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
-                        double r, double epsilon, bool cache, boost::any aw,
-                        bool directed, bool verbose, rng_t& rng)
+                        double r, double epsilon, bool cache, size_t max_cache,
+                        boost::any aw, bool directed, bool verbose, rng_t& rng)
 
 {
     typedef eprop_map_t<double>::type emap_t;
@@ -176,7 +176,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
             run_action<always_directed_never_filtered_never_reversed>()
                 (gi, [&](auto& g)
                      {
-                         auto d = make_cached_dist(g, d_e);
+                         auto d = make_cached_dist(g, d_e, max_cache);
                          gen_k_nearest<true>(g, d, k, r, epsilon, w, directed,
                                              verbose, rng);
                      })();
@@ -214,7 +214,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
             run_action<always_directed_never_filtered_never_reversed>()
                 (gi, [&](auto& g)
                      {
-                         auto d = make_cached_dist(g, d_e);
+                         auto d = make_cached_dist(g, d_e, max_cache);
                          gen_k_nearest<true>(g, d, k, r, epsilon, w, directed,
                                              verbose, rng);
                      })();
