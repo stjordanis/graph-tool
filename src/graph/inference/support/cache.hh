@@ -30,9 +30,9 @@ using namespace std;
 // Repeated computation of x*log(x) and log(x) actually adds up to a lot of
 // time. A significant speedup can be made by caching pre-computed values.
 
-extern vector<double> __safelog_cache;
-extern vector<double> __xlogx_cache;
-extern vector<double> __lgamma_cache;
+extern thread_local vector<double> __safelog_cache;
+extern thread_local vector<double> __xlogx_cache;
+extern thread_local vector<double> __lgamma_cache;
 
 constexpr size_t __max_size = (500 * (1 << 20)) / sizeof(double);
 
