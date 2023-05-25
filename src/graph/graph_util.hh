@@ -191,8 +191,8 @@ void parallel_vertex_loop_no_spawn(const Graph& g, F&& f)
     }
 }
 
-template <class Graph, class F, size_t thres = OPENMP_MIN_THRESH>
-void parallel_vertex_loop(const Graph& g, F&& f)
+template <class Graph, class F>
+void parallel_vertex_loop(const Graph& g, F&& f, size_t thres = OPENMP_MIN_THRESH)
 {
     #pragma omp parallel if (num_vertices(g) > thres)
     {
@@ -237,8 +237,8 @@ void parallel_edge_loop_no_spawn(const Graph& g, F&& f)
     parallel_vertex_loop_no_spawn<graph_t, dispatch_t&>(u, dispatch);
 }
 
-template <class Graph, class F, size_t thres = OPENMP_MIN_THRESH>
-void parallel_edge_loop(const Graph& g, F&& f)
+template <class Graph, class F>
+void parallel_edge_loop(const Graph& g, F&& f, size_t thres = OPENMP_MIN_THRESH)
 {
     #pragma omp parallel if (num_vertices(g) > thres)
     {
@@ -255,8 +255,8 @@ void parallel_loop_no_spawn(Container&& v, F&& f)
         f(i, v[i]);
 }
 
-template <class Container, class F, size_t thres = OPENMP_MIN_THRESH>
-void parallel_loop(Container&& v, F&& f)
+template <class Container, class F>
+void parallel_loop(Container&& v, F&& f, size_t thres = OPENMP_MIN_THRESH)
 {
     #pragma omp parallel if (v.size() > thres)
     {
