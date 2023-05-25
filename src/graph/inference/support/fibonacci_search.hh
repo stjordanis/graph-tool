@@ -138,7 +138,10 @@ public:
     }
 
 private:
-    constexpr static double _phi = (1 + sqrt(5)) / 2;
+#ifndef __clang__
+    constexpr static
+#endif
+    double _phi = (1 + sqrt(5)) / 2;
 };
 
 }
