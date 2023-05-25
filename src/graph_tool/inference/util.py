@@ -93,6 +93,8 @@ def pmap(prop, value_map):
         a = prop.fa
     else:
         a = prop
+    if len(a) == 0:
+        return
     if isinstance(value_map, PropertyMap):
         value_map = value_map.fa
     if a.max() >= len(value_map):
