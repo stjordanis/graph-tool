@@ -563,6 +563,7 @@ graph_inference_supportdir = $(MOD_DIR)/include/inference/support
 dist_graph_inference_support_HEADERS = \
 	src/graph/inference/support/cache.hh \
 	src/graph/inference/support/contingency.hh \
+	src/graph/inference/support/fibonacci_search.hh \
 	src/graph/inference/support/graph_state.hh \
 	src/graph/inference/support/int_part.hh \
 	src/graph/inference/support/util.hh

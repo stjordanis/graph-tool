@@ -20,8 +20,10 @@
 #include <boost/python.hpp>
 #include "numpy_bind.hh"
 #include "hash_map_wrap.hh"
+#include "random.hh"
 
 #include "support/util.hh"
+#include "support/fibonacci_search.hh"
 
 using namespace std;
 using namespace boost;
@@ -92,6 +94,27 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     def("lbinom", lbinom<size_t, size_t>);
     def("lbinom_fast", lbinom_fast<true, size_t, size_t>);
     def("log_sum_exp", +[](double x, double y){ return log_sum_exp(x, y); });
+
+    class_<FibonacciSearch>("FibonacciSearch")
+        .def("search",
+             +[](FibonacciSearch& s, size_t x_min, size_t x_max, python::object f)
+              {
+                  return s.search(x_min, x_max,
+                                  [&](size_t x)
+                                  {
+                                      return python::extract<double>(f(x));
+                                  });
+              })
+        .def("search_random",
+             +[](FibonacciSearch& s, size_t x_min, size_t x_max,
+                 python::object f, rng_t& rng)
+              {
+                  return s.search(x_min, x_max,
+                                  [&](size_t x)
+                                  {
+                                      return python::extract<double>(f(x));
+                                  }, rng);
+              });
 
     __MOD__::EvokeRegistry();
 }

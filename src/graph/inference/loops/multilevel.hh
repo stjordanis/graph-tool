@@ -25,6 +25,7 @@
 
 #include <boost/range/combine.hpp>
 #include "../../topology/graph_bipartite_weighted_matching.hh"
+#include "../support/fibonacci_search.hh"
 #include "../support/contingency.hh"
 
 namespace graph_tool
@@ -686,35 +687,6 @@ struct Multilevel: public State
         return S;
     }
 
-#ifndef __clang__
-    constexpr static
-#endif
-    double _phi = (1 + sqrt(5)) / 2;
-
-    size_t fibo(size_t n)
-    {
-        return size_t(round(std::pow(_phi, n) / sqrt(5)));
-    }
-
-    size_t fibo_n_floor(size_t x)
-    {
-        return floor(log(x * sqrt(5) + .5) / log(_phi));
-    }
-
-    template <class RNG>
-    size_t get_mid(size_t a, size_t b, RNG& rng)
-    {
-        if (a == b)
-            return a;
-        if (State::_random_bisect)
-        {
-            std::uniform_int_distribution<size_t> random(a, b - 1);
-            return random(rng);
-        }
-        auto n = fibo_n_floor(b - a);
-        return b - fibo(n - 1);
-    }
-
     template <bool forward=true, class RNG>
     std::pair<double, double>
     stage_multilevel(GSet<Group>& rs, std::vector<size_t>& vs, RNG& rng)
@@ -776,18 +748,6 @@ struct Multilevel: public State
             }
             assert(rs.size() == B);
             return c.first;
-        };
-
-        auto clean_cache = [&](size_t Bmin, size_t Bmax, bool keep_best=true)
-        {
-            for (auto iter = cache.begin(), last = cache.end(); iter != last;)
-            {
-                const auto& [B, b] = *iter;
-                if ((B < Bmin || B > Bmax) && (!keep_best || b.first > S_best))
-                    iter = cache.erase(iter);
-                else
-                    ++iter;
-            }
         };
 
         auto get_S = [&](size_t B, bool keep_cache=true)
@@ -939,76 +899,20 @@ struct Multilevel: public State
             put_cache(B_max, S);
         }
 
-
-        B_mid = get_mid(B_min, B_max, rng);
-
-        // initial bracketing
-        double S_max = get_S(B_max);
-        double S_mid = get_S(B_mid);
-        double S_min = get_S(B_min);
-        while (S_mid > S_min || S_mid > S_max)
-        {
-            if (S_min < S_max)
-            {
-                B_max = B_mid;
-                S_max = S_mid;
-                B_mid = get_mid(B_min, B_mid, rng);
-                S_mid = get_S(B_mid);
-            }
-            else
-            {
-                B_min = B_mid;
-                S_min = S_mid;
-                B_mid = get_mid(B_mid, B_max, rng);
-            }
-
-            if (std::isinf(_beta))
-                clean_cache(B_min, B_max);
-
-            if (B_min == B_mid && B_max == B_mid + 1)
-                break;
-        }
-
-        // Fibonnaci search
-        while (B_max - B_mid > 1)
-        {
-            size_t x;
-            if (B_max - B_mid > B_mid - B_min)
-                x = get_mid(B_mid, B_max, rng);
-            else
-                x = get_mid(B_min, B_mid, rng);
-
-            double S_x = get_S(x);
-            double S_mid = get_S(B_mid);
-
-            if (S_x < S_mid)
-            {
-                if (B_max - B_mid > B_mid - B_min)
-                    B_min = B_mid;
-                else
-                    B_max = B_mid;
-                B_mid = x;
-            }
-            else
-            {
-                if (B_max - B_mid > B_mid - B_min)
-                    B_max = x;
-                else
-                    B_min = x;
-            }
-
-            if (std::isinf(_beta))
-                clean_cache(B_min, B_max);
-        }
-
-        clean_cache(B_min_init, B_max_init, false);
+        FibonacciSearch fb;
+        if (State::_random_bisect)
+            fb.search(B_min, B_mid, B_max, get_S, rng);
+        else
+            fb.search(B_min, B_mid, B_max, get_S);
 
         // add midpoint
         if (!std::isinf(_beta))
         {
             size_t Br;
             if constexpr (forward)
-                Br = get_mid(B_min_init, B_max_init, rng);
+                Br = (State::_random_bisect ?
+                      fb.get_mid(B_min_init, B_max_init, rng) :
+                      fb.get_mid(B_min_init, B_max_init));
             else
                 Br = _rs_prev.size();
             get_S(Br, false);
