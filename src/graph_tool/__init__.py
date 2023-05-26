@@ -104,7 +104,7 @@ __URL__ = "https://graph-tool.skewed.de"
 import numpy
 import numpy.ma
 import scipy
-
+from numpy.random import default_rng
 
 from .dl_import import *
 dl_import("from . import libgraph_tool_core as libcore")
@@ -133,6 +133,7 @@ import collections.abc
 import itertools
 import csv
 import contextlib
+import threading
 
 from .decorators import _require, _limit_args, _copy_func
 
@@ -4037,19 +4038,30 @@ Vector_string.a = None
 Vector_string.get_array = lambda self: None
 Vector_string.__repr__ = lambda self: repr(list(self))
 
-
 # Global RNG
 
-_rng = libcore.get_rng((numpy.random.randint(0, sys.maxsize) + os.getpid()) % sys.maxsize)
+_rngs = {}
+_root_seed = default_rng().integers(sys.maxsize)
 
 def seed_rng(seed):
-    """Seed the random number generator used by graph-tool's algorithms"""
-    global _rng
-    _rng = libcore.get_rng(seed)
+    """Seed the random number generator(s) used by graph-tool's algorithms"""
+    global _root_seed, _rngs
+    _rngs = {}
+    _root_seed = seed
 
 def _get_rng():
-    global _rng
-    return _rng
+    global _root_seed, _rngs
+    if threading.current_thread() is threading.main_thread():
+        tid = 0
+    else:
+        tid = threading.get_ident() + 1
+    rng = _rngs.get(tid, None)
+    if rng is None:
+        seed = default_rng([tid, _root_seed]).integers(sys.maxsize)
+        rng = libcore.get_rng(seed)
+        _rngs[tid] = rng
+    return rng
+
 
 # OpenMP Setup
 
