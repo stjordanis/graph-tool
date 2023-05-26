@@ -22,12 +22,12 @@
 
 #include "graph_selectors.hh"
 #include "graph_properties.hh"
+#include "graph_python_interface.hh"
 
 #include "graph_discrete.hh"
 
 #include "random.hh"
 
-#include <boost/python.hpp>
 
 using namespace std;
 using namespace boost;
@@ -65,11 +65,13 @@ public:
 
     size_t iterate_sync(size_t niter, rng_t& rng)
     {
+        GILRelease gil;
         return discrete_iter_sync(_g, _state, niter, rng);
     }
 
     size_t iterate_async(size_t niter, rng_t& rng)
     {
+        GILRelease gil;
         return discrete_iter_async(_g, _state, niter, rng);
     }
 
