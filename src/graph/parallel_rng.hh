@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <vector>
+#include <mutex>
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -31,16 +32,14 @@ class parallel_rng
 public:
     static void init(RNG& rng)
     {
+        std::lock_guard<std::mutex> lock(_init_mutex);
+
         size_t num_threads = 1;
-    #ifdef _OPENMP
+#ifdef _OPENMP
         num_threads = omp_get_max_threads();
-    #endif
+#endif
         for (size_t i = _rngs.size(); i < num_threads - 1; ++i)
         {
-            // std::array<int, RNG::state_size> seed_data;
-            // std::generate_n(seed_data.data(), seed_data.size(), std::ref(rng));
-            // std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
-            // rngs.emplace_back(seq);
             _rngs.emplace_back(rng);
             _rngs.back().set_stream(i + 1);
         }
@@ -64,6 +63,7 @@ public:
 
 private:
     static std::vector<RNG> _rngs;
+    static std::mutex _init_mutex;
 };
 
 template <class RNG>
