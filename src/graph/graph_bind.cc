@@ -446,7 +446,8 @@ BOOST_PYTHON_MODULE(libgraph_tool_core)
 
     // random numbers
     class_<rng_t>("rng_t");
-    def("get_rng", get_rng);
+    def("get_rng", get_rng, return_value_policy<reference_existing_object>());
+    def("seed_rng", seed_rng);
 
     register_exception_translator<GraphException>
         (graph_exception_translator<GraphException>);

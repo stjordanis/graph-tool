@@ -1022,7 +1022,7 @@ size_t discrete_iter_sync(Graph& g, State state, size_t niter, RNG& rng_)
 {
     size_t nflips = 0;
 
-    parallel_rng<rng_t>::init(rng_);
+    parallel_rng<rng_t> prng(rng_);
 
     auto& active = *state._active;
 
@@ -1037,7 +1037,7 @@ size_t discrete_iter_sync(Graph& g, State state, size_t niter, RNG& rng_)
             (active,
              [&] (auto, auto v)
              {
-                 auto& rng = parallel_rng<rng_t>::get(rng_);
+                 auto& rng = prng.get(rng_);
                  state._s_temp[v] = state._s[v];
                  nflips += state.template update_node<true>(g, v,
                                                             state._s_temp,

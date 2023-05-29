@@ -20,15 +20,51 @@
 #include "parallel_rng.hh"
 
 #include <random>
+#include <mutex>
+#include <thread>
+#include <unordered_map>
 
-rng_t get_rng(size_t seed)
+rng_t _rng;
+
+std::unordered_map<std::thread::id, rng_t> _rngs;
+size_t _rng_stream = 0;
+std::mutex _rng_mutex;
+
+rng_t& get_rng()
 {
+    auto tid = std::this_thread::get_id();
+    auto iter = _rngs.find(tid);
+    if (iter == _rngs.end())
+    {
+        auto& rng = _rngs[tid] = _rng;
+        rng.set_stream(get_rng_stream());
+        return rng;
+    }
+    return iter->second;
+}
+
+size_t get_rng_stream()
+{
+    std::lock_guard<std::mutex> lock(_rng_mutex);
+    return _rng_stream++;
+}
+
+void seed_rng(size_t seed)
+{
+    std::lock_guard<std::mutex> lock(_rng_mutex);
+
     parallel_rng<rng_t>::clear();
+    _rngs.clear();
+    _rng_stream = 0;
+
     if (seed == 0)
     {
         pcg_extras::seed_seq_from<std::random_device> seed_source;
-        return rng_t(seed_source);
+        _rng = rng_t(seed_source);
     }
-    std::seed_seq seq{seed, seed + 1, seed + 2, seed + 3, seed + 4};
-    return rng_t(seq);
+    else
+    {
+        std::seed_seq seq{seed, seed + 1, seed + 2, seed + 3, seed + 4};
+        _rng = rng_t(seq);
+    }
 }

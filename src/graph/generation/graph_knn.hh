@@ -124,7 +124,7 @@ template <bool parallel, class Graph, class Dist, class Weight, class RNG>
 void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
              double epsilon, Weight eweight, bool verbose, RNG& rng_)
 {
-    parallel_rng<rng_t>::init(rng_);
+    parallel_rng<rng_t> prng(rng_);
 
     auto cmp =
         [] (auto& x, auto& y)
@@ -147,7 +147,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
         (g,
          [&](auto v)
          {
-             auto& rng = parallel_rng<rng_t>::get(rng_);
+             auto& rng = prng.get(rng_);
              for (auto u : random_permutation_range(vs, rng))
              {
                  if (u == v)
@@ -192,7 +192,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
             (vs,
              [&](auto, auto v)
              {
-                 auto& rng = parallel_rng<rng_t>::get(rng_);
+                 auto& rng = prng.get(rng_);
                  auto& us = out_neighbors[v];
                  us.clear();
                  for (auto u : out_neighbors_range(v, g))
@@ -218,7 +218,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
             (vs,
              [&](auto, auto v)
              {
-                 auto& rng = parallel_rng<rng_t>::get(rng_);
+                 auto& rng = prng.get(rng_);
 
                  visited.clear();
                  for (auto u : in_neighbors_range(v, g))
@@ -280,7 +280,7 @@ template <bool parallel, class Graph, class Dist, class Weight, class RNG>
 void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                    Weight eweight, bool verbose, RNG& rng_)
 {
-    parallel_rng<rng_t>::init(rng_);
+    parallel_rng<rng_t> prng(rng_);
 
     auto cmp =
         [] (auto& x, auto& y)
@@ -304,7 +304,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
         (g,
          [&](auto v)
          {
-             auto& rng = parallel_rng<rng_t>::get(rng_);
+             auto& rng = prng.get(rng_);
              for (auto u : random_permutation_range(vs, rng))
              {
                  if (u == v)
@@ -339,7 +339,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
         parallel_loop(vs,
                       [&](auto, auto v)
                       {
-                          auto& rng = parallel_rng<rng_t>::get(rng_);
+                          auto& rng = prng.get(rng_);
 
                           vnew[v].clear();
                           vold[v].clear();
@@ -381,7 +381,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
             (vs,
              [&](auto, auto v)
              {
-                 auto& rng = parallel_rng<rng_t>::get(rng_);
+                 auto& rng = prng.get(rng_);
 
                  visited.clear();
                  for (auto u : vnew[v])

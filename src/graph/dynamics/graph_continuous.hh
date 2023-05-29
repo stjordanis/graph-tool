@@ -95,12 +95,12 @@ private:
 template <class Graph, class State, class RNG>
 void get_diff_sync(Graph& g, State state, double t, double dt, RNG& rng_)
 {
-    parallel_rng<rng_t>::init(rng_);
+    parallel_rng<rng_t> prng(rng_);
     parallel_vertex_loop
         (g,
          [&] (auto v)
          {
-             auto& rng = parallel_rng<rng_t>::get(rng_);
+             auto& rng = prng.get(rng_);
              state._s_diff[v] = state.get_node_diff(g, v, t, dt, rng);
          });
 

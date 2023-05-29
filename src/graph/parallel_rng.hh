@@ -19,8 +19,11 @@
 #define PARALLEL_RNG_HH
 
 #include "config.h"
+#include "random.hh"
 #include <vector>
 #include <mutex>
+#include <thread>
+#include <unordered_map>
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -30,27 +33,26 @@ template <class RNG>
 class parallel_rng
 {
 public:
-    static void init(RNG& rng)
+    parallel_rng(RNG& rng):
+        _rngs(get_rngs(rng))
     {
-        std::lock_guard<std::mutex> lock(_init_mutex);
-
-        size_t num_threads = 1;
 #ifdef _OPENMP
+        size_t num_threads = 1;
         num_threads = omp_get_max_threads();
-#endif
         for (size_t i = _rngs.size(); i < num_threads - 1; ++i)
         {
             _rngs.emplace_back(rng);
-            _rngs.back().set_stream(i + 1);
+            _rngs.back().set_stream(get_rng_stream());
         }
+#endif
     }
 
     static void clear()
     {
-        _rngs.clear();
+        _trngs.clear();
     }
 
-    static RNG& get(RNG& rng)
+    RNG& get(RNG& rng)
     {
         size_t tid = 0;
 #ifdef _OPENMP
@@ -62,12 +64,17 @@ public:
     }
 
 private:
-    static std::vector<RNG> _rngs;
-    static std::mutex _init_mutex;
-};
 
-template <class RNG>
-std::vector<RNG> parallel_rng<RNG>::_rngs;
+    static std::vector<RNG>& get_rngs(RNG& rng)
+    {
+        std::lock_guard<std::mutex> lock(_init_mutex);
+        return _trngs[&rng];
+    }
+
+    std::vector<RNG>& _rngs;
+    static inline std::unordered_map<RNG*, std::vector<RNG>> _trngs;
+    static inline std::mutex _init_mutex;
+};
 
 
 #endif // PARALLEL_RNG_HH
