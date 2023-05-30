@@ -123,7 +123,7 @@ void marginal_multigraph_sample(GraphInterface& gi, boost::any axs, boost::any a
     gt_dispatch<>()
         ([&](auto& g, auto& xs, auto& xc, auto& x)
          {
-             parallel_rng<rng_t>::init(rng_);
+             parallel_rng<rng_t> prng(rng_);
              parallel_edge_loop
                  (g,
                   [&](auto& e)
@@ -132,7 +132,7 @@ void marginal_multigraph_sample(GraphInterface& gi, boost::any axs, boost::any a
                       std::vector<double> probs(xc[e].begin(), xc[e].end());
                       Sampler<val_t> sample(xs[e], probs);
 
-                      auto& rng = parallel_rng<rng_t>::get(rng_);
+                      auto& rng = prng.get(rng_);
                       x[e] = sample.sample(rng);
                   });
          },
@@ -179,13 +179,13 @@ void marginal_graph_sample(GraphInterface& gi, boost::any ap,
     gt_dispatch<>()
         ([&](auto& g, auto& p, auto& x)
          {
-             parallel_rng<rng_t>::init(rng_);
+             parallel_rng<rng_t> prng(rng_);
              parallel_edge_loop
                  (g,
                   [&](auto& e)
                   {
                       std::bernoulli_distribution sample(p[e]);
-                      auto& rng = parallel_rng<rng_t>::get(rng_);
+                      auto& rng = prng.get(rng_);
                       x[e] = sample(rng);
                   });
          },
