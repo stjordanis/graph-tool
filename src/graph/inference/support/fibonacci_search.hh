@@ -18,6 +18,11 @@
 #ifndef FIBONACCI_SEARCH_HH
 #define FIBONACCI_SEARCH_HH
 
+#include <algorithm>
+#include <array>
+#include <random>
+#include <cmath>
+
 namespace graph_tool
 {
 
@@ -107,17 +112,17 @@ public:
         std::array<size_t,3> xs = {x_min, x_mid, x_max};
         std::array<double,3> fs = {f_min, f_mid, f_max};
 
-        return xs[min_element(fs.begin(), fs.end()) - fs.begin()];
+        return xs[std::min_element(fs.begin(), fs.end()) - fs.begin()];
     }
 
     size_t fibo(size_t n)
     {
-        return size_t(round(std::pow(_phi, n) / sqrt(5)));
+        return size_t(std::round(std::pow(_phi, n) / std::sqrt(5)));
     }
 
     size_t fibo_n_floor(size_t x)
     {
-        return floor(log(x * sqrt(5) + .5) / log(_phi));
+        return std::floor(std::log(x * std::sqrt(5) + .5) / std::log(_phi));
     }
 
     size_t get_mid(size_t a, size_t b)
@@ -141,7 +146,7 @@ private:
 #ifndef __clang__
     constexpr static
 #endif
-    double _phi = (1 + sqrt(5)) / 2;
+    double _phi = (1 + std::sqrt(5)) / 2;
 };
 
 }
