@@ -77,12 +77,33 @@ struct vector_from_list
         python::handle<> x(python::borrowed(obj_ptr));
         python::object o(x);
         vector<ValueType> value;
-        python::stl_input_iterator<ValueType> iter(o), end;
-        for (; iter != end; ++iter)
-            value.push_back(*iter);
+        auto init_iter =
+            [&]
+            {
+                python::stl_input_iterator<ValueType> iter(o), end;
+                for (; iter != end; ++iter)
+                    value.push_back(*iter);
+            };
+        if constexpr (std::is_scalar_v<ValueType>)
+        {
+            if (Py_IS_TYPE(o.ptr(), &PyArray_Type) ||
+                PyType_IsSubtype(Py_TYPE(o.ptr()), &PyArray_Type))
+            {
+                auto a = get_array<ValueType,1>(o);
+                value.insert(value.end(), a.begin(), a.end());
+            }
+            else
+            {
+                init_iter();
+            }
+        }
+        else
+        {
+            init_iter();
+        }
         void* storage =
-            ( (boost::python::converter::rvalue_from_python_storage
-               <vector<ValueType> >*) data)->storage.bytes;
+            ((boost::python::converter::rvalue_from_python_storage
+              <vector<ValueType> >*) data)->storage.bytes;
         new (storage) vector<ValueType>(value);
         data->convertible = storage;
     }
@@ -120,7 +141,6 @@ void set_vector_state(std::vector<T>& v, python::object state)
 {
     auto a = get_array<T,1>(state);
     v.clear();
-    v.reserve(a.size());
     v.insert(v.end(), a.begin(), a.end());
 }
 
@@ -266,11 +286,12 @@ struct variant_from_python
     {
         handle<> x(borrowed(obj_ptr));
         object o(x);
-        ValueType value = extract<ValueType>(o)();
+        extract<ValueType> str(o);
+        ValueType value = str();
         GraphInterface::deg_t deg = value;
         void* storage =
-            ( (boost::python::converter::rvalue_from_python_storage
-               <GraphInterface::deg_t>*) data)->storage.bytes;
+            ((boost::python::converter::rvalue_from_python_storage
+              <GraphInterface::deg_t>*) data)->storage.bytes;
         new (storage) GraphInterface::deg_t(deg);
         data->convertible = storage;
     }
