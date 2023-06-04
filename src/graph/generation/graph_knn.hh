@@ -20,6 +20,7 @@
 
 #include <tuple>
 #include <random>
+#include <list>
 #include <mutex>
 #include <boost/functional/hash.hpp>
 
@@ -50,6 +51,7 @@ public:
         : _d(d), _max_size(max_size), _mutex(mutex ? num_vertices(g) : 0)
     {
         _dist_cache.resize(num_vertices(g));
+        _priority.resize(num_vertices(g));
     }
 
     double operator()(size_t v, size_t u)
@@ -67,49 +69,37 @@ public:
 
     double dispatch(size_t v, size_t u)
     {
-        _time++;
         auto& cache = _dist_cache[u];
+        auto& priority = _priority[u];
         auto iter = cache.find(v);
         if (iter == cache.end())
         {
-            if (cache.size() / 2 > _max_size)
-                clean_cache(cache);
+            if (cache.size() == _max_size)
+            {
+                auto w = priority.back();
+                priority.pop_back();
+                cache.erase(w);
+            }
             double d = _d(v, u);
-            cache[v] = {d, _time};
+            priority.push_front(v);
+            cache[v] = {d, priority.begin()};
             return d;
         }
-        get<1>(iter->second) = _time;
+        else
+        {
+            priority.erase(get<1>(iter->second));
+            priority.push_front(v);
+            get<1>(iter->second) = priority.begin();
+        }
         return get<0>(iter->second);
     }
 
-    template <class Cache>
-    void clean_cache(Cache& cache)
-    {
-        std::vector<std::tuple<size_t, size_t>> heap;
-
-        for (auto& [u, dt] : cache)
-        {
-            size_t t = get<1>(dt);
-            heap.emplace_back(u, t);
-        }
-
-        auto cmp = [&](auto& a, auto& b) { return get<1>(a) > get<1>(b); };
-
-        make_heap(heap.begin(), heap.end(), cmp);
-
-        while (heap.size() > _max_size)
-        {
-            cache.erase(get<0>(heap.front()));
-            pop_heap(heap.begin(), heap.end(), cmp);
-            heap.pop_back();
-        }
-    }
-
 private:
-    std::vector<gt_hash_map<size_t, std::tuple<double, uint64_t>>> _dist_cache;
+    typedef typename std::list<size_t>::iterator iter_t;
+    std::vector<gt_hash_map<size_t, std::tuple<double, iter_t>>> _dist_cache;
+    std::vector<std::list<size_t>> _priority;
     D& _d;
     size_t _max_size;
-    uint64_t _time;
     std::vector<std::mutex> _mutex;
 
 };
@@ -135,20 +125,21 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
     std::vector<std::vector<std::tuple<size_t, double>>>
         B(num_vertices(g));
 
-    std::vector<size_t> vs;
+    std::vector<size_t> vs, vs_;
     for (auto v : vertices_range(g))
         vs.push_back(v);
+    vs_ = vs;
 
     if (verbose)
         cout << "random init" << endl;
 
-    #pragma omp parallel if (parallel) firstprivate(vs)
-    parallel_vertex_loop_no_spawn
-        (g,
-         [&](auto v)
+    #pragma omp parallel if (parallel) firstprivate(vs_)
+    parallel_loop_no_spawn
+        (vs,
+         [&](auto, auto v)
          {
              auto& rng = prng.get(rng_);
-             for (auto u : random_permutation_range(vs, rng))
+             for (auto u : random_permutation_range(vs_, rng))
              {
                  if (u == v)
                      continue;
@@ -256,6 +247,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
 
                  for (auto u : out_neighbors[v])
                  {
+                     update(v, u);
                      for (auto w : in_neighbors_range(u, g))
                          update(u, w);
                      for (auto w : out_neighbors[u])
@@ -269,9 +261,9 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
             cout << iter++ << " " << delta << " " << num_edges(g) << endl;
     }
 
-    for (auto v : vertices_range(g))
+    for (auto v : vs)
         clear_vertex(v, g);
-    for (auto v : vertices_range(g))
+    for (auto v : vs)
         build_vertex(v);
 }
 
@@ -292,20 +284,21 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
         B(num_vertices(g));
     std::vector<gt_hash_set<size_t>> Bset(num_vertices(g));
 
-    std::vector<size_t> vs;
+    std::vector<size_t> vs, vs_;
     for (auto v : vertices_range(g))
         vs.push_back(v);
+    vs_ = vs;
 
     if (verbose)
         cout << "random init" << endl;
 
-    #pragma omp parallel if (parallel) firstprivate(vs)
-    parallel_vertex_loop_no_spawn
-        (g,
-         [&](auto v)
+    #pragma omp parallel if (parallel) firstprivate(vs_)
+    parallel_loop_no_spawn
+        (vs,
+         [&](auto, auto v)
          {
              auto& rng = prng.get(rng_);
-             for (auto u : random_permutation_range(vs, rng))
+             for (auto u : random_permutation_range(vs_, rng))
              {
                  if (u == v)
                      continue;
@@ -474,9 +467,9 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
             cout << iter++ << " " << delta << endl;
     }
 
-    for (auto v : vertices_range(g))
+    for (auto v : vs)
         clear_vertex(v, g);
-    for (auto v : vertices_range(g))
+    for (auto v : vs)
     {
         for (auto& [u, l, m] : B[v])
         {
@@ -489,13 +482,17 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 template <bool parallel, class Graph, class Dist, class Weight>
 void gen_knn_exact(Graph& g, Dist&& d, size_t k, Weight eweight)
 {
-    std::vector<std::vector<std::tuple<size_t, double>>> vs(num_vertices(g));
+    std::vector<size_t> vs;
+    for (auto v : vertices_range(g))
+        vs.push_back(v);
+    std::vector<std::vector<std::tuple<size_t, double>>> us(num_vertices(g));
+
     #pragma omp parallel if (parallel)
-    parallel_vertex_loop_no_spawn
-        (g,
-         [&](auto v)
+    parallel_loop_no_spawn
+        (vs,
+         [&](auto, auto v)
          {
-             auto& ns = vs[v];
+             auto& ns = us[v];
              for (auto u : vertices_range(g))
              {
                  if (u == v)
@@ -515,9 +512,9 @@ void gen_knn_exact(Graph& g, Dist&& d, size_t k, Weight eweight)
              ns.shrink_to_fit();
          });
 
-    for (auto v : vertices_range(g))
+    for (auto v : vs)
     {
-        for (auto& [u, w] : vs[v])
+        for (auto& [u, w] : us[v])
         {
             auto e = add_edge(u, v, g).first;
             eweight[e] = w;
@@ -542,9 +539,9 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
         vs.push_back(v);
 
     #pragma omp parallel if (parallel) firstprivate(heap)
-    parallel_vertex_loop_no_spawn
-        (g,
-         [&](auto v)
+    parallel_loop_no_spawn
+        (vs,
+         [&](auto, auto v)
          {
              for (auto u : vs)
              {
@@ -567,153 +564,161 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
     }
 }
 
+template <class DescriptorProperty>
+class MaskFilter
+{
+public:
+    typedef typename boost::property_traits<DescriptorProperty>::value_type value_t;
+    MaskFilter(){}
+    MaskFilter(DescriptorProperty& filtered_property)
+        : _filtered_property(&filtered_property) {}
+
+    template <class Descriptor>
+    inline bool operator() (Descriptor&& d) const
+    {
+        return get(*_filtered_property, d);
+    }
+
+    DescriptorProperty& get_filter() { return *_filtered_property; }
+    constexpr bool is_inverted() { return false; }
+
+private:
+    DescriptorProperty* _filtered_property;
+};
+
+
 template <bool parallel, class Graph, class Dist, class Weight, class RNG>
 void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double epsilon,
                    Weight eweight, bool local, bool directed, bool verbose, RNG& rng)
 {
     size_t N = num_vertices(g);
-    if (N * N <= 4 * m)
+    std::vector<bool> select(N, true);
+    typename eprop_map_t<bool>::type::unchecked_t eselect(get(edge_index_t(), g));
+
+    auto u = make_filt_graph(g, MaskFilter<decltype(eselect)>(eselect),
+                             [&](auto v) { return select[v]; });
+
+    size_t iter = 0;
+    while (N > 1)
     {
-        gen_k_nearest_exact<parallel>(g, d, m, directed, eweight);
-        return;
+        if (verbose)
+            cout << "m = " << m <<  " nearest iteration: " << iter++ << endl;
+
+        if (N * N <= 4 * m)
+        {
+            if (verbose)
+                cout << "Running exact m nearest with N = " << N << endl;
+            gen_k_nearest_exact<parallel>(u, d, m, directed, eweight);
+            break;
+        }
+
+        size_t nk = ceil((4. * m)/N);
+        if (verbose)
+            cout << "Running KNN with N = " << N << " and k = " << nk << endl;
+        if (local)
+            gen_knn_local<parallel>(u, d, nk, r, epsilon, eweight, verbose, rng);
+        else
+            gen_knn<parallel>(u, d, nk, r, max_rk, epsilon, eweight, verbose, rng);
+
+        typedef typename graph_traits<Graph>::edge_descriptor edge_t;
+        std::vector<std::tuple<edge_t, double>> medges;
+
+        // 2m shortest directed pairs
+        auto heap = make_shared_heap(medges, 2 * m,
+                                     [](auto& x, auto& y)
+                                     {
+                                         return get<1>(x) < get<1>(y);
+                                     });
+        if (verbose)
+            cout << "Keeping 2m = " << 2 * m << " of "
+                 << nk * N << " closest directed pairs..." << endl;
+
+        #pragma omp parallel if (parallel) firstprivate(heap)
+        parallel_edge_loop_no_spawn(u,
+                                    [&](auto& e)
+                                    { heap.push({e, eweight[e]}); });
+        heap.merge();
+
+        if (verbose)
+            cout << "heap size: " << medges.size()
+                 << ", top: " << get<1>(medges.front()) << endl;
+
+        if (verbose)
+            cout << "Selecting nodes..." << endl;
+
+        typename eprop_map_t<bool>::type ekeep(g.get_edge_index_range(),
+                                               get(edge_index_t(), g));
+
+        #pragma omp parallel if (parallel)
+        parallel_loop_no_spawn(medges,
+                               [&](auto, auto& el){ ekeep[get<0>(el)] = true; });
+
+        N = 0;
+        std::vector<bool> nselect(select);
+        #pragma omp parallel if (parallel) reduction(+:N)
+        parallel_vertex_loop_no_spawn
+            (u,
+             [&](auto v)
+             {
+                 nselect[v] = true;
+                 for (auto e : in_edges_range(v, u))
+                 {
+                     if (!ekeep[e])
+                     {
+                         nselect[v] = false;
+                         break;
+                     }
+                 }
+                 if (nselect[v])
+                     N++;
+             });
+
+        select = nselect;
+        if (N > 1)
+        {
+            #pragma omp parallel if (parallel)
+            parallel_edge_loop_no_spawn(u, [&](auto& e){ eselect[e] = false; });
+        }
+    };
+
+    if (verbose)
+        cout << "Removing parallel edges..." << endl;
+
+    if (!directed)
+    {
+        undirected_adaptor g_u(g);
+        contract_parallel_edges(g_u, dummy_property_map());
+    }
+    else
+    {
+        contract_parallel_edges(g, dummy_property_map());
     }
 
-    size_t nk = ceil((4. * m)/num_vertices(g)) + 2;
     if (verbose)
-        cout << "Running KNN with k = " << nk << " and N = " << N << endl;
-    if (local)
-        gen_knn_local<parallel>(g, d, nk, r, epsilon, eweight, verbose, rng);
-    else
-        gen_knn<parallel>(g, d, nk, r, max_rk, epsilon, eweight, verbose, rng);
+        cout << "Selecting best m = " << m << " out of "
+             << num_edges(g) << " edges..." << endl;
 
-    typedef typename graph_traits<Graph>::edge_descriptor edge_t;
-    std::vector<std::tuple<edge_t, double>> medges;
+    std::vector<std::tuple<std::tuple<size_t, size_t>, double>> pairs;
 
-    // 2m shortest directed pairs
-    auto heap = make_shared_heap(medges, 2 * m,
+    auto heap = make_shared_heap(pairs, m,
                                  [](auto& x, auto& y)
                                  {
                                      return get<1>(x) < get<1>(y);
                                  });
-    if (verbose)
-        cout << "Ranking 2m = " << 2 * m << " of "
-             << num_edges(g) << " closest directed pairs..." << endl;
 
-    #pragma omp parallel firstprivate(heap)
-    parallel_edge_loop_no_spawn(g,
-                                [&](auto& e)
-                                { heap.push({e, eweight[e]}); });
-
-    heap.merge();
-
-    if (verbose)
-        cout << "heap size: " << medges.size()
-             << ", top: " << get<1>(medges.front()) << endl;
-
-    if (verbose)
-        cout << "Selecting nodes..." << endl;
-
-    typename eprop_map_t<uint8_t>::type ekeep(g.get_edge_index_range(),
-                                              get(edge_index_t(), g));
-
-    parallel_loop(medges, [&](auto, auto& el){ ekeep[get<0>(el)] = true; });
-
-    N = 0;
-    std::vector<uint8_t> select(num_vertices(g));
-    #pragma omp parallel reduction(+:N)
-    parallel_vertex_loop_no_spawn
+    #pragma omp parallel if (parallel) firstprivate(heap)
+    parallel_edge_loop_no_spawn
         (g,
-         [&](auto v)
+         [&](auto& e)
          {
-             select[v] = true;
-             for (auto e : in_edges_range(v, g))
-             {
-                 if (!ekeep[e])
-                 {
-                     select[v] = false;
-                     break;
-                 }
-             }
-             if (select[v])
-                 N++;
+             size_t u = source(e, g);
+             size_t v = target(e, g);
+             if (!directed && u > v)
+                 std::swap(u, v);
+             auto l = eweight[e];
+             heap.push({{u, v}, l});
          });
-
-    adj_list<> g_(num_vertices(g));
-    g_.set_keep_epos(true);
-    typename eprop_map_t<double>::type ew(get(edge_index_t(), g_));
-
-    auto u = make_filt_graph(g_, boost::keep_all(),
-                             [&](auto v) { return select[v]; });
-
-    if (N < num_vertices(g))
-    {
-        if (N * N <= 4 * m)
-        {
-            if (verbose)
-                cout << "Running exact nearest pairs with m = " << m << " and N = " << N << endl;
-            gen_k_nearest_exact<parallel>(u, d, m, directed, ew);
-        }
-        else
-        {
-            nk = ceil((4. * m)/N) + 2;
-            if (verbose)
-                cout << "Running KNN with k = " << nk << " and N = " << N << endl;
-            if (local)
-                gen_knn_local<parallel>(u, d, nk, r, epsilon, ew, verbose, rng);
-            else
-                gen_knn<parallel>(u, d, nk, r, max_rk, epsilon, ew, verbose, rng);
-        }
-    }
-
-    if (verbose)
-        cout << "Additional E = " << num_edges(u) << endl;
-
-    if (!directed)
-    {
-        if (verbose)
-            cout << "Removing parallel edges..." << endl;
-
-        undirected_adaptor g_u(g);
-        contract_parallel_edges(g_u, dummy_property_map());
-        undirected_adaptor u_u(g_);
-        contract_parallel_edges(u_u, dummy_property_map());
-
-        if (verbose)
-            cout << "E = " << num_edges(g)
-                 << ", E' = " << num_edges(g_) << endl;
-    }
-
-    if (verbose)
-        cout << "Selecting best m edges..." << endl;
-
-    gt_hash_set<std::tuple<size_t, size_t>> visited;
-    std::vector<std::tuple<std::tuple<size_t, size_t>, double>> pairs;
-    auto collect_heap =
-        [&](auto& g, auto& ew)
-        {
-            auto heap = make_shared_heap(pairs, m,
-                                         [](auto& x, auto& y)
-                                         {
-                                             return get<1>(x) < get<1>(y);
-                                         });
-            for (auto e : edges_range(g))
-            {
-                size_t u = source(e, g);
-                size_t v = target(e, g);
-                if (!directed && u > v)
-                    std::swap(u, v);
-                if (visited.find({u, v}) != visited.end())
-                    continue;
-                visited.insert({u, v});
-                auto l = ew[e];
-                heap.push({{u, v}, l});
-            }
-
-            heap.merge();
-        };
-
-    collect_heap(g, eweight);
-    collect_heap(u, ew);
+    heap.merge();
 
     if (verbose)
         cout << "E = " << pairs.size()
