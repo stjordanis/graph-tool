@@ -7,7 +7,7 @@ job_gcc_amd64:
     - export PYTHONPATH=$PWD/install/site-packages
     - cd doc
     - sphinx-build -E -b html . build/html || true
-    - ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 10 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
+    - ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 16 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
   tags:
     - amd64
   except:
@@ -22,7 +22,7 @@ job_clang_amd64:
     - export PYTHONPATH=$PWD/install/site-packages
     - cd doc
     - sphinx-build -E -b html . build/html || true
-    - ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 10 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
+    - ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 16 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
   tags:
     - amd64
   except:
