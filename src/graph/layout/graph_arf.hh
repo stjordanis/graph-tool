@@ -32,7 +32,7 @@ struct get_arf_layout
     {
         typedef typename property_traits<PosMap>::value_type::value_type pos_t;
 
-        parallel_vertex_loop_no_spawn
+        parallel_vertex_loop
             (g,
              [&](auto v)
              {
@@ -51,7 +51,7 @@ struct get_arf_layout
                 (g,
                  [&](auto v)
                  {
-                     vector<pos_t> delta_pos(dim,0);
+                     vector<pos_t> delta_pos(dim, 0);
 
                      for (auto w : vertices_range(g))
                      {

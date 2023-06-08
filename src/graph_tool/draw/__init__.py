@@ -394,7 +394,7 @@ def arf_layout(g, weight=None, d=0.5, a=10, dt=0.001, epsilon=1e-6,
     """
 
     if pos is None:
-        pos = random_layout(g, dim=dim)
+        pos = random_layout(g, dim=dim, shape=[[0, 1]] * dim)
     _check_prop_vector(pos, name="pos", floating=True)
 
     ug = GraphView(g, directed=False)
