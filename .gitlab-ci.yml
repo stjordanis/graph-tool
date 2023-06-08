@@ -5,7 +5,9 @@ job_gcc_amd64:
     - CCACHE_BASEDIR=$PWD make $MAKEOPTS
     - make install
     - export PYTHONPATH=$PWD/install/site-packages
-    - cd doc; ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 10 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
+    - cd doc
+    - sphinx-build -E -b html . build/html || true
+    - ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 10 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
   tags:
     - amd64
   except:
@@ -18,7 +20,9 @@ job_clang_amd64:
     - CCACHE_BASEDIR=$PWD make $MAKEOPTS
     - make install
     - export PYTHONPATH=$PWD/install/site-packages
-    - cd doc; ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 10 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
+    - cd doc
+    - sphinx-build -E -b html . build/html || true
+    - ls *rst autosummary/*rst | parallel --halt-on-error 2 --jobs 10 sphinx-build -E -d envs/{} -b doctest . builds/{} {};
   tags:
     - amd64
   except:
