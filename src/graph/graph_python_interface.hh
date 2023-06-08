@@ -46,6 +46,7 @@ namespace std
 #include "demangle.hh"
 #include "numpy_bind.hh"
 #include "coroutine.hh"
+#include "openmp.hh"
 
 // This file includes a simple python interface for the internally kept
 // graph. It defines a PythonVertex, PythonEdge and PythonIterator template
@@ -743,12 +744,9 @@ bool hasattr(boost::python::object obj, std::string const& attrName);
 class GILRelease
 {
 public:
-    GILRelease(bool release=true)
+    GILRelease(bool release = true)
     {
-        size_t tid = 0;
-#ifdef _OPENMP
-        tid = omp_get_thread_num();
-#endif
+        size_t tid = get_thread_num();
         if (release && tid == 0)
             _state = PyEval_SaveThread();
     }

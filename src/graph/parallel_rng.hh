@@ -25,9 +25,7 @@
 #include <thread>
 #include <unordered_map>
 
-#ifdef _OPENMP
-# include <omp.h>
-#endif
+#include "openmp.hh"
 
 template <class RNG>
 class parallel_rng
@@ -36,15 +34,12 @@ public:
     parallel_rng(RNG& rng):
         _rngs(get_rngs(rng))
     {
-#ifdef _OPENMP
-        size_t num_threads = 1;
-        num_threads = omp_get_max_threads();
+        size_t num_threads = get_num_threads();
         for (size_t i = _rngs.size(); i < num_threads - 1; ++i)
         {
             _rngs.emplace_back(rng);
             _rngs.back().set_stream(get_rng_stream());
         }
-#endif
     }
 
     static void clear()
@@ -54,10 +49,7 @@ public:
 
     RNG& get(RNG& rng)
     {
-        size_t tid = 0;
-#ifdef _OPENMP
-        tid = omp_get_thread_num();
-#endif
+        size_t tid = get_thread_num();
         if (tid == 0)
             return rng;
         return _rngs[tid - 1];
