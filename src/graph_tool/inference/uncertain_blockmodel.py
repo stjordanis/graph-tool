@@ -35,7 +35,7 @@ class UncertainBaseState(object):
     r"""Base state for uncertain network inference."""
 
     def __init__(self, g, nested=True, state_args={}, bstate=None,
-                 self_loops=False, init_empty=False, max_w=1 << 16):
+                 self_loops=False, init_empty=False, max_m=1 << 16):
 
         self.g = g
 
@@ -108,14 +108,14 @@ class UncertainBaseState(object):
         self.slist = Vector_size_t(init=edges[:,0])
         self.tlist = Vector_size_t(init=edges[:,1])
 
-        self.max_w = max_w
+        self.max_m = max_m
 
         init_q_cache()
 
     def __getstate__(self):
         return dict(g=self.g, nested=self.nbstate is not None,
                     bstate=(self.nbstate if self.nbstate is not None else self.bstate),
-                    self_loops=self.self_loops)
+                    self_loops=self.self_loops, max_m=self.max_m)
 
     def __setstate__(self, state):
         self.__init__(**state)

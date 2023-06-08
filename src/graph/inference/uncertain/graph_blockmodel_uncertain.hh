@@ -37,7 +37,8 @@ using namespace std;
     ((S_const,, double, 0))                                                    \
     ((aE,, double, 0))                                                         \
     ((E_prior,, bool, 0))                                                      \
-    ((self_loops,, bool, 0))
+    ((self_loops,, bool, 0))                                                   \
+    ((max_m,, int, 0))
 
 template <class BlockState>
 struct Uncertain
@@ -181,6 +182,12 @@ struct Uncertain
         double add_edge_dS(size_t u, size_t v, int dm, const uentropy_args_t& ea)
         {
             auto& e = get_u_edge(u, v);
+
+            auto m = (e == _null_edge) ? 0 : _eweight[e];
+
+            if (m + dm > _max_m)
+                return numeric_limits<double>::infinity();
+
             double dS = _block_state.modify_edge_dS(u, v, e, dm, ea);
             if (ea.density && _E_prior)
             {
