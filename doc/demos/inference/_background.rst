@@ -147,7 +147,7 @@ figure.
    savefig("sbm-example-ers.svg")
 
 .. table::
-    :class: figure
+    :align: center
 
     +----------------------------------+------------------------------+
     |.. figure:: sbm-example-ers.svg   |.. figure:: sbm-example.svg   |
