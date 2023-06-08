@@ -10,7 +10,7 @@ we have
 
 .. testsetup:: model-selection
 
-   gt.seed_rng(44)
+   gt.seed_rng(42)
 
 .. testcode:: model-selection
 
@@ -25,8 +25,8 @@ we have
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   Non-degree-corrected DL:	 8526.689850...
-   Degree-corrected DL:	 8667.387042...
+   Non-degree-corrected DL:	 8504.411444...
+   Degree-corrected DL:	 8542.336883...
 
 Since it yields the smallest description length, the non-degree-corrected
 fit should be preferred. The statistical significance of the choice can
@@ -52,13 +52,13 @@ fits. In our particular case, we have
 .. testoutput:: model-selection
    :options: +NORMALIZE_WHITESPACE
 
-   ln Λ:  140.697191...
+   ln Λ:  37.925438...
 
 The precise threshold that should be used to decide when to `reject a
 hypothesis <https://en.wikipedia.org/wiki/Hypothesis_testing>`_ is
 subjective and context-dependent, but the value above implies that the
-particular non-degree-corrected fit is around :math:`\mathrm{e}^{140}
-\approx 10^{60}` times more likely than the non-degree corrected one,
+particular non-degree-corrected fit is around :math:`\mathrm{e}^{37.9}
+\approx 10^{16}` times more likely than the non-degree corrected one,
 and hence it can be safely concluded that it provides a substantially
 better fit.
 

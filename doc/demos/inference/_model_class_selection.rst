@@ -64,7 +64,7 @@ show in the example below.
 
 .. testsetup:: model-evidence
 
-   np.random.seed(43)            
+   np.random.seed(43)
    gt.seed_rng(43)
 
 .. testcode:: model-evidence
@@ -110,8 +110,8 @@ show in the example below.
 
 .. testoutput:: model-evidence
 
-   Model log-evidence for deg_corr = True: -679.052588...
-   Model log-evidence for deg_corr = False: -672.773743...
+   Model log-evidence for deg_corr = True: -678.153636...
+   Model log-evidence for deg_corr = False: -673.376428...
 
 The outcome shows a preference for the non-degree-corrected model.
 
@@ -120,7 +120,7 @@ approach for the same network, using the nested model.
 
 .. testsetup:: nested-model-evidence
 
-   np.random.seed(43)            
+   np.random.seed(43)
    gt.seed_rng(42)
 
 .. testcode:: nested-model-evidence
@@ -168,8 +168,8 @@ approach for the same network, using the nested model.
 
 .. testoutput:: nested-model-evidence
 
-   Model log-evidence for deg_corr = True: -666.444281...
-   Model log-evidence for deg_corr = False: -656.553775...
+   Model log-evidence for deg_corr = True: -664.271777...
+   Model log-evidence for deg_corr = False: -655.768987...
 
 The results are similar: The non-degree-corrected model possesses the
 largest evidence. Note also that we observe a better evidence for the

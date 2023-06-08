@@ -1594,7 +1594,7 @@ class BooleanState(DiscreteStateBase):
            ...     ret = state.iterate_sync(niter=1)
            ...     l += 1
            >>> print("Period length:", l)
-           Period length: 3
+           Period length: 4
 
         """
 

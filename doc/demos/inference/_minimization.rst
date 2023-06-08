@@ -95,7 +95,7 @@ which yields:
 
 .. testoutput:: football
 
-   82
+   99
 
 .. note::
 
@@ -149,7 +149,7 @@ illustrate its use with the neural network of the `C. elegans
 
 .. testsetup:: celegans
 
-   gt.seed_rng(44)
+   gt.seed_rng(42)
 
 .. testcode:: celegans
 
@@ -207,9 +207,9 @@ which shows the number of nodes and groups in all levels:
 
 .. testoutput:: celegans
 
-   l: 0, N: 297, B: 26
-   l: 1, N: 26, B: 9
-   l: 2, N: 9, B: 3
+   l: 0, N: 297, B: 24
+   l: 1, N: 24, B: 8
+   l: 2, N: 8, B: 3
    l: 3, N: 3, B: 1
    l: 4, N: 1, B: 1
 
@@ -227,10 +227,10 @@ The hierarchical levels themselves are represented by individual
 
 .. testoutput:: celegans
 
-   <BlockState object with 297 blocks (26 nonempty), degree-corrected, for graph <Graph object, directed, with 297 vertices and 2359 edges, 2 internal vertex properties, 1 internal edge property, 2 internal graph properties, at 0x...>, at 0x...>
-   <BlockState object with 26 blocks (9 nonempty), for graph <Graph object, directed, with 297 vertices and 274 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
-   <BlockState object with 9 blocks (3 nonempty), for graph <Graph object, directed, with 26 vertices and 59 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
-   <BlockState object with 3 blocks (1 nonempty), for graph <Graph object, directed, with 9 vertices and 9 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 297 blocks (24 nonempty), degree-corrected, for graph <Graph object, directed, with 297 vertices and 2359 edges, 2 internal vertex properties, 1 internal edge property, 2 internal graph properties, at 0x...>, at 0x...>
+   <BlockState object with 24 blocks (8 nonempty), for graph <Graph object, directed, with 297 vertices and 271 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 8 blocks (3 nonempty), for graph <Graph object, directed, with 24 vertices and 49 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
+   <BlockState object with 3 blocks (1 nonempty), for graph <Graph object, directed, with 8 vertices and 9 edges, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
    <BlockState object with 1 blocks (1 nonempty), for graph <Graph object, directed, with 3 vertices and 1 edge, 2 internal vertex properties, 1 internal edge property, at 0x...>, at 0x...>
 
 This means that we can inspect the hierarchical partition just as before:
@@ -246,9 +246,9 @@ This means that we can inspect the hierarchical partition just as before:
 
 .. testoutput:: celegans
 
-   197
-   6
-   8
+   248
+   14
+   4
 
 Refinements using merge-split MCMC
 ++++++++++++++++++++++++++++++++++
@@ -283,8 +283,8 @@ to the above minimization for the `C. elegans` network is the following:
 
 .. testoutput:: celegans-mcmc
 
-   Improvement: -122.83984...
-      
+   Improvement: -81.412028...
+
 Whenever possible, this procedure should be repeated several times, and
 the result with the smallest description length (obtained via the
 :meth:`~graph_tool.inference.BlockState.entropy` method)

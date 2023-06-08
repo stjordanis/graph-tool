@@ -135,7 +135,7 @@ simple example, using
    except FileNotFoundError:
        pass
    np.random.seed(43)
-   gt.seed_rng(45)
+   gt.seed_rng(42)
 
 .. testcode:: measured
 
@@ -312,9 +312,9 @@ Which yields:
 
 .. testoutput:: measured
 
-   Posterior probability of edge (11, 36): 1.0
-   Posterior probability of non-edge (15, 73): 0.0
-   Estimated average local clustering: 0.573779 ± 0.003477...
+   Posterior probability of edge (11, 36): 0.859885...
+   Posterior probability of non-edge (15, 73): 0.083008...
+   Estimated average local clustering: 0.572547 ± 0.004556...
 
 The results are very similar to the ones obtained with the uniform model
 in this case, but can be quite different in situations where a large

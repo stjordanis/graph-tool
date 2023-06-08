@@ -825,7 +825,7 @@ def align_partition_labels(x, y):
     >>> x = [0, 2, 2, 1, 1, 1, 2, 3, 2]
     >>> y = gt.shuffle_partition_labels(x)
     >>> print(y)
-    [0 3 3 2 2 2 3 1 3]
+    [3 1 1 2 2 2 1 0 1]
     >>> gt.align_partition_labels(y, x)
     array([0, 2, 2, 1, 1, 1, 2, 3, 2], dtype=int32)
 
@@ -868,7 +868,7 @@ def align_nested_partition_labels(x, y):
     >>> x = [[0, 2, 2, 1, 1, 1, 2, 3, 2], [1, 0, 1, 0], [0,0]]
     >>> y = gt.shuffle_nested_partition_labels(x)
     >>> print(y)
-    [array([0, 3, 3, 2, 2, 2, 3, 1, 3], dtype=int32), array([1, 0, 0, 1], dtype=int32), array([0, 0], dtype=int32)]
+    [array([3, 1, 1, 2, 2, 2, 1, 0, 1], dtype=int32), array([0, 1, 0, 1], dtype=int32), array([0, 0], dtype=int32)]
     >>> gt.align_nested_partition_labels(y, x)
     [array([0, 2, 2, 1, 1, 1, 2, 3, 2], dtype=int32), array([1, 0, 1, 0], dtype=int32), array([0, 0], dtype=int32)]
     """
