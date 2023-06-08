@@ -89,8 +89,15 @@ struct vector_from_list
             if (Py_IS_TYPE(o.ptr(), &PyArray_Type) ||
                 PyType_IsSubtype(Py_TYPE(o.ptr()), &PyArray_Type))
             {
-                auto a = get_array<ValueType,1>(o);
-                value.insert(value.end(), a.begin(), a.end());
+                try
+                {
+                    auto a = get_array<ValueType,1>(o);
+                    value.insert(value.end(), a.begin(), a.end());
+                }
+                catch (InvalidNumpyConversion&)
+                {
+                    init_iter();
+                }
             }
             else
             {
