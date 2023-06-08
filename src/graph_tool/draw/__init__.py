@@ -367,10 +367,10 @@ def arf_layout(g, weight=None, d=0.5, a=10, dt=0.001, epsilon=1e-6,
        :hide:
 
        np.random.seed(42)
-       gt.seed_rng(42)
+       gt.seed_rng(43)
 
     >>> g = gt.price_network(300)
-    >>> pos = gt.arf_layout(g, max_iter=0)
+    >>> pos = gt.arf_layout(g)
     >>> gt.graph_draw(g, pos=pos, output="graph-draw-arf.pdf")
     <...>
 

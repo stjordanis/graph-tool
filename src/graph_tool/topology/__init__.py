@@ -1470,7 +1470,7 @@ def extract_largest_component(g, directed=None, prune=False):
     >>> g = gt.random_graph(100, lambda: poisson(1), directed=False)
     >>> u = gt.extract_largest_component(g)
     >>> print(u)
-    <GraphView object, undirected, with 10 vertices and 9 edges, edges filtered by (<EdgePropertyMap object with value type 'bool', for Graph 0x..., at 0x..>, False), vertices filtered by (<VertexPropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False), at 0x...>
+    <GraphView object, undirected, with 10 vertices and 9 edges, edges filtered by (<EdgePropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False), vertices filtered by (<VertexPropertyMap object with value type 'bool', for Graph 0x..., at 0x...>, False), at 0x...>
     """
 
     c = label_largest_component(g, directed=directed)
