@@ -29,48 +29,113 @@ using namespace std;
 using namespace boost;
 using namespace graph_tool;
 
-template <class Value>
+typedef mpl::vector<int8_t, int16_t, int32_t, int64_t,
+                    uint8_t, uint16_t, uint32_t,
+                    uint64_t, float, double, long double> scalars_t;
+
+class stop: public std::exception {};
+
 void vector_map(boost::python::object ovals, boost::python::object omap)
 {
-    multi_array_ref<Value,1> vals = get_array<Value,1>(ovals);
-    multi_array_ref<Value,1> map = get_array<Value,1>(omap);
-
-    size_t pos = 0;
-    for (size_t i = 0; i < vals.size(); ++i)
+    bool found = false;
+    try
     {
-        Value v = vals[i];
-        if (map[v] == -1)
-            map[v] = pos++;
-        vals[i] = map[v];
+        mpl::for_each<scalars_t>
+            ([&](auto idx)
+             {
+                 typedef decltype(idx) idx_t;
+                 try
+                 {
+                     auto vals = get_array<idx_t,1>(ovals);
+                     mpl::for_each<scalars_t>
+                         ([&](auto val)
+                          {
+                              typedef decltype(val) val_t;
+                              try
+                              {
+                                  auto map = get_array<val_t,1>(omap);
+                                  for (size_t i = 0; i < vals.size(); ++i)
+                                      vals[i] = map[vals[i]];
+                                  found = true;
+                                  throw stop();
+                              }
+                              catch (InvalidNumpyConversion&) {};
+                          });
+                 }
+                 catch (InvalidNumpyConversion&) {};
+             });
     }
+    catch (stop&) {};
+    if (!found)
+        throw ValueException("Invalid array types");
 }
 
-template <class Value>
 void vector_contiguous_map(boost::python::object ovals)
 {
-    multi_array_ref<Value,1> vals = get_array<Value,1>(ovals);
-    gt_hash_map<Value, size_t> map;
-
-    for (size_t i = 0; i < vals.size(); ++i)
+    bool found = false;
+    try
     {
-        Value v = vals[i];
-        auto iter = map.find(v);
-        if (iter == map.end())
-            iter = map.insert(make_pair(v, map.size())).first;
-        vals[i] = iter->second;
+        mpl::for_each<scalars_t>
+            ([&](auto idx)
+             {
+                 typedef decltype(idx) idx_t;
+                 try
+                 {
+                     auto vals = get_array<idx_t,1>(ovals);
+                     gt_hash_map<idx_t, size_t> map;
+
+                     for (size_t i = 0; i < vals.size(); ++i)
+                     {
+                         auto v = vals[i];
+                         auto iter = map.find(v);
+                         if (iter == map.end())
+                             iter = map.insert({v, map.size()}).first;
+                         vals[i] = iter->second;
+                     }
+                     found = true;
+                     throw stop();
+                 }
+                 catch (InvalidNumpyConversion&) {};
+             });
     }
+    catch (stop&) {};
+    if (!found)
+        throw ValueException("Invalid array type");
 }
 
-template <class Value>
 void vector_rmap(boost::python::object ovals, boost::python::object omap)
 {
-    multi_array_ref<Value,1> vals = get_array<Value,1>(ovals);
-    multi_array_ref<Value,1> map = get_array<Value,1>(omap);
-
-    for (size_t i = 0; i < vals.size(); ++i)
+    bool found = false;
+    try
     {
-        map[vals[i]] = i;
+        mpl::for_each<scalars_t>
+            ([&](auto idx)
+             {
+                 typedef decltype(idx) idx_t;
+                 try
+                 {
+                     auto vals = get_array<idx_t,1>(ovals);
+                     mpl::for_each<scalars_t>
+                         ([&](auto val)
+                          {
+                              typedef decltype(val) val_t;
+                              try
+                              {
+                                  auto map = get_array<val_t,1>(omap);
+                                  for (size_t i = 0; i < vals.size(); ++i)
+                                      map[vals[i]] = i;
+                                  found = true;
+                                  throw stop();
+                              }
+                              catch (InvalidNumpyConversion&) {};
+                          });
+                 }
+                 catch (InvalidNumpyConversion&) {};
+             });
     }
+    catch (stop&) {};
+    if (!found)
+        throw ValueException("Invalid array types");
 }
 
 #define __MOD__ inference
@@ -82,17 +147,13 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     using namespace boost::python;
     docstring_options dopt(true, false);
 
-    def("vector_map", vector_map<int32_t>);
-    def("vector_map64", vector_map<int64_t>);
-    def("vector_mapdouble", vector_map<double>);
-    def("vector_rmap", vector_rmap<int32_t>);
-    def("vector_rmap64", vector_rmap<int64_t>);
-    def("vector_rmapdouble", vector_rmap<double>);
-    def("vector_contiguous_map", vector_contiguous_map<int32_t>);
-    def("vector_contiguous_map64", vector_contiguous_map<int64_t>);
+    def("vector_map", vector_map);
+    def("vector_rmap", vector_rmap);
+    def("vector_contiguous_map", vector_contiguous_map);
 
     def("lbinom", lbinom<size_t, size_t>);
     def("lbinom_fast", lbinom_fast<true, size_t, size_t>);
+    def("lgamma_fast", lgamma_fast<true, size_t>);
     def("log_sum_exp", +[](double x, double y){ return log_sum_exp(x, y); });
 
     class_<FibonacciSearch>("FibonacciSearch")
