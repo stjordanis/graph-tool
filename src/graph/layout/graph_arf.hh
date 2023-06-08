@@ -86,6 +86,8 @@ struct get_arf_layout
                          }
                      }
 
+                     #pragma omp barrier
+
                      for (size_t j = 0; j < dim; ++j)
                      {
                          delta += abs(delta_pos[j]);
