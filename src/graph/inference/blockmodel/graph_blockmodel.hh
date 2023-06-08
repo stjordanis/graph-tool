@@ -2158,7 +2158,7 @@ public:
                     {
                         S -= vterm_exact(_mrp[r],      _mrm[r],      _wr[r], _deg_corr, _bg);
                         S += vterm_exact(_mrp[r] + dm, _mrm[r] + dm, _wr[r], _deg_corr, _bg);
-                        S += vterm_exact(_mrp[s],      _mrm[s],      _wr[s], _deg_corr, _bg);
+                        S -= vterm_exact(_mrp[s],      _mrm[s],      _wr[s], _deg_corr, _bg);
                         S += vterm_exact(_mrp[s] + dm, _mrm[s] + dm, _wr[s], _deg_corr, _bg);
                     }
                     else
