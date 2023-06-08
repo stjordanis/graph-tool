@@ -85,7 +85,7 @@ struct nth<0>
     template <class T, class... Ts>
     auto&& operator()(T&& a, Ts&&...) const
     {
-        return a;
+        return std::forward<T>(a);
     }
 };
 
@@ -147,7 +147,7 @@ auto uncheck(std::vector<boost::checked_vector_property_map<Type,Index>> p)
 template <class T>
 auto&& uncheck(T&& a)
 {
-    return a;
+    return std::forward<T>(a);
 }
 
 
