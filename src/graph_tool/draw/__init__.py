@@ -366,8 +366,8 @@ def arf_layout(g, weight=None, d=0.5, a=10, dt=0.001, epsilon=1e-6,
     .. testcode::
        :hide:
 
-       np.random.seed(42)
-       gt.seed_rng(43)
+       np.random.seed(43)
+       gt.seed_rng(45)
 
     >>> g = gt.price_network(300)
     >>> pos = gt.arf_layout(g)
