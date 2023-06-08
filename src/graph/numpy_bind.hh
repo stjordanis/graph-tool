@@ -216,7 +216,7 @@ boost::multi_array_ref<ValueType,dim> get_array(boost::python::object points)
         std::string type_name = boost::python::extract<std::string>(boost::python::str(dtype));
         throw InvalidNumpyConversion("not a numpy array! instead: " + type_name);
 #else
-        throw InvalidNumpyConversion("not a numpy array!"");
+        throw InvalidNumpyConversion("not a numpy array!");
 #endif
     }
 
