@@ -86,8 +86,7 @@ struct vector_from_list
             };
         if constexpr (std::is_scalar_v<ValueType>)
         {
-            if (Py_IS_TYPE(o.ptr(), &PyArray_Type) ||
-                PyType_IsSubtype(Py_TYPE(o.ptr()), &PyArray_Type))
+            if (PyType_IsSubtype(Py_TYPE(o.ptr()), &PyArray_Type))
             {
                 try
                 {

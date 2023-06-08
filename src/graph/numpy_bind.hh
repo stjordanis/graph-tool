@@ -207,14 +207,17 @@ public:
 template <class ValueType, size_t dim>
 boost::multi_array_ref<ValueType,dim> get_array(boost::python::object points)
 {
-    if (!Py_IS_TYPE(points.ptr(), &PyArray_Type) &&
-        !PyType_IsSubtype(Py_TYPE(points.ptr()), &PyArray_Type))
+    if (!PyType_IsSubtype(Py_TYPE(points.ptr()), &PyArray_Type))
     {
+#if PY_VERSION_HEX >= 0x030b00f0
         auto* oname = PyType_GetName(Py_TYPE(points.ptr()));
         boost::python::handle<> x(boost::python::borrowed(oname));
         boost::python::object dtype(x);
         std::string type_name = boost::python::extract<std::string>(boost::python::str(dtype));
         throw InvalidNumpyConversion("not a numpy array! instead: " + type_name);
+#else
+        throw InvalidNumpyConversion("not a numpy array!"");
+#endif
     }
 
     PyArrayObject* pa = (PyArrayObject*) points.ptr();
