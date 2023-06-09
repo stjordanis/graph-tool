@@ -62,9 +62,12 @@ build_tarball:
     - export DEB_VERSION=1
   script:
     - img=`echo $BASE | sed s/:/_/`
+    - img="${img}_${CI_COMMIT_SHORT_SHA}"
     - cd release/debian
     - docker buildx build --platform linux/$PLATFORM --build-arg BASE=$BASE --build-arg DEB_VERSION=$DEB_VERSION --build-arg REF=`git log -n1 --pretty='%H'` -t $img . --no-cache --pull --load
-    - docker cp $img:build build
+    - cid=`docker create $img`
+    - docker cp ${cid}:build build
+    - docker rm -v $cid
     - name=`echo $BASE | grep -o ":.*" | sed s/://`
     - aptly repo create $name || true
     - for f in `ls build/python3-graph-tool_*.deb`; do nf=`echo $f | sed s/.deb/_$name.deb/`; mv $f $nf; aptly repo add $name $nf || true; done
