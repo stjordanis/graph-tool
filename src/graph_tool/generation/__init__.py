@@ -1558,8 +1558,7 @@ def remove_random_edges(g, M, weight=None, counts=True):
 
 
 def generate_knn(points, k, dist=None, pairs=False, exact=False, local=True,
-                 r=.5, max_rk=None, epsilon=.001, directed=False, verbose=False,
-                 cache_dist=True, max_cache_size=None):
+                 r=.5, max_rk=None, epsilon=.001, directed=False, verbose=False):
     r"""Generate a graph of k-nearest neighbors (or pairs) from a set of
     multidimensional points.
 
@@ -1599,12 +1598,6 @@ def generate_knn(points, k, dist=None, pairs=False, exact=False, local=True,
     directed : ``bool`` (optional, default: ``False``)
         If ``True`` a directed version of the graph will be returned, otherwise
         the graph is undirected.
-    cache_dist : ``bool`` (optional, default: ``True``)
-        If ``True``, an internal cache of the distance values are kept,
-        implemented as a hash table.
-    cache_dist : ``int`` (optional, default: ``None``)
-        Maximum number of cached distances per vertex. If not provided, the size
-        of the cache will be unlimited.
 
     Returns
     -------
@@ -1651,9 +1644,6 @@ def generate_knn(points, k, dist=None, pairs=False, exact=False, local=True,
         points = numpy.asarray(points, dtype="float")
         N = points.shape[0]
 
-    if max_cache_size is None:
-        max_cache_size = N
-
     if max_rk is None:
         max_rk = N
 
@@ -1672,15 +1662,13 @@ def generate_knn(points, k, dist=None, pairs=False, exact=False, local=True,
     else:
         if pairs:
             libgraph_tool_generation.gen_k_nearest(g._Graph__graph, points, k,
-                                                   r, max_rk, epsilon, cache_dist,
-                                                   max_cache_size,
+                                                   r, max_rk, epsilon,
                                                    _prop("e", g, w), local,
                                                    directed, verbose,
                                                    _get_rng())
         else:
             libgraph_tool_generation.gen_knn(g._Graph__graph, points, k, r,
-                                             max_rk, epsilon, local, cache_dist,
-                                             max_cache_size,
+                                             max_rk, epsilon, local,
                                              _prop("e", g, w), verbose,
                                              _get_rng())
 

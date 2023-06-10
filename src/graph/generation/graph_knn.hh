@@ -21,7 +21,7 @@
 #include <tuple>
 #include <random>
 #include <list>
-#include <mutex>
+#include <shared_mutex>
 #include <boost/functional/hash.hpp>
 
 #include "graph.hh"
@@ -41,74 +41,6 @@ namespace graph_tool
 {
 using namespace std;
 using namespace boost;
-
-template <bool mutex, class D>
-class CachedDist
-{
-public:
-    template <class Graph>
-    CachedDist(Graph& g, D& d, size_t max_size)
-        : _d(d), _max_size(max_size), _mutex(mutex ? num_vertices(g) : 0)
-    {
-        _dist_cache.resize(num_vertices(g));
-        _priority.resize(num_vertices(g));
-    }
-
-    double operator()(size_t v, size_t u)
-    {
-        if constexpr (mutex)
-        {
-            std::unique_lock lock(_mutex[u]);
-            return dispatch(v, u);
-        }
-        else
-        {
-            return dispatch(v, u);
-        }
-    }
-
-    double dispatch(size_t v, size_t u)
-    {
-        auto& cache = _dist_cache[u];
-        auto& priority = _priority[u];
-        auto iter = cache.find(v);
-        if (iter == cache.end())
-        {
-            if (cache.size() == _max_size)
-            {
-                auto w = priority.back();
-                priority.pop_back();
-                cache.erase(w);
-            }
-            double d = _d(v, u);
-            priority.push_front(v);
-            cache[v] = {d, priority.begin()};
-            return d;
-        }
-        else
-        {
-            priority.erase(get<1>(iter->second));
-            priority.push_front(v);
-            get<1>(iter->second) = priority.begin();
-        }
-        return get<0>(iter->second);
-    }
-
-private:
-    typedef typename std::list<size_t>::iterator iter_t;
-    std::vector<gt_hash_map<size_t, std::tuple<double, iter_t>>> _dist_cache;
-    std::vector<std::list<size_t>> _priority;
-    D& _d;
-    size_t _max_size;
-    std::vector<std::mutex> _mutex;
-
-};
-
-template <bool mutex, class Graph, class D>
-auto make_cached_dist(Graph& g, D& d, size_t max_size)
-{
-    return CachedDist<mutex, D>(g, d, max_size);
-}
 
 template <bool parallel, class Graph, class Dist, class Weight, class RNG>
 void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
@@ -130,6 +62,8 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
         vs.push_back(v);
     vs_ = vs;
 
+    vector<gt_hash_set<size_t>> all_visited(num_vertices(g));
+
     if (verbose)
         cout << "random init" << endl;
 
@@ -139,6 +73,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
          [&](auto, auto v)
          {
              auto& rng = prng.get(rng_);
+             auto& vis = all_visited[v];
              for (auto u : random_permutation_range(vs_, rng))
              {
                  if (u == v)
@@ -147,6 +82,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
                  auto& Bv = B[v];
                  Bv.emplace_back(u, l);
                  std::push_heap(Bv.begin(), Bv.end(), cmp);
+                 vis.insert(u);
                  if (Bv.size() == k)
                      break;
              }
@@ -163,7 +99,6 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
 
     std::vector<std::vector<size_t>> out_neighbors(num_vertices(g));
 
-    idx_set<size_t, false, false> visited(num_vertices(g));
     std::bernoulli_distribution rsample(r);
 
     size_t iter = 0;
@@ -204,16 +139,16 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
             cout << "update neighbors" << endl;
 
         size_t c = 0;
-        #pragma omp parallel if (parallel) reduction(+:c) firstprivate(visited)
+        size_t n = 0;
+
+        #pragma omp parallel if (parallel) reduction(+:c,n)
         parallel_loop_no_spawn
             (vs,
              [&](auto, auto v)
              {
                  auto& rng = prng.get(rng_);
 
-                 visited.clear();
-                 for (auto u : in_neighbors_range(v, g))
-                     visited.insert(u);
+                 auto& visited = all_visited[v];
 
                  auto& Bv = B[v];
 
@@ -235,6 +170,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
                          }
 
                          visited.insert(w);
+                         n++;
                      };
 
                  for (auto u : in_neighbors_range(v, g))
@@ -258,7 +194,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
         delta = c / double(vs.size() * k);
 
         if (verbose)
-            cout << iter++ << " " << delta << " " << num_edges(g) << endl;
+            cout << iter++ << " " << delta << " " << c << " " << n << endl;
     }
 
     for (auto v : vs)
@@ -283,6 +219,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
     std::vector<std::vector<std::tuple<size_t, double, bool>>>
         B(num_vertices(g));
     std::vector<gt_hash_set<size_t>> Bset(num_vertices(g));
+    vector<gt_hash_set<size_t>> all_visited(num_vertices(g));
 
     std::vector<size_t> vs, vs_;
     for (auto v : vertices_range(g))
@@ -298,6 +235,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
          [&](auto, auto v)
          {
              auto& rng = prng.get(rng_);
+             auto& visited = all_visited[v];
              for (auto u : random_permutation_range(vs_, rng))
              {
                  if (u == v)
@@ -305,14 +243,15 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                  double l = d(u, v);
                  auto& Bv = B[v];
                  Bv.emplace_back(u, l, true);
-                 Bset[v].insert(u);
                  std::push_heap(Bv.begin(), Bv.end(), cmp);
+                 Bset[v].insert(u);
+                 visited.insert(u);
                  if (Bv.size() == k)
                      break;
              }
          });
 
-    std::vector<std::mutex> mutex(num_vertices(g));
+    std::vector<std::shared_mutex> mutex(num_vertices(g));
 
     std::vector<std::vector<size_t>> vnew(num_vertices(g));
     std::vector<std::vector<size_t>> rvnew(num_vertices(g));
@@ -368,8 +307,9 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
         size_t rK = std::max(size_t(ceil(r * k)), size_t(1));
         size_t c = 0;
+        size_t n = 0;
 
-        #pragma omp parallel if (parallel) firstprivate(visited)
+        #pragma omp parallel if (parallel) firstprivate(visited) reduction(+:c,n)
         parallel_loop_no_spawn
             (vs,
              [&](auto, auto v)
@@ -423,19 +363,54 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
                  auto update_pair =
                      [&](auto s, auto t)
                      {
-                         double l = d(s, t);
                          auto& Bt = B[t];
                          auto& Bst = Bset[t];
+                         auto& vis = all_visited[t];
+                         n++;
 
-                         if constexpr (parallel)
-                         {
-                             std::unique_lock lock(mutex[t]);
-                             update_heap(s, l, Bt, Bst);
-                         }
-                         else
-                         {
-                             update_heap(s, l, Bt, Bst);
-                         }
+                         auto do_ulocked =
+                             [&](auto&& f)
+                             {
+                                 if constexpr (parallel)
+                                 {
+                                     std::unique_lock lock(mutex[t]);
+                                     f();
+                                 }
+                                 else
+                                 {
+                                     f();
+                                 }
+                             };
+
+                         auto do_slocked =
+                             [&](auto&& f)
+                             {
+                                 if constexpr (parallel)
+                                 {
+                                     std::shared_lock lock(mutex[t]);
+                                     return f();
+                                 }
+                                 else
+                                 {
+                                     return f();
+                                 }
+                             };
+
+                         if (do_slocked([&]()
+                                        {
+                                            if (vis.find(s) != vis.end())
+                                                return true;
+                                            return false;
+                                        }))
+                             return;
+
+                         double l = d(s, t);
+
+                         do_ulocked([&]()
+                                    {
+                                        update_heap(s, l, Bt, Bst);
+                                        vis.insert(s);
+                                    });
                      };
 
                  for (auto s : vnew[v])
@@ -464,7 +439,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
         delta = c / double(vs.size() * k);
 
         if (verbose)
-            cout << iter++ << " " << delta << endl;
+            cout << iter++ << " " << delta << " " << c << " " << n << endl;
     }
 
     for (auto v : vs)

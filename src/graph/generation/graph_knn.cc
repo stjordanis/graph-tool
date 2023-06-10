@@ -24,8 +24,7 @@ using namespace graph_tool;
 
 void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                   double r, size_t max_rk, double epsilon, bool local,
-                  bool cache, size_t max_cache, boost::any aw, bool verbose,
-                  rng_t& rng)
+                  boost::any aw, bool verbose,  rng_t& rng)
 
 {
     typedef eprop_map_t<double>::type emap_t;
@@ -46,81 +45,33 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                 return sqrt(d);
             };
 
-        if (!cache)
-        {
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         if (local)
-                             gen_knn_local<true>(g, d_e, k, r, epsilon, w, verbose, rng);
-                         else
-                             gen_knn<true>(g, d_e, k, r, max_rk, epsilon, w, verbose, rng);
-                     })();
-        }
-        else
-        {
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         if (local)
-                         {
-                             auto d = make_cached_dist<true>(g, d_e, max_cache);
-                             gen_knn_local<true>(g, d, k, r, epsilon, w, verbose, rng);
-                         }
-                         else
-                         {
-                             auto d = make_cached_dist<false>(g, d_e, max_cache);
-                             gen_knn<true>(g, d, k, r, max_rk, epsilon, w, verbose, rng);
-                         }
-                     })();
-        }
+        run_action<always_directed_never_filtered_never_reversed>()
+            (gi, [&](auto& g)
+                 {
+                     if (local)
+                         gen_knn_local<true>(g, d_e, k, r, epsilon, w, verbose, rng);
+                     else
+                         gen_knn<true>(g, d_e, k, r, max_rk, epsilon, w, verbose, rng);
+                 })();
     }
     catch (InvalidNumpyConversion&)
     {
-        if (!cache)
-        {
-            auto d_e =
-                [&](auto v, auto u)
-                {
-                    double d = python::extract<double>(om(v, u));
-                    return d;
-                };
+        auto d_e =
+            [&](auto v, auto u)
+            {
+                double d;
+                d = python::extract<double>(om(v, u));
+                return d;
+            };
 
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         if (local)
-                             gen_knn_local<false>(g, d_e, k, r, epsilon, w, verbose, rng);
-                         else
-                             gen_knn<false>(g, d_e, k, r, max_rk, epsilon, w, verbose, rng);
-                     })();
-        }
-        else
-        {
-            auto d_e =
-                [&](auto v, auto u)
-                {
-                    double d;
-                    #pragma omp critical
-                    d = python::extract<double>(om(v, u));
-                    return d;
-                };
-
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         if (local)
-                         {
-                             auto d = make_cached_dist<true>(g, d_e, max_cache);
-                             gen_knn_local<true>(g, d, k, r, epsilon, w, verbose, rng);
-                         }
-                         else
-                         {
-                             auto d = make_cached_dist<false>(g, d_e, max_cache);
-                             gen_knn<true>(g, d, k, r, max_rk, epsilon, w, verbose, rng);
-                         }
-                     })();
-        }
+        run_action<always_directed_never_filtered_never_reversed>()
+            (gi, [&](auto& g)
+                 {
+                     if (local)
+                         gen_knn_local<false>(g, d_e, k, r, epsilon, w, verbose, rng);
+                     else
+                         gen_knn<false>(g, d_e, k, r, max_rk, epsilon, w, verbose, rng);
+                 })();
     }
 }
 
@@ -168,9 +119,8 @@ void generate_knn_exact(GraphInterface& gi, boost::python::object om, size_t k,
 }
 
 void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
-                        double r, size_t max_rk, double epsilon, bool cache,
-                        size_t max_cache, boost::any aw, bool local,
-                        bool directed, bool verbose, rng_t& rng)
+                        double r, size_t max_rk, double epsilon, boost::any aw,
+                        bool local, bool directed, bool verbose, rng_t& rng)
 
 {
     typedef eprop_map_t<double>::type emap_t;
@@ -186,81 +136,29 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
                 return euclidean(u, v, m);
             };
 
-        if (!cache)
-        {
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         gen_k_nearest<true>(g, d_e, k, r, max_rk, epsilon, w,
-                                             local, directed, verbose, rng);
-                     })();
-        }
-        else
-        {
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         if (local)
-                         {
-                             auto d = make_cached_dist<true>(g, d_e, max_cache);
-                             gen_k_nearest<true>(g, d, k, r, max_rk, epsilon, w, true,
-                                                 directed, verbose, rng);
-                         }
-                         else
-                         {
-                             auto d = make_cached_dist<false>(g, d_e, max_cache);
-                             gen_k_nearest<true>(g, d, k, r, max_rk, epsilon, w, false,
-                                                 directed, verbose, rng);
-                         }
-                     })();
-        }
+        run_action<always_directed_never_filtered_never_reversed>()
+            (gi, [&](auto& g)
+                 {
+                     gen_k_nearest<true>(g, d_e, k, r, max_rk, epsilon, w, local,
+                                         directed, verbose, rng);
+                 })();
     }
     catch (InvalidNumpyConversion&)
     {
-        if (!cache)
-        {
-            auto d_e =
-                [&](auto v, auto u)
-                {
-                    double d = python::extract<double>(om(v, u));
-                    return d;
-                };
+        auto d_e =
+            [&](auto v, auto u)
+            {
+                double d;
+                d = python::extract<double>(om(v, u));
+                return d;
+            };
 
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         gen_k_nearest<false>(g, d_e, k, r, max_rk, epsilon, w,
-                                              local, directed, verbose, rng);
-                     })();
-        }
-        else
-        {
-            auto d_e =
-                [&](auto v, auto u)
-                {
-                    double d;
-                    #pragma omp critical
-                    d = python::extract<double>(om(v, u));
-                    return d;
-                };
-
-            run_action<always_directed_never_filtered_never_reversed>()
-                (gi, [&](auto& g)
-                     {
-                         if (local)
-                         {
-                             auto d = make_cached_dist<true>(g, d_e, max_cache);
-                             gen_k_nearest<true>(g, d, k, r, max_rk, epsilon, w, true,
-                                                 directed, verbose, rng);
-                         }
-                         else
-                         {
-                             auto d = make_cached_dist<false>(g, d_e, max_cache);
-                             gen_k_nearest<false>(g, d, k, r, max_rk, epsilon, w, true,
-                                                  directed, verbose, rng);
-                         }
-                     })();
-        }
+        run_action<always_directed_never_filtered_never_reversed>()
+            (gi, [&](auto& g)
+                 {
+                     gen_k_nearest<false>(g, d_e, k, r, max_rk, epsilon, w, local,
+                                          directed, verbose, rng);
+                 })();
     }
 }
 
