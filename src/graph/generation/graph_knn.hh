@@ -42,9 +42,9 @@ namespace graph_tool
 using namespace std;
 using namespace boost;
 
-template <bool parallel, class Graph, class Dist, class Weight, class RNG>
+template <bool parallel, class Graph, class Dist, class Weight, class Hint, class RNG>
 void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
-             double epsilon, Weight eweight, bool verbose, RNG& rng_)
+             double epsilon, Weight eweight, Hint& hint, bool verbose, RNG& rng_)
 {
     parallel_rng<rng_t> prng(rng_);
 
@@ -54,15 +54,15 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
             return get<1>(x) < get<1>(y);
         };
 
-    std::vector<std::vector<std::tuple<uint32_t, double>>>
+    std::vector<std::vector<std::tuple<size_t, double>>>
         B(num_vertices(g));
 
-    std::vector<uint32_t> vs, vs_;
+    std::vector<size_t> vs, vs_;
     for (auto v : vertices_range(g))
         vs.push_back(v);
     vs_ = vs;
 
-    vector<gt_hash_map<uint32_t,uint32_t>> all_seen(num_vertices(g));
+    vector<gt_hash_map<size_t,size_t>> all_seen(num_vertices(g));
 
     if (verbose)
         cout << "random init" << endl;
@@ -86,18 +86,32 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
                  if (Bv.size() == k)
                      break;
              }
+             for (auto u : all_neighbors_range(v, hint))
+             {
+                 if (seen.find(u) != seen.end() || u == v)
+                     continue;
+                 double l = d(u, v);
+                 if (l < get<1>(Bv.front()))
+                 {
+                     std::pop_heap(Bv.begin(), Bv.end(), cmp);
+                     Bv.back() = {u, l};
+                     std::push_heap(Bv.begin(), Bv.end(), cmp);
+                 }
+                 seen[u] = 0;
+             }
          });
 
     auto build_vertex = [&](auto v)
         {
             for (auto& [u, l] : B[v])
             {
-                auto e = add_edge(size_t(u), size_t(v), g).first;
+                auto e = add_edge(u, v, g).first;
                 eweight[e] = l;
             }
         };
 
-    std::vector<std::vector<uint32_t>> out_neighbors(num_vertices(g));
+    std::vector<std::vector<size_t>> out_neighbors(num_vertices(g));
+    std::vector<std::vector<size_t>> hint_neighbors(num_vertices(hint));
 
     std::bernoulli_distribution rsample(r);
 
@@ -120,9 +134,12 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
              {
                  auto& rng = prng.get(rng_);
                  auto& us = out_neighbors[v];
+                 auto& hus = hint_neighbors[v];
                  us.clear();
                  for (auto u : out_neighbors_range(v, g))
                      us.push_back(u);
+                 for (auto u : all_neighbors_range(v, hint))
+                     hus.push_back(u);
                  if (max_rk < us.size())
                  {
                      size_t i = 0;
@@ -132,6 +149,17 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
                              break;
                      }
                      us.erase(us.begin() + max_rk, us.end());
+                 }
+
+                 if (max_rk < hus.size())
+                 {
+                     size_t i = 0;
+                     for ([[maybe_unused]] auto u : random_permutation_range(hus, rng))
+                     {
+                         if (++i == max_rk)
+                             break;
+                     }
+                     hus.erase(hus.begin() + max_rk, hus.end());
                  }
              });
 
@@ -156,7 +184,7 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
                      seen[v] = iter;
 
                  auto update =
-                     [&](uint32_t u, uint32_t w)
+                     [&](size_t u, size_t w)
                      {
                          if (u == w || w == v)
                              return;
@@ -184,6 +212,13 @@ void gen_knn(Graph& g, Dist&& d, size_t k, double r, size_t max_rk,
                          seen[w] = iter;
                          n++;
                      };
+
+                 for (auto u : all_neighbors_range(v, hint))
+                 {
+                     update(v, u);
+                     for (auto w : hint_neighbors[u])
+                         update(u, w);
+                 }
 
                  for (auto u : in_neighbors_range(v, g))
                  {
@@ -236,12 +271,12 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
             return get<1>(x) < get<1>(y);
         };
 
-    std::vector<std::vector<std::tuple<uint32_t, double, bool>>>
+    std::vector<std::vector<std::tuple<size_t, double, bool>>>
         B(num_vertices(g));
-    std::vector<gt_hash_set<uint32_t>> Bset(num_vertices(g));
-    vector<gt_hash_set<uint32_t>> all_visited(num_vertices(g));
+    std::vector<gt_hash_set<size_t>> Bset(num_vertices(g));
+    vector<gt_hash_set<size_t>> all_visited(num_vertices(g));
 
-    std::vector<uint32_t> vs, vs_;
+    std::vector<size_t> vs, vs_;
     for (auto v : vertices_range(g))
         vs.push_back(v);
     vs_ = vs;
@@ -273,12 +308,12 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 
     std::vector<std::shared_mutex> mutex(num_vertices(g));
 
-    std::vector<std::vector<uint32_t>> vnew(num_vertices(g));
-    std::vector<std::vector<uint32_t>> rvnew(num_vertices(g));
-    std::vector<std::vector<uint32_t>> vold(num_vertices(g));
-    std::vector<std::vector<uint32_t>> rvold(num_vertices(g));
+    std::vector<std::vector<size_t>> vnew(num_vertices(g));
+    std::vector<std::vector<size_t>> rvnew(num_vertices(g));
+    std::vector<std::vector<size_t>> vold(num_vertices(g));
+    std::vector<std::vector<size_t>> rvold(num_vertices(g));
 
-    idx_set<uint32_t, false, false> visited(num_vertices(g));
+    idx_set<size_t, false, false> visited(num_vertices(g));
     std::bernoulli_distribution rsample(std::min(r, 1.));
 
     size_t iter = 0;
@@ -468,7 +503,7 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
     {
         for (auto& [u, l, m] : B[v])
         {
-            auto e = add_edge(size_t(u), size_t(v), g).first;
+            auto e = add_edge(u, v, g).first;
             eweight[e] = l;
         }
     }
@@ -477,10 +512,10 @@ void gen_knn_local(Graph& g, Dist&& d, size_t k, double r, double epsilon,
 template <bool parallel, class Graph, class Dist, class Weight>
 void gen_knn_exact(Graph& g, Dist&& d, size_t k, Weight eweight)
 {
-    std::vector<uint32_t> vs;
+    std::vector<size_t> vs;
     for (auto v : vertices_range(g))
         vs.push_back(v);
-    std::vector<std::vector<std::tuple<uint32_t, double>>> us(num_vertices(g));
+    std::vector<std::vector<std::tuple<size_t, double>>> us(num_vertices(g));
 
     #pragma omp parallel if (parallel)
     parallel_loop_no_spawn
@@ -488,7 +523,7 @@ void gen_knn_exact(Graph& g, Dist&& d, size_t k, Weight eweight)
          [&](auto, auto v)
          {
              auto& ns = us[v];
-             for (uint32_t u : vertices_range(g))
+             for (size_t u : vertices_range(g))
              {
                  if (u == v)
                      continue;
@@ -511,7 +546,7 @@ void gen_knn_exact(Graph& g, Dist&& d, size_t k, Weight eweight)
     {
         for (auto& [u, w] : us[v])
         {
-            auto e = add_edge(size_t(u), size_t(v), g).first;
+            auto e = add_edge(u, v, g).first;
             eweight[e] = w;
         }
     }
@@ -521,7 +556,7 @@ template <bool parallel, class Graph, class Dist, class Weight>
 void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
                          Weight eweight)
 {
-    std::vector<std::tuple<std::tuple<uint32_t, uint32_t>, double>> pairs;
+    std::vector<std::tuple<std::tuple<size_t, size_t>, double>> pairs;
 
     auto heap = make_shared_heap(pairs, k,
                                  [](auto& x, auto& y)
@@ -529,7 +564,7 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
                                      return get<1>(x) < get<1>(y);
                                  });
 
-    std::vector<uint32_t> vs;
+    std::vector<size_t> vs;
     for (auto v : vertices_range(g))
         vs.push_back(v);
 
@@ -554,7 +589,7 @@ void gen_k_nearest_exact(Graph& g, Dist&& d, size_t k, bool directed,
     for (auto& [uv, l] : pairs)
     {
         auto& [u, v] = uv;
-        auto e = add_edge(size_t(u), size_t(v), g).first;
+        auto e = add_edge(u, v, g).first;
         eweight[e] = l;
     }
 }
@@ -582,9 +617,10 @@ private:
 };
 
 
-template <bool parallel, class Graph, class Dist, class Weight, class RNG>
-void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double epsilon,
-                   Weight eweight, bool local, bool directed, bool verbose, RNG& rng)
+template <bool parallel, class Graph, class Dist, class Weight, class Hint, class RNG>
+void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk,
+                   double epsilon, Weight eweight, Hint& hint, bool local,
+                   bool directed, bool verbose, RNG& rng)
 {
     size_t N = num_vertices(g);
     std::vector<bool> select(N, true);
@@ -592,6 +628,9 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double
 
     auto u = make_filt_graph(g, MaskFilter<decltype(eselect)>(eselect),
                              [&](auto v) { return select[v]; });
+
+    auto uhint = make_filt_graph(hint, keep_all(),
+                                 [&](auto v) { return select[v]; });
 
     size_t iter = 0;
     while (N > 1)
@@ -613,7 +652,7 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double
         if (local)
             gen_knn_local<parallel>(u, d, nk, r, epsilon, eweight, verbose, rng);
         else
-            gen_knn<parallel>(u, d, nk, r, max_rk, epsilon, eweight, verbose, rng);
+            gen_knn<parallel>(u, d, nk, r, max_rk, epsilon, eweight, uhint, verbose, rng);
 
         typedef typename graph_traits<Graph>::edge_descriptor edge_t;
         std::vector<std::tuple<edge_t, double>> medges;
@@ -693,7 +732,7 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double
         cout << "Selecting best m = " << m << " out of "
              << num_edges(g) << " edges..." << endl;
 
-    std::vector<std::tuple<std::tuple<uint32_t, uint32_t>, double>> pairs;
+    std::vector<std::tuple<std::tuple<size_t, size_t>, double>> pairs;
 
     auto heap = make_shared_heap(pairs, m,
                                  [](auto& x, auto& y)
@@ -706,8 +745,8 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double
         (g,
          [&](auto& e)
          {
-             uint32_t u = source(e, g);
-             uint32_t v = target(e, g);
+             size_t u = source(e, g);
+             size_t v = target(e, g);
              if (!directed && u > v)
                  std::swap(u, v);
              auto l = eweight[e];
@@ -728,7 +767,7 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk, double
     for (auto& [uv, l] : pairs)
     {
         auto& [u, v] = uv;
-        auto e = add_edge(size_t(u), size_t(v), g).first;
+        auto e = add_edge(u, v, g).first;
         eweight[e] = l;
     }
 }

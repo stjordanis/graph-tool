@@ -29,6 +29,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
 {
     typedef eprop_map_t<double>::type emap_t;
     auto w = any_cast<emap_t>(aw);
+    adj_list<> h(gi.get_num_vertices());
 
     try
     {
@@ -51,7 +52,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                      if (local)
                          gen_knn_local<true>(g, d_e, k, r, epsilon, w, verbose, rng);
                      else
-                         gen_knn<true>(g, d_e, k, r, max_rk, epsilon, w, verbose, rng);
+                         gen_knn<true>(g, d_e, k, r, max_rk, epsilon, w, h, verbose, rng);
                  })();
     }
     catch (InvalidNumpyConversion&)
@@ -70,7 +71,7 @@ void generate_knn(GraphInterface& gi, boost::python::object om, size_t k,
                      if (local)
                          gen_knn_local<false>(g, d_e, k, r, epsilon, w, verbose, rng);
                      else
-                         gen_knn<false>(g, d_e, k, r, max_rk, epsilon, w, verbose, rng);
+                         gen_knn<false>(g, d_e, k, r, max_rk, epsilon, w, h, verbose, rng);
                  })();
     }
 }
@@ -125,6 +126,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
 {
     typedef eprop_map_t<double>::type emap_t;
     auto w = any_cast<emap_t>(aw);
+    adj_list<> h(gi.get_num_vertices());
 
     try
     {
@@ -139,7 +141,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
         run_action<always_directed_never_filtered_never_reversed>()
             (gi, [&](auto& g)
                  {
-                     gen_k_nearest<true>(g, d_e, k, r, max_rk, epsilon, w, local,
+                     gen_k_nearest<true>(g, d_e, k, r, max_rk, epsilon, w, h, local,
                                          directed, verbose, rng);
                  })();
     }
@@ -156,7 +158,7 @@ void generate_k_nearest(GraphInterface& gi, boost::python::object om, size_t k,
         run_action<always_directed_never_filtered_never_reversed>()
             (gi, [&](auto& g)
                  {
-                     gen_k_nearest<false>(g, d_e, k, r, max_rk, epsilon, w, local,
+                     gen_k_nearest<false>(g, d_e, k, r, max_rk, epsilon, w, h, local,
                                           directed, verbose, rng);
                  })();
     }
