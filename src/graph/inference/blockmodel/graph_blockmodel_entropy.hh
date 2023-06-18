@@ -36,19 +36,19 @@ enum deg_dl_kind
 
 struct entropy_args_t
 {
-    bool dense;
-    bool multigraph;
-    bool exact;
-    bool adjacency;
-    bool recs;
-    bool deg_entropy;
-    bool partition_dl;
-    bool degree_dl;
-    deg_dl_kind  degree_dl_kind;
-    bool edges_dl;
-    bool recs_dl;
-    double beta_dl;
-    bool Bfield;
+    bool dense = false;
+    bool multigraph = true;
+    bool exact = true;
+    bool adjacency = true;
+    bool recs = true;
+    bool deg_entropy = true;
+    bool partition_dl = true;
+    bool degree_dl = true;
+    deg_dl_kind  degree_dl_kind = deg_dl_kind::DIST;
+    bool edges_dl = true;
+    bool recs_dl = true;
+    double beta_dl = 1.;
+    bool Bfield = false;
 };
 
 // Sparse entropy terms
