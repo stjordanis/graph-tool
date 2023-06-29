@@ -443,6 +443,7 @@ libgraph_tool_inference_la_SOURCES = \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_cising_glauber_mcmc.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_ising_glauber.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_ising_glauber_mcmc.cc \
+	src/graph/inference/uncertain/graph_blockmodel_dynamics_ising_glauber_mcmc_h.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_pseudo_cising.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_pseudo_cising_mcmc.cc \
 	src/graph/inference/uncertain/graph_blockmodel_dynamics_pseudo_cising_mcmc_h.cc \
