@@ -19,6 +19,7 @@
 #define CACHE_HH
 
 #include "config.h"
+#include "../../openmp.hh"
 
 #include <vector>
 #include <cmath>
@@ -30,13 +31,46 @@ using namespace std;
 // Repeated computation of x*log(x) and log(x) actually adds up to a lot of
 // time. A significant speedup can be made by caching pre-computed values.
 
-extern thread_local vector<double> __safelog_cache;
-extern thread_local vector<double> __xlogx_cache;
-extern thread_local vector<double> __lgamma_cache;
+extern vector<vector<double>> __safelog_cache;
+extern vector<vector<double>> __xlogx_cache;
+extern vector<vector<double>> __lgamma_cache;
 
 constexpr size_t __max_size = (500 * (1 << 20)) / sizeof(double);
 
-void init_safelog(size_t x);
+template <class T>
+size_t get_size(T n)
+{
+    size_t k = 1;
+    while (k < size_t(n))
+        k <<= 1;
+    return k;
+}
+
+template <bool Init=true, class T, class F, class Cache>
+[[gnu::pure]]
+inline double get_cached(T x, F&& f, Cache& tcache)
+{
+    auto t = get_thread_num();
+    auto& cache = tcache[t];
+    if (size_t(x) >= cache.size())
+    {
+        if (Init && size_t(x) < __max_size)
+        {
+            size_t old_size = cache.size();
+            if (size_t(x) >= old_size)
+            {
+                cache.resize(get_size(x + 1));
+                for (size_t y = old_size; y < cache.size(); ++y)
+                    cache[y] = f(y);
+            }
+        }
+        else
+        {
+            return f(x);
+        }
+    }
+    return cache[x];
+}
 
 template <class T>
 [[gnu::const]]
@@ -51,17 +85,8 @@ template <bool Init=true, class T>
 [[gnu::pure]]
 inline double safelog_fast(T x)
 {
-    if (size_t(x) >= __safelog_cache.size())
-    {
-        if (Init && size_t(x) < __max_size)
-            init_safelog(x);
-        else
-            return safelog(x);
-    }
-    return __safelog_cache[x];
+    return get_cached<Init>(x, [](T x) { return safelog(x); }, __safelog_cache);
 }
-
-void init_xlogx(size_t x);
 
 template <class T>
 [[gnu::const]]
@@ -74,33 +99,17 @@ template <bool Init=true, class T>
 [[gnu::pure]]
 inline double xlogx_fast(T x)
 {
-    if (size_t(x) >= __xlogx_cache.size())
-    {
-        if (Init && size_t(x) < __max_size)
-            init_xlogx(x);
-        else
-            return xlogx(x);
-    }
-    return __xlogx_cache[x];
+    return get_cached<Init>(x, [](T x) { return xlogx(x); }, __xlogx_cache);
 }
-
-void init_lgamma(size_t x);
 
 template <bool Init=true, class T>
 [[gnu::pure]]
 inline double lgamma_fast(T x)
 {
-    if (size_t(x) >= __lgamma_cache.size())
-    {
-        if (Init && size_t(x) < __max_size)
-            init_lgamma(x);
-        else
-            return lgamma(x);
-    }
-    return __lgamma_cache[x];
+    return get_cached<Init>(x, [](T x) { return lgamma(x); }, __lgamma_cache);
 }
 
-void init_cache(size_t E);
+void init_cache();
 
 } // graph_tool namespace
 

@@ -4062,7 +4062,9 @@ def openmp_get_num_threads():
 
 def openmp_set_num_threads(n):
     """Set the number of OpenMP threads."""
-    return libcore.openmp_set_num_threads(n)
+    from graph_tool.inference import libinference
+    libcore.openmp_set_num_threads(n)
+    libinference.init_cache()
 
 def openmp_get_schedule():
     """Return the runtime OpenMP schedule and chunk size. The schedule can by

@@ -22,77 +22,33 @@ namespace graph_tool
 
 using namespace std;
 
-thread_local vector<double> __safelog_cache;
-thread_local vector<double> __xlogx_cache;
-thread_local vector<double> __lgamma_cache;
-
-
-template <class T>
-size_t get_size(T n)
-{
-    size_t k = 1;
-    while (k < size_t(n))
-        k <<= 1;
-    return k;
-}
-
-void init_safelog(size_t x)
-{
-    size_t old_size = __safelog_cache.size();
-    if (x >= old_size)
-    {
-        __safelog_cache.resize(get_size(x + 1));
-        for (size_t i = old_size; i < __safelog_cache.size(); ++i)
-            __safelog_cache[i] = safelog(i);
-    }
-}
+vector<vector<double>> __safelog_cache;
+vector<vector<double>> __xlogx_cache;
+vector<vector<double>> __lgamma_cache;
 
 void clear_safelog()
 {
-    vector<double>().swap(__safelog_cache);
+    __safelog_cache.clear();
 }
 
-
-void init_xlogx(size_t x)
-{
-    size_t old_size = __xlogx_cache.size();
-    if (x >= old_size)
-    {
-        __xlogx_cache.resize(get_size(x + 1));
-        for (size_t i = old_size; i < __xlogx_cache.size(); ++i)
-            __xlogx_cache[i] = xlogx(i);
-    }
-}
 
 void clear_xlogx()
 {
-    vector<double>().swap(__xlogx_cache);
+    __xlogx_cache.clear();
 }
 
-void init_lgamma(size_t x)
-{
-    size_t old_size = __lgamma_cache.size();
-    if (x >= old_size)
-    {
-        __lgamma_cache.resize(get_size(x + 1));
-        if (old_size == 0)
-            __lgamma_cache[0] = numeric_limits<double>::infinity();
-        for (size_t i = std::max(old_size, size_t(1));
-             i < __lgamma_cache.size(); ++i)
-            __lgamma_cache[i] = lgamma(i);
-    }
-}
 
 void clear_lgamma()
 {
-    vector<double>().swap(__lgamma_cache);
+    __lgamma_cache.clear();
 }
 
-void init_cache(size_t E)
+void init_cache()
 {
-    init_lgamma(2 * E);
-    init_xlogx(2 * E);
-    init_safelog(2 * E);
+    auto nt = get_num_threads();
+    __lgamma_cache.resize(nt);
+    __xlogx_cache.resize(nt);
+    __safelog_cache.resize(nt);
 }
 
 

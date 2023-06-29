@@ -398,7 +398,7 @@ public:
     double get_edges_dl(size_t B, Graph& g, int dE = 0)
     {
         size_t BB = (graph_tool::is_directed(g)) ? B * B : (B * (B + 1)) / 2;
-        return lbinom(BB + _E + dE - 1, _E + dE);
+        return lbinom_fast(BB + _E + dE - 1, _E + dE);
     }
 
     template <class VProp>

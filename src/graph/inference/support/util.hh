@@ -42,7 +42,7 @@ template <bool Init=true, class T1, class T2>
 [[gnu::const]]
 inline double lbinom_fast(T1 N, T2 k)
 {
-    if (N == 0 || k == 0 || k > N)
+    if (N == 0 || k == 0 || k >= N)
         return 0;
     return ((lgamma_fast<Init>(N + 1) - lgamma_fast<Init>(k + 1)) - lgamma_fast<Init>(N - k + 1));
 }
@@ -59,7 +59,8 @@ inline double lbinom_careful(T1 N, T2 k)
     {
         // We have N >> k. Use Stirling's approximation: ln N! ~ N ln N - N
         // and reorder
-        return - N * std::log1p(-k / N) - k * std::log1p(-k / N) - k - lgk + k * std::log(N);
+        double N_ = N;
+        return - N * std::log1p(-k / N_) - k * std::log1p(-k / N_) - k - lgk + k * std::log(N_);
     }
     else
     {

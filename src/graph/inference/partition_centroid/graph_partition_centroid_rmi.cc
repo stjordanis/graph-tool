@@ -79,11 +79,7 @@ REGISTER_MOD
              for (auto c : nr)
                  N += c;
 
-
              double EMI = 0;
-
-             init_safelog(2 * N + 1);
-             init_lgamma(2 * N + 1);
 
              #pragma omp parallel for reduction(+:EMI) collapse(2)
              for (size_t r = 0; r < nr.size(); ++r)
@@ -94,12 +90,12 @@ REGISTER_MOD
                      auto b = ns[s];
                      for (int32_t m = max(1, a + b - N); m <= min(a, b); ++m)
                      {
-                         double T = (m * (safelog_fast<false>(m) + safelog_fast<false>(N) - safelog_fast<false>(a) - safelog_fast<false>(b))) / N;
-                         double lT = lgamma_fast<false>(a + 1) + lgamma_fast<false>(b + 1);
-                         lT += lgamma_fast<false>(N - a + 1) + lgamma_fast<false>(N - b + 1);
-                         lT -= lgamma_fast<false>(N + 1) + lgamma_fast<false>(m + 1);
-                         lT -= lgamma_fast<false>(a - m + 1) + lgamma_fast<false>(b - m + 1);
-                         lT -= lgamma_fast<false>(N - a - b + m + 1);
+                         double T = (m * (safelog_fast(m) + safelog_fast(N) - safelog_fast(a) - safelog_fast(b))) / N;
+                         double lT = lgamma_fast(a + 1) + lgamma_fast(b + 1);
+                         lT += lgamma_fast(N - a + 1) + lgamma_fast(N - b + 1);
+                         lT -= lgamma_fast(N + 1) + lgamma_fast(m + 1);
+                         lT -= lgamma_fast(a - m + 1) + lgamma_fast(b - m + 1);
+                         lT -= lgamma_fast(N - a - b + m + 1);
                          EMI += T * exp(lT);
                      }
                  }

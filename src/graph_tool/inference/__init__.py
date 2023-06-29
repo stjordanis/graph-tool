@@ -325,3 +325,5 @@ from . ranked import *
 from . latent_layers import *
 from . histogram import *
 from . clique_decomposition import *
+
+libinference.init_cache()
