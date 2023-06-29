@@ -141,7 +141,7 @@ class OverlapBlockState(BlockState):
 
         if b is None:
             # create a random partition into B blocks.
-            B = min(B, self.g.num_vertices())
+            B = min((B, self.g.num_vertices()))
             ba = random.randint(0, B, self.g.num_vertices())
             ba[:B] = arange(B)        # avoid empty blocks
             if B < self.g.num_vertices():
@@ -254,7 +254,7 @@ class OverlapBlockState(BlockState):
         self._state = libinference.make_overlap_block_state(self)
 
         if deg_corr:
-            init_q_cache(max(self.get_E(), self.get_N()) + 1)
+            init_q_cache(max((self.get_E(), self.get_N())) + 1)
 
         self._entropy_args = dict(adjacency=True, deg_entropy=True, dl=True,
                                   partition_dl=True, degree_dl=True,
@@ -836,17 +836,17 @@ def get_block_edge_gradient(g, be, cmap=None):
     rg = [numpy.inf, -numpy.inf]
     for e in g.edges():
         s, t = be[e]
-        rg[0] = min(s, rg[0])
-        rg[0] = min(t, rg[0])
-        rg[1] = max(s, rg[1])
-        rg[1] = max(t, rg[1])
+        rg[0] = min((s, rg[0]))
+        rg[0] = min((t, rg[0]))
+        rg[1] = max((s, rg[1]))
+        rg[1] = max((t, rg[1]))
 
     for e in g.edges():
         if int(e.source()) < int(e.target()) or g.is_directed():
             s, t = be[e]
         else:
             t, s = be[e]
-        cs = cmap((s - rg[0]) / max(rg[1] - rg[0], 1))
-        ct = cmap((t - rg[0]) / max(rg[1] - rg[0], 1))
+        cs = cmap((s - rg[0]) / max((rg[1] - rg[0], 1)))
+        ct = cmap((t - rg[0]) / max((rg[1] - rg[0], 1)))
         cp[e] = [0] + list(cs) + [1] + list(ct)
     return cp

@@ -157,7 +157,7 @@ class RankedBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         positions in the unit interval :math:`[0,1]`."""
         u = self.get_vertex_order()
         u = u.copy("double")
-        u.fa /= max(u.fa.max(), 1)
+        u.fa /= max((u.fa.max(), 1))
         return u
 
     def collect_vertex_marginals(self, p=None, b=None, update=1):

@@ -248,6 +248,6 @@ def minimize_nested_blockmodel_dl(g, init_bs=None,
         if abs(ret[0]) < 1e-8:
             l -= 1
         else:
-            l = min(l + 1, len(state.levels) - 1)
+            l = min((l + 1, len(state.levels) - 1))
 
     return state

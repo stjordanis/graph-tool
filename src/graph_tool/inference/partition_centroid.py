@@ -318,18 +318,18 @@ def mutual_information(x, y, norm=False, adjusted=False, avg_method="arithmetic"
         H1 = -(n1 * np.log(n1)).sum() / N + np.log(N)
         H2 = -(n2 * np.log(n2)).sum() / N + np.log(N)
         if avg_method == "max":
-            avg = max(H1, H2)
+            avg = max((H1, H2))
         elif avg_method == "min":
-            avg = min(H1, H2)
+            avg = min((H1, H2))
         elif avg_method == "arithmetic":
             avg = (H1 + H2) / 2
         elif avg_method == "geometric":
             avg = sqrt(H1 * H2)
         R = avg - EMI
         if R < 0:
-            R = min(R, -np.finfo("float64").eps)
+            R = min((R, -np.finfo("float64").eps))
         else:
-            R = max(R, np.finfo("float64").eps)
+            R = max((R, np.finfo("float64").eps))
         MI = (MI - EMI)/ R
     elif norm:
         Hx = -((nr * np.log(nr))[part == 0]).sum() / N + np.log(N)

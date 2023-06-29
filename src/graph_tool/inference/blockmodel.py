@@ -114,7 +114,7 @@ _q_cache_max_n = 10000
 def init_q_cache(max_n=None):
     if max_n is None:
         max_n = _q_cache_max_n
-    libinference.init_q_cache(min(_q_cache_max_n, max_n))
+    libinference.init_q_cache(min((_q_cache_max_n, max_n)))
 
 class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
                  GibbsMCMCState, MulticanonicalMCMCState, ExhaustiveSweepState,
@@ -236,13 +236,13 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
 
         # ensure we have at most as many blocks as nodes
         if B is not None and b is None:
-            B = min(B, self.g.num_vertices())
+            B = min((B, self.g.num_vertices()))
 
         if b is None:
             # create a random partition into B blocks.
             if B is None:
                 raise ValueError("either 'b' or 'B' must be specified")
-            B = min(B, self.g.num_vertices())
+            B = min((B, self.g.num_vertices()))
             ba = random.randint(0, B, self.g.num_vertices())
             ba[:B] = arange(B)        # avoid empty blocks
             if B < self.g.num_vertices():
@@ -255,7 +255,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
             if isinstance(b, numpy.ndarray):
                 self.b = g.new_vp("int")
                 ba = numpy.zeros(len(self.b.fa), dtype="int")
-                ba[:min(len(ba), len(b))] = b[:min(len(ba), len(b))]
+                ba[:min((len(ba), len(b)))] = b[:min((len(ba), len(b)))]
                 self.b.fa = ba
             else:
                 self.b = b = g.own_property(b.copy(value_type="int32_t"))
@@ -377,7 +377,7 @@ class BlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         assert all(self.recdx.a >= 0), self.recdx.a
 
         if deg_corr:
-            init_q_cache(max(2 * max(self.get_E(), self.get_N()), 100))
+            init_q_cache(max((2 * max((self.get_E(), self.get_N())), 100)))
 
         self._entropy_args = dict(adjacency=True, deg_entropy=True, dl=True,
                                   partition_dl=True, degree_dl=True,

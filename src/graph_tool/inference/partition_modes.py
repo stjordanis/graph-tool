@@ -546,7 +546,7 @@ def partition_overlap(x, y, norm=True):
         raise ValueError("Partitions need to have the same number of elements")
     m = libinference.partition_overlap(x, y)
     if norm:
-        m /= max(len(x), len(y))
+        m /= max((len(x), len(y)))
     return m
 
 def nested_partition_overlap(x, y, norm=True):
@@ -625,16 +625,16 @@ def nested_partition_overlap(x, y, norm=True):
     """
     y = order_nested_partition_labels(y)
     x = align_nested_partition_labels(x, y)
-    L = min(len(x), len(y))
+    L = min((len(x), len(y)))
     m = 0
     N = 0
     for l in range(L):
         xl = x[l]
         yl = y[l]
-        Nl = min(len(xl), len(yl))
+        Nl = min((len(xl), len(yl)))
         null = np.logical_and(xl[:Nl] == -1, y[:Nl] == -1).sum()
         ml = (xl[:Nl] == yl[:Nl]).sum() - null
-        Nl = max((xl != -1).sum(), (yl != -1).sum())
+        Nl = max(((xl != -1).sum(), (yl != -1).sum()))
         N += Nl
         m += ml
     if norm:

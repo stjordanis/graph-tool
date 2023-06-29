@@ -264,7 +264,7 @@ class MultiflipMCMCState(ABC):
 
         if psingle is None:
             psingle = self.g.num_vertices()
-        gibbs_sweeps = max(gibbs_sweeps, 1)
+        gibbs_sweeps = max((gibbs_sweeps, 1))
         nproposal = Vector_size_t(4)
         nacceptance = Vector_size_t(4)
         force_move = kwargs.pop("force_move", False)
@@ -407,7 +407,7 @@ class MultilevelMCMCState(ABC):
 
         if psingle is None:
             psingle = self.g.num_vertices()
-        merge_sweeps = max(merge_sweeps, 1)
+        merge_sweeps = max((merge_sweeps, 1))
         if M is None:
             M = self.g.num_vertices()
             global_moves = True
@@ -415,7 +415,7 @@ class MultilevelMCMCState(ABC):
             global_moves = False
         bclabel = self._get_bclabel()
         if bclabel is not None:
-            B_min = max(len(numpy.unique(bclabel.fa)), B_min)
+            B_min = max((len(numpy.unique(bclabel.fa)), B_min))
         if b_min is None:
             b_min = self.g.vertex_index.copy("int")
         if b_max is None:

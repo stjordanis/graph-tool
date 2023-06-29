@@ -65,8 +65,8 @@ class PPBlockState(MCMCState, MultiflipMCMCState, MultilevelMCMCState,
         self.err = Vector_size_t()
         self.eio = Vector_size_t()
 
-        init_q_cache(max(2 * max(self.g.num_edges(),
-                                 self.g.num_vertices()), 100))
+        init_q_cache(max((2 * max((self.g.num_edges(),
+                                   self.g.num_vertices()), 100))))
 
         self.bg = GraphView(self.g)
         self.bg.clear_filters()

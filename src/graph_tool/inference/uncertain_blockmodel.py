@@ -780,14 +780,14 @@ class MixedMeasuredBlockState(UncertainBaseState):
                 hs = [self.alpha, self.beta, self.mu, self.nu]
                 j = numpy.random.randint(len(hs))
 
-                f_dh = [max(0, hs[j] - hstep), hs[j] + hstep]
+                f_dh = [max((0, hs[j] - hstep)), hs[j] + hstep]
                 pf = 1./(f_dh[1] - f_dh[0])
 
                 old_hs = hs[j]
                 hs[j] = f_dh[0] + numpy.random.random() * (f_dh[1] - f_dh[0])
 
-                b_dh = [max(0, hs[j] - hstep), hs[j] + hstep]
-                pb = 1./min(1, hs[j])
+                b_dh = [max((0, hs[j] - hstep)), hs[j] + hstep]
+                pb = 1./min((1, hs[j]))
 
                 latent_edges = kwargs.get("entropy_args", {}).get("latent_edges", True)
                 density = False
@@ -884,8 +884,8 @@ class DynamicsBlockStateBase(UncertainBaseState):
             x = transform[1](x)
 
         if rg is not None:
-            mi = max(rg[0], x - step)
-            ma = min(rg[1], x + step)
+            mi = max((rg[0], x - step))
+            ma = min((rg[1], x + step))
         else:
             mi = x - step
             ma = x + step
@@ -894,8 +894,8 @@ class DynamicsBlockStateBase(UncertainBaseState):
         a = 0
         if rg is not None:
             a -= -log(ma - mi)
-            mi = max(rg[0], nx - step)
-            ma = min(rg[1], nx + step)
+            mi = max((rg[0], nx - step))
+            ma = min((rg[1], nx + step))
             a += -log(ma - mi)
 
         if transform is not None:
