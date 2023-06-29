@@ -60,7 +60,7 @@ The following network will be used as an example throughout the documentation.
     # The capacity will be defined as the inverse euclidean distance
     cap = g.new_edge_property("double")
     for e in g.edges():
-        cap[e] = min(1.0 / norm(pos[e.target()].a - pos[e.source()].a), 10)
+        cap[e] = min((1.0 / norm(pos[e.target()].a - pos[e.source()].a), 10))
     g.edge_properties["cap"] = cap
     g.vertex_properties["pos"] = pos
     g.save("flow-example.xml.gz")

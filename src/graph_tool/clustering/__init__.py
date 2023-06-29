@@ -581,7 +581,7 @@ def motif_significance(g, k, n_shuffles=100, p=1.0, motif_list=None,
                 m_e[_graph_sig(m_temp[j])].append(len(s_ms) - 1)
 
     s_counts = [x / float(n_shuffles) for x in s_counts]
-    s_dev = [max(sqrt(x[0] / float(n_shuffles) - x[1] ** 2), 1) \
+    s_dev = [max((sqrt(x[0] / float(n_shuffles) - x[1] ** 2), 1)) \
               for x in zip(s_dev, s_counts)]
 
     list_hist = list(zip(s_ms, s_counts, s_dev))
