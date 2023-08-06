@@ -32,7 +32,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.viewcode',
               'extlinks_fancy',
               'sphinxext.opengraph',
-              'sphinx_copybutton'
+              'sphinx_copybutton',
+              "sphinx_favicon"
               #'sphinx.ext.linkcode'
               #'matplotlib.sphinxext.plot_directive'
               ]
@@ -176,7 +177,11 @@ html_logo = "graph-tool-logo.svg"
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "graph-icon.ico"
+#html_favicon = "graph-tool-logo-circle.svg"
+
+favicons = [
+    {"href": "graph-tool-logo-circle.svg"},
+]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

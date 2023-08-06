@@ -44,9 +44,8 @@ nobase_dist_graphtooldoc_DATA = \
 	doc/sphinxext/phantom_import.py \
 	doc/sphinxext/compiler_unparse.py \
 	doc/sphinxext/traitsdoc.py \
-	doc/.static/graph-icon.png \
-	doc/.static/graph-icon.ico \
-	doc/.static/graph-tool-logo.svg
+	doc/.static/graph-tool-logo.svg \
+	doc/.static/graph-tool-logo-circle.svg
 
 EXTRA_DIST = autogen.sh
 
