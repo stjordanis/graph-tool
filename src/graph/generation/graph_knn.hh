@@ -680,12 +680,9 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk,
         if (verbose)
             cout << "Selecting nodes..." << endl;
 
-        typename eprop_map_t<bool>::type ekeep(g.get_edge_index_range(),
-                                               get(edge_index_t(), g));
-
-        #pragma omp parallel if (parallel)
-        parallel_loop_no_spawn(medges,
-                               [&](auto, auto& el){ ekeep[get<0>(el)] = true; });
+        typename eprop_map_t<bool>::type ekeep(get(edge_index_t(), g));
+        for (auto& el : medges)
+            ekeep[get<0>(el)] = true;
 
         N = 0;
         std::vector<bool> nselect(select);
