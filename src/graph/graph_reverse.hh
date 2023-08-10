@@ -78,6 +78,8 @@ class reversed_graph {
     static vertex_descriptor null_vertex()
     { return Traits::null_vertex(); }
 
+    void reverse_edge(edge_descriptor& e) { _g. reverse_edge(e); }
+
     // would be private, but template friends aren't portable enough.
  // private:
     GraphRef _g;
