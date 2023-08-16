@@ -26,26 +26,37 @@
 namespace graph_tool
 {
 
+template <class Value>
 class FibonacciSearch
 {
 public:
+
+    constexpr static bool _discrete = std::is_integral_v<Value>;
+    constexpr static double _epsilon = 1e-8;
+
     FibonacciSearch() {}
 
     template <class F, class... RNG>
-    size_t search(size_t x_min, size_t x_max, F&& f, RNG&... rng)
+    std::tuple<Value, double>
+    search(Value x_min, Value x_max, F&& f, size_t maxiter = 0,
+           Value tol = 0, RNG&... rng)
     {
-        size_t x_mid;
-        return search(x_min, x_mid, x_max, f, rng...);
+        Value x_mid;
+        return search(x_min, x_mid, x_max, f, maxiter, tol, rng...);
     }
 
     template <class F, class... RNG>
-    size_t search(size_t& x_min, size_t& x_mid, size_t& x_max, F&& f, RNG&... rng)
+    std::tuple<Value, double>
+    search(Value& x_min, Value& x_mid, Value& x_max, F&& f,
+           size_t maxiter = 0, Value tol = 0, RNG&... rng)
     {
         // initial bracketing
         x_mid = get_mid(x_min, x_max, rng...);
         double f_max = f(x_max);
         double f_mid = f(x_mid);
         double f_min = f(x_min);
+
+        Value md = _discrete ? 1 : 0;
 
         while (f_mid > f_min || f_mid > f_max)
         {
@@ -64,14 +75,16 @@ public:
 
             f_mid = f(x_mid);
 
-            if (x_min == x_mid && (x_max - x_mid) <= 1)
+            if (x_min == x_mid && (x_max - x_mid) <= md)
                 break;
         }
 
+        size_t niter = 0;
+
         // Fibonacci search
-        while (x_max - x_mid > 1)
+        while (x_max - x_mid > md)
         {
-            size_t x;
+            Value x;
             if (x_max - x_mid > x_mid - x_min)
                 x = get_mid(x_mid, x_max, rng...);
             else
@@ -107,39 +120,63 @@ public:
                     f_min = f_x;
                 }
             }
+
+            if constexpr (!_discrete)
+            {
+                niter++;
+                if (x_max - x_min < tol)
+                    break;
+                if (maxiter > 0 && niter > maxiter)
+                    break;
+            }
         }
 
-        std::array<size_t,3> xs = {x_min, x_mid, x_max};
+        std::array<Value,3> xs = {x_min, x_mid, x_max};
         std::array<double,3> fs = {f_min, f_mid, f_max};
-
-        return xs[std::min_element(fs.begin(), fs.end()) - fs.begin()];
+        size_t pos = std::min_element(fs.begin(), fs.end()) - fs.begin();
+        return {xs[pos], fs[pos]};
     }
 
-    size_t fibo(size_t n)
+    Value fibo(size_t n)
     {
-        return size_t(std::round(std::pow(_phi, n) / std::sqrt(5)));
+        return Value(std::round(std::pow(_phi, n) / std::sqrt(5)));
     }
 
-    size_t fibo_n_floor(size_t x)
+    Value fibo_n_floor(Value x)
     {
         return std::floor(std::log(x * std::sqrt(5) + .5) / std::log(_phi));
     }
 
-    size_t get_mid(size_t a, size_t b)
+    Value get_mid(Value a, Value b)
     {
         if (a == b)
             return a;
-        auto n = fibo_n_floor(b - a);
-        return b - fibo(n - 1);
+        if constexpr (_discrete)
+        {
+            auto n = fibo_n_floor(b - a);
+            return b - fibo(n - 1);
+        }
+        else
+        {
+            return (_phi * a + b) / (_phi + 1);
+        }
     }
 
     template <class RNG>
-    size_t get_mid(size_t a, size_t b, RNG& rng)
+    Value get_mid(Value a, Value b, RNG& rng)
     {
         if (a == b)
             return a;
-        std::uniform_int_distribution<size_t> sample(a, b - 1);
-        return sample(rng);
+        if constexpr (_discrete)
+        {
+            std::uniform_int_distribution<Value> sample(a, b - 1);
+            return sample(rng);
+        }
+        else
+        {
+            std::uniform_real_distribution<Value> sample(a, b);
+            return sample(rng);
+        }
     }
 
 private:

@@ -158,26 +158,36 @@ BOOST_PYTHON_MODULE(libgraph_tool_inference)
     def("init_cache", init_cache);
     def("log_sum_exp", +[](double x, double y){ return log_sum_exp(x, y); });
 
-    class_<FibonacciSearch>("FibonacciSearch")
-        .def("search",
-             +[](FibonacciSearch& s, size_t x_min, size_t x_max, python::object f)
-              {
-                  return s.search(x_min, x_max,
-                                  [&](size_t x)
-                                  {
-                                      return python::extract<double>(f(x));
-                                  });
-              })
-        .def("search_random",
-             +[](FibonacciSearch& s, size_t x_min, size_t x_max,
-                 python::object f, rng_t& rng)
-              {
-                  return s.search(x_min, x_max,
-                                  [&](size_t x)
-                                  {
-                                      return python::extract<double>(f(x));
-                                  }, rng);
-              });
+    auto fib_export = [&](auto val)
+        {
+            typedef decltype(val) val_t;
+            typedef FibonacciSearch<val_t> FibonacciSearch;
+            auto name = std::string("FibonacciSearch") + (std::is_integral_v<val_t> ? "Int" : "Real");
+            class_<FibonacciSearch>(name.c_str())
+                .def("search",
+                     +[](FibonacciSearch& s, val_t x_min, val_t x_max, python::object f,
+                         size_t bits, val_t tol)
+                      {
+                          return s.search(x_min, x_max,
+                                          [&](val_t x)
+                                          {
+                                              return python::extract<double>(f(x));
+                                          }, bits, tol);
+                      })
+                .def("search_random",
+                     +[](FibonacciSearch& s, val_t x_min, val_t x_max,
+                         python::object f, size_t bits, val_t tol, rng_t& rng)
+                      {
+                          return s.search(x_min, x_max,
+                                          [&](val_t x)
+                                          {
+                                              return python::extract<double>(f(x));
+                                          }, bits, tol, rng);
+                      });
+        };
+
+    fib_export(int());
+    fib_export(double());
 
     __MOD__::EvokeRegistry();
 }
