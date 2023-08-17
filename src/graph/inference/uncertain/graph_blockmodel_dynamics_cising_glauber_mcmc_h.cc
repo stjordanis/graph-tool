@@ -24,7 +24,7 @@
 #define BASE_STATE_params BLOCK_STATE_params
 #include "graph_blockmodel_dynamics.hh"
 #include "graph_blockmodel_dynamics_continuous.hh"
-#include "graph_blockmodel_dynamics_mcmc.hh"
+#include "graph_blockmodel_dynamics_pseudo_ising_mcmc_h.hh"
 #include "../support/graph_state.hh"
 #include "../loops/mcmc_loop.hh"
 
@@ -41,12 +41,12 @@ GEN_DISPATCH(dynamics_state, Dyn<BaseState>::template DynamicsState,
              DYNAMICS_STATE_params)
 
 template <class State>
-GEN_DISPATCH(mcmc_dynamics_state, MCMC<State>::template MCMCDynamicsState,
-             MCMC_DYNAMICS_STATE_params(State))
+GEN_DISPATCH(mcmc_dynamics_state, MCMC<State>::template MCMCPseudoIsingState,
+             MCMC_PSEUDO_ISING_STATE_params(State))
 
-python::object mcmc_cising_glauber_sweep(python::object omcmc_state,
-                                         python::object odynamics_state,
-                                         rng_t& rng)
+python::object mcmc_cising_glauber_sweep_h(python::object omcmc_state,
+                                           python::object odynamics_state,
+                                           rng_t& rng)
 {
     python::object ret;
     auto dispatch = [&](auto* block_state)
@@ -81,5 +81,5 @@ REGISTER_MOD
 ([]
 {
     using namespace boost::python;
-    def("mcmc_cising_glauber_sweep", &mcmc_cising_glauber_sweep);
+    def("mcmc_cising_glauber_sweep_h", &mcmc_cising_glauber_sweep_h);
 });
