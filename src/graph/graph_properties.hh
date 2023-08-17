@@ -463,7 +463,6 @@ void put(graph_tool::DynamicPropertyMapWrap<Value,Key>& pmap,
 // based on its index
 template <class IndexMap>
 class DescriptorHash
-    : public std::unary_function<typename IndexMap::key_type, size_t>
 {
 public:
     DescriptorHash() {}
