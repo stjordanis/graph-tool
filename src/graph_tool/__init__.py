@@ -902,12 +902,12 @@ class EdgePropertyMap(PropertyMap):
             except ArgumentError:
                 raise IndexError(f"nonexistent edge ({u}, {v})")
 
-    def __setitem__(self, k, v):
+    def __setitem__(self, k, x):
         try:
             try:
-                self._PropertyMap__map[k] = v
+                self._PropertyMap__map[k] = x
             except TypeError:
-                self._PropertyMap__map[k] = self._PropertyMap__convert(v)
+                self._PropertyMap__map[k] = self._PropertyMap__convert(x)
         except ArgumentError:
             try:
                 u, v = k
@@ -917,9 +917,9 @@ class EdgePropertyMap(PropertyMap):
             try:
                 e = g.edge(u, v)
                 try:
-                    self._PropertyMap__map[e] = v
+                    self._PropertyMap__map[e] = x
                 except TypeError:
-                    self._PropertyMap__map[e] = self._PropertyMap__convert(v)
+                    self._PropertyMap__map[e] = self._PropertyMap__convert(x)
             except ArgumentError:
                 raise IndexError(f"nonexistent edge ({u}, {v})")
 
