@@ -104,6 +104,7 @@ public:
         return begin() + idx;
     }
 
+    [[gnu::always_inline]]
     auto& operator[](const Key& key)
     {
         auto iter = find(key);
@@ -112,6 +113,7 @@ public:
         return iter->second;
     }
 
+    [[gnu::always_inline]]
     iterator find(const Key& key)
     {
         auto& pos = get_pos();
