@@ -647,6 +647,9 @@ void gen_k_nearest(Graph& g, Dist&& d, size_t m, double r, size_t max_rk,
         }
 
         size_t nk = ceil((4. * m)/N);
+
+        eselect.reserve(N * nk);
+
         if (verbose)
             cout << "Running KNN with N = " << N << " and k = " << nk << endl;
         if (local)
