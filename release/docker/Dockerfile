@@ -33,8 +33,8 @@ RUN mkdir -p ${MAKEPKG_ROOT}; chown mkpkg:mkpkg ${MAKEPKG_ROOT}
 # WORKDIR ${MAKEPKG_ROOT}/glibc-linux4
 # RUN makepkg PKGBUILD --needed --skipinteg
 
-USER root
-RUN mv -v "${MAKEPKG_ROOT}"/glibc-linux4/glibc-linux4-2*.pkg.tar.zst /tmp/glibc-linux4.pkg.tar.zst
+# USER root
+# RUN mv -v "${MAKEPKG_ROOT}"/glibc-linux4/glibc-linux4-2*.pkg.tar.zst /tmp/glibc-linux4.pkg.tar.zst
 
 USER ${MAKEPKG_USER}
 WORKDIR ${MAKEPKG_ROOT}
