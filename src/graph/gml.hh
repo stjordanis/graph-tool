@@ -25,7 +25,10 @@
 #include <boost/variant/recursive_variant.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
+
+#if BOOST_VERSION >= 107600
 #include <boost/regex/v5/unicode_iterator.hpp>
+#endif
 
 #include <boost/algorithm/string/replace.hpp>
 
