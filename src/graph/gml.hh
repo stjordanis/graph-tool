@@ -239,7 +239,6 @@ public:
                                                                           graph_property_tag()),
                                      iter.second);
             }
-
         }
         else
         {
@@ -299,13 +298,10 @@ struct gml : spirit::qi::grammar<Iterator, void(), Skipper>
         using namespace spirit;
         using spirit::unicode::char_;
 
-        unesc_str = spirit::lexeme['"' >> *(unesc_char |  (unicode::graph - "\"") |
-                                            unicode::space | "\\x" >> qi::hex) >> '"'];
-        unesc_char.add("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
-            ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
-            ("\\\'", '\'')("\\\"", '\"');
-        key_identifier %= spirit::lexeme[((+((spirit::qi::unicode::alnum | "_") | "-")) >> *spirit::qi::unicode::alnum)];
-        auto key_action = [this](auto && attr)
+        unesc_str = spirit::lexeme['"' >> *(unesc_char |  (unicode::graph - "\"") | unicode::space ) >> '"'];
+        unesc_char.add("\\\"", '\"')("&quot;",'\"')("&lowbar;",'_')("&NewLine;",'\n')("&amp;",'&');
+        key_identifier %= spirit::lexeme[+(spirit::qi::unicode::alnum | char_("_-"))];
+        auto key_action = [this](auto&& attr)
                           {
                               _state.push_key(std::forward<decltype(attr)>(attr));
                           };
@@ -383,6 +379,7 @@ struct get_str
         const ValueType* v = any_cast<ValueType>(&val);
         if (v == nullptr)
             return;
+
         if constexpr (std::is_same<ValueType, python::object>::value)
         {
             sval = base64_encode(lexical_cast<string>(*v));
@@ -396,7 +393,9 @@ struct get_str
 
         if constexpr (!std::is_scalar<ValueType>::value)
         {
-            replace_all(sval, "\"", "\\\"");
+            replace_all(sval, "&", "&amp;");
+            replace_all(sval, "\"", "&quot;");
+            replace_all(sval, "\n", "&NewLine;");
             sval = "\"" + sval + "\"";
         }
     }
@@ -407,7 +406,7 @@ std::string print_val(dynamic_property_map& pmap, const Descriptor& v)
 {
     std::string val;
     boost::any oval = pmap.get(v);
-    mpl::for_each<ValueTypes>([&oval, &val](auto t){ get_str()(oval, val, t); });
+    mpl::for_each<ValueTypes>([&oval, &val](const auto& t){ get_str()(oval, val, t); });
     return val;
 }
 
