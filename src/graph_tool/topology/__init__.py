@@ -351,11 +351,11 @@ def similarity(g1, g2, eweight1=None, eweight2=None, label1=None, label2=None,
                                _prop("v", g2, label2), p, asymmetric)
 
     if not g1.is_directed() or not g2.is_directed():
-        s //= 2
+        s /= 2
 
     s **= 1./p
 
-    if eweight1 is None and eweight1 is None:
+    if eweight1 is None and eweight2 is None:
         if asymmetric:
             E = g1.num_edges()
         else:
