@@ -757,11 +757,27 @@ class PropertyMap(object):
         else:
             u = GraphView(g, skip_vfilt=True, skip_efilt=True)
             if key_type == "v":
-                vals = [self.__convert(self[v]) for v in u.vertices()]
+                vals = self.fa
+                if vals is None:
+                    if "vector" in value_type and value_type != "vector<string>":
+                        vals = [self[v].a for v in u.vertices()]
+                    else:
+                        vals = [self.__convert(self[v]) for v in u.vertices()]
             elif key_type == "e":
-                vals = [self.__convert(self[e]) for e in u.edges()]
+                vals = self.a
+                if vals is None:
+                    if "vector" in value_type and value_type != "vector<string>":
+                        vals = [self[e].a for e in u.edges()]
+                    else:
+                        vals = [self.__convert(self[e]) for e in u.edges()]
+                else:
+                    idx = u.get_edges([u.edge_index])[:,2]
+                    vals = vals[idx]
             else:
-                vals = self.__convert(self[g])
+                if "vector" in value_type and value_type != "vector<string>":
+                    vals = self[g].a
+                else:
+                    vals = self.__convert(self[g])
 
         state = dict(g=g, value_type=value_type,
                      key_type=key_type, vals=vals,
